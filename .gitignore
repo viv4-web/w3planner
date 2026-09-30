@@ -1,0 +1,5 @@
+# Game artwork extracted from the game files. Deployed to the host only, never committed.
+assets/
+*.zip
+.DS_Store
+Thumbs.db

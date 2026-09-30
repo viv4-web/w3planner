@@ -7,6 +7,7 @@ A free, open-source skill tree, mutation and build planner for the current versi
 - Mutations with research costs, prerequisites and the active-mutation colour rule
 - Builds are stored entirely in the URL: share a link, no accounts, no backend
 - No cookies, no analytics, no third-party requests
+- Locked down by default: a strict Content-Security-Policy in `_headers` blocks anything loading from other sites
 
 ## Feedback
 
