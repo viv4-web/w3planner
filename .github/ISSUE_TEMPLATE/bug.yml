@@ -1,0 +1,24 @@
+name: Bug report
+description: Something is wrong, broken, or doesn't match the game
+labels: ["bug"]
+body:
+  - type: input
+    id: link
+    attributes:
+      label: Build link
+      description: Click "Copy link" in the planner and paste it here.
+      placeholder: https://w3planner.pages.dev/#v1....
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What's wrong?
+      description: What did you expect, and what happened instead? If a value differs from the game, say what the game shows.
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Browser and device
+      placeholder: e.g. Firefox on Windows, Safari on iPhone

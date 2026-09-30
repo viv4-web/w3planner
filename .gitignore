@@ -1,6 +1,13 @@
-# Game artwork extracted from the game files. Deployed to the host only, never committed.
+dist/
 assets/
+/w3planner-art/
 *.zip
+*.env
+.env*
+node_modules/
+__pycache__/
+.venv/
+venv/
+raw/
 .DS_Store
 Thumbs.db
-dist/

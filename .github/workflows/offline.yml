@@ -1,0 +1,36 @@
+name: Offline package
+
+# Builds the offline download from this repository whenever a release is published,
+# so it always contains exactly the code of the website. Can also be run by hand.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build the placeholder site and the offline package
+        run: |
+          python tools/build.py --variant placeholder --out dist/placeholder
+          python tools/make_offline.py --out dist/release
+      - name: Keep it as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: offline-package
+          path: |
+            dist/release/*.zip
+            dist/release/SHA256SUMS.txt
+      - name: Attach it to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/release/*.zip dist/release/SHA256SUMS.txt --clobber

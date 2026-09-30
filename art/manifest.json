@@ -1,0 +1,594 @@
+{
+ "skill/sword_s22": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/sword_s33": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/sword_s23": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/sword_s34": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/sword_s24": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/sword_s16": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/sword_s18": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/sword_s25": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/sword_s20": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/sword_s36": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/sword_s32": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/sword_s26": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/sword_s35": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/sword_s2": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/sword_s31": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/sword_s28": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/sword_s29": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/sword_s27": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/sword_s30": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/sword_s19": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s20": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s8": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s42": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s13": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s17": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s1": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s28": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s3": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s4": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s31": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s11": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s33": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s19": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s35": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s36": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s37": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s38": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s39": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s40": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/magic_s41": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s2": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s8": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s16": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s14": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s20": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s10": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s27": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s12": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s5": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s18": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s23": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s13": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s3": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s24": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s25": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s22": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s15": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s11": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s4": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/alchemy_s26": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_23": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_40": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_26": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_42": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_31": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_38": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_35": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_25": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_30": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_41": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_34": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_37": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_24": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_43": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_44": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_33": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_39": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_27": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_32": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "skill/perk_28": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutagen/0": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutagen/1": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutagen/2": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutagen/3": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutagen/4": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutagen/5": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutagen/6": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutagen/7": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutagen/8": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutagen/9": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutagen/10": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutagen/11": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "lock/sock": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "lock/slot": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "art/skill_slot_empty": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "art/skill_slot_locked": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "art/mutagen_slot_empty": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/treebg-0": {
+  "game": "jpg",
+  "placeholder": "jpg"
+ },
+ "ga/treebg-1": {
+  "game": "jpg",
+  "placeholder": "jpg"
+ },
+ "ga/treebg-2": {
+  "game": "jpg",
+  "placeholder": "jpg"
+ },
+ "ga/treebg-3": {
+  "game": "jpg",
+  "placeholder": "jpg"
+ },
+ "ga/treebg-4": {
+  "game": "jpg",
+  "placeholder": "jpg"
+ },
+ "ga/tilebg-0": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/tilebg-1": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/tilebg-2": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/tilebg-3": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/tilefr-0": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/tilefr-1": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/tilefr-2": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/tilefr-3": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/fravail": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/frlock": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/frsel": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/tab-0": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/tab-1": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/tab-2": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/tab-3": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/tab-4": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/bar-red": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/bar-blue": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/bar-green": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/bar-amber": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/orn": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/cell-grey": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/cell-red": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/cell-blue": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/cell-green": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/cell-gold": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/master": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "ga/mutbg": {
+  "game": "jpg",
+  "placeholder": "jpg"
+ },
+ "ga/msel": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutation/1": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutation/2": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutation/3": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutation/4": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutation/5": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutation/6": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutation/7": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutation/8": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutation/9": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutation/10": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutation/11": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "mutation/12": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "css/body-bg": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "css/bar-green": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "css/bar-red": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "css/bar-blue": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "img/skill-point": {
+  "game": "png",
+  "placeholder": "png"
+ }
+}
