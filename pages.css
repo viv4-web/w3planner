@@ -1,0 +1,20 @@
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/barlow-condensed-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/barlow-condensed-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/barlow-condensed-latin-600-normal.woff2) format("woff2")}
+:root{box-sizing:border-box;color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100vh;background:#050505;color:#d9d0bf;font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;font-size:19px;line-height:1.5}
+header{display:flex;align-items:center;gap:22px;padding:16px 28px;border-bottom:1px solid #2a241d;flex-wrap:wrap}
+header a.home{color:#c8a86b;text-decoration:none;font-size:22px;font-weight:500}
+nav{display:flex;gap:18px;margin-left:auto}nav a{color:#8f8575;text-decoration:none;font-size:18px}nav a:hover,nav a:focus-visible,nav a[aria-current]{color:#fff}
+main{max-width:760px;margin:0 auto;padding:34px 24px 60px}
+h1{font-weight:500;font-size:44px;color:#fff;margin:0 0 6px;letter-spacing:.5px}h2{font-weight:500;font-size:28px;color:#fff;margin:34px 0 8px}
+p,li{color:#cfc5b3}a{color:#e0b86a}a:focus-visible{outline:2px solid #c8a86b;outline-offset:2px}
+.lead{font-size:22px;color:#e6dcc8}.muted{color:#8f8575;font-size:16px}
+.card{border:1px solid #3a3025;background:#0d0c0a;padding:16px 20px;margin:14px 0}
+.btn{display:inline-block;border:1px solid #8a6a36;color:#fff;text-decoration:none;padding:6px 18px;margin:6px 10px 0 0}.btn:hover{border-color:#e0b86a}
+footer{border-top:1px solid #2a241d;padding:18px 28px 30px;color:#6f675b;font-size:15px}
+
+kbd{border:1px solid #6b5a42;border-bottom-width:2px;padding:0 6px;font-family:inherit;font-size:16px;color:#fff;background:#15120f}
+table{border-collapse:collapse;width:100%;margin:10px 0}td,th{border-bottom:1px solid #2a241d;padding:7px 10px;text-align:left;vertical-align:top}th{color:#fff;font-weight:500}
+.toc a{margin-right:14px}
