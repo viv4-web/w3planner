@@ -9,6 +9,10 @@ A free, open-source skill tree, mutation and build planner for the current versi
 - No cookies, no analytics, no third-party requests
 - Locked down by default: a strict Content-Security-Policy in `_headers` blocks anything loading from other sites
 
+## Offline version
+
+Every release also has an offline download for Windows PC (it runs in your browser and needs no install): see [Releases](https://github.com/viv4-web/w3planner/releases). It is built from this repository by `tools/make_offline.py`, so it always contains exactly the same `index.html` as the website. The offline copy can open build links but does not create them. See [RELEASING.md](RELEASING.md).
+
 ## Feedback
 
 Found a wrong number or a bug? [Open an issue](https://github.com/viv4-web/w3planner/issues/new/choose) and include the build's share link.
@@ -17,14 +21,14 @@ Found a wrong number or a bug? [Open an issue](https://github.com/viv4-web/w3pla
 
 A static site: plain HTML, CSS and JavaScript with no build step and no dependencies. All data (names, descriptions, values, costs, rules) is extracted from the game's own files and scripts and embedded in `index.html`.
 
-The game artwork (`assets/`) is **not** included in this repository. It is extracted from the game files and uploaded only to the host. To run the site locally with art, extract it yourself from your own copy of the game.
+The repository ships with placeholder artwork that I drew myself (`art/`), so it runs as-is: `python3 -m http.server`, then open http://localhost:8000. The live site additionally shows the game's own artwork, which is **not** included here and is loaded from a separate folder.
 
 ## Deploy
 
-Deployed to Cloudflare Pages by direct upload of the site folder (`index.html`, the other pages, `pages.css`, `_headers`, `fonts/`, `assets/`).
+Deployed to Cloudflare Pages by direct upload of the site folder (`index.html`, the other pages, `pages.css`, `_headers`, `fonts/` and an image folder).
 
 ## License
 
-Code: MIT (see [LICENSE](LICENSE)). The license does not cover game artwork, text or data, which belong to CD PROJEKT S.A.
+Code and placeholder artwork: MIT (see [LICENSE](LICENSE)). The license does not cover game names, text or data, or the game's own artwork, which belong to CD PROJEKT S.A.
 
 This is an unofficial fan work and is not approved/endorsed by CD PROJEKT RED.

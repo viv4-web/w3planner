@@ -22,8 +22,7 @@ SOFTWARE.
 
 ---
 
-SCOPE: This license covers only the planner's own source code in this
-repository. It does NOT cover game artwork, icons, text, names or data values,
-which are the property of CD PROJEKT S.A. and are used under CD PROJEKT RED's
-Fan Content Guidelines. The Barlow Condensed font files in /fonts are licensed
+SCOPE: This license covers the planner's own source code and the placeholder
+artwork in /art, which was created for this project. It does NOT cover game artwork, icons, text, names or data values,
+which are the property of CD PROJEKT S.A. and are shown here in an unofficial, non-commercial fan project. The Barlow Condensed font files in /fonts are licensed
 separately under the SIL Open Font License 1.1.
