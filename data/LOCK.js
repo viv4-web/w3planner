@@ -1,0 +1,1 @@
+{sock:"@@img:lock/sock@@",slot:"@@img:lock/slot@@"}

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Build Planner: unofficial skill tree planner</title>
+<meta name="description" content="Free, unofficial fan-made skill tree, mutation and build planner. Plan skills, mutations, mutagens and slots, then share your build as a link. No accounts, no tracking.">
+<meta property="og:title" content="Build Planner: unofficial skill tree planner">
+<meta property="og:description" content="Plan skills, mutations, mutagens and slots, then share your build as a link.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚔️</text></svg>">
+<script src="config.js"></script>
+<style>{{css}}</style>
+</head>
+<body>
+<header>
+  <h1>Build Planner</h1><nav class="site" aria-label="Site"><a href="help.html">Help</a><a href="about.html">About</a><a href="privacy.html">Privacy</a><a href="support.html">Support</a></nav>
+</header>
+<main>
+  <section>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="panel" id="treePanel"></div>
+    <div class="pts">POINTS AVAILABLE <b id="avail2">0</b><img src="@@img:img/skill-point@@" alt=""></div><div class="budget" aria-label="Character points">
+    <label>Level <input id="lvl" type="number" min="1" max="100" value="1"></label><label title="Places of Power and other sources">Bonus points <input id="bonuspts" type="number" min="0" max="100" value="0"></label><span>Total <b id="total">8</b></span>
+    <span hidden>Points available <b id="avail">0</b></span>
+    <button class="btn" id="mutbtn">Mutations</button><button class="btn" id="reset">Reset build</button>
+  </div><p class="hint" id="treeHint"></p>
+  </section>
+  <section class="right">
+    <div class="bonus" id="bonus"></div>
+    <div class="panel plain"><svg id="slots" viewBox="0 0 820 900" aria-label="Equipped skills and mutagens"></svg></div>
+    <div class="info" id="info"></div>
+    <div class="share" id="shareRow">
+      <input id="link" readonly aria-label="Shareable build link">
+      <button class="btn" id="copy">Copy link</button>
+    </div>
+    <div class="share" id="importRow" hidden><input id="imp" aria-label="Paste a shared build link" placeholder="Paste a shared link to open it"><button class="btn" id="impbtn">Open link</button><span id="impmsg" class="impmsg" role="status"></span></div>
+  </section>
+</main>
+<footer>This is an unofficial fan work and is not approved/endorsed by CD PROJEKT RED. Game artwork and text © CD PROJEKT S.A. · <a href="help.html" style="color:inherit">Help</a> · <a href="about.html" style="color:inherit">About</a> · <a href="privacy.html" style="color:inherit">Privacy</a> · <a href="support.html" style="color:inherit">Support</a> · <a href="https://github.com/viv4-web/w3planner" style="color:inherit">Source code</a></footer>
+<div class="tip" id="tip" role="tooltip"></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toastMsg"></span><button class="btn" id="toastGo" type="button" hidden>Go to Level</button></div>
+<div class="mov" id="mutov" hidden role="dialog" aria-modal="true" aria-labelledby="mtitle"><div class="mmodal">
+ <div class="mh"><h2 id="mtitle">MUTATIONS</h2><div class="mctl" aria-label="Character points"><label>Level <input id="mlvl" type="number" min="1" max="100"></label><label title="Places of Power and other sources">Bonus points <input id="mbonus" type="number" min="0" max="100"></label></div><div class="mhead" id="mhead"></div><button class="x" id="mclose" aria-label="Close mutations">✕</button></div>
+ <div class="mbody"><div class="mweb"><div class="mtip" id="mtip" hidden role="tooltip"></div><svg id="mweb" viewBox="60 -10 880 480" preserveAspectRatio="xMidYMid meet" aria-label="Mutation tree"></svg></div></div><div class="mfoot"><span id="mhint">Hover a mutation for details · <b>Click</b> to research, then activate · <b>Right-click</b> to undo research</span><button class="btn" id="mundo" disabled>Undo research</button></div>
+</div></div>
+
+<script>{{js}}</script>
+</body>
+</html>

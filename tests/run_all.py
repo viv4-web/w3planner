@@ -1,0 +1,154 @@
+#!/usr/bin/env python3
+"""Run every check on a fresh build. Exit code 0 = everything passed.
+
+    python tests/run_all.py                                        the public (placeholder) build
+    python tests/run_all.py --variant game --art-dir ../w3planner-art
+    python tests/run_all.py --quick                                fewer hostile-link cases (faster)
+
+Setup once:  pip install -r requirements.txt  &&  python -m playwright install chromium
+What it does: builds the site, serves it with the security headers from _headers, drives it with a real browser.
+"""
+import argparse, json, random, shutil, subprocess, sys, tempfile, threading, urllib.parse, zipfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tools"))
+import serve
+from playwright.sync_api import sync_playwright
+
+RESULTS = []
+ALL_TIPS = "(()=>{const o={};TREES.forEach((t,ti)=>t.sk.forEach((s,i)=>{for(let L=1;L<=3;L++)o[ti+'.'+i+'.'+L]=tipText(ti,i,L)}));return o})()"
+STATE = "[+document.getElementById('lvl').value,+document.getElementById('bonuspts').value,S.lv,S.slots.slice(0,12),S.muts,S.mres,S.mact]"
+FULLSTATE = "JSON.stringify([+document.getElementById('lvl').value,+document.getElementById('bonuspts').value,S.lv,S.slots,S.muts,S.mres,S.mact])"
+INV = """(()=>{const bad=[];
+ S.lv.forEach((row,ti)=>row.forEach((v,i)=>{if(!(Number.isInteger(v)&&v>=0&&v<=TREES[ti].sk[i].max))bad.push('skill level out of range')}));
+ S.slots.forEach(x=>{if(x&&!(Number.isInteger(x[0])&&x[0]>=0&&x[0]<4&&Number.isInteger(x[1])&&x[1]>=0&&x[1]<20))bad.push('slot points at a skill that does not exist')});
+ S.muts.forEach(m=>{if(m!==null&&!(Number.isInteger(m)&&m>=0&&m<MUTS.length))bad.push('mutagen that does not exist')});
+ if(!(S.mact>=-1&&S.mact<12))bad.push('bad active mutation');
+ const b=+document.getElementById('bonuspts').value,l=+document.getElementById('lvl').value;
+ if(!(b>=0&&b<=100))bad.push('bonus points out of range');if(!(l>=1&&l<=100))bad.push('level out of range');
+ return [...new Set(bad)]})()"""
+ROUNDTRIP = """(()=>{render=()=>{};history.replaceState=()=>{};let seed=20260930;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};let bad=0,n=0,spec=0;
+ for(let it=0;it<80;it++){S=blank();document.getElementById('lvl').value=1+Math.floor(rnd()*100);document.getElementById('bonuspts').value=Math.floor(rnd()*60);
+  for(let st=0;st<45;st++){const ti=Math.floor(rnd()*4),i=Math.floor(rnd()*20),r=rnd();
+   if(r<.5)add(ti,i);else if(r<.58)rem(ti,i);
+   else if(r<.72){const k=Math.floor(rnd()*16);if(slotOpen(k)&&S.lv[ti][i]&&accepts(k,[ti,i])&&!S.slots.some(x=>x&&x[0]===ti&&x[1]===i))S.slots[k]=[ti,i]}
+   else if(r<.84){const g=Math.floor(rnd()*4);if(sockOpen(g))S.muts[g]=Math.floor(rnd()*MUTS.length)}
+   else if(r<.95){const m=Math.floor(rnd()*12);if(mCanResearch(m))S.mres[m]=1}
+   else{const m=Math.floor(rnd()*12);if(S.mres[m])S.mact=m}}
+  enforceLocks();if(S.muts.some(x=>x!==null&&x>=9))spec++;
+  const before=JSON.stringify([+document.getElementById('lvl').value,+document.getElementById('bonuspts').value,S.lv,S.slots,S.muts,S.mres,S.mact]);
+  const t=dec(enc());n++;const after=t?JSON.stringify([+document.getElementById('lvl').value,+document.getElementById('bonuspts').value,t.lv,t.slots,t.muts,t.mres,t.mact]):'REJECTED';
+  if(before!==after)bad++}
+ return {n,bad,spec}})()"""
+A64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+
+
+def check(name, ok, detail=""):
+    RESULTS.append((name, bool(ok), detail))
+    print(("  PASS  " if ok else "  FAIL  ") + name + (("  (" + str(detail) + ")") if detail != "" else ""))
+
+
+def random_code(r):
+    ch = lambda n, alpha: "".join(r.choice(alpha) for _ in range(n))
+    v = r.choice(["v1"] * 9 + ["v2", "x", ""])
+    parts = [v, ch(r.choice([27] * 8 + [0, 5, 80]), A64 if r.random() < .95 else A64 + "%!*"), ch(r.choice([32] * 6 + [24, 0, 2, 64]), A64),
+             ch(r.choice([4] * 8 + [0, 9]), "-0123456789xXabcz"), r.choice([str(r.randint(1, 100))] * 3 + ["0", "-5", "1e9", "abc", str(r.randint(101, 99999))]),
+             r.choice([str(r.randint(0, 100))] * 3 + ["-7", "1e300", "zzz", str(r.randint(101, 99999))]), r.choice(["0", "zz", "1n", "", "x" * 50, "9" * 40]), r.choice(["0", "13", "99", "-3", "q", "7"])]
+    return ".".join(parts[:r.choice([3, 4, 5, 8, 8, 8])])
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--variant", choices=["placeholder", "game"], default="placeholder"); ap.add_argument("--art-dir")
+    ap.add_argument("--quick", action="store_true"); ap.add_argument("--keep", action="store_true", help="keep the temporary build folder")
+    a = ap.parse_args()
+    tmp = Path(tempfile.mkdtemp(prefix="w3test-")); site = tmp / "site"
+    cmd = [sys.executable, str(ROOT / "tools" / "build.py"), "--variant", a.variant, "--out", str(site)] + (["--art-dir", a.art_dir] if a.art_dir else [])
+    if subprocess.run(cmd).returncode: sys.exit("build failed")
+    server = serve.make_server(site, 0); port = server.server_address[1]
+    threading.Thread(target=server.serve_forever, daemon=True).start(); base = "http://127.0.0.1:%d/" % port
+    ref = json.loads((ROOT / "tests/fixtures/tooltips_ref.json").read_text()); legacy = json.loads((ROOT / "tests/fixtures/legacy_links.json").read_text())
+    N = 60 if a.quick else 300
+    with sync_playwright() as pw:
+        b = pw.chromium.launch()
+        print("\n== The page (%s build, served with its security headers) ==" % a.variant)
+        pg = b.new_page(viewport={"width": 1500, "height": 950}); errs, ext, fails = [], [], []
+        pg.add_init_script("window.__v=[];document.addEventListener('securitypolicyviolation',e=>window.__v.push(e.violatedDirective+' '+e.blockedURI))")
+        pg.on("pageerror", lambda e: errs.append(str(e))); pg.on("requestfailed", lambda r: fails.append(r.url[-40:]))
+        pg.on("request", lambda r: ext.append(r.url) if not r.url.startswith(("http://127.0.0.1:%d" % port, "data:")) else None)
+        resp = pg.goto(base); pg.wait_for_timeout(900); E = pg.evaluate
+        check("loads without script errors", not errs, errs[:1]); check("makes no requests to other sites", not ext, ext[:2]); check("no failed requests", not fails, fails[:2])
+        check("no Content-Security-Policy violations", E("window.__v") == [], E("window.__v")); h = resp.headers
+        check("security headers are sent", all(h.get(k) for k in ("content-security-policy", "x-content-type-options", "x-frame-options")))
+        tips = E(ALL_TIPS); bad = [k for k in ref if ref[k] != tips.get(k)]
+        check("all %d skill tooltips match the reference" % len(ref), not bad, bad[:3])
+        print("\n== Behaviour ==")
+        check("starts at level 1 with one open slot", E("lvl()") == 1 and E("[0,1,2,3,4,5,6,7,8,9,10,11].filter(slotOpen).length") == 1)
+        pg.locator('#slots g.node[data-k="1"]').click(); pg.wait_for_timeout(100)
+        check("clicking a locked slot explains what it needs", (not pg.locator("#toast").is_hidden()) and "unlocks at" in pg.inner_text("#toastMsg"))
+        i = E("TREES[1].sk.findIndex(s=>!s.req.length)"); pg.locator('.tab[data-k="1"]').click(); node = lambda: pg.locator('#treePanel g.node[data-i="%d"]' % i)
+        node().click(); node().click(); pg.wait_for_timeout(100)
+        check("adding a point with none left explains why", "No skill points left" in pg.inner_text("#toastMsg") and E("S.lv[1][%d]" % i) == 0)
+        E("document.getElementById('lvl').value=40;pointsChanged()"); pg.wait_for_timeout(100); node().click(); node().click(); pg.wait_for_timeout(100)
+        check("a skill point can be added once there are points", E("S.lv[1][%d]" % i) >= 1)
+        src = node().bounding_box(); dst = pg.locator('#slots g.node[data-k="0"]').bounding_box()
+        pg.mouse.move(src["x"] + src["width"] / 2, src["y"] + src["height"] / 2); pg.mouse.down(); pg.mouse.move(dst["x"] + 20, dst["y"] + 20, steps=8)
+        pg.mouse.move(dst["x"] + dst["width"] / 2, dst["y"] + dst["height"] / 2, steps=6); pg.mouse.up(); pg.wait_for_timeout(100)
+        check("a skill can be dragged into a slot", E("JSON.stringify(S.slots[0])") == "[1,%d]" % i)
+        pg.click("#mutbtn"); pg.wait_for_timeout(150); bb = pg.locator('#mweb .mn[data-i="3"]').bounding_box(); x, y = bb["x"] + bb["width"] / 2, bb["y"] + bb["height"] * .4
+        pg.mouse.move(x, y); pg.wait_for_timeout(60); pg.mouse.click(x, y); pg.wait_for_timeout(100); check("a mutation can be researched by clicking it", E("S.mres[3]") == 1)
+        pg.mouse.move(700, 120); pg.wait_for_timeout(50); pg.click("#mundo"); pg.wait_for_timeout(100); check("the Undo research button works", E("S.mres[3]") == 0)
+        sp = E("MUTS.filter(m=>m.special)"); lesser = {"red": 0, "blue": 3, "green": 6}
+        check("36 mutagens: 9 regular and 27 special (9 per colour)", E("MUTS.length") == 36 and len(sp) == 27 and all(E("MUTS.filter(m=>m.special&&m.c==='%s').length" % c) == 9 for c in lesser))
+        check("every special mutagen has the bonus of the Lesser mutagen of its colour", E("MUTS.filter(m=>m.special).every(m=>{const l=MUTS[{red:0,blue:3,green:6}[m.c]];return m.v===l.v&&m.syn===l.syn&&m.stat===l.stat&&m.pct===l.pct})"))
+        print("\n== Links ==")
+        E("document.getElementById('lvl').value=40;document.getElementById('bonuspts').value=5;pointsChanged();S.muts[0]=MUTS.findIndex(m=>m.label==='Wraith');S.muts[1]=35;save()")
+        code = E("document.getElementById('link').value.split('#')[1]"); link_state = E(FULLSTATE); q = b.new_page(); q.goto(base + "#" + code); q.wait_for_timeout(500)
+        check("a link with special mutagens reopens identically", q.evaluate(FULLSTATE) == link_state); q.close()
+        for entry in legacy:
+            o = b.new_page(); o.goto(base + "#" + entry["code"]); o.wait_for_timeout(400); got = o.evaluate(STATE); ex = entry["expect"]
+            check("a link made by %s still opens identically" % entry["made_by"], got[:5] == ex[:5] and (ex[5] is None or (got[5] == ex[5] and got[6] == ex[6]))); o.close()
+        rt = b.new_page(); rt.goto(base); rt.wait_for_timeout(600); r = rt.evaluate(ROUNDTRIP); rt.close(); check("%d random builds survive a link round trip unchanged (%d with special mutagens)" % (r["n"], r["spec"]), r["bad"] == 0, r["bad"])
+        h2 = b.new_page(viewport={"width": 1300, "height": 900}); herrs = []; h2.on("pageerror", lambda e: herrs.append(str(e).split("\n")[0][:80])); h2.goto(base); h2.wait_for_timeout(700)
+        h2.evaluate("document.getElementById('bonuspts').value=20;pointsChanged();const i=TREES[1].sk.findIndex(s=>!s.req.length);add(1,i);add(1,i);S.slots[0]=[1,i];S.muts[0]=3;save();openMut()")
+        valid = h2.evaluate("document.getElementById('link').value.split('#')[1]"); p = valid.split("."); rep = lambda k, v: ".".join(p[:k] + [v] + p[k + 1:])
+        crafted = [rep(2, "//" * 16), rep(3, "xxxx"), rep(3, "9999"), rep(1, "%" * 27), rep(4, "1e9"), "v1.!!!.???", "v1." + "A" * 100000] + [random_code(random.Random(k)) for k in range(N)]
+        problems = []
+        for c in crafted:
+            herrs.clear(); h2.evaluate("h=>{location.hash=h}", c); h2.wait_for_timeout(20); inv = h2.evaluate(INV)
+            if herrs or inv: problems.append((c[:30], herrs[:1], inv))
+        h2.evaluate("h=>{location.hash=h}", valid); h2.wait_for_timeout(50)
+        check("%d hostile or malformed links: no crash, no impossible build" % len(crafted), not problems, problems[:1]); check("the page still works afterwards", h2.evaluate("document.getElementById('slots').children.length>0"))
+        print("\n== Pages and layout ==")
+        for name in ("help.html", "about.html", "privacy.html", "support.html"):
+            rr = pg.request.get(base + name); check("%s is served" % name, rr.status == 200 and "<title>" in rr.text())
+        m = b.new_page(viewport={"width": 390, "height": 844}, is_mobile=True); m.goto(base); m.wait_for_timeout(500)
+        check("no sideways scrolling on a phone", m.evaluate("document.documentElement.scrollWidth-innerWidth") <= 0)
+        if a.variant == "placeholder":
+            print("\n== Offline package ==")
+            rel = tmp / "release"; res = subprocess.run([sys.executable, str(ROOT / "tools/make_offline.py"), "--site", str(site), "--out", str(rel)], capture_output=True, text=True)
+            check("the offline package builds", res.returncode == 0, res.stderr.strip()[-120:])
+            if res.returncode == 0:
+                zp = next(rel.glob("BuildPlanner-offline-*.zip")); ex_dir = tmp / "Build Planner (offline test)"; zipfile.ZipFile(zp).extractall(ex_dir)
+                off = "file://" + urllib.parse.quote(str(next(ex_dir.iterdir()))) + "/index.html"; o = b.new_page(viewport={"width": 1500, "height": 950}); oerr, onet = [], []
+                o.on("pageerror", lambda e: oerr.append(str(e))); o.on("request", lambda r: onet.append(r.url) if r.url.startswith("http") else None); o.goto(off); o.wait_for_timeout(900); OE = o.evaluate
+                check("opens from a folder with spaces in its name, no errors", not oerr, oerr[:1]); check("makes no network requests", not onet, onet[:2])
+                vis = lambda s: OE("(()=>{const e=document.querySelector('%s');return !!e&&e.offsetParent!==null})()" % s)
+                check("offline copy cannot create links, only open them", (not vis("#copy")) and vis("#imp"))
+                otips = OE(ALL_TIPS); check("offline tooltips match the reference", all(ref[k] == otips.get(k) for k in ref))
+                o.fill("#imp", "https://w3planner.pages.dev/#" + code); o.click("#impbtn"); o.wait_for_timeout(300)
+                check("a link from the website opens in the offline copy", OE(FULLSTATE) == link_state)
+                o.fill("#imp", "https://example.com/"); o.click("#impbtn"); check("a link with no build in it is refused and does not navigate", o.url.startswith("file://") and "does not look" in o.inner_text("#impmsg"))
+        else:
+            print("\n(offline package checks skipped: the offline package never contains game art)")
+        b.close()
+    server.shutdown()
+    if not a.keep: shutil.rmtree(tmp, ignore_errors=True)
+    failed = [r for r in RESULTS if not r[1]]
+    print("\n%d checks: %d passed, %d failed" % (len(RESULTS), len(RESULTS) - len(failed), len(failed)))
+    sys.exit(1 if failed else 0)
+
+
+if __name__ == "__main__":
+    main()
