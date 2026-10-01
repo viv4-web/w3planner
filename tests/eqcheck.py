@@ -120,6 +120,26 @@ def guttercheck(b, base, check, label):
         pg.close()
 
 
+def tiercheck(b, base, check, label):
+    """A tiered card is one family: title without a tier prefix, a tier line, no duplicate badge; the tooltip names the selected tier; search matches tier names; the default tier follows Level."""
+    pg = b.new_page(viewport={"width": 1920, "height": 1080}); pg.goto(base); until(pg, READY); E = pg.evaluate
+    E("(()=>{S.gear.fill(0);save();eqRender(true)})()"); pg.fill("#lvl", "30"); pg.click('#eqbody .eqtile[data-i="%d"]' % CHEST); pg.wait_for_selector("#pkgrid .pktile")
+    CARD = "(q=>{const t=[...document.querySelectorAll('#pkgrid .pktile')].filter(x=>x.querySelector('span').textContent.toLowerCase().startsWith(q))[0];return t?{title:t.querySelector('span').textContent,tier:(t.querySelector('.pktr')||{}).textContent||'',badge:!!t.querySelector('i'),sel:t.classList.contains('sel')}:null})"
+    pg.fill("#pkq", "feline"); pg.wait_for_timeout(100); c = E(CARD + "('feline')"); tip = E("document.querySelector('#pkside .eqt-name').textContent"); on = E("[...document.querySelectorAll('#pkside .eqchip')].filter(b=>b.getAttribute('aria-pressed')==='true').map(b=>b.textContent)")
+    check("%s: Chest armor, search 'feline': the card is titled 'Feline armor' with the tier line 'Basic \u2013 Grandmaster \u00b7 5 tiers' and no second badge (%s)" % (label, c), c and c["title"] == "Feline armor" and c["tier"] == "Basic \u2013 Grandmaster \u00b7 5 tiers" and not c["badge"], c)
+    check("%s: ... at Level 30 the default tier is Superior (the highest with required level <= 30; Mastercrafted needs 34) and the tooltip names it in full (%s, %s)" % (label, tip, on), on == ["Superior"] and tip == "Superior Feline armor", [tip, on])
+    pg.click('#pkside .eqchip[data-id="Lynx Armor 1"]'); tip = E("document.querySelector('#pkside .eqt-name').textContent")
+    check("%s: clicking the Enhanced chip makes the tooltip title 'Enhanced Feline armor' (%s)" % (label, tip), tip == "Enhanced Feline armor", tip)
+    pg.fill("#pkq", "enhanced feline"); pg.wait_for_timeout(100); n = E("document.querySelectorAll('#pkgrid .pktile').length"); tip = E("document.querySelector('#pkside .eqt-name').textContent"); on = E("[...document.querySelectorAll('#pkside .eqchip')].filter(b=>b.getAttribute('aria-pressed')==='true').map(b=>b.textContent)")
+    check("%s: search 'enhanced feline' finds the Feline card with Enhanced preselected (%d card, %s)" % (label, n, on), n == 1 and on == ["Enhanced"] and tip == "Enhanced Feline armor", [n, on, tip])
+    pg.fill("#pkq", ""); pg.fill("#pkq", "feline"); pg.wait_for_timeout(100); n = E("document.querySelectorAll('#pkgrid .pktile').length")
+    check("%s: search 'feline' alone still finds the card (%d)" % (label, n), n == 1, n)
+    pg.fill("#pkq", ""); pg.keyboard.press("Escape"); pg.fill("#lvl", "40"); E("(()=>{const d=eqData();S.gear[%d]=d.byId.get('Lynx Armor 2').n;save();eqRender(true)})()" % CHEST); pg.click('#eqbody .eqtile[data-i="%d"]' % CHEST); pg.wait_for_selector("#pkgrid .pktile"); pg.fill("#pkq", "feline"); pg.wait_for_timeout(100)
+    tip = E("document.querySelector('#pkside .eqt-name').textContent"); tile = E("document.querySelector('#eqbody .eqtile[data-i=\"%d\"]').getAttribute('aria-label')" % CHEST); st = E("document.querySelector('#eqbody .eqitem h4').textContent")
+    check("%s: the equipped tier is the default (Level 40 would otherwise give Grandmaster), and the slot tile and Item stats card keep the full name (%s | %s | %s)" % (label, tip, tile, st), tip == "Superior Feline armor" and "Superior Feline armor" in tile and st == "Superior Feline armor", [tip, tile, st])
+    pg.close()
+
+
 def levelcheck(b, base, check, label, pg):
     """The level requirement: the game blocks GetItemLevel(item) > GetLevel() (r4Player.ws:11723). Only the Level field counts."""
     E = pg.evaluate
@@ -180,7 +200,7 @@ def run(b, base, check, label, quick=False):
     errs, events = [], []; pg = b.new_page(viewport={"width": 1400, "height": 950}); pg.on("pageerror", lambda e: errs.append(str(e).split("\n")[0][:100])); E = pg.evaluate
     pg.on("load", lambda p: events.append("load")); pg.on("request", lambda r: events.append("data") if "/data/items" in r.url else None)
     pg.goto(base); check("%s: the panel shows right away and the equipment data loads after the page has loaded, only items.js and items_ng.js" % label, until(pg, READY) and E(KEYS) == ["items.js", "items_ng.js"] and events.index("load") < (events.index("data") if "data" in events else 99), [events[:4], E(KEYS)])
-    layout(b, base, check, label); scalecheck(b, base, check, label); scrollcheck(b, base, check, label); guttercheck(b, base, check, label)
+    layout(b, base, check, label); scalecheck(b, base, check, label); scrollcheck(b, base, check, label); guttercheck(b, base, check, label); tiercheck(b, base, check, label)
     pg.fill("#lvl", "100")      # the planner starts at Level 1 and the game blocks items above the level, so the walk-through below runs at the top level
     check("%s: weapons (steel, silver, crossbow, bolts) then armor (chest, gloves, trousers, boots, mask); one greyed strip \"Consumables & bombs, coming later\"" % label,
           E("[...document.querySelectorAll('#eqbody .eqw .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "steel,silver,crossbow,bolts" and E("[...document.querySelectorAll('#eqbody .eqarm .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "chest,gloves,trousers,boots,mask"
