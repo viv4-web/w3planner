@@ -75,6 +75,7 @@ Known placeholder in the live build: `mutagen/9`, `mutagen/10`, `mutagen/11` (sp
 ## Secrets and limits
 - Tokens live in `~/.config/w3planner/*.env` (mode 600). Never print them, log them, commit them or put them in command lines that get stored. The daily GitHub token has no administration rights on purpose; do not ask for more without telling Vivek.
 - `gh` (in `~/.local/bin`) gets its auth from `~/.config/w3planner/gh.env` and does not log in by itself. Before any `gh` command run `set -a; . ~/.config/w3planner/gh.env; set +a` (and never print the token), or it fails with "gh auth login".
+- Cloudflare credentials (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`) are in `~/.config/w3planner/cf.env`. Before `wrangler` or `tools/deploy.py` run `set -a; . ~/.config/w3planner/cf.env; set +a` (and never print them).
 - The `w3dev` account has no sudo and no docker, and is capped at about 3 GB RAM and 2 CPUs because this server also runs other things. Use `--quick` while iterating; run the full suite before a pull request.
 
 ## Backlog (in rough order)
