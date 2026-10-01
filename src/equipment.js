@@ -22,7 +22,7 @@ const eqCur=i=>{const d=eqData();return d&&S.gear[i]?d.byN.get(S.gear[i])||null:
 function eqValidate(){const d=eqData();let bad=0;EQ_SLOTS.forEach((s,i)=>{const n=S.gear[i];if(!n)return;const it=d.byN.get(n);if(!it||it.slot!==s){S.gear[i]=0;bad++}});return bad}
 
 // ---- what the game shows: primary stat, stat lines (gameplay/globals/tooltip_settings.csv), level, rarity ----
-function eqPrimary(it){const b=(it.base||[]),f=n=>b.find(e=>e.stat===n&&e.type==='base');
+function eqPrimary(it){const b=(it.base||[]),f=n=>b.find(e=>e.stat===n&&e.type==='base')||b.find(e=>e.stat===n); // the game takes the base value, else the multiplicative, else the additive one (GetItemPrimaryStat)
  if(it.slot==='steel')return{label:'Damage',e:f('SlashingDamage')};
  if(it.slot==='silver')return{label:'Damage',e:f('SilverDamage')};
  if(['chest','gloves','trousers','boots'].includes(it.slot))return{label:'Armor',e:f('armor')};
