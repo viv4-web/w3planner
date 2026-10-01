@@ -70,12 +70,16 @@ def main():
     threading.Thread(target=server.serve_forever, daemon=True).start(); base = "http://127.0.0.1:%d/" % port
     ref = json.loads((ROOT / "tests/fixtures/tooltips_ref.json").read_text())
     print("\n== Equipment data (data/items.json) ==")
-    items = json.loads((ROOT / "data/items.json").read_text(encoding="utf-8")); manifest = json.loads((ROOT / "art/manifest.json").read_text()); slots = {x["id"] for x in items["slots"]}; ids = [r["id"] for r in items["items"]]
-    check("%d items, ids unique, every slot and set reference is valid" % len(ids), len(set(ids)) == len(ids) and all(r["slot"] in slots and (r["set"] is None or r["set"] in items["sets"]) for r in items["items"])
-          and all(p in set(ids) for s_ in items["sets"].values() for p in s_["pieces"]) and all(r["name"] for r in items["items"]))
-    icon_ids = sorted({r["icon"][len("@@img:"):-2] for r in items["items"] if r["icon"]}); item_slots = sorted(k for k in manifest if k.startswith("items/") and "/ph-" not in k)
+    items = json.loads((ROOT / "data/items.json").read_text(encoding="utf-8")); manifest = json.loads((ROOT / "art/manifest.json").read_text()); slots = {x["id"] for x in items["slots"]}; recs = items["items"]
+    per = {rs: [r["id"] for r in recs if rs in r["rulesets"]] for rs in items["rulesets"]}
+    check("%d items; ids unique within each ruleset; every slot, set and ruleset reference is valid" % len(recs), all(len(v) == len(set(v)) for v in per.values()) and all(r["slot"] in slots and (r["set"] is None or r["set"] in items["sets"]) and r["rulesets"] for r in recs)
+          and all(p in set(per[rs]) for s_ in items["sets"].values() for rs in per for p in s_[rs]["pieces"]) and all(r["name"] for r in recs))
+    sb = [(s_, b) for s_, v in items["sets"].items() for b in v["bonuses"]]
+    check("every set bonus has its thresholds, a filled text and a script and XML source (%d bonuses)" % len(sb), len(sb) == 13 and all(b["pieces"] in (3, 6) and "$S$" not in b["text"] and any(x.startswith("scripts/") for x in b["source"]) for _, b in sb), [s_ for s_, b in sb if "$S$" in b["text"]])
+    check("required levels follow the game's formula (a Grandmaster Feline armor needs level 40 in ng, 70 in ng_plus)", next(r["required_level"] for r in recs if r["id"] == "Lynx Armor 4" and r["rulesets"] == ["ng"]) == 40 and next(r["required_level"] for r in recs if r["id"] == "Lynx Armor 4" and r["rulesets"] == ["ng_plus"]) == 70)
+    icon_ids = sorted({r["icon"][len("@@img:"):-2] for r in recs if r["icon"]}); item_slots = sorted(k for k in manifest if k.startswith("items/") and "/ph-" not in k)
     check("every icon token has a manifest slot, and no manifest slot is unused", icon_ids == item_slots, sorted(set(icon_ids) ^ set(item_slots))[:3])
-    check("every equipment icon shows the drawn placeholder of its slot in the public build", all(manifest[i].get("placeholder_as") == "items/ph-" + next(r["slot"] for r in items["items"] if r["icon"] == "@@img:%s@@" % i) and (ROOT / "art/placeholder" / (manifest[i]["placeholder_as"] + ".png")).is_file() for i in icon_ids))
+    check("every equipment icon shows the drawn placeholder of its slot in the public build", all(manifest[i].get("placeholder_as") == "items/ph-" + next(r["slot"] for r in recs if r["icon"] == "@@img:%s@@" % i) and (ROOT / "art/placeholder" / (manifest[i]["placeholder_as"] + ".png")).is_file() for i in icon_ids))
     if a.variant == "game": check("the private art folder has every equipment icon", all((Path(a.art_dir) / (i + ".png")).is_file() for i in icon_ids), [i for i in icon_ids if not (Path(a.art_dir) / (i + ".png")).is_file()][:3])
     N = 60 if a.quick else 300
     with sync_playwright() as pw:
@@ -139,6 +143,8 @@ def main():
         print("\n== Release gate logic (tools/deploy.py, with a fake Cloudflare) ==")
         gt = subprocess.run([sys.executable, str(ROOT / "tests/test_deploy_gate.py")], capture_output=True, text=True)
         check("preview never touches production; promote and automatic rollback behave", gt.returncode == 0, "" if gt.returncode == 0 else gt.stderr.strip()[-300:])
+        bt = subprocess.run([sys.executable, str(ROOT / "tests/test_bundle.py")], capture_output=True, text=True)
+        check("the W3 bundle reader: format, zlib, snappy, lz4 (hand-made data)", bt.returncode == 0, "" if bt.returncode == 0 else bt.stderr.strip()[-300:])
         sw = subprocess.run([sys.executable, str(ROOT / "tests/test_smoke_wait.py")], capture_output=True, text=True)
         check("the smoke test waits for a new deployment on the plain URL, never a cache-busted one", sw.returncode == 0, "" if sw.returncode == 0 else sw.stderr.strip()[-300:])
         if a.variant == "placeholder":

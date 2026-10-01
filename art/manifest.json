@@ -777,6 +777,11 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-chest"
  },
+ "items/armors/common_light_lvl3_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
  "items/armors/common_light_lvl4_01_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -1217,6 +1222,16 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-silver"
  },
+ "items/weapons/dwarven_silver_sword_lvl1-64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
+ "items/weapons/elven_silver_sword_lvl1-64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
  "items/weapons/gnomish_silver_sword_lvl2-64x128": {
   "game": "png",
   "placeholder": "png",
@@ -1262,7 +1277,7 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-silver"
  },
- "items/weapons/silver_sword_lvl6_64x128": {
+ "items/weapons/silver_sword_lvl7_64x128": {
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-silver"
@@ -1471,16 +1486,6 @@
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-silver"
- },
- "items/weapons/top_notch_silver_sword": {
-  "game": "png",
-  "placeholder": "png",
-  "placeholder_as": "items/ph-silver"
- },
- "items/weapons/top_notch_steel_sword": {
-  "game": "png",
-  "placeholder": "png",
-  "placeholder_as": "items/ph-steel"
  },
  "items/weapons/unique_abarad_64x128": {
   "game": "png",

@@ -7,7 +7,8 @@ The planner's numbers, names and descriptions come from the game's own files, no
 ## Tools in `tools/extract/`
 | Script | Does |
 |---|---|
-| `w3dec.py` | decodes `en.w3strings` (v164; UTF-8 since the remaster) into id to text |
+| `w3dec.py` | decodes `en.w3strings` (v164 UTF-8, and the older UTF-16 versions) into id to text; also importable |
+| `bundle.py` | reads W3 `.bundle` files: list, extract by glob, info (zlib, snappy, lz4; not Doboz) |
 | `w3tex.py` | extracts textures (icons) from `texture.cache` |
 | `swfimg.py` | extracts the images embedded in the Flash menu files (`panel_character_dupe.swf` and friends) |
 | `tr.py` | translates the game's tooltip code (`characterMenu.ws`, `characterMenuDupe.ws`) into JavaScript |
@@ -23,7 +24,7 @@ The planner's numbers, names and descriptions come from the game's own files, no
 | `MUT.json`, `MASTER.json` | the 12 mutations and the master mutation: costs, prerequisites, colours, descriptions | `bob_abilities/abilities_plus/geralt_mutations.xml`; description numbers from `effects_ep2.xml` and `playerWitcher.ws` |
 | `MUTS.json` | the 9 regular mutagens (red, blue, green; lesser, regular, greater) and their bonuses | ability definitions and items in `def_item_ingredients.xml` |
 | `SPECIAL_MUT.json` | the 27 special (monster) mutagens, 9 per colour, `[label, colour]` | items tagged `MutagenIngredient` with `mod_alchemy_table` in `def_item_ingredients.xml`; all use the lesser ability, so they give the lesser bonus |
-| `items.json` | equipment: 9 slots, school and DLC sets with all tiers, relics, crossbows, bolts, masks; per item the id, name, slot, set, tier, quality, stats, bonuses, rune/glyph slots, icon | `items/def_item_*.xml`, `dlc18_*`, `w3r_*` (items and abilities), `inventory/` (icons), `en.w3strings` (names). **Scripted:** `tools/extract_items.py`. Required level, set bonuses and the damage/armour of autogen items are not in the files (null) |
+| `items.json` | equipment (two rulesets, ng and ng_plus): 9 slots, school and DLC sets with tiers, set bonuses with thresholds and text, relics, crossbows, bolts, masks; per item id, name, slot, set, tier, quality, required level, stats, bonuses, rune/glyph slots, icon | `bundles/xml.bundle`, `ep1.bundle`, `bob.bundle` (items and abilities XML, `*_plus` = New Game Plus), `scripts/*.ws` (set bonuses, level rule), `inventory/` (icons), `en.w3strings` (names, texts). **Scripted:** `tools/extract_items.py` with `tools/extract/bundle.py` |
 | `ART.json`, `GA.json`, `MUTIMG.json`, `LOCK.js` | only art slot tokens (`@@img:...@@`), resolved at build time | see `art/manifest.json` |
 
 Unlock thresholds come from `geralt_skills.xml` too: 12 skill slots at total skill points 0, 2, 4, 6, 8, 10, 12, 15, 18, 22, 26, 30; 4 mutagen sockets at 2, 9, 16, 28; 4 mutation slots after 2, 4, 8 and 12 researched mutations. Skill slots and sockets unlock by total points (level minus one plus bonus points), not by level.
