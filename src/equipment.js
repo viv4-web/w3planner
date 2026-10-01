@@ -50,16 +50,22 @@ function eqTip(it,withTiers){const q=EQ_QUAL[it.quality]||['',''],p=eqPrimary(it
  lines.forEach(e=>{h+=`<div class="eqt-line" style="color:${eqColor(e)}"><span>${eqEsc(e.label||e.stat)}</span><b>${eqEsc(eqVal(e))}</b></div>`});
  const meta=[];if(it.enhancement_slots)meta.push(it.enhancement_slots+' '+(it.enhancement_kind||'upgrade')+' slot'+(it.enhancement_slots>1?'s':''));if(it.weight)meta.push('Weight '+(Math.round(it.weight*100)/100));
  if(meta.length)h+=`<div class="eqt-meta">${eqEsc(meta.join(' · '))}</div>`;
- if(st){h+=`<div class="eqt-set"><b>${eqEsc(st.name)}</b>${st.bonuses.length?(it.set_bonus_piece?' · counts toward the set bonus':' · does not count toward the set bonus in this mode'):' · no set bonus'}</div>`}
+ if(st){h+=`<div class="eqt-set"><b>${eqEsc(st.name)}</b>${st.bonuses.length?(it.set_bonus_piece?' · counts toward the set bonus':' · does not count toward the set bonus: '+eqWhy(it)):' · no set bonus'}</div>`}
  return h+'</div>'}
 
 // ---- sets: pieces counted by the SetBonusPiece rule, bonuses at 3 and 6 ----
+// The game counts every equipped item that carries the SetBonusPiece tag, whatever its slot (UpdateItemSetBonuses, playerWitcher.ws:10972-10987; tag name gameParams.ws:345). So the reason an item is not
+// counted is read from the data: no tag on any item of its kind (the set crossbows), none on any piece of its slot, or only some tiers carry it (NG: Grandmaster only).
+function eqWhy(it){const d=eqData(),sib=((d&&d.bySlot[it.slot])||[]).filter(x=>x.set===it.set),tagged=sib.filter(x=>x.set_bonus_piece);
+ if(it.slot==='crossbow'||it.slot==='bolts')return'crossbows and bolts carry no set bonus tag in the game data, so they never count';
+ if(!tagged.length)return'no '+EQ_NAME[it.slot].toLowerCase()+' of this set carries the set bonus tag';
+ const tiers=[...new Set(tagged.map(x=>x.tier_name||'Basic'))];return'in this mode only the '+tiers.join(', ')+(tiers.length>1?' tiers carry':' tier carries')+' the set bonus tag'}
 function eqSets(){const d=eqData(),out=[];if(!d||!EQ.meta)return out;
  Object.keys(EQ.meta.sets).forEach(sid=>{const st=EQ.meta.sets[sid],mine=EQ_SLOTS.map((s,i)=>eqCur(i)).filter(it=>it&&it.set===sid);if(!mine.length)return;
-  out.push({sid,st,n:mine.length,counted:mine.filter(it=>it.set_bonus_piece).length})});return out}
+  out.push({sid,st,n:mine.length,counted:mine.filter(it=>it.set_bonus_piece).length,skipped:mine.filter(it=>!it.set_bonus_piece)})});return out}
 function eqSetHtml(x){const cur=b=>b.per_piece?String(Math.round(+b.per_piece*x.counted*100)/100):'';
  return`<section class="eqset"><h3>${eqEsc(x.st.name)} <small>${x.counted} counted, ${x.n} worn</small></h3>`+(x.st.bonuses.length?`<ul>`+x.st.bonuses.map(b=>{const on=x.counted>=b.pieces;return`<li class="${on?'lit':'dim'}"><b>${b.pieces} pieces${on?'':' (not active)'}</b> ${eqEsc(b.text.replace('{current}',cur(b)))}</li>`}).join('')+`</ul>`:`<p class="dim">This set has no set bonus.</p>`)+
-  (x.counted<x.n?`<p class="dim">${x.n-x.counted} worn piece${x.n-x.counted>1?'s do':' does'} not count: in this mode only some tiers carry the set bonus tag.</p>`:'')+`</section>`}
+  x.skipped.map(it=>`<p class="dim">${eqEsc(it.name)} is not counted: ${eqEsc(eqWhy(it))}.</p>`).join('')+`</section>`}
 
 // ---- the equipment screen ----
 function eqSlotHtml(slot){const i=EQ_SLOTS.indexOf(slot),it=eqCur(i),low=it&&eqLow(it),q=it&&EQ_QUAL[it.quality]?EQ_QUAL[it.quality][1]:'#6b5a42',sq=['bolts','mask'].includes(slot);

@@ -16,7 +16,9 @@ header,footer{width:100%;max-width:2400px;margin-left:auto;margin-right:auto;pad
 @media (min-width:1440px){
  .page{display:grid;grid-template-columns:minmax(0,1fr) 1px clamp(380px,28vw,560px);column-gap:clamp(12px,1.2vw,24px);align-items:stretch}
  .vdiv{height:auto;width:1px;margin:0;background:linear-gradient(180deg,transparent,#8a6a36 4%,#8a6a36 96%,transparent);box-shadow:0 0 14px #8a6a3666}
- .eqarea{position:relative;margin:0;min-height:0}.eqinner{position:absolute;inset:0;overflow:auto;overscroll-behavior:contain}   /* the panel is as tall as the skills area and scrolls inside */
+ .eqarea{position:relative;margin:0;min-height:0}   /* the panel is as tall as the skills area; its header stays, the body scrolls */
+ .eqinner{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;padding-bottom:0}.eqhead,.eqrs{flex:none}
+ .eqbody{flex:1 1 0;min-height:0;overflow-y:auto;overscroll-behavior:contain}.eqbody>.eqcols,.eqbody>.eqmsg{padding-bottom:16px}   /* the scroller ends at the panel's bottom edge; the 16 px is content, inside it */
  #eqbtn{display:none}
 }
 /* >= 1024: tree and mutations side by side. ONE scale (--sc, set by fitSkills() in app.js: min(width, height, 1)) drives both. At --sc 1 the tree svg (700 units wide, art 64 px) and the

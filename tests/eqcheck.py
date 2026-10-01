@@ -75,6 +75,35 @@ def scalecheck(b, base, check, label):
         pg.close()
 
 
+URSINE = ["Bear School steel sword 4", "Bear School silver sword 4", "Bear School Crossbow", "Broadhead Bolt", "Bear Armor 4", "Bear Gloves 5", "Bear Pants 5", "Bear Boots 5", "q702_vampire_mask"]   # all nine slots; the last card is the mask
+
+
+def gear(pg, ids):
+    return pg.evaluate("""(ids=>{const d=eqData();EQ_SLOTS.forEach((s,i)=>{const it=ids[i]&&d.byId.get(ids[i]);S.gear[i]=it&&it.slot===s?it.n:0});save();eqRender(true);return S.gear.filter(x=>x).length})""", ids)
+
+
+def scrollcheck(b, base, check, label):
+    """The panel's scroller ends at the panel's bottom edge, so the last stats card is reachable at every size; the header stays; stacked layouts have no inner scroll."""
+    for w, h in ((2560, 1440), (1920, 1080), (1440, 900), (1280, 800), (390, 844)):
+        pg = b.new_page(viewport={"width": w, "height": h}, is_mobile=w < 600, has_touch=w < 600); pg.goto(base); until(pg, READY); pg.fill("#lvl", "100"); n = gear(pg, URSINE); pg.wait_for_timeout(300); tag = "%s: at %dx%d" % (label, w, h)
+        if w >= 1440:
+            before = pg.evaluate("document.querySelector('#eqpanel .eqrs').getBoundingClientRect().top")
+            r = pg.evaluate("""()=>{const b=document.getElementById('eqbody');b.scrollTop=1e6;const A=document.getElementById('eqpanel').getBoundingClientRect(),B=b.getBoundingClientRect(),c=[...document.querySelectorAll('#eqbody .eqitem')].pop().getBoundingClientRect();
+              return{n:document.querySelectorAll('#eqbody .eqitem').length,panelB:A.bottom,bodyB:B.bottom,lastB:c.bottom,lastT:c.top,bodyT:B.top,head:document.querySelector('#eqpanel .eqrs').getBoundingClientRect().top,scrolls:b.scrollHeight>b.clientHeight,end:Math.abs(b.scrollHeight-b.clientHeight-b.scrollTop)<=1}}""")
+            check("%s: scrolled to the end, the last stats card (%d cards) is fully inside the panel's visible box" % (tag, r["n"]), n == 9 and r["n"] == 9 and r["end"] and r["lastB"] <= r["bodyB"] + 0.5 and r["lastB"] <= r["panelB"] and r["lastT"] >= r["bodyT"], r)
+            check("%s: the scroller ends at the panel's bottom edge (%.0f, %.0f) and the header (title, level, mode toggle) stays put (%.0f, %.0f)" % (tag, r["bodyB"], r["panelB"], before, r["head"]), abs(r["panelB"] - r["bodyB"]) <= 3 and abs(before - r["head"]) <= 0.5 and r["scrolls"], r)
+        else:
+            r = pg.evaluate("""()=>{const b=document.getElementById('eqbody');window.scrollTo(0,1e7);const c=[...document.querySelectorAll('#eqbody .eqitem')].pop().getBoundingClientRect();return{inner:b.scrollHeight>b.clientHeight+1,ov:getComputedStyle(b).overflowY,lastB:c.bottom,vh:innerHeight}}""")
+            check("%s: stacked: no inner scroll, and the last stats card is reachable with the page scroll (bottom %d of %d)" % (tag, r["lastB"], r["vh"]), not r["inner"] and r["ov"] == "visible" and 0 < r["lastB"] <= r["vh"], r)
+        pg.close()
+    pg = b.new_page(viewport={"width": 1440, "height": 900}); pg.goto(base); until(pg, READY); pg.fill("#lvl", "100"); E = pg.evaluate
+    gear(pg, URSINE[:3] + ["", "Bear Armor 4", "Bear Gloves 5", "Bear Pants 5", "Bear Boots 5"]); h3 = E("document.querySelector('.eqset h3').textContent"); notes = E("[...document.querySelectorAll('.eqset p.dim')].map(p=>p.textContent)"); cb = E("eqCur(2).name")
+    check("%s: Ursine swords + 4 armor + the Basic crossbow: '6 counted, 7 worn', and the crossbow is named with the real reason (%s)" % (label, notes), "6 counted, 7 worn" in h3 and len(notes) == 1 and notes[0] == cb + " is not counted: crossbows and bolts carry no set bonus tag in the game data, so they never count.", [h3, notes, cb])
+    gear(pg, ["Bear School steel sword 3", "Bear School silver sword 4", "", "", "Bear Armor 4", "Bear Gloves 5", "Bear Pants 5", "Bear Boots 5"]); notes = E("[...document.querySelectorAll('.eqset p.dim')].map(p=>p.textContent)")
+    check("%s: a lower-tier piece is not counted because of its tier, and the note says which tier counts (%s)" % (label, notes), len(notes) == 1 and "only the Grandmaster tier carries the set bonus tag" in notes[0] and "steel sword" in notes[0].lower(), notes)
+    pg.close()
+
+
 def levelcheck(b, base, check, label, pg):
     """The level requirement: the game blocks GetItemLevel(item) > GetLevel() (r4Player.ws:11723). Only the Level field counts."""
     E = pg.evaluate
@@ -135,7 +164,7 @@ def run(b, base, check, label, quick=False):
     errs, events = [], []; pg = b.new_page(viewport={"width": 1400, "height": 950}); pg.on("pageerror", lambda e: errs.append(str(e).split("\n")[0][:100])); E = pg.evaluate
     pg.on("load", lambda p: events.append("load")); pg.on("request", lambda r: events.append("data") if "/data/items" in r.url else None)
     pg.goto(base); check("%s: the panel shows right away and the equipment data loads after the page has loaded, only items.js and items_ng.js" % label, until(pg, READY) and E(KEYS) == ["items.js", "items_ng.js"] and events.index("load") < (events.index("data") if "data" in events else 99), [events[:4], E(KEYS)])
-    layout(b, base, check, label); scalecheck(b, base, check, label)
+    layout(b, base, check, label); scalecheck(b, base, check, label); scrollcheck(b, base, check, label)
     pg.fill("#lvl", "100")      # the planner starts at Level 1 and the game blocks items above the level, so the walk-through below runs at the top level
     check("%s: weapons (steel, silver, crossbow, bolts) then armor (chest, gloves, trousers, boots, mask); one greyed strip \"Consumables & bombs, coming later\"" % label,
           E("[...document.querySelectorAll('#eqbody .eqw .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "steel,silver,crossbow,bolts" and E("[...document.querySelectorAll('#eqbody .eqarm .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "chest,gloves,trousers,boots,mask"
