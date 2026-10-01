@@ -61,6 +61,760 @@
    "kind": "cosmetic"
   }
  ],
+ "stat_display": [
+  {
+   "stat": "toxicity_offset",
+   "line": 0,
+   "color": null,
+   "percent": false,
+   "type": null,
+   "mod": null
+  },
+  {
+   "stat": "toxicity",
+   "line": 1,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "toxicity",
+   "mod": "1"
+  },
+  {
+   "stat": "duration",
+   "line": 2,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "duration",
+   "mod": "1"
+  },
+  {
+   "stat": "ExplosionRadius",
+   "line": 3,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "0.1"
+  },
+  {
+   "stat": "SlashingDamage",
+   "line": 4,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "2"
+  },
+  {
+   "stat": "PhysicalDamage",
+   "line": 5,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "2"
+  },
+  {
+   "stat": "SilverDamage",
+   "line": 6,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "2"
+  },
+  {
+   "stat": "MoraleDamage",
+   "line": 7,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "2"
+  },
+  {
+   "stat": "FireDamage",
+   "line": 8,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "2"
+  },
+  {
+   "stat": "PoisonDamage",
+   "line": 9,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "2"
+  },
+  {
+   "stat": "PiercingDamage",
+   "line": 10,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "2"
+  },
+  {
+   "stat": "BludgeoningDamage",
+   "line": 11,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "2"
+  },
+  {
+   "stat": "FrostDamage",
+   "line": 12,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "2"
+  },
+  {
+   "stat": "ShockDamage",
+   "line": 13,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "2"
+  },
+  {
+   "stat": "armor_reduction",
+   "line": 14,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "0.1"
+  },
+  {
+   "stat": "stamina",
+   "line": 15,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "vitality",
+   "line": 16,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "vitality",
+   "mod": "0.4"
+  },
+  {
+   "stat": "attack_power",
+   "line": 17,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "spell_power",
+   "line": 18,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "magic",
+   "mod": "0.4"
+  },
+  {
+   "stat": "spell_power_aard",
+   "line": 19,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "magic",
+   "mod": "0.4"
+  },
+  {
+   "stat": "spell_power_igni",
+   "line": 20,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "magic",
+   "mod": "0.4"
+  },
+  {
+   "stat": "spell_power_quen",
+   "line": 21,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "magic",
+   "mod": "0.4"
+  },
+  {
+   "stat": "spell_power_yrden",
+   "line": 22,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "magic",
+   "mod": "0.4"
+  },
+  {
+   "stat": "spell_power_axii",
+   "line": 23,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "magic",
+   "mod": "0.4"
+  },
+  {
+   "stat": "vitalityRegen",
+   "line": 24,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "vitality",
+   "mod": "0.4"
+  },
+  {
+   "stat": "staminaRegen",
+   "line": 25,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "focus_gain",
+   "line": 26,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "armor",
+   "line": 27,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "defence",
+   "mod": "2"
+  },
+  {
+   "stat": "physical_resistance",
+   "line": 28,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "physical_resistance_perc",
+   "line": 29,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "piercing_resistance",
+   "line": 30,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "piercing_resistance_perc",
+   "line": 31,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "bludgeoning_resistance",
+   "line": 32,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "bludgeoning_resistance_perc",
+   "line": 33,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "force_resistance",
+   "line": 34,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "shock_resistance",
+   "line": 35,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "poison_resistance_perc",
+   "line": 36,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "poison_resistance",
+   "line": 37,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "bleeding_resistance",
+   "line": 38,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "bleeding_resistance_perc",
+   "line": 39,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "fire_resistance",
+   "line": 40,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "frost_resistance",
+   "line": 41,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "slashing_resistance_perc",
+   "line": 42,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "rending_resistance_perc",
+   "line": 43,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "elemental_resistance_perc",
+   "line": 44,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "critical_hit_damage_bonus",
+   "line": 45,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "critical_hit_chance",
+   "line": 46,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "burning_resistance_perc",
+   "line": 47,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "defence",
+   "mod": "0.4"
+  },
+  {
+   "stat": "BurningEffect",
+   "line": 48,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "PoisonEffect",
+   "line": 49,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "BleedingEffect",
+   "line": 50,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "BlindnessEffect",
+   "line": 51,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "SlowdownEffect",
+   "line": 52,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "FrozenEffect",
+   "line": 53,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "ConfusionEffect",
+   "line": 54,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "StaggerEffect",
+   "line": 55,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "repair_object_weapon_bonus",
+   "line": 56,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "defence",
+   "mod": "0.2"
+  },
+  {
+   "stat": "repair_object_armor_bonus",
+   "line": 57,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.2"
+  },
+  {
+   "stat": "vsCursed_attack_power",
+   "line": 58,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "vsMagicals_attack_power",
+   "line": 59,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "vsBeast_attack_power",
+   "line": 60,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "vsFiend_attack_power",
+   "line": 61,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "vsGiant_attack_power",
+   "line": 62,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "vsHuman_attack_power",
+   "line": 63,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "vsHybrid_attack_power",
+   "line": 64,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "vsInsectoid_attack_power",
+   "line": 65,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "vsNecrophage_attack_power",
+   "line": 66,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "vsOrnithosaur_attack_power",
+   "line": 67,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "vsSpecter_attack_power",
+   "line": 68,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "vsVampire_attack_power",
+   "line": 69,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "vsDraconide_attack_power",
+   "line": 70,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "vsOgre_attack_power",
+   "line": 71,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "vsRelic_attack_power",
+   "line": 72,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "desc_burningchance_mult",
+   "line": 73,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "desc_bleedingchance_mult",
+   "line": 74,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "desc_freezingchance_mult",
+   "line": 75,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "desc_poinsonchance_mult",
+   "line": 76,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "desc_confusionchance_mult",
+   "line": 77,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "desc_staggerchance_mult",
+   "line": 78,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "desc_indestructible",
+   "line": 79,
+   "color": "934913",
+   "percent": true,
+   "type": "defence",
+   "mod": "0.2"
+  },
+  {
+   "stat": "instant_kill_chance_mult",
+   "line": 80,
+   "color": "934913",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.8"
+  },
+  {
+   "stat": "dismember_chance_mult",
+   "line": 81,
+   "color": "934913",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.4"
+  },
+  {
+   "stat": "nonhuman_exp_bonus_when_fatal",
+   "line": 82,
+   "color": "934913",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.2"
+  },
+  {
+   "stat": "human_exp_bonus_when_fatal",
+   "line": 83,
+   "color": "934913",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.2"
+  },
+  {
+   "stat": "quen_chance_on_projectile",
+   "line": 84,
+   "color": "934913",
+   "percent": true,
+   "type": "defence",
+   "mod": "0.2"
+  },
+  {
+   "stat": "bonus_money",
+   "line": 85,
+   "color": "934913",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.2"
+  },
+  {
+   "stat": "desc_reinforced",
+   "line": 86,
+   "color": "934913",
+   "percent": false,
+   "type": "defence",
+   "mod": "0.2"
+  },
+  {
+   "stat": "bonus_herb_chance",
+   "line": 87,
+   "color": "934913",
+   "percent": true,
+   "type": "defence",
+   "mod": "0.1"
+  },
+  {
+   "stat": "returned_silver_damage_mult",
+   "line": 88,
+   "color": "934913",
+   "percent": true,
+   "type": "attack",
+   "mod": "0.2"
+  },
+  {
+   "stat": "encumbrance",
+   "line": 89,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "defence",
+   "mod": "0.2"
+  },
+  {
+   "stat": "panic",
+   "line": 90,
+   "color": "BAADA0",
+   "percent": false,
+   "type": "defence",
+   "mod": "0.1"
+  },
+  {
+   "stat": "indestructible",
+   "line": 91,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "defence",
+   "mod": null
+  },
+  {
+   "stat": "repairValue",
+   "line": 92,
+   "color": "BAADA0",
+   "percent": true,
+   "type": null,
+   "mod": null
+  },
+  {
+   "stat": "lifesteal",
+   "line": 93,
+   "color": "BAADA0",
+   "percent": true,
+   "type": "attack",
+   "mod": null
+  }
+ ],
  "sets": {
   "lynx": {
    "name": "Feline",
@@ -1566,8 +2320,8 @@
    ]
   },
   "stat_list": {
-   "value": "a multiplicative value is a percentage (value x 100, rounded, 'NN %'); focus_gain is shown as is; other values are rounded to a whole number",
-   "order_color_percent": "the order, colour and percentage flag of each line come from gameplay/globals/tooltip_settings.csv, which is NOT in the files we have",
+   "value": "a percentage line shows value x 100 rounded, 'NN %'; a non-percentage focus_gain is shown as is; other non-percentage values are rounded to a whole number; each stat line has the colour of its stat_display row",
+   "order_color_percent": "gameplay/globals/tooltip_settings.csv: only the stats listed there are shown, in its row order (stat_display holds line, colour, percent; each item stat carries its line and percent); percent is the CSV flag, or always true for a multiplicative (type mult) value",
    "source": [
     "scripts/game/gui/_old/components/guiTooltipComponent.ws:1075",
     "scripts/game/components/inventoryComponent.ws:3007"

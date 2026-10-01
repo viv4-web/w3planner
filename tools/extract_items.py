@@ -119,6 +119,19 @@ class Scripts:
         return num(m.group(1))
 
 
+def load_tooltip_settings(game_dir):
+    """gameplay/globals/tooltip_settings.csv (from the game's bundles, see tools/pc/extract_on_pc.py): the stat lines of the item tooltip.
+    Row order = display order; columns: attribute, colour (hex), percentage flag, attr type, attr mod. A stat that is not listed is not shown. {} if the file is absent."""
+    p = Path(game_dir) / "csv" / "gameplay" / "globals" / "tooltip_settings.csv"
+    if not p.is_file(): return {}
+    out = {}
+    for row in p.read_text(encoding="utf-8-sig").splitlines()[1:]:
+        c = (row.split(";") + [""] * 5)[:5]
+        if not c[0].strip(): continue                                                  # separator rows are skipped by the game too (StrLen <= 0)
+        out[c[0].strip().lower()] = {"stat": c[0].strip(), "line": len(out), "color": c[1].strip() or None, "percent": c[2].strip().upper() == "TRUE", "type": c[3].strip() or None, "mod": c[4].strip() or None}
+    return out
+
+
 class Game:
     def __init__(self, game_dir, ruleset, strings=None):
         self.dir = Path(game_dir); self.ruleset = ruleset; self.items, self.abilities, self.file_of, self.parse_failures, self.duplicate_items = {}, {}, {}, [], []
@@ -135,7 +148,7 @@ class Game:
                 if n in self.items: self.duplicate_items.append((n, self.file_of[n], fname))   # a later package redefines an item
                 self.items[n], self.file_of[n] = it, fname
         self.strs, self.keys = strings or w3dec.decode(str(self.dir / "en.w3strings"))
-        self.unresolved = defaultdict(set)
+        self.unresolved = defaultdict(set); self.tooltip = load_tooltip_settings(game_dir)
 
     def text(self, key):
         return self.strs.get(self.keys.get(w3dec.h(key))) if key else None
@@ -163,10 +176,15 @@ def stats_of(game, item):
             if c.tag == "tags": continue
             lab = game.label(c.tag)
             if lab is None: game.unresolved[c.tag].add(item.get("name"))
-            if c.get("is_ability") == "true": entries.append({"stat": c.tag, "label": lab, "effect": True, "ability": n}); continue
+            t = game.tooltip.get(c.tag.lower())
+            if c.get("is_ability") == "true":
+                e = {"stat": c.tag, "label": lab, "effect": True, "ability": n}
+                if t: e.update(line=t["line"], percent=t["percent"])
+                entries.append(e); continue
             if c.get("min") is None: continue
             e = {"stat": c.tag, "label": lab, "type": c.get("type") or "base", "min": num(c.get("min")), "ability": n}
             if c.get("max") is not None and num(c.get("max")) != e["min"]: e["max"] = num(c.get("max"))
+            if t: e.update(line=t["line"], percent=t["percent"] or e["type"] == "mult")      # a multiplicative value is always a percentage (GetItemTooltipAttributes)
             entries.append(e)
     return entries, names, missing
 
@@ -263,7 +281,8 @@ def build_ruleset(g, sc):
                "tier": tier, "tier_name": tier_name, "quality": q or None, "quality_name": QUALITY.get(q), "required_level": lvl,
                "armor_class": next((c for t, c in (("LightArmor", "light"), ("MediumArmor", "medium"), ("HeavyArmor", "heavy")) if t in tags), None) if SLOT_KIND[slot] == "armor" else None,
                "weight": weight, "price": num(it.get("price")) if it.get("price") else None,
-               "base": [{k: v for k, v in e.items() if k != "ability"} for e in base], "bonuses": [{k: v for k, v in e.items() if k != "ability"} for e in bonus],
+               "base": [{k: v for k, v in e.items() if k != "ability"} for e in sorted(base, key=lambda e: e.get("line", 9999))],
+               "bonuses": [{k: v for k, v in e.items() if k != "ability"} for e in sorted(bonus, key=lambda e: e.get("line", 9999))],
                "enhancement_slots": enh, "enhancement_kind": {"weapon": "rune", "armor": "glyph"}.get(SLOT_KIND[slot]) if enh else None,
                "set_bonus_piece": ("SetBonusPiece" in tags) or None, "quest": (("Quest" in tags) or bool(re.match(r"^(q|mq|sq)\d", name))) or None,
                "autogen": bool(autogen) or None, "level_varies": bool(autogen) or None, "description": desc, "icon_path": ic, "icon": "@@img:%s@@" % slot_id if slot_id else None,
@@ -314,7 +333,7 @@ def build(game_dir):
     ag = {n: [{k: v for k, v in (("stat", c.tag), ("type", c.get("type")), ("min", num(c.get("min"))), ("max", num(c.get("max")) if c.get("max") is not None else None)) if v is not None}
               for c in a if c.get("min") is not None] for n, a in g0.abilities.items() if n.startswith("autogen_")}
     data = {"version": 4, "default_ruleset": "ng", "rulesets": {"ng": "first playthrough (gameplay/items, gameplay/abilities)", "ng_plus": "New Game Plus (the *_plus folders); 'NGP X' items are the carry-over copies of X"},
-            "slots": [{"id": s, "category": c, "label": l, "kind": k} for s, c, l, k in SLOTS], "sets": sets_out, "rules": rules(g0, sc, set_rules),
+            "slots": [{"id": s, "category": c, "label": l, "kind": k} for s, c, l, k in SLOTS], "stat_display": sorted(g0.tooltip.values(), key=lambda t: t["line"]), "sets": sets_out, "rules": rules(g0, sc, set_rules),
             "autogen": {"note": AUTOGEN_NOTE, "abilities": ag}, "items": items}
     report = {"notes": notes, "unresolved_stat_labels": unresolved, "duplicate_item_definitions": dup, "per_ruleset": {rs: len(v) for rs, v in per.items()},
               "items_without_icon_by_set": dict(Counter((r["set"] or r["group"]) for r in items if not r["icon"])), "parse_failures": []}
@@ -399,8 +418,8 @@ def rules(g, sc, set_rules):
                          "crossbow": "'Damage' = the equipped bolt's primary stat (Bodkin Bolt PiercingDamage if none) x the crossbow's attack_power multiplier",
                          "shown": "rounded to a whole number; steel swords never list SilverDamage and silver swords never list SlashingDamage in the stat list",
                          "source": [sc.ref(IC, r"function GetItemPrimaryStatImplById"), sc.ref(IC, r"function GetItemTooltipAttributes"), sc.ref(GT, r"function GetCrossbowPrimatyStat")]},
-        "stat_list": {"value": "a multiplicative value is a percentage (value x 100, rounded, 'NN %'); focus_gain is shown as is; other values are rounded to a whole number",
-                      "order_color_percent": "the order, colour and percentage flag of each line come from gameplay/globals/tooltip_settings.csv, which is NOT in the files we have",
+        "stat_list": {"value": "a percentage line shows value x 100 rounded, 'NN %'; a non-percentage focus_gain is shown as is; other non-percentage values are rounded to a whole number; each stat line has the colour of its stat_display row",
+                      "order_color_percent": "gameplay/globals/tooltip_settings.csv: only the stats listed there are shown, in its row order (stat_display holds line, colour, percent; each item stat carries its line and percent); percent is the CSV flag, or always true for a multiplicative (type mult) value",
                       "source": [sc.ref(GT, r"function AddItemStats"), sc.ref(IC, r"function GetItemTooltipAttributes")]},
         "quality": {"1": "common", "2": "masterwork", "3": "magic", "4": "relic", "5": "set (witcher gear)", "source": [sc.ref(GT, r"function GetItemRarityDescription")]},
         "ng_plus": {"text": "Two rulesets. ng = first playthrough (gameplay/items): the witcher gear tiers Basic to Grandmaster, levels 17 to 40; only the top tier carries SetBonusPiece. ng_plus = New Game Plus (the *_plus folders): "

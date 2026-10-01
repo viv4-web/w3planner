@@ -82,6 +82,10 @@ def main():
     lvl = lambda rs, i: next(r["required_level"] for r in per[rs] if r["id"] == i)
     check("required levels follow the game's formula (a Grandmaster Feline armor needs level 40 in ng, 70 in ng_plus)", lvl("ng", "Lynx Armor 4") == 40 and lvl("ng_plus", "Lynx Armor 4") == 70)
     check("autogen relics have no level and say it varies", all(r["level_varies"] and r["required_level"] is None for r in recs if r["autogen"]) and any(r["autogen"] for r in recs))
+    shown = [e for r in recs for e in r["base"] + r["bonuses"] if "line" in e]
+    check("stat lines follow tooltip_settings.csv (%d rows; stats sorted by line, percent flags set)" % len(items["stat_display"]), len(items["stat_display"]) > 80 and shown and all(r["base"] == sorted(r["base"], key=lambda e: e.get("line", 9999)) for r in recs)
+          and all(e["percent"] for e in shown if e.get("type") == "mult"))
+    check("every item has its icon (none missing)", all(r["icon"] for r in recs), [r["id"] for r in recs if not r["icon"]][:3])
     icon_ids = sorted({r["icon"][len("@@img:"):-2] for r in recs if r["icon"]}); item_slots = sorted(k for k in manifest if k.startswith("items/") and "/ph-" not in k)
     check("every icon token has a manifest slot, and no manifest slot is unused", icon_ids == item_slots, sorted(set(icon_ids) ^ set(item_slots))[:3])
     check("every equipment icon shows the drawn placeholder of its slot in the public build", all(manifest[i].get("placeholder_as") == "items/ph-" + next(r["slot"] for r in recs if r["icon"] == "@@img:%s@@" % i) and (ROOT / "art/placeholder" / (manifest[i]["placeholder_as"] + ".png")).is_file() for i in icon_ids))

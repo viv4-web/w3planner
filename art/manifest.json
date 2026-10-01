@@ -642,6 +642,11 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-chest"
  },
+ "items/armors/bear_armor_4_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
  "items/armors/bear_armor_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -657,6 +662,11 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-boots"
  },
+ "items/armors/bear_boots_lvl5_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
  "items/armors/bear_gloves_lvl1_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -666,6 +676,16 @@
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/bear_gloves_lvl5_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/bear_pants_lvl5_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
  },
  "items/armors/common_heavy_boots_lvl1_64x128": {
   "game": "png",
@@ -862,6 +882,16 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-trousers"
  },
+ "items/armors/flaming_rose_armor_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/flaming_rose_gloves_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
  "items/armors/forgotten_wolven_armor_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -897,6 +927,11 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-chest"
  },
+ "items/armors/gryphon_armor_4_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
  "items/armors/gryphon_armor_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -912,6 +947,11 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-boots"
  },
+ "items/armors/gryphon_boots_lvl5_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
  "items/armors/gryphon_gloves_lvl1_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -922,12 +962,137 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-gloves"
  },
+ "items/armors/gryphon_gloves_lvl5_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
  "items/armors/gryphon_pants_lvl1_64x128": {
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-trousers"
  },
  "items/armors/gryphon_pants_lvl2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
+ "items/armors/gryphon_pants_lvl5_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
+ "items/armors/guard_1_armor_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/guard_1_boots_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
+ "items/armors/guard_1_gloves_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/guard_1_pants_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
+ "items/armors/guard_1a_armor_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/guard_1a_boots_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
+ "items/armors/guard_1a_gloves_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/guard_1a_pants_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
+ "items/armors/guard_2_armor_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/guard_2_boots_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
+ "items/armors/guard_2_pants_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
+ "items/armors/guard_2a_armor_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/guard_2a_boots_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
+ "items/armors/guard_2a_gloves_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/guard_2a_pants_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
+ "items/armors/knight_1_armor_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/knight_1_boots_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
+ "items/armors/knight_1_gloves_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/knight_1_pants_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
+ "items/armors/knight_2_armor_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/knight_2_boots_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
+ "items/armors/knight_2_gloves_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/knight_2_pants_1_64x128": {
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-trousers"
@@ -957,6 +1122,11 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-chest"
  },
+ "items/armors/lynx_armor_4_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
  "items/armors/lynx_armor_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -972,6 +1142,11 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-boots"
  },
+ "items/armors/lynx_boots_lvl5_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
  "items/armors/lynx_gloves_lvl1_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -982,12 +1157,22 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-gloves"
  },
+ "items/armors/lynx_gloves_lvl5_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
  "items/armors/lynx_pants": {
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-trousers"
  },
  "items/armors/lynx_pants_1": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
+ "items/armors/lynx_pants_5_64x128": {
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-trousers"
@@ -1012,6 +1197,86 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-trousers"
  },
+ "items/armors/ofir_armor_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/ofir_gloves_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/ofir_pants_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
+ "items/armors/ofir_shoes_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
+ "items/armors/q704_vampire_armor_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/q704_vampire_boots_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
+ "items/armors/q704_vampire_gloves_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/q704_vampire_pants_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
+ "items/armors/red_wolf_armor_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/red_wolf_armor_2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/red_wolf_boots_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
+ "items/armors/red_wolf_boots_2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
+ "items/armors/red_wolf_gloves_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/red_wolf_gloves_2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/red_wolf_pants_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
+ "items/armors/red_wolf_pants_2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
  "items/armors/t_01_mg__common_medium_lvl2-64x128": {
   "game": "png",
   "placeholder": "png",
@@ -1021,6 +1286,86 @@
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/thief_armor_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/thief_gloves_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/thief_pants_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
+ "items/armors/thief_shoes_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
+ "items/armors/toussaint_armor_2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/toussaint_boots_2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
+ "items/armors/toussaint_gloves_2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/toussaint_pants_2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
+ "items/armors/vampire_armor_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/vampire_boots_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
+ "items/armors/vampire_gloves_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/vampire_pants_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
+ "items/armors/viper_armor_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/viper_gloves_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/viper_pants_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
+ "items/armors/viper_shoes_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
  },
  "items/armors/w3r_fire_armor_64x128": {
   "game": "png",
@@ -1042,6 +1387,11 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-trousers"
  },
+ "items/armors/wedding_suit_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
  "items/armors/white_tiger_armor_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -1058,6 +1408,26 @@
   "placeholder_as": "items/ph-gloves"
  },
  "items/armors/white_tiger_pants_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
+ "items/armors/wolf_armor_lvl5_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/wolf_boots_lvl5_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
+ "items/armors/wolf_gloves_lvl5_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/wolf_pants_lvl5_64x128": {
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-trousers"
@@ -1122,6 +1492,11 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-bolts"
  },
+ "items/crossbow/crossbow_toussaint_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-crossbow"
+ },
  "items/crossbow/witcher_crossbow_lvl1_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -1177,6 +1552,11 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-mask"
  },
+ "items/quests/aerondight_ep2": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
  "items/quests/emmentaler_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -1191,6 +1571,11 @@
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-silver"
+ },
+ "items/quests/q704_vampire_mask_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-mask"
  },
  "items/quests/sq301_geralt_mask_01_64x64": {
   "game": "png",
@@ -1207,10 +1592,30 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-mask"
  },
+ "items/quests/sq701_crossbow_geralt_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-crossbow"
+ },
+ "items/quests/sq701_crossbow_ravix_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-crossbow"
+ },
+ "items/quests/vampire_mask_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-mask"
+ },
  "items/weapons/bodkin_bolt_64x128": {
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-bolts"
+ },
+ "items/weapons/burning_rose_sword_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
  },
  "items/weapons/dol_blathanna_steel_longsword_64x128": {
   "game": "png",
@@ -1232,12 +1637,42 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-silver"
  },
+ "items/weapons/ep1_silver_sword_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
  "items/weapons/gnomish_silver_sword_lvl2-64x128": {
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-silver"
  },
  "items/weapons/gnomish_sword_lvl2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/guard_1_steel_sword_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/guard_2_steel_sword_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/gwent_steel_sword_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/hanza_1_steel_sword_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/knight_1_steel_sword_64x128": {
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-steel"
@@ -1262,7 +1697,27 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-steel"
  },
+ "items/weapons/ofir_steel_sabre_2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/ofir_steel_sabre_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/olgierd_sabre_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
  "items/weapons/q402_item_epic_sword-64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/q704_vampire_steel_sword_64x128": {
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-steel"
@@ -1412,6 +1867,11 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-steel"
  },
+ "items/weapons/squire_1_steel_sword_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
  "items/weapons/steel_legendary_tor_lara_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -1486,6 +1946,21 @@
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-silver"
+ },
+ "items/weapons/toussaint_2_steel_sword_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/unique_1_silver_sword_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
+ "items/weapons/unique_1_steel_sword_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
  },
  "items/weapons/unique_abarad_64x128": {
   "game": "png",
@@ -1582,6 +2057,26 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-steel"
  },
+ "items/weapons/vampire_silver_sword_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
+ "items/weapons/vampire_steel_sword_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/viper_silver_lvl1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
+ "items/weapons/viper_steel_lvl1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
  "items/weapons/vixen_silver_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -1612,6 +2107,11 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-silver"
  },
+ "items/weapons/witcher_silver_bear_sword_lvl5_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
  "items/weapons/witcher_silver_gryphon_sword_lvl1_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -1628,6 +2128,11 @@
   "placeholder_as": "items/ph-silver"
  },
  "items/weapons/witcher_silver_gryphon_sword_lvl4_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
+ "items/weapons/witcher_silver_gryphon_sword_lvl5_64x128": {
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-silver"
@@ -1652,6 +2157,46 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-silver"
  },
+ "items/weapons/witcher_silver_lynx_sword_lvl5_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
+ "items/weapons/witcher_silver_manticora_ep2_sword_lvl1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
+ "items/weapons/witcher_silver_manticora_ep2_sword_lvl2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
+ "items/weapons/witcher_silver_red_wolf_sword_lvl2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
+ "items/weapons/witcher_silver_viper_sword_lvl2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
+ "items/weapons/witcher_silver_viper_sword_lvl3_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
+ "items/weapons/witcher_silver_viper_sword_lvl4_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
+ "items/weapons/witcher_silver_wolf_sword_lvl5_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
  "items/weapons/witcher_steel_bear_sword_lvl1_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -1668,6 +2213,11 @@
   "placeholder_as": "items/ph-steel"
  },
  "items/weapons/witcher_steel_bear_sword_lvl4_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/witcher_steel_bear_sword_lvl5_64x128": {
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-steel"
@@ -1692,6 +2242,11 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-steel"
  },
+ "items/weapons/witcher_steel_gryphon_sword_lvl5_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
  "items/weapons/witcher_steel_lynx_sword_lvl1_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -1708,6 +2263,41 @@
   "placeholder_as": "items/ph-steel"
  },
  "items/weapons/witcher_steel_lynx_sword_lvl4_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/witcher_steel_lynx_sword_lvl5_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/witcher_steel_manticora_ep2_sword_lvl1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/witcher_steel_manticora_ep2_sword_lvl2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/witcher_steel_viper_sword_lvl2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/witcher_steel_viper_sword_lvl3_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/witcher_steel_viper_sword_lvl4_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/witcher_steel_wolf_sword_lvl5_64x128": {
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-steel"
