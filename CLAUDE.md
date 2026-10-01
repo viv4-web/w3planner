@@ -37,7 +37,7 @@ Deploy history: the first production deployment was a manual zip upload on 2026-
 - `src/index.html`, `src/app.css`, `src/app.js`: the app. `app.js` holds markers like `/*@data:GA*/` that the build replaces with the files in `data/`.
 - `data/*.json|js`: the game data (skills, tooltips, mutations, mutagens). Generated from game files: do not hand-edit (see `docs/DATA-PIPELINE.md`).
 - `art/manifest.json` and `art/placeholder/`: every art slot and its placeholder image. The live build reads the real art from `~/work/w3planner-art` (a plain folder on the server, NOT a git repo, never committed).
-- `static/`: help/about/privacy/support pages, `pages.css`, `config.js`, `_headers` (security headers), fonts.
+- `static/`: help/about/privacy/support pages, `pages.css`, `config.js`, `_headers` (security and cache headers: HTML is `no-cache`, hashed images and fonts are cached for a year), fonts.
 - `tools/`: build, serve, deploy, offline packaging, art generator (`tools/artgen`), game-file extractors (`tools/extract`), guard.
 - `tests/`: `run_all.py` and fixtures.
 
@@ -78,7 +78,7 @@ Globals you will use: `TREES`, `MUT` (mutations), `MUTS` (36 mutagens: 9 regular
 `tools/deploy.py` is the only way to deploy. Production never gets anything the gate has not passed.
 1. `python tools/deploy.py --art-dir ~/work/w3planner-art` (with `cf.env` loaded): game-art guard, the full test suite on the game build (never `--quick`), build, then a **preview** deployment (branch `preview`, never production) and `tests/smoke.py` against the preview URL: page loads, no console errors, every link fixture opens, a new link can be created and reopened. It prints a short report and stops.
 2. Vivek can look at the build first with `--serve` (binds 127.0.0.1 only; he forwards the port).
-3. Only after Vivek says yes: `python tools/deploy.py --art-dir ~/work/w3planner-art --promote --yes`. It refuses unless `dist/game` is exactly the build, from the same clean commit, that passed on preview. After the production upload it runs the same smoke tests against https://w3planner.pages.dev; if they fail it rolls production back to the previous deployment through the Cloudflare API, re-checks, and reports. That rollback is the only thing it does without asking.
+3. Only after Vivek says yes: `python tools/deploy.py --art-dir ~/work/w3planner-art --promote --yes`. It refuses unless `dist/game` is exactly the build, from the same clean commit, that passed on preview. After the production upload it first polls the plain URL (no query string: what a browser loads) for up to 5 minutes until it serves the new `index.html` and version, because Cloudflare's edge can answer the plain URL with the old page for a while after an upload (a cache-busted URL does not show this: that fooled the v25 promote on 2026-10-01 into a needless rollback). Then it runs the same smoke tests against https://w3planner.pages.dev; if they fail it rolls production back to the previous deployment through the Cloudflare API, re-checks, and reports. That rollback is the only thing it does without asking.
 4. If the automatic rollback itself fails, roll back by hand: `POST /accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/w3planner/deployments/<previous id>/rollback` (the script prints the id), or use the dashboard (Deployments, "Rollback to this deployment"), and tell Vivek.
 The gate logic is tested with a fake Cloudflare in `tests/test_deploy_gate.py` (part of `run_all.py`); nothing in the test suite uploads anything.
 
@@ -103,8 +103,7 @@ The other files extracted to `~/incoming/mutagens/` (the 64x64 icons from `textu
 2. Build guides feature (guides that reference skills and items by stable id).
 3. (a) Confirm the four `how: inferred` special-mutagen icon matches (Greater Foglet, Archgriffin, Griffin, Ekhidna in `data/SPECIAL_MUT_ICONS.json`) against the names in `en.w3strings` (`item_name_mutagen_N` for the item in each row, decoded with `tools/extract/w3dec.py`). The colour check and elimination support them, but no name in the XML does.
 4. (b) Show the mutagen's icon in the description panel (`renderInfo`, `tab===4`). Today only the Mutagens tab tiles, the sockets and the drag ghost show icons; hover tooltips and the panel are text.
-5. Fix the gate's false alarm that rolled v25 back on 2026-10-01 (deployment `8cfdc7f2` was fine and serves v25 directly): `tests/smoke.py` `wait_for_index` fetches with a `?smoke=` cache-buster, so it sees the new `index.html` while the browser, loading the plain URL, still gets the old one from the edge. Wait on the same plain URL the browser loads (and keep the version check), then promote again.
-6. Add Firefox and WebKit to `tests/run_all.py` (only Chromium is tested today).
-7. Script the game-data extraction (`docs/DATA-PIPELINE.md`).
-8. GitHub Actions workflows in `.github/workflows` have run: CI is green on `main` (since PR #1). `gh api repos/viv4-web/w3planner/actions/permissions` returns 403 by design (the token has no administration rights); that is not a CI problem.
-9. Later: automate deploys, once manual deploys have been smooth for a while.
+5. Add Firefox and WebKit to `tests/run_all.py` (only Chromium is tested today).
+6. Script the game-data extraction (`docs/DATA-PIPELINE.md`).
+7. GitHub Actions workflows in `.github/workflows` have run: CI is green on `main` (since PR #1). `gh api repos/viv4-web/w3planner/actions/permissions` returns 403 by design (the token has no administration rights); that is not a CI problem.
+8. Later: automate deploys, once manual deploys have been smooth for a while.

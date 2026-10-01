@@ -161,7 +161,7 @@ def do_promote(a):
     if code: print("\nPRODUCTION UPLOAD FAILED: wrangler exited with %d (the error is above). Production is unchanged unless wrangler says otherwise." % code); return 1
     new = latest_deployment(a.project, "production", started) or {}
     print("\nSmoke tests against production %s" % prod, flush=True)
-    ok, failed = smoke(prod, version, wait=120)
+    ok, failed = smoke(prod, version, wait=300)  # the plain URL can lag behind the upload for a few minutes
     if ok:
         print("\n== PRODUCTION OK ==\nversion %s is live at %s\nnew deployment %s %s\nprevious deployment (rollback target): %s" % (version, prod, new.get("id", "?"), new.get("url", ""), previous["id"] if previous else "none")); return 0
     print("\n== PRODUCTION SMOKE TESTS FAILED (%d): %s ==" % (len(failed), "; ".join(f[0] + (" (%s)" % f[2] if f[2] != "" else "") for f in failed[:5])))

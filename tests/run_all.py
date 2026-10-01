@@ -129,11 +129,17 @@ def main():
         print("\n== Pages and layout ==")
         for name in ("help.html", "about.html", "privacy.html", "support.html"):
             rr = pg.request.get(base + name); check("%s is served" % name, rr.status == 200 and "<title>" in rr.text())
+        cc = lambda path: pg.request.get(base + path).headers.get("cache-control", "")
+        check("HTML is served with Cache-Control: no-cache (/, index.html, help.html)", all("no-cache" in cc(x) for x in ("", "index.html", "help.html")), [cc(x) for x in ("", "index.html", "help.html")])
+        font = next(f for f in sorted((ROOT / "static/fonts").rglob("*")) if f.is_file()).relative_to(ROOT / "static"); img0 = E("MUTIMG[0]")
+        check("fonts and hashed images stay cached for a year", "immutable" in cc(str(font)) and (a.variant != "game" or "immutable" in cc(img0)), [cc(str(font)), cc(img0)])
         m = b.new_page(viewport={"width": 390, "height": 844}, is_mobile=True); m.goto(base); m.wait_for_timeout(500)
         check("no sideways scrolling on a phone", m.evaluate("document.documentElement.scrollWidth-innerWidth") <= 0)
         print("\n== Release gate logic (tools/deploy.py, with a fake Cloudflare) ==")
         gt = subprocess.run([sys.executable, str(ROOT / "tests/test_deploy_gate.py")], capture_output=True, text=True)
         check("preview never touches production; promote and automatic rollback behave", gt.returncode == 0, "" if gt.returncode == 0 else gt.stderr.strip()[-300:])
+        sw = subprocess.run([sys.executable, str(ROOT / "tests/test_smoke_wait.py")], capture_output=True, text=True)
+        check("the smoke test waits for a new deployment on the plain URL, never a cache-busted one", sw.returncode == 0, "" if sw.returncode == 0 else sw.stderr.strip()[-300:])
         if a.variant == "placeholder":
             print("\n== Offline package ==")
             rel = tmp / "release"; res = subprocess.run([sys.executable, str(ROOT / "tools/make_offline.py"), "--site", str(site), "--out", str(rel)], capture_output=True, text=True)
