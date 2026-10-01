@@ -85,6 +85,7 @@ def run_smoke(url, expect_version=None, expect_index=None, wait=0, results=None)
         h = resp.headers; check("security headers are sent", all(h.get(k) for k in NEEDED_HEADERS), [k for k in NEEDED_HEADERS if not h.get(k)])
         if expect_index: check("the page is served with Cache-Control: no-cache (so a new version shows at once)", "no-cache" in h.get("cache-control", ""), h.get("cache-control"))
         ver = pg.evaluate("APP_VERSION"); check("version is %s" % (expect_version or ver), not expect_version or ver == expect_version, ver)
+        if expect_version and ver != expect_version: b.close(); return False, res           # the edge answered the old page: the other checks would only test that page, so this is the one (lag-style) failure
         imgs = pg.evaluate("[...document.images].filter(i=>!(i.complete&&i.naturalWidth>0)).map(i=>i.src.slice(-40))"); check("every image on the page loads", not imgs, imgs[:3])
         linkcheck.check_fixtures(b, url, "fixtures", check)
         if pg.evaluate("!!document.getElementById('eqbtn')"):
