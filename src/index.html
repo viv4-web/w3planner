@@ -18,8 +18,8 @@
 </header>
 <div class="page" id="page">
 <div class="area skillsarea"><h2 class="areahead">Skills</h2>
-<main>
-  <section>
+<main class="skills">
+  <section class="treecol">
     <div class="tabs" role="tablist" id="tabs"></div>
     <div class="panel" id="treePanel"></div>
     <div class="pts">POINTS AVAILABLE <b id="avail2">0</b><img src="@@img:img/skill-point@@" alt=""></div><div class="budget" aria-label="Character points">
@@ -28,24 +28,26 @@
     <button class="btn" id="mutbtn">Mutations</button><button class="btn" id="eqbtn" title="Jump to the equipment panel">Equipment</button><button class="btn" id="reset">Reset build</button>
   </div><p class="hint" id="treeHint"></p>
   </section>
-  <section class="right">
+  <div class="mutcol">
     <div class="bonus" id="bonus"></div>
     <div class="panel plain"><svg id="slots" viewBox="0 0 820 900" aria-label="Equipped skills and mutagens"></svg></div>
+  </div>
+  <div class="detailrow">
     <div class="info" id="info"></div>
     <div class="share" id="shareRow">
       <input id="link" readonly aria-label="Shareable build link">
       <button class="btn" id="copy">Copy link</button>
     </div>
     <div class="share" id="importRow" hidden><input id="imp" aria-label="Paste a shared build link" placeholder="Paste a shared link to open it"><button class="btn" id="impbtn">Open link</button><span id="impmsg" class="impmsg" role="status"></span></div>
-  </section>
+  </div>
 </main>
 </div>
 <div class="vdiv" aria-hidden="true"></div>
-<aside class="area eqarea" id="eqpanel" aria-labelledby="eqtitle">
+<aside class="area eqarea" id="eqpanel" aria-labelledby="eqtitle"><div class="eqinner">
  <div class="eqhead"><h2 class="areahead" id="eqtitle">Equipment</h2><span class="eqlvl" title="Character level, set on the left">Level <b id="eqlvl"></b></span></div>
  <div class="eqrs" role="radiogroup" aria-label="Game mode"><button class="btn" type="button" role="radio" data-rs="ng" aria-checked="true">First playthrough</button><button class="btn" type="button" role="radio" data-rs="ng_plus" aria-checked="false">New Game Plus</button></div>
  <div class="eqbody" id="eqbody" aria-live="polite"></div>
-</aside>
+</div></aside>
 </div>
 <footer>This is an unofficial fan work and is not approved/endorsed by CD PROJEKT RED. Game artwork and text © CD PROJEKT S.A. · <a href="help.html" style="color:inherit">Help</a> · <a href="about.html" style="color:inherit">About</a> · <a href="privacy.html" style="color:inherit">Privacy</a> · <a href="support.html" style="color:inherit">Support</a> · <a href="https://github.com/viv4-web/w3planner" style="color:inherit">Source code</a></footer>
 <div class="tip" id="tip" role="tooltip"></div>

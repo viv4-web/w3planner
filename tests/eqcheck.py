@@ -15,22 +15,39 @@ def until(pg, js, ms=6000):
     return False
 
 
+GEOM = """()=>{const B=s=>{const e=document.querySelector(s);if(!e)return null;const r=e.getBoundingClientRect();return{l:Math.round(r.left),t:Math.round(r.top),r:Math.round(r.right),b:Math.round(r.bottom),w:Math.round(r.width),h:Math.round(r.height)}};
+ const rows=s=>[...new Set([...document.querySelectorAll(s)].map(e=>Math.round(e.getBoundingClientRect().top)))].length;
+ const tiles=[...document.querySelectorAll('#eqbody .eqtile')].map(t=>{const r=t.getBoundingClientRect();return[r.width,r.height]});
+ return{tree:B('#treePanel'),mut:B('#slots'),info:B('#info'),link:(B('#shareRow')&&B('#shareRow').w?B('#shareRow'):B('#importRow')),skills:B('.skillsarea'),eq:B('#eqpanel'),page:B('.page'),c1:B('.eqc1'),c2:B('.eqc2'),c3:B('.eqc3'),vd:B('.vdiv'),
+  sw:document.documentElement.scrollWidth,vw:innerWidth,wrows:rows('.eqw .eqslot'),arows:rows('.eqarm .eqslot'),maxratio:Math.max(...tiles.map(t=>t[0]/t[1])),mintile:Math.min(...tiles.map(t=>Math.min(t[0],t[1])))}}"""
+
+
 def layout(b, base, check, label):
-    for w, h in ((1500, 900), (1280, 800), (1024, 768)):
-        pg = b.new_page(viewport={"width": w, "height": h}); pg.goto(base); until(pg, READY); E = pg.evaluate
-        tree, slots, eq, vd = E(BOX, "#treePanel"), E(BOX, "#slots"), E(BOX, "#eqpanel"), E(BOX, ".vdiv")
-        side = tree["r"] <= slots["l"] <= slots["r"] <= eq["l"] and vd["r"] <= eq["l"] and tree["l"] < 40
-        check("%s: at %d px the skills (tree, slots) sit left, the divider and the equipment panel right, nothing overlaps, no sideways scroll%s" % (label, w, " and the tree keeps %d px" % tree["w"] if w == 1280 else ""),
-              side and E("document.documentElement.scrollWidth<=innerWidth") and (w != 1280 or tree["w"] >= 570) and tree["l"] <= 24, [tree, slots, eq])
-        if w == 1280:
-            check("%s: the panel scrolls on its own (sticky, own vertical scroll) and has the 'Skills' and 'Equipment' headers" % label, E("getComputedStyle(document.getElementById('eqpanel')).overflowY") == "auto" and E("getComputedStyle(document.getElementById('eqpanel')).position") == "sticky"
-                  and E("document.querySelector('.skillsarea .areahead').textContent") == "Skills" and E("document.querySelector('#eqpanel .areahead').textContent") == "Equipment")
-            check("%s: compact tiles (not 174 px tall): %d px" % (label, E(BOX, '#eqbody .eqtile')["h"]), E(BOX, '#eqbody .eqtile')["h"] < 110)
+    """The page grid at seven widths (see CLAUDE.md, Equipment panel)."""
+    for w, h in ((2560, 1259), (1920, 1080), (1440, 900), (1280, 800), (1024, 768), (768, 900), (390, 844)):
+        pg = b.new_page(viewport={"width": w, "height": h}, is_mobile=w < 600, has_touch=w < 600); pg.goto(base); until(pg, READY); g = pg.evaluate(GEOM); tag = "%s: at %d px" % (label, w)
+        check("%s: no sideways scroll, and no slot tile wider than 1.05x its height" % tag, g["sw"] <= g["vw"] and g["maxratio"] <= 1.05, [g["sw"], g["vw"], g["maxratio"]])
+        if w >= 1440:
+            tree, mut, eq, sk = g["tree"], g["mut"], g["eq"], g["skills"]
+            check("%s: [tree] [mutations] | [equipment]: tree left, mutations beside it, divider, equipment right; skill detail and link bar span the whole skills area" % tag,
+                  tree["l"] < 120 and tree["r"] <= mut["l"] and mut["r"] <= g["vd"]["l"] and g["vd"]["r"] <= eq["l"] and abs(g["info"]["l"] - sk["l"]) <= 2 and abs(g["info"]["r"] - sk["r"]) <= 2 and abs(g["link"]["r"] - sk["r"]) <= 2 and g["info"]["t"] >= max(tree["b"], mut["b"]) - 40, g)
+            check("%s: the skills area and the equipment panel have the same height (%d, %d); the page uses its width (equipment right edge %d of %d)" % (tag, sk["h"], eq["h"], eq["r"], g["page"]["r"]),
+                  abs(sk["h"] - eq["h"]) <= 2 and eq["r"] >= 0.95 * g["page"]["r"] and g["page"]["w"] <= 2400 and abs(eq["w"] - min(560, max(380, 0.28 * w))) <= 3, g)
+            check("%s: the tree is %d px wide and the weapons are one row of 4, the armor %s" % (tag, tree["w"], "one row of 5" if g["arows"] == 1 else "3 + 2"), g["wrows"] == 1 and g["arows"] == (1 if eq["w"] - 30 >= 392 else 2), [g["wrows"], g["arows"], eq["w"]])
+        elif w >= 1024:
+            eq, sk = g["eq"], g["skills"]
+            check("%s: the skills (tree beside mutations) on top, the equipment panel below at full width in 3 columns (weapons | armor | sets and stats)" % tag,
+                  g["tree"]["r"] <= g["mut"]["l"] and eq["t"] >= sk["b"] - 2 and abs(eq["l"] - sk["l"]) <= 2 and abs(eq["r"] - sk["r"]) <= 2 and g["c1"]["r"] <= g["c2"]["l"] and g["c2"]["r"] <= g["c3"]["l"] and g["vd"]["h"] <= 2, g)
+        elif w >= 600:
+            check("%s: everything stacked: tree, mutations, detail, equipment; 4 slots per row" % tag, g["tree"]["b"] <= g["mut"]["t"] and g["mut"]["b"] <= g["info"]["t"] and g["info"]["b"] <= g["eq"]["t"] and g["wrows"] == 1, g)
+        else:
+            check("%s: stacked, slots 3 per row (weapons %d rows, armor %d rows), tap targets at least 44 px" % (tag, g["wrows"], g["arows"]), g["tree"]["b"] <= g["mut"]["t"] and g["info"]["b"] <= g["eq"]["t"] and g["wrows"] == 2 and g["arows"] == 2 and g["mintile"] >= 44
+                  and pg.evaluate("[...document.querySelectorAll('#eqpanel .eqrs .btn')].every(b=>b.getBoundingClientRect().height>=44)")
+                  and pg.evaluate("(()=>{const x=document.querySelector('.eqx');return !x||x.getBoundingClientRect().width-2*parseFloat(getComputedStyle(x,'::before').top)>=44})()"), g)
+            pg.click('#eqbody .eqtile[data-i="4"]'); pg.wait_for_selector("#pkgrid .pktile"); full = pg.evaluate("(()=>{const r=document.querySelector('.eqpmodal').getBoundingClientRect();return[Math.round(r.width),Math.round(r.height),innerWidth,innerHeight]})()")
+            check("%s: the chooser is full-screen and its tiles are at least 44 px" % tag, full[0] >= full[2] - 2 and full[1] >= full[3] - 2 and pg.evaluate("[...document.querySelectorAll('.pktile')].every(t=>t.getBoundingClientRect().height>=44)"), full)
+            check("%s: ... and the Equipment button jumps to the panel" % tag, pg.evaluate("getComputedStyle(document.getElementById('eqbtn')).display") != "none")
         pg.close()
-    m = b.new_page(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True); m.goto(base); until(m, READY); E = m.evaluate
-    tree, eq, vd = E(BOX, "#treePanel"), E(BOX, "#eqpanel"), E(BOX, ".vdiv")
-    check("%s: at 390 px the skills come first, then a horizontal divider, then the equipment, without sideways scroll" % label, tree["b"] <= vd["t"] + 2 and vd["b"] <= eq["t"] + 2 and vd["h"] <= 2 and vd["w"] > 200 and E("document.documentElement.scrollWidth<=innerWidth"), [tree, vd, eq])
-    check("%s: on a phone the Equipment button jumps to the panel" % label, E("getComputedStyle(document.getElementById('eqbtn')).display") != "none"); m.close()
 
 
 def run(b, base, check, label, quick=False):
@@ -38,9 +55,9 @@ def run(b, base, check, label, quick=False):
     pg.on("load", lambda p: events.append("load")); pg.on("request", lambda r: events.append("data") if "/data/items" in r.url else None)
     pg.goto(base); check("%s: the panel shows right away and the equipment data loads after the page has loaded, only items.js and items_ng.js" % label, until(pg, READY) and E(KEYS) == ["items.js", "items_ng.js"] and events.index("load") < (events.index("data") if "data" in events else 99), [events[:4], E(KEYS)])
     layout(b, base, check, label)
-    check("%s: weapons (steel, silver, bolts, crossbow) then armor (chest, gloves, trousers, boots, mask); consumables and bombs greyed" % label,
-          E("[...document.querySelectorAll('#eqbody .eqsec:nth-child(1) .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "steel,silver,bolts,crossbow" and E("[...document.querySelectorAll('#eqbody .eqsec:nth-child(2) .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "chest,gloves,trousers,boots,mask"
-          and E("document.querySelectorAll('#eqbody .eqslot.later').length") == 2)
+    check("%s: weapons (steel, silver, crossbow, bolts) then armor (chest, gloves, trousers, boots, mask); one greyed strip \"Consumables & bombs, coming later\"" % label,
+          E("[...document.querySelectorAll('#eqbody .eqw .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "steel,silver,crossbow,bolts" and E("[...document.querySelectorAll('#eqbody .eqarm .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "chest,gloves,trousers,boots,mask"
+          and E("document.querySelector('#eqbody .eqstrip').textContent") == "Consumables & bombs, coming later" and E("document.querySelectorAll('#eqbody .eqstrip').length") == 1)
     # the chooser for EVERY weapon slot, and Equip
     for slot, i in (("steel", 0), ("silver", 1), ("bolts", 3), ("crossbow", 2)):
         pg.click('#eqbody .eqtile[data-i="%d"]' % i); pg.wait_for_selector("#pkgrid .pktile"); n = E("document.querySelectorAll('#pkgrid .pktile').length"); only = E("[...document.querySelectorAll('#pkgrid .pktile')].every(t=>EQ.rs[S.rs].byId.get(t.dataset.id).slot===EQ.pick.slot)")

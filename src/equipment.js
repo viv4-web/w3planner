@@ -1,8 +1,9 @@
 // ---- Equipment panel (always visible, right of the skills): slots, chooser, tooltip, set bonuses, ruleset switch, Equip set. The data (data/items.json and data/items_<ruleset>.json) is loaded by script tags right after the page has loaded, never inside index.html. ----
 const EQ_URL={meta:/*@file:items*/,ng:/*@file:items_ng*/,ng_plus:/*@file:items_ng_plus*/};
 const EQ_SLOTS=['steel','silver','crossbow','bolts','chest','gloves','trousers','boots','mask']; // the order of the g1 link segment: never change it, only append
-const EQ_NAME={steel:'Steel sword',silver:'Silver sword',crossbow:'Crossbow',bolts:'Bolts',chest:'Armor',gloves:'Gauntlets',trousers:'Trousers',boots:'Boots',mask:'Mask'};
-const EQ_WEAPONS=['steel','silver','bolts','crossbow'],EQ_ARMOUR=['chest','gloves','trousers','boots','mask'];
+// labels follow the game's inventory (panel_inventory_paperdoll_slotname_* where it has one; item_category_* otherwise)
+const EQ_NAME={steel:'Steel sword',silver:'Silver sword',crossbow:'Crossbow',bolts:'Bolts',chest:'Chest armor',gloves:'Gloves',trousers:'Trousers',boots:'Boots',mask:'Mask'};
+const EQ_WEAPONS=['steel','silver','crossbow','bolts'],EQ_ARMOUR=['chest','gloves','trousers','boots','mask'];
 const EQ_QUAL={1:['Common','#a2a2a2'],2:['Masterwork','#2b7bff'],3:['Magic','#e1d401'],4:['Relic','#ca610c'],5:['Witcher gear','#01b701']}; // GetItemRarityDescription
 const EQ_RS={ng:'First playthrough',ng_plus:'New Game Plus'};
 let EQ={meta:null,rs:{},err:null,pick:null,sig:''};
@@ -60,7 +61,7 @@ function eqSetHtml(x){const cur=b=>b.per_piece?String(Math.round(+b.per_piece*x.
 function eqSlotHtml(slot){const i=EQ_SLOTS.indexOf(slot),it=eqCur(i),q=it&&EQ_QUAL[it.quality]?EQ_QUAL[it.quality][1]:'#6b5a42',sq=['bolts','mask'].includes(slot);
  return`<div class="eqslot${it?' on':''}${sq?' sq':''}" data-i="${i}"><button type="button" class="eqtile" data-i="${i}" style="--q:${q}" aria-haspopup="dialog" aria-label="${EQ_NAME[slot]}: ${it?eqEsc(it.name):'empty'}. Open the chooser${it?'. Press Delete to unequip':''}">${it&&it.icon?`<img src="${it.icon}" alt="">`:`<span class="eqempty">${EQ_NAME[slot]}</span>`}</button>
   <div class="eqsl"><b>${EQ_NAME[slot]}</b><span>${it?eqEsc(it.name):'Empty'}</span></div>${it?`<button type="button" class="eqx" data-i="${i}" aria-label="Unequip ${eqEsc(it.name)}">×</button>`:''}</div>`}
-const eqLater=n=>`<div class="eqslot later" aria-disabled="true"><div class="eqtile" aria-hidden="true"><span class="eqempty">${n}</span></div><div class="eqsl"><b>${n}</b><span>Later phase</span></div></div>`;
+const eqLater='<div class="eqstrip" aria-disabled="true">Consumables &amp; bombs, coming later</div>';
 function eqItemStats(it){const q=EQ_QUAL[it.quality]||['',''],p=eqPrimary(it),lv=eqLevel(it);
  return`<section class="eqitem"><h4 style="color:${q[1]||'#e6dcc8'}">${eqEsc(it.name)}</h4><div class="eqim">${eqEsc(EQ_NAME[it.slot])}${it.tier_name&&it.set?' · '+eqEsc(it.tier_name):''}${lv?` · <span class="${lv.bad?'bad':''}">${lv.t}</span>`:''}</div>
   <div class="eqgrid">${p.label&&p.e?`<span>${eqEsc(p.label)}</span><b>${eqVal({...p.e,percent:false})}</b>`:''}${eqLines(it).map(e=>`<span style="color:${eqColor(e)}">${eqEsc(e.label||e.stat)}</span><b style="color:${eqColor(e)}">${eqEsc(eqVal(e))}</b>`).join('')}</div></section>`}
@@ -68,14 +69,14 @@ function eqRender(force){const body=document.getElementById('eqbody');if(!body)r
  const sig=[S.rs,S.gear.join(),lvl(),!!eqData(),EQ.err].join('|');if(!force&&sig===EQ.sig)return;EQ.sig=sig;document.getElementById('eqlvl').textContent=lvl();
  document.querySelectorAll('#eqpanel .eqrs [data-rs]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.rs===S.rs)));
  const keep=document.activeElement&&body.contains(document.activeElement)?document.activeElement.dataset.i:null,had=!!(document.activeElement&&document.activeElement.classList&&document.activeElement.classList.contains('eqtile'));
- const weapons=`<section class="eqsec"><h3>Weapons</h3><div class="eqslots">${EQ_WEAPONS.map(eqSlotHtml).join('')}${eqLater('Consumables')}${eqLater('Bombs')}</div></section>`,armour=`<section class="eqsec"><h3>Armor</h3><div class="eqslots">${EQ_ARMOUR.map(eqSlotHtml).join('')}</div></section>`;
+ const weapons=`<section class="eqsec eqw"><h3>Weapons</h3><div class="eqslots">${EQ_WEAPONS.map(eqSlotHtml).join('')}</div>${eqLater}</section>`,armour=`<section class="eqsec eqarm"><h3>Armor</h3><div class="eqslots">${EQ_ARMOUR.map(eqSlotHtml).join('')}</div></section>`;
  let rest;
  if(EQ.err)rest=`<p class="eqmsg">Could not load the equipment data: ${eqEsc(EQ.err)}. <button class="btn" id="eqretry" type="button">Try again</button></p>`;
  else if(!eqData())rest='<p class="eqmsg">Loading equipment data…</p>';
  else{const sets=eqSets(),items=EQ_SLOTS.map((s,i)=>eqCur(i)).filter(Boolean);
   rest=`<section class="eqsec"><h3>Sets</h3>${sets.length?sets.map(eqSetHtml).join(''):'<p class="dim">No set pieces equipped. Pieces of one witcher school or other set unlock bonuses at 3 and 6 pieces.</p>'}</section>
    <section class="eqsec"><h3>Item stats <small>listed, not added up</small></h3>${items.length?items.map(eqItemStats).join(''):'<p class="dim">Equip an item to see its numbers here.</p>'}</section>`}
- body.innerHTML=weapons+armour+rest;
+ body.innerHTML=`<div class="eqcols"><div class="eqc1">${weapons}</div><div class="eqc2">${armour}</div><div class="eqc3">${rest}</div></div>`;
  body.querySelectorAll('.eqtile[data-i]').forEach(b=>{const i=+b.dataset.i;b.onclick=()=>eqPick(i);b.oncontextmenu=e=>{e.preventDefault();eqUnequip(i)};
   b.onkeydown=e=>{if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();eqUnequip(i)}};
   const it=eqCur(i);if(it){b.onmouseenter=()=>eqHoverTip(it,b);b.onmouseleave=eqHideTip;b.onfocus=()=>eqHoverTip(it,b);b.onblur=eqHideTip}});
