@@ -96,6 +96,13 @@ def main():
     check("every icon token has a manifest slot, and no manifest slot is unused", icon_ids == item_slots, sorted(set(icon_ids) ^ set(item_slots))[:3])
     check("every equipment icon shows the drawn placeholder of its slot in the public build", all(manifest[i].get("placeholder_as") == "items/ph-" + next(r["slot"] for r in recs if r.get("icon") == "@@img:%s@@" % i) and (ROOT / "art/placeholder" / (manifest[i]["placeholder_as"] + ".png")).is_file() for i in icon_ids))
     if a.variant == "game": check("the private art folder has every equipment icon", all((Path(a.art_dir) / (i + ".png")).is_file() for i in icon_ids), [i for i in icon_ids if not (Path(a.art_dir) / (i + ".png")).is_file()][:3])
+    print("\n== Consumables data (data/consumables.json, consumable_ids.json) ==")
+    cd = json.loads((ROOT / "data/consumables.json").read_text(encoding="utf-8")); citems = cd["items"]; creg = json.loads((ROOT / "data/consumable_ids.json").read_text(encoding="utf-8"))["ids"]
+    check("%d consumables: ids unique, every one has its registry number (data/consumable_ids.json: append-only, 1 to 4095), categories potion, decoction, bomb, oil only" % len(citems),
+          len({i["id"] for i in citems}) == len(citems) and all(creg.get(i["id"]) == i["n"] for i in citems) and len(set(creg.values())) == len(creg) and max(creg.values()) <= 4095 and {i["cat"] for i in citems} == {"potion", "decoction", "bomb", "oil"})
+    check("oils say which sword they fit (SteelOil: 6 of 36, SilverOil: all), no oil, bomb or potion carries a level, every consumable has a name, an icon token and a manifest slot",
+          sum(1 for i in citems if i["cat"] == "oil" and i.get("steel")) == 6 and all(i.get("silver") for i in citems if i["cat"] == "oil") and all(i["name"] and i["icon"] and i["icon"][len("@@img:"):-2] in manifest for i in citems))
+    if a.variant == "game": check("the private art folder has every consumable icon and the four drawn placeholders", all((Path(a.art_dir) / (i["icon"][len("@@img:"):-2] + ".png")).is_file() for i in citems), [i["id"] for i in citems if not (Path(a.art_dir) / (i["icon"][len("@@img:"):-2] + ".png")).is_file()][:3])
     N = 60 if a.quick else 300
     with sync_playwright() as pw:
         b = pw.chromium.launch()

@@ -88,7 +88,7 @@ def run_smoke(url, expect_version=None, expect_index=None, wait=0, results=None)
         if expect_version and ver != expect_version: b.close(); return False, res           # the edge answered the old page: the other checks would only test that page, so this is the one (lag-style) failure
         imgs = pg.evaluate("[...document.images].filter(i=>!(i.complete&&i.naturalWidth>0)).map(i=>i.src.slice(-40))"); check("every image on the page loads", not imgs, imgs[:3])
         linkcheck.check_fixtures(b, url, "fixtures", check)
-        if pg.evaluate("!!document.getElementById('eqbtn')"):
+        if pg.evaluate("!!document.getElementById('tabInv')"):
             import eqcheck
             eqcheck.run(b, url, check, "equipment")
         # a new link can be created and reopened

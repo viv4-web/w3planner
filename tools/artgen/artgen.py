@@ -233,3 +233,29 @@ def item_placeholder(slot,ss=6):
     elif slot=='mask':
         d.ellipse(P([(14,10),(W-14,H-8)]),fill=(214,200,170,255),outline=gold);d.ellipse(P([(21,24),(29,32)]),fill=dark);d.ellipse(P([(W-29,24),(W-21,32)]),fill=dark);d.arc(P([(24,36),(W-24,52)]),20,160,fill=dark,width=int(1.4*k))
     return down(im,W,H)
+
+
+# ---------- consumable placeholders (v28): one drawn bottle or bomb per kind; the game's icons are used on the live site only ----------
+CONS_KINDS=['potion','decoction','oil','bomb']
+def cons_placeholder(kind,S=64,ss=6):
+    im=canvas(S,S,ss);d=ImageDraw.Draw(im);k=ss;P=lambda pts:[(x*k,y*k) for x,y in pts]
+    d.rounded_rectangle([1*k,1*k,(S-1)*k,(S-1)*k],radius=4*k,fill=(34,31,28,255),outline=(78,66,48,255),width=int(1.2*k))
+    glass=(196,210,222,150);cork=(150,108,66,255);gold=(196,150,70,235);cx=S/2
+    if kind in('potion','decoction','oil'):
+        liq={'potion':(190,50,44,235),'decoction':(70,150,60,235),'oil':(208,150,40,235)}[kind]
+        if kind=='potion':
+            body=[(cx-14,36),(cx-10,26),(cx-5,22),(cx-5,12),(cx+5,12),(cx+5,22),(cx+10,26),(cx+14,36),(cx+11,52),(cx-11,52)]
+        elif kind=='decoction':
+            body=[(cx-12,30),(cx-6,24),(cx-6,12),(cx+6,12),(cx+6,24),(cx+12,30),(cx+12,52),(cx-12,52)]
+        else:
+            body=[(cx-8,20),(cx-8,14),(cx+8,14),(cx+8,20),(cx+13,26),(cx+13,52),(cx-13,52),(cx-13,26)]
+        d.polygon(P(body),fill=glass,outline=(230,236,244,255))
+        d.polygon(P([(cx-11,38),(cx+11,38),(cx+10,50),(cx-10,50)]),fill=liq)
+        d.rectangle(P([(cx-5,8),(cx+5,13)]),fill=cork)
+        if kind=='oil':d.ellipse(P([(cx-3,41),(cx+3,47)]),fill=(255,226,150,255))
+        if kind=='decoction':d.arc(P([(cx-6,40),(cx+6,50)]),20,160,fill=(20,18,16,255),width=int(1.2*k))
+    else:
+        d.ellipse(P([(cx-17,22),(cx+17,56)]),fill=(70,68,66,255),outline=(150,146,140,255),width=int(1.2*k))
+        d.rectangle(P([(cx-4,16),(cx+4,24)]),fill=(110,106,100,255));d.line(P([(cx,16),(cx+8,8),(cx+14,10)]),fill=cork,width=int(1.6*k))
+        d.polygon(P([(cx+14,10),(cx+17,5),(cx+19,10),(cx+22,8),(cx+18,14)]),fill=(240,170,60,255))
+    return down(im,S,S)

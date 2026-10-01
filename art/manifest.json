@@ -2481,5 +2481,451 @@
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-steel"
+ },
+ "cons/ph-potion": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "cons/ph-decoction": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "cons/ph-bomb": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "cons/ph-oil": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "cons/bombs/dancing_star_bomb": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-bomb"
+ },
+ "cons/bombs/devils_puffball_bomb": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-bomb"
+ },
+ "cons/bombs/dragons_dream_bomb": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-bomb"
+ },
+ "cons/bombs/dwimeritium_bomb": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-bomb"
+ },
+ "cons/bombs/grapeshot_bomb": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-bomb"
+ },
+ "cons/bombs/petard_snow_ball_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-bomb"
+ },
+ "cons/bombs/samun_bomb": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-bomb"
+ },
+ "cons/bombs/silver_dust_bomb": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-bomb"
+ },
+ "cons/bombs/white_frost_bomb": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-bomb"
+ },
+ "cons/mutagen_potions/alghoul_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/ancient_leshy_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/arachas_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/basilisk_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/cockatrice_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/czart_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/dao_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/doppler_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/ekimma_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/fiend_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/fogling_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/forktail_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/grave_hag_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/griphon_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/katakan_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/lamia_ekimma_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/leshy_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/nekker_warrior_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/nightwraith_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/noonwraith_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/quest_anti_spectre_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/succubus_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/troll_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/volcanic_gryphon": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/water_hag_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/werewolf_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/wraith_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/wyvern_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/oils/beast_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/beast_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/beast_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/cursed_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/cursed_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/cursed_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/draconide_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/draconide_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/draconide_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/hanged_mans_venom_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/hanged_mans_venom_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/hanged_mans_venom_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/hybrid_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/hybrid_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/hybrid_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/insectoid_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/insectoid_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/insectoid_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/magicals_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/magicals_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/magicals_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/necrophage_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/necrophage_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/necrophage_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/ogre_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/ogre_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/ogre_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/relic_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/relic_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/relic_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/specter_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/specter_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/specter_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/vampire_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/vampire_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/vampire_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/potions/black-blood-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/blizzard-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/cat-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/full-moon-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/golden-oriole-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/healing-potion-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/maribor-forest-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/petris-philtre-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/tawny-owl-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/thunderbolt-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/tiara-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/white-honey-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/white-raffard-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
  }
 }

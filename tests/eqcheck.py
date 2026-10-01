@@ -1,7 +1,7 @@
 """The Equipment panel in a real browser: layout, lazy data, chooser for every weapon slot, tooltip with tiers, set bonuses, Equip set, ruleset switch,
 keyboard, touch layout, links. Used by tests/run_all.py (online and offline builds) and tests/smoke.py (preview and production)."""
 
-READY = "typeof eqData==='function'&&!!eqData()&&!!document.querySelector('#eqbody .eqtile[data-i]')"
+READY = "typeof eqData==='function'&&!!eqData()&&!!CN.data&&!!document.querySelector('#eqbody .eqtile[data-i]')"
 KEYS = "Object.keys(window.W3DATA||{}).map(k=>k+'.js')"   # the data files that were loaded (a script sets W3DATA.<name>)
 BOX = "(sel)=>{const e=document.querySelector(sel);if(!e)return null;const r=e.getBoundingClientRect();return{l:Math.round(r.left),r:Math.round(r.right),t:Math.round(r.top),b:Math.round(r.bottom),w:Math.round(r.width),h:Math.round(r.height)}}"
 CHEST, GLOVES, TROUSERS, BOOTS, STEEL, SILVER = 4, 5, 6, 7, 0, 1
@@ -16,63 +16,10 @@ def until(pg, js, ms=6000):
     return False
 
 
-GEOM = """()=>{const B=s=>{const e=document.querySelector(s);if(!e)return null;const r=e.getBoundingClientRect();return{l:Math.round(r.left),t:Math.round(r.top),r:Math.round(r.right),b:Math.round(r.bottom),w:Math.round(r.width),h:Math.round(r.height)}};
- const rows=s=>[...new Set([...document.querySelectorAll(s)].map(e=>Math.round(e.getBoundingClientRect().top)))].length;
- const tiles=[...document.querySelectorAll('#eqbody .eqtile')].map(t=>{const r=t.getBoundingClientRect();return[r.width,r.height]});
- return{tree:B('#treePanel'),mut:B('#slots'),info:B('#info'),link:(B('#shareRow')&&B('#shareRow').w?B('#shareRow'):B('#importRow')),skills:B('.skillsarea'),eq:B('#eqpanel'),page:B('.page'),c1:B('.eqc1'),c2:B('.eqc2'),c3:B('.eqc3'),vd:B('.vdiv'),
-  sw:document.documentElement.scrollWidth,vw:innerWidth,wrows:rows('.eqw .eqslot'),arows:rows('.eqarm .eqslot'),maxratio:Math.max(...tiles.map(t=>t[0]/t[1])),mintile:Math.min(...tiles.map(t=>Math.min(t[0],t[1])))}}"""
-
-
-def layout(b, base, check, label):
-    """The page grid at seven widths (see CLAUDE.md, Equipment panel)."""
-    for w, h in ((2560, 1259), (1920, 1080), (1440, 900), (1280, 800), (1024, 768), (768, 900), (390, 844)):
-        pg = b.new_page(viewport={"width": w, "height": h}, is_mobile=w < 600, has_touch=w < 600); pg.goto(base); until(pg, READY); g = pg.evaluate(GEOM); tag = "%s: at %d px" % (label, w)
-        check("%s: no sideways scroll, and no slot tile wider than 1.05x its height" % tag, g["sw"] <= g["vw"] and g["maxratio"] <= 1.05, [g["sw"], g["vw"], g["maxratio"]])
-        if w >= 1440:
-            tree, mut, eq, sk = g["tree"], g["mut"], g["eq"], g["skills"]
-            check("%s: [tree] [mutations] | [equipment]: tree left, mutations beside it, divider, equipment right; skill detail and link bar span the whole skills area" % tag,
-                  tree["l"] < 120 and tree["r"] <= mut["l"] and mut["r"] <= g["vd"]["l"] and g["vd"]["r"] <= eq["l"] and abs(g["info"]["l"] - sk["l"]) <= 2 and abs(g["info"]["r"] - sk["r"]) <= 2 and abs(g["link"]["r"] - sk["r"]) <= 2 and g["info"]["t"] >= max(tree["b"], mut["b"]) - 40, g)
-            check("%s: the skills area and the equipment panel have the same height (%d, %d); the page uses its width (equipment right edge %d of %d)" % (tag, sk["h"], eq["h"], eq["r"], g["page"]["r"]),
-                  abs(sk["h"] - eq["h"]) <= 2 and eq["r"] >= 0.95 * g["page"]["r"] and g["page"]["w"] <= 2400 and abs(eq["w"] - min(560, max(380, 0.28 * w))) <= 3, g)
-            check("%s: the tree is %d px wide and the weapons are one row of 4, the armor %s" % (tag, tree["w"], "one row of 5" if g["arows"] == 1 else "3 + 2"), g["wrows"] == 1 and g["arows"] == (1 if g["c2"]["w"] >= 392 else 2), [g["wrows"], g["arows"], g["c2"]["w"]])
-        elif w >= 1024:
-            eq, sk = g["eq"], g["skills"]
-            check("%s: the skills (tree beside mutations) on top, the equipment panel below at full width in 3 columns (weapons | armor | sets and stats)" % tag,
-                  g["tree"]["r"] <= g["mut"]["l"] and eq["t"] >= sk["b"] - 2 and abs(eq["l"] - sk["l"]) <= 2 and abs(eq["r"] - sk["r"]) <= 2 and g["c1"]["r"] <= g["c2"]["l"] and g["c2"]["r"] <= g["c3"]["l"] and g["vd"]["h"] <= 2, g)
-        elif w >= 600:
-            check("%s: everything stacked: tree, mutations, detail, equipment; 4 slots per row" % tag, g["tree"]["b"] <= g["mut"]["t"] and g["mut"]["b"] <= g["info"]["t"] and g["info"]["b"] <= g["eq"]["t"] and g["wrows"] == 1, g)
-        else:
-            check("%s: stacked, slots 3 per row (weapons %d rows, armor %d rows), tap targets at least 44 px" % (tag, g["wrows"], g["arows"]), g["tree"]["b"] <= g["mut"]["t"] and g["info"]["b"] <= g["eq"]["t"] and g["wrows"] == 2 and g["arows"] == 2 and g["mintile"] >= 44
-                  and pg.evaluate("[...document.querySelectorAll('#eqpanel .eqrs .btn')].every(b=>b.getBoundingClientRect().height>=44)")
-                  and pg.evaluate("(()=>{const x=document.querySelector('.eqx');return !x||x.getBoundingClientRect().width-2*parseFloat(getComputedStyle(x,'::before').top)>=44})()"), g)
-            pg.click('#eqbody .eqtile[data-i="4"]'); pg.wait_for_selector("#pkgrid .pktile"); full = pg.evaluate("(()=>{const r=document.querySelector('.eqpmodal').getBoundingClientRect();return[Math.round(r.width),Math.round(r.height),innerWidth,innerHeight]})()")
-            check("%s: the chooser is full-screen and its tiles are at least 44 px" % tag, full[0] >= full[2] - 2 and full[1] >= full[3] - 2 and pg.evaluate("[...document.querySelectorAll('.pktile')].every(t=>t.getBoundingClientRect().height>=44)"), full)
-            check("%s: ... and the Equipment button jumps to the panel" % tag, pg.evaluate("getComputedStyle(document.getElementById('eqbtn')).display") != "none")
-        pg.close()
-
-
 LEVELS = {"ng": {"Lynx Armor": 17, "Lynx Armor 1": 23, "Lynx Armor 2": 29, "Lynx Armor 3": 34, "Lynx Armor 4": 40, "Lynx School Crossbow": 29, "q702_vampire_mask": 1, "Blunt Bolt Legendary": 1},
           "ng_plus": {"Lynx Armor": 47, "Lynx Armor 1": 53, "Lynx Armor 2": 59, "Lynx Armor 3": 64, "Lynx Armor 4": 70, "NGP Lynx Armor 4": 40, "Lynx School Crossbow": 29, "q702_vampire_mask": 1}}
 # hand-calculated from the game's scripts (GetItemLevel, inventoryComponent.ws:305 and gameParams.ws:917; see the report): armor 120/150/180/205/240 -> 17/23/29/34/40 (Grandmaster has the EP1 tag, minus 1),
 # NG+ armor 270/300/330/355/390 -> 47/53/59/64/70, crossbow attack power x2.25 -> 32 - 1 - 2 = 29, masks have no branch (level 0 -> 1), the first test of 'Blunt Bolt Legendary' (5) wins -> 1
-
-
-SCALE = """()=>{const R=s=>{const e=document.querySelector(s);return e?e.getBoundingClientRect():null};
- const n=R('#treePanel .node .frame'),ts=R('#treePanel svg'),ms=R('#slots'),info=R('#info'),sr=R('#shareRow'),link=sr&&sr.width?sr:R('#importRow');
- const w=[...document.querySelectorAll('.eqw .eqtile')].map(e=>e.getBoundingClientRect().width),a=[...document.querySelectorAll('.eqarm .eqtile')].map(e=>e.getBoundingClientRect().width);
- return{vh:innerHeight,y:scrollY,node:n.width,ts:ts.width,ms:ms.width,tt:R('#treePanel').top,mt:ms.top,info:info.bottom,link:link.bottom,w:w,a:a}}"""
-
-
-def scalecheck(b, base, check, label):
-    """One scale drives the tree and the mutation grid (min of width, height and 1.0 = native icon size); the tile size is shared; the detail box and link bar stay in the first screen."""
-    for w, h in ((2560, 1440), (1920, 1080), (1440, 900), (1280, 800)):
-        pg = b.new_page(viewport={"width": w, "height": h}); pg.goto(base); until(pg, READY); pg.wait_for_timeout(300); g = pg.evaluate(SCALE); tag = "%s: at %dx%d" % (label, w, h)
-        st, sm = g["ts"] / 700, g["ms"] / 717.5
-        check("%s: the detail box and the link bar are fully inside the window without scrolling (%d, %d of %d)" % (tag, g["info"], g["link"], h), g["y"] == 0 and g["info"] <= h and g["link"] <= h, g)
-        check("%s: tree icons are not upscaled (tile %.1f px, native 84 at scale 1)" % (tag, g["node"]), g["node"] <= 84 + 1.5, g)
-        check("%s: tree and mutation grid have the same scale (%.3f, %.3f) and start at the same height" % (tag, st, sm), abs(st - sm) <= 0.01 * max(st, sm) and abs(g["tt"] - g["mt"]) <= 6, g)
-        check("%s: weapon and armor tiles are the same size (%s, %s)" % (tag, sorted(set(round(x) for x in g["w"])), sorted(set(round(x) for x in g["a"]))), max(g["w"] + g["a"]) - min(g["w"] + g["a"]) <= 1.5, g)
-        pg.close()
 
 
 URSINE = ["Bear School steel sword 4", "Bear School silver sword 4", "Bear School Crossbow", "Broadhead Bolt", "Bear Armor 4", "Bear Gloves 5", "Bear Pants 5", "Bear Boots 5", "q702_vampire_mask"]   # all nine slots; the last card is the mask
@@ -82,48 +29,178 @@ def gear(pg, ids):
     return pg.evaluate("""(ids=>{const d=eqData();EQ_SLOTS.forEach((s,i)=>{const it=ids[i]&&d.byId.get(ids[i]);S.gear[i]=it&&it.slot===s?it.n:0});save();eqRender(true);return S.gear.filter(x=>x).length})""", ids)
 
 
-def scrollcheck(b, base, check, label):
-    """The panel's scroller ends at the panel's bottom edge, so the last stats card is reachable at every size; the header stays; stacked layouts have no inner scroll."""
-    for w, h in ((2560, 1440), (1920, 1080), (1440, 900), (1280, 800), (390, 844)):
-        pg = b.new_page(viewport={"width": w, "height": h}, is_mobile=w < 600, has_touch=w < 600); pg.goto(base); until(pg, READY); pg.fill("#lvl", "100"); n = gear(pg, URSINE); pg.wait_for_timeout(300); tag = "%s: at %dx%d" % (label, w, h)
-        if w >= 1440:
-            before = pg.evaluate("document.querySelector('#eqpanel .eqrs').getBoundingClientRect().top")
-            r = pg.evaluate("""()=>{const b=document.getElementById('eqbody');b.scrollTop=1e6;const A=document.getElementById('eqpanel').getBoundingClientRect(),B=b.getBoundingClientRect(),c=[...document.querySelectorAll('#eqbody .eqitem')].pop().getBoundingClientRect();
-              return{n:document.querySelectorAll('#eqbody .eqitem').length,panelB:A.bottom,bodyB:B.bottom,lastB:c.bottom,lastT:c.top,bodyT:B.top,head:document.querySelector('#eqpanel .eqrs').getBoundingClientRect().top,scrolls:b.scrollHeight>b.clientHeight,end:Math.abs(b.scrollHeight-b.clientHeight-b.scrollTop)<=1}}""")
-            check("%s: scrolled to the end, the last stats card (%d cards) is fully inside the panel's visible box" % (tag, r["n"]), n == 9 and r["n"] == 9 and r["end"] and r["lastB"] <= r["bodyB"] + 0.5 and r["lastB"] <= r["panelB"] and r["lastT"] >= r["bodyT"], r)
-            check("%s: the scroller ends at the panel's bottom edge (%.0f, %.0f) and the header (title, level, mode toggle) stays put (%.0f, %.0f)" % (tag, r["bodyB"], r["panelB"], before, r["head"]), abs(r["panelB"] - r["bodyB"]) <= 3 and abs(before - r["head"]) <= 0.5 and r["scrolls"], r)
+def openinv(pg):
+    """The Inventory screen (the equipment tests work there); the data must be loaded."""
+    pg.evaluate("scrGo('inv')"); until(pg, "!document.getElementById('screenInv').hidden")
+
+
+GEOM = """()=>{const B=s=>{const e=document.querySelector(s);if(!e||!e.getClientRects().length)return null;const r=e.getBoundingClientRect();return{l:Math.round(r.left),t:Math.round(r.top),r:Math.round(r.right),b:Math.round(r.bottom),w:Math.round(r.width),h:Math.round(r.height)}};
+ const tiles=[...document.querySelectorAll('#eqbody .eqtile')].map(t=>t.getBoundingClientRect()).filter(r=>r.width>0);
+ return{tabs:B('.scrtabs'),lvl:B('.lvlblock'),right:B('.topright'),tInv:B('#tabInv'),tChar:B('#tabChar'),tAlch:B('#tabAlch'),prev:B('#scrPrev'),next:B('#scrNext'),left:B('#invLeft'),mid:B('#invMid'),centre:B('.invcentre'),rt:B('#invRight'),wbox:B('.wbox'),cbox:B('.cbox'),bbox:B('.bbox'),mask:B('.maskbox'),abox:B('.abox'),
+  sets:B('.invright .eqsec'),tree:B('#treePanel'),slots:B('#slots'),info:B('#info'),sw:document.documentElement.scrollWidth,vw:innerWidth,mintile:Math.min(...tiles.map(r=>Math.min(r.width,r.height))),ntiles:tiles.length}}"""
+
+
+def layoutcheck(b, base, check, label):
+    """The two screens at seven widths: the top bar, the Character screen (the v26 layout, no equipment), the Inventory screen (stash | slot boxes | silhouette | armour, sets, stats) and how it folds."""
+    for w, h in ((2560, 1259), (1920, 1080), (1440, 900), (1280, 800), (1024, 768), (768, 900), (390, 844)):
+        pg = b.new_page(viewport={"width": w, "height": h}, is_mobile=w < 600, has_touch=w < 600); pg.goto(base); until(pg, READY); tag = "%s: at %d px" % (label, w); E = pg.evaluate
+        c = E(GEOM)
+        check("%s: Character screen (the default): no sideways scroll, tree and skill slots visible, no equipment boxes, tabs: Alchemy, Inventory, Character" % tag,
+              c["sw"] <= c["vw"] and c["tree"] and c["slots"] and not c["wbox"] and c["tAlch"]["l"] < c["tInv"]["l"] < c["tChar"]["l"] and c["prev"]["r"] <= c["tAlch"]["l"] + 1 and c["tChar"]["r"] <= c["next"]["l"] + 1, c)
+        if w >= 1100:
+            check("%s: top bar: level block left, tabs in the middle, ruleset and Copy link right" % tag, c["lvl"]["r"] <= c["tabs"]["l"] and c["tabs"]["r"] <= c["right"]["l"] and abs((c["tabs"]["l"] + c["tabs"]["r"]) / 2 - w / 2) < 60, c)
         else:
-            r = pg.evaluate("""()=>{const b=document.getElementById('eqbody');window.scrollTo(0,1e7);const c=[...document.querySelectorAll('#eqbody .eqitem')].pop().getBoundingClientRect();return{inner:b.scrollHeight>b.clientHeight+1,ov:getComputedStyle(b).overflowY,lastB:c.bottom,vh:innerHeight}}""")
-            check("%s: stacked: no inner scroll, and the last stats card is reachable with the page scroll (bottom %d of %d)" % (tag, r["lastB"], r["vh"]), not r["inner"] and r["ov"] == "visible" and 0 < r["lastB"] <= r["vh"], r)
+            check("%s: top bar: the tabs and arrows come first, the level block, ruleset and Copy link below" % tag, c["tabs"]["t"] < c["lvl"]["t"] and c["tabs"]["t"] < c["right"]["t"] and c["tabs"]["l"] >= 0 and c["tabs"]["r"] <= w, c)
+        openinv(pg); g = E(GEOM)
+        check("%s: Inventory: no sideways scroll, no skill tree, a 44 px tap target on every slot tile (smallest %s)" % (tag, g["mintile"]), g["sw"] <= g["vw"] and not g["tree"] and g["ntiles"] == 15 and (w >= 600 or g["mintile"] >= 44), g)
+        if w >= 1440:
+            check("%s: Inventory: stash | weapons, consumables, bombs, mask | silhouette | armour, sets, item stats, left to right; the boxes stack top to bottom" % tag,
+                  g["left"]["r"] <= g["mid"]["l"] and g["mid"]["r"] <= g["centre"]["l"] + 1 and g["centre"]["r"] <= g["rt"]["l"] + 1 and g["wbox"]["b"] <= g["cbox"]["t"] and g["cbox"]["b"] <= g["bbox"]["t"] and g["bbox"]["b"] <= g["mask"]["t"] and g["abox"]["b"] <= g["sets"]["t"], g)
+        elif w >= 1024:
+            check("%s: Inventory: the equipment on top, the stash (and the slot panel) below it" % tag, g["left"]["t"] >= max(g["mid"]["b"], g["rt"]["b"]) - 2 and g["mid"]["r"] <= g["rt"]["l"] + 1, g)
+        else:
+            check("%s: Inventory: everything stacked: weapons, consumables, bombs, mask, then armour, sets, stats, then the stash" % tag, g["mid"]["b"] <= g["rt"]["t"] + 2 and g["rt"]["b"] <= g["left"]["t"] + 2 and g["wbox"]["b"] <= g["cbox"]["t"], g)
         pg.close()
-    pg = b.new_page(viewport={"width": 1440, "height": 900}); pg.goto(base); until(pg, READY); pg.fill("#lvl", "100"); E = pg.evaluate
-    gear(pg, URSINE[:3] + ["", "Bear Armor 4", "Bear Gloves 5", "Bear Pants 5", "Bear Boots 5"]); h3 = E("document.querySelector('.eqset h3').textContent"); notes = E("[...document.querySelectorAll('.eqset p.dim')].map(p=>p.textContent)"); cb = E("eqCur(2).name")
-    check("%s: Ursine swords + 4 armor + the Basic crossbow: '6 counted, 7 worn', and the crossbow is named with the real reason (%s)" % (label, notes), "6 counted, 7 worn" in h3 and len(notes) == 1 and notes[0] == cb + " is not counted: crossbows and bolts carry no set bonus tag in the game data, so they never count.", [h3, notes, cb])
-    gear(pg, ["Bear School steel sword 3", "Bear School silver sword 4", "", "", "Bear Armor 4", "Bear Gloves 5", "Bear Pants 5", "Bear Boots 5"]); notes = E("[...document.querySelectorAll('.eqset p.dim')].map(p=>p.textContent)")
-    check("%s: a lower-tier piece is not counted because of its tier, and the note says which tier counts (%s)" % (label, notes), len(notes) == 1 and "only the Grandmaster tier carries the set bonus tag" in notes[0] and "steel sword" in notes[0].lower(), notes)
+
+
+def screencheck(b, base, check, label):
+    """Switching screens with the tabs, the arrows and a swipe; the screen is in the link as s1I; the shared controls are on both screens."""
+    pg = b.new_page(viewport={"width": 1500, "height": 950}); pg.goto(base); until(pg, READY); E = pg.evaluate
+    vis = lambda sel: E("(s=>{const e=document.querySelector(s);return !!e&&e.getClientRects().length>0})", sel)
+    shared = lambda: all(vis(s) for s in ("#lvl", "#bonuspts", '#topbar [data-rs="ng"]', '#topbar [data-rs="ng_plus"]')) and (E("CFG.share===false") or vis("#copy"))     # the offline copy cannot make links, so it has no Copy link
+    check("%s: opens on Character: its screen shown, Inventory hidden, no s1 segment in the link, Character tab selected" % label, vis("#screenChar") and not vis("#screenInv") and E("S.scr") == "char" and not E("/\\.s1I/.test(location.hash)") and E("document.getElementById('tabChar').getAttribute('aria-selected')") == "true", E("location.hash"))
+    check("%s: Level, Bonus points, NG / NG+ and Copy link are on the Character screen" % label, shared())
+    check("%s: Alchemy is greyed, says 'coming later', is disabled and does nothing" % label, E("(()=>{const a=document.getElementById('tabAlch');return a.disabled&&/coming later/.test(a.textContent)&&a.classList.contains('off')})()") and E("(()=>{document.getElementById('tabAlch').click();return S.scr})()") == "char")
+    check("%s: on Character the right arrow is disabled and the left arrow is not" % label, E("document.getElementById('scrNext').disabled") and not E("document.getElementById('scrPrev').disabled"))
+    pg.click("#scrPrev"); pg.wait_for_timeout(100)
+    check("%s: the left arrow goes to Inventory: its screen shown, s1I in the link, the active tab is the filled gold block (%s)" % (label, E("getComputedStyle(document.getElementById('tabInv')).backgroundColor")),
+          vis("#screenInv") and not vis("#screenChar") and E("S.scr") == "inv" and E("/\\.s1I$/.test(location.hash)") and E("getComputedStyle(document.getElementById('tabInv')).backgroundColor") == "rgb(200, 168, 107)" and E("getComputedStyle(document.getElementById('tabChar')).backgroundColor") != "rgb(200, 168, 107)")
+    check("%s: Level, Bonus points, NG / NG+ and Copy link are on the Inventory screen too; on Inventory the left arrow is disabled" % label, shared() and E("document.getElementById('scrPrev').disabled") and not E("document.getElementById('scrNext').disabled"))
+    pg.click("#scrNext"); pg.wait_for_timeout(100)
+    check("%s: the right arrow goes back to Character (no s1 segment again)" % label, E("S.scr") == "char" and vis("#screenChar") and not E("/\\.s1I/.test(location.hash)"))
+    pg.click("#tabInv"); pg.wait_for_timeout(100); a = E("S.scr"); pg.click("#tabChar"); pg.wait_for_timeout(100)
+    check("%s: the tabs switch screens (Inventory, then Character)" % label, a == "inv" and E("S.scr") == "char")
+    pg.fill("#lvl", "55"); pg.click("#tabInv"); pg.wait_for_timeout(100)
+    check("%s: the level set on one screen is the level on the other (%s)" % (label, E("document.getElementById('lvl').value")), E("document.getElementById('lvl').value") == "55" and E("lvl()") == 55)
+    code = E("location.hash.slice(1)"); q = b.new_page(); q.goto(base + "#" + code); until(q, READY)
+    check("%s: a link made on Inventory opens on Inventory" % label, q.evaluate("S.scr") == "inv" and q.evaluate("!document.getElementById('screenInv').hidden") and q.evaluate("document.getElementById('screenChar').hidden")); q.close(); pg.close()
+    # swipe on a phone: left = next, right = previous; not from the skill tree (it drags)
+    m = b.new_page(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True); m.goto(base); until(m, READY); E = m.evaluate
+    SW = """([sel,dx])=>{const el=document.querySelector(sel),r=el.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+Math.min(40,r.height/2),mk=(t,cx)=>new Touch({identifier:7,target:el,clientX:cx,clientY:y});
+      el.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,cancelable:true,touches:[mk(el,x)],changedTouches:[mk(el,x)]}));
+      el.dispatchEvent(new TouchEvent('touchend',{bubbles:true,cancelable:true,touches:[],changedTouches:[mk(el,x+dx)]}));return S.scr}"""
+    on_tree = E(SW, ["#treePanel", -140]); on_char = E(SW, ["#treeHint", 140]); on_inv = E(SW, ["#invMid", -140]) if False else None
+    check("%s: 390 px: a swipe that starts on the skill tree does nothing (%s); a swipe right from the Character text goes to Inventory (%s)" % (label, on_tree, on_char), on_tree == "char" and on_char == "inv")
+    left = E(SW, ["#invMid", -140]); right = E(SW, ["#invMid", 140]); short = E(SW, ["#invMid", -30])
+    check("%s: 390 px: on Inventory a swipe left goes to Character (%s), a swipe right back (%s), a short swipe does nothing (%s)" % (label, left, right, short), left == "char" and right == "inv" and short == "inv")
+    m.close()
+
+
+def conscheck(b, base, check, label):
+    """Consumables: the data, what a slot accepts (the slot rule), the c1 and s1 link segments, unknown prefixes, old links re-encoding byte for byte."""
+    pg = b.new_page(viewport={"width": 1500, "height": 950}); pg.goto(base); until(pg, READY); E = pg.evaluate
+    cats = E("(()=>{const o={};CN.data.items.forEach(i=>o[i.cat]=(o[i.cat]||0)+1);return o})()")
+    check("%s: the consumables: 34 potions, 31 decoctions, 25 bombs, 36 oils (%s); every id has a registry number, no number twice" % (label, cats), cats == {"potion": 34, "decoction": 31, "bomb": 25, "oil": 36} and E("new Set(CN.data.items.map(i=>i.n)).size") == 126, cats)
+    R = E("""(()=>{const g=id=>CN.byId.get(id),a=(k,id)=>cnAccepts(k,g(id));return{
+      potionSlots:[1,2,3,4].every(i=>a('potion'+i,'Swallow 3')&&a('potion'+i,'Mutagen 1')&&a('potion'+i,'White Raffards Decoction 2')),
+      potionNoOilBomb:[1,2,3,4].every(i=>!a('potion'+i,'Beast Oil 2')&&!a('potion'+i,'Hanged Man Venom 1')&&!a('potion'+i,'Dancing Star 2')),
+      bombSlots:[1,2].every(i=>a('petard'+i,'Dancing Star 2')&&a('petard'+i,'Snow Ball')&&!a('petard'+i,'Swallow 1')&&!a('petard'+i,'Mutagen 1')&&!a('petard'+i,'Beast Oil 1')),
+      steel:a('oil_steel','Beast Oil 2')&&a('oil_steel','Hanged Man Venom 3')&&!a('oil_steel','Cursed Oil 2')&&!a('oil_steel','Necrophage Oil 1')&&!a('oil_steel','Swallow 1'),
+      silver:a('oil_silver','Cursed Oil 2')&&a('oil_silver','Beast Oil 1')&&a('oil_silver','Vampire Oil 3')&&!a('oil_silver','Dancing Star 1'),
+      steelN:CN.bySlot.oil_steel.length,silverN:CN.bySlot.oil_silver.length,potionN:CN.bySlot.potion1.length,bombN:CN.bySlot.petard1.length,nothing:!cnAccepts('potion1',null)&&!cnAccepts('chest',CN.byId.get('Swallow 1'))}})()""")
+    check("%s: slot rule: potion slots take potions and decoctions and never an oil or a bomb; bomb slots only bombs; the steel sword takes only SteelOil oils (6), the silver sword every oil (36) (%s)" % (label, R),
+          R["potionSlots"] and R["potionNoOilBomb"] and R["bombSlots"] and R["steel"] and R["silver"] and (R["steelN"], R["silverN"], R["potionN"], R["bombN"]) == (6, 36, 65, 25) and R["nothing"], R)
+    SET = "(ids)=>{const d=CN.byId;S.cons=ids.map(x=>x?d.get(x).n:0);return enc()}"
+    ids = ["Swallow 3", "Mutagen 1", "Cat 2", "White Raffards Decoction 3", "Dancing Star 3", "Samum 1", "Beast Oil 3", "Vampire Oil 2"]
+    code = E(SET, ids); seg = [x for x in code.split(".") if x.startswith("c1")]
+    back = E("(c=>{const s=dec(c);return s&&s.cons.join()})", code); want = E("(ids=>ids.map(x=>CN.byId.get(x).n).join())", ids)
+    check("%s: c1 round trip: one c1 segment of 18 characters (c1 + 8 slots x 2), the same 8 numbers come back (%s)" % (label, seg), len(seg) == 1 and len(seg[0]) == 18 and back == want, [seg, back, want])
+    check("%s: no consumables, no c1 segment; link order is g1, c1, s1" % label, "c1" not in E("(()=>{S.cons.fill(0);return enc()})()") and E("(i=>{S.cons=i.map(x=>CN.byId.get(x).n);S.gear[4]=eqData().byId.get('Lynx Armor 4').n;S.scr='inv';const p=enc().split('.').slice(8).map(x=>x.slice(0,2));S.cons.fill(0);S.gear.fill(0);S.scr='char';return p.join()})", ids) == "g1,c1,s1")
+    base_code = E("(()=>{S.cons.fill(0);S.gear.fill(0);S.scr='char';S.rs='ng';return enc()})()")
+    tolerant = E("(c)=>{const s=dec(c+'.z9ABC');return !!s&&dec(c+'.z9ABC.y2').cons.every(x=>x===0)}", base_code)
+    bad = E("(c)=>[c+'.c1ABC',c+'.c1'+'A'.repeat(17),c+'.s1X',c+'.s1I.s1I',c+'.Q9AB',c+'.1xAB',c+'.9z',c+'.g1AAAAAAAAAAAAAAAAAAAAA.g1AAAAAAAAAAAAAAAAAAAAA',c+'.c1'+'A'.repeat(15)+'!'].map(x=>dec(x))", base_code)
+    check("%s: a well-formed unknown prefix is ignored (z9, y2); malformed or repeated known segments and ill-shaped ones are rejected (%s)" % (label, bad.count(None)), tolerant and all(x is None for x in bad), bad)
+    # every fixture link: decoding then encoding gives the same link, byte for byte (the 16-slot links; older ones had 12 slots)
+    import json, linkcheck
+    fixtures, _ = linkcheck.load_fixtures(); same, diff = 0, []
+    for fx in fixtures:
+        if fx["kind"] == "legacy" or len(fx["code"].split(".")[2]) != 32: continue
+        r = E("(c)=>{const s=dec(c);if(!s)return null;S=s;enforceLocks();return enc()}", fx["code"])
+        if r == fx["code"]: same += 1
+        else: diff.append((fx["name"][:30], fx["code"][-30:], (r or "")[-30:]))
+    check("%s: every link made before v28 re-encodes byte for byte (%d links)" % (label, same), not diff and same > 30, diff[:3])
     pg.close()
 
 
-GUTTER = """()=>{const b=document.getElementById('eqbody'),cs=getComputedStyle(b),r=b.getBoundingClientRect();
- const sbw=b.offsetWidth-b.clientWidth-parseFloat(cs.borderLeftWidth)-parseFloat(cs.borderRightWidth);
- const edge=r.left+parseFloat(cs.borderLeftWidth)+b.clientWidth-parseFloat(cs.paddingRight);   /* the content box's right edge, left of the scrollbar */
- const v=[...b.querySelectorAll('.eqgrid b')].map(e=>{const q=e.getBoundingClientRect();return{r:q.right,h:q.height,t:e.textContent}});
- const lh=Math.max(...v.map(x=>x.h));return{n:v.length,sbw:sbw,pr:parseFloat(cs.paddingRight),edge:edge,over:v.filter(x=>x.r>edge+0.5).map(x=>x.t+'@'+x.r).slice(0,5),maxr:Math.max(...v.map(x=>x.r)),wrapped:v.filter(x=>x.h>lh*1.5).length,gutter:cs.scrollbarGutter,pcts:v.filter(x=>/%/.test(x.t)).length}}"""
-
-
-def guttercheck(b, base, check, label):
-    """The scrollbar never sits on the stat values: every value's right edge is inside the scroller's content box (left of the scrollbar and its gap), and a value like '11 %' stays on one line."""
-    for w, h in ((2560, 1440), (1920, 1080), (1440, 900), (1280, 800)):
-        pg = b.new_page(viewport={"width": w, "height": h}); pg.goto(base); until(pg, READY); pg.fill("#lvl", "100"); gear(pg, URSINE); pg.wait_for_timeout(300); g = pg.evaluate(GUTTER)
-        check("%s: at %dx%d (%s): %d stat values, all end inside the scroller's content box (right edge %.1f, scrollbar %d px, padding %d px, gutter %s), %d with a %% sign, none wrapped" % (label, w, h, "scrolling panel" if w >= 1440 else "stacked, no inner scroll", g["n"], g["edge"], g["sbw"], g["pr"], g["gutter"], g["pcts"]),
-              g["n"] > 20 and g["pcts"] > 0 and not g["over"] and (w < 1440 or g["pr"] >= 12) and g["wrapped"] == 0, g)
-        pg.close()
+def invcheck(b, base, check, label):
+    """The Inventory flow: the stash, the slot panel for a consumable slot, Equip, the oil row of a sword, 'Affected by', the link, a phone's full-screen sheet."""
+    pg = b.new_page(viewport={"width": 1920, "height": 1080}); pg.goto(base); until(pg, READY); E = pg.evaluate; openinv(pg); pg.fill("#lvl", "100")
+    E("(()=>{S.gear.fill(0);S.cons.fill(0);S.slots=S.slots.map(()=>null);save();eqRender(true)})()")
+    check("%s: the stash is empty: five sub-tab icons, an empty state, 'Import save (coming later)' disabled (%s)" % (label, E("document.getElementById('stash').innerText")[:70].replace("\n", " ")),
+          E("document.querySelectorAll('#stash .sttab').length") == 5 and "Your stash fills when you import a save. Click any slot to plan." in E("document.getElementById('stash').innerText") and E("document.getElementById('stimport').disabled")
+          and E("[...document.querySelectorAll('#stash .sttab')].map(b=>b.title).join()") == "Crafting components,Quest items,Food & drink, Roach,Alchemy,Weapons & Armor" and E("document.querySelectorAll('#stash .sttab.on').length") == 1)
+    pg.click('#stash .sttab >> nth=3'); a = E("document.querySelector('#stash .stname').textContent"); pg.click('#stash .sttab >> nth=0')
+    check("%s: the sub-tabs switch (Alchemy is the fourth: %s); the active one is outlined" % (label, a), a.lower() == "alchemy" and E("document.querySelector('#stash .sttab.on').dataset.t") == "0")
+    # a potion slot
+    pg.click('#eqbody .eqtile[data-i="9"]'); pg.wait_for_selector("#pkgrid .pktile")
+    title = E("document.getElementById('pktitle').textContent"); n_all = E("document.querySelectorAll('#pkgrid .pktile').length"); stash_hidden = E("document.getElementById('stash').hidden")
+    pg.click('.chip[data-k="potion"]'); n_p = E("document.querySelectorAll('#pkgrid .pktile').length"); pg.click('.chip[data-k="decoction"]'); n_d = E("document.querySelectorAll('#pkgrid .pktile').length"); pg.click('.chip[data-k="all"]')
+    check("%s: clicking a consumable slot replaces the stash with the panel '%s': %d cards, Potions %d, Decoctions %d; no oil or bomb among them; 'Only items in my stash' is disabled" % (label, title, n_all, n_p, n_d),
+          title == "Potion 1 · all items that fit" and stash_hidden and (n_all, n_p, n_d) == (65, 34, 31) and E("[...document.querySelectorAll('#pkgrid .pktile')].every(t=>['potion','decoction'].includes(CN.byId.get(t.dataset.id).cat))") and E("document.getElementById('pkstash').disabled")
+          and E("document.querySelectorAll('#oilrow').length") == 0, [title, n_all, n_p, n_d])
+    pg.fill("#pkq", "superior swallow"); pg.wait_for_timeout(100); cards = E("[...document.querySelectorAll('#pkgrid .pktile span')].map(s=>s.textContent)")
+    pg.click('#pkgrid .pktile[data-id="Swallow 3"]'); tip = E("document.getElementById('pkside').innerText")
+    check("%s: search 'superior swallow' leaves one card; its detail shows toxicity, duration, charges and the effect (%s)" % (label, cards), cards == ["Superior Swallow"] and "Toxicity" in tip and "Duration" in tip and "Charges" in tip and "Accelerates Vitality" in tip, [cards, tip[:200]])
+    pg.click("#pkequip"); pg.wait_for_timeout(150)
+    check("%s: Equip puts Superior Swallow in Potion 1, closes the panel (the stash is back), the slot shows it, Item stats list it with base values, no totals" % label,
+          E("S.cons[0]") == E("CN.byId.get('Swallow 3').n") and E("document.getElementById('eqpick').hidden") and not E("document.getElementById('stash').hidden") and E("!!document.querySelector('.eqslot.cons.on[data-i=\"9\"] img')")
+          and E("[...document.querySelectorAll('#invRight .eqitem h4')].map(h=>h.textContent).join()") == "Superior Swallow" and "Toxicity" in E("document.querySelector('#invRight .eqitem').innerText") and E("/\\.c1/.test(document.getElementById('link').value)"))
+    # a bomb slot
+    pg.click('#eqbody .eqtile[data-i="13"]'); pg.wait_for_selector("#pkgrid .pktile"); nb = E("document.querySelectorAll('#pkgrid .pktile').length"); chips = E("document.querySelectorAll('.chip').length"); pg.keyboard.press("Escape")
+    check("%s: a bomb slot lists the 25 bombs only (no chips)" % label, nb == 25 and chips == 0 and E("document.getElementById('eqpick').hidden") and not E("document.getElementById('stash').hidden"))
+    # swords and oils: equip a silver sword first, then choose an oil in its panel
+    E("(()=>{S.gear[1]=eqData().byId.get('Lynx School silver sword 4').n;S.gear[0]=eqData().byId.get('Lynx School steel sword 4').n;save();eqRender(true)})()")
+    pg.click('#eqbody .eqtile[data-i="1"]'); pg.wait_for_selector("#oilrow .oiltile"); n_silver = E("document.querySelectorAll('#oilrow .oiltile').length"); title = E("document.getElementById('pktitle').textContent"); sel = E("document.querySelector('#pkgrid .pktile.sel')&&document.querySelector('#pkgrid .pktile.sel').dataset.id")
+    pg.click('#oilrow .oiltile[data-n="%d"]' % E("CN.byId.get('Beast Oil 2').n")); pg.wait_for_timeout(150)
+    check("%s: the silver sword's panel ('%s') has an Oil row with 'No oil' and the 36 oils; the worn sword is preselected (%s); choosing Beast Oil 2 applies it (S.cons[7])" % (label, title, sel),
+          title == "Silver sword · all items that fit" and n_silver == 37 and sel == "Lynx School silver sword 4" and E("S.cons[7]") == E("CN.byId.get('Beast Oil 2').n") and E("document.querySelector('#oilrow .oiltile.sel').dataset.n") == str(E("S.cons[7]")))
+    check("%s: the sword's Item stats show 'Oil: Enhanced beast oil', the tile has an oil badge, the oil has its own stats entry; the panel stays open" % label,
+          "Oil: Enhanced beast oil" in E("document.querySelector('#invRight .eqitem .eqoil')&&[...document.querySelectorAll('#invRight .eqitem')].map(x=>x.innerText).join('|')") and E("!!document.querySelector('.eqslot[data-i=\"1\"] .oilbadge')") and "Silver sword oil" in E("document.getElementById('invRight').innerText") and not E("document.getElementById('eqpick').hidden"))
+    pg.keyboard.press("Escape"); pg.click('#eqbody .eqtile[data-i="0"]'); pg.wait_for_selector("#oilrow .oiltile"); n_steel = E("document.querySelectorAll('#oilrow .oiltile').length"); names = E("[...document.querySelectorAll('#oilrow .oiltile span')].map(s=>s.textContent).join()")
+    check("%s: the steel sword's Oil row offers only the 6 oils with the SteelOil tag plus 'No oil' (%d: %s)" % (label, n_steel, names[:80]), n_steel == 7 and "Beast oil" in names and "Hanged Man" in names and "Cursed" not in names, names)
+    pg.keyboard.press("Escape")
+    # no oil, and the link
+    pg.click('#eqbody .eqtile[data-i="1"]'); pg.click('#oilrow .oiltile[data-n="0"]'); gone = E("S.cons[7]"); pg.click('#oilrow .oiltile[data-n="%d"]' % E("CN.byId.get('Beast Oil 2').n")); pg.keyboard.press("Escape")
+    code = E("document.getElementById('link').value").split("#")[-1]; want = E("[S.scr,S.cons.join(),S.gear.join()]")
+    q = b.new_page(viewport={"width": 1920, "height": 1080}); q.goto(base + "#" + code); until(q, READY); got = q.evaluate("[S.scr,S.cons.join(),S.gear.join()]")
+    shown = q.evaluate("[!document.getElementById('screenInv').hidden,!!document.querySelector('.eqslot.cons.on[data-i=\"9\"] img'),!!document.querySelector('.eqslot[data-i=\"1\"] .oilbadge'),document.querySelector('#invRight').innerText.indexOf('Oil: Enhanced beast oil')>=0]"); q.close()
+    check("%s: 'No oil' removes it (%s); copy link, open in a new tab: the Inventory screen, the potion in slot 1 and the oil on the silver sword come back (%s)" % (label, gone, shown), gone == 0 and got == want and all(shown), [got, want, shown])
+    # Affected by: names of the skills and mutations of this build that change the item
+    E("""(()=>{let ti=-1,i=-1;TREES.forEach((t,a)=>t.sk.forEach((s,k)=>{if(s.id==='alchemy_s14'){ti=a;i=k}}));S.lv[ti][i]=1;S.slots[0]=[ti,i];S.cons[0]=CN.byId.get('Mutagen 1').n;eqRender(true)})()""")
+    nm = lambda i: E("TREES.flatMap(t=>t.sk).find(s=>s.id==='%s').name" % i); adapt, effic = nm("alchemy_s14"), nm("alchemy_s8")
+    aff = E("document.getElementById('invRight').innerText"); tip = E("(()=>{const t=document.querySelector('.eqtile[data-i=\"9\"]');t.focus();return document.getElementById('eqtip').innerText})()")
+    check("%s: 'Affected by' names %s for a decoction when that skill is equipped (names only), and nothing for a bomb" % (label, adapt), ("Affected by: " + adapt) in aff and ("Affected by: " + adapt) in tip and E("(()=>{S.cons[4]=CN.byId.get('Samum 1').n;eqRender(true);return document.getElementById('invRight').innerText.split('Samum')[1]})()").find("nothing in this build") >= 0, aff[-200:])
+    E("""(()=>{let ti=-1,i=-1;TREES.forEach((t,a)=>t.sk.forEach((s,k)=>{if(s.id==='alchemy_s8'){ti=a;i=k}}));S.lv[ti][i]=1;S.slots[1]=[ti,i];eqRender(true)})()""")
+    eff = E("document.getElementById('invRight').innerText")
+    check("%s: %s on a bomb: 'Affected by' names it, with the in-game text and the note that the scripts only change crafting yield" % (label, effic), effic in eff and "+1 bomb per slot" in eff and "only add it to the number of bombs a recipe makes" in eff, eff[-300:])
+    check("%s: nothing is computed: no totals in Item stats" % label, "total" not in E("document.querySelector('#invRight .eqsec:last-child h3').innerText").lower() or "not added up" in E("document.querySelector('#invRight .eqsec:last-child h3').innerText"))
+    # a hand-made link with an oil in a potion slot loses it
+    bad = E("(()=>{S.cons[1]=CN.byId.get('Beast Oil 1').n;S.cons[6]=CN.byId.get('Cursed Oil 1').n;return cnValidate()+':'+S.cons[1]+':'+S.cons[6]})()")
+    check("%s: an oil in a potion slot, or a silver-only oil on the steel sword (hand-made link), is dropped (%s)" % (label, bad), bad == "2:0:0", bad)
+    check("%s: the Item stats heading says base values, not added up" % label, "base values" in E("document.querySelector('#invRight .eqsec:last-child h3').innerText"))
+    pg.close()
+    m = b.new_page(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True); m.goto(base); until(m, READY); m.evaluate("scrGo('inv')"); until(m, "!document.getElementById('screenInv').hidden")
+    m.tap('#eqbody .eqtile[data-i="10"]'); m.wait_for_selector("#pkgrid .pktile"); r = m.evaluate("(()=>{const r=document.querySelector('.eqpmodal').getBoundingClientRect(),p=document.getElementById('eqpick').getBoundingClientRect();return[Math.round(r.width),Math.round(p.height),innerWidth,innerHeight,getComputedStyle(document.getElementById('eqpick')).position]})()")
+    ok_tiles = m.evaluate("[...document.querySelectorAll('.pktile,.chip,#pkclose')].every(t=>t.getBoundingClientRect().height>=40)")
+    check("%s: 390 px: tapping a slot opens the panel as a full-screen sheet (%s), its cards and buttons are tap sized" % (label, r), r[0] >= r[2] - 2 and r[1] >= r[3] - 2 and r[4] == "fixed" and ok_tiles, r)
+    m.tap("#pkgrid .pktile >> nth=2"); m.tap("#pkequip"); m.wait_for_timeout(200)
+    check("%s: 390 px: tapping a card and Equip equips it, the sheet closes, nothing scrolls sideways" % label, m.evaluate("S.cons[1]")>0 and m.evaluate("document.getElementById('eqpick').hidden") and m.evaluate("document.documentElement.scrollWidth-innerWidth") <= 0, m.evaluate("S.cons.join()")); m.close()
 
 
 def tiercheck(b, base, check, label):
     """The picker shows every tier as its own card (full in-game name, tier label), a family together from Basic to Grandmaster; the Tier filter and the search narrow the cards; the tooltip is the selected card only;
     the worn item is selected when the picker opens and nothing is selected when nothing is worn."""
-    pg = b.new_page(viewport={"width": 1920, "height": 1080}); pg.goto(base); until(pg, READY); E = pg.evaluate
+    pg = b.new_page(viewport={"width": 1920, "height": 1080}); pg.goto(base); until(pg, READY); E = pg.evaluate; openinv(pg)
     E("(()=>{S.gear.fill(0);save();eqRender(true)})()"); pg.fill("#lvl", "30"); pg.click('#eqbody .eqtile[data-i="%d"]' % CHEST); pg.wait_for_selector("#pkgrid .pktile")
     CARDS = "[...document.querySelectorAll('#pkgrid .pktile')].map(t=>({title:t.querySelector('span').textContent,tier:(t.querySelector('.pktr')||{}).textContent||'',low:t.classList.contains('low'),sel:t.classList.contains('sel'),worn:t.classList.contains('worn')}))"
     check("%s: opened with nothing worn: nothing is selected, the detail says so (%s)" % (label, E("document.getElementById('pkside').textContent")), E("document.querySelectorAll('#pkgrid .pktile.sel').length") == 0 and "Select an item" in E("document.getElementById('pkside').textContent"))
@@ -153,15 +230,15 @@ def tiercheck(b, base, check, label):
 def countcheck(b, base, check, label):
     """Set pieces count by the SetBonusPiece tag of the chosen ruleset only (playerWitcher.ws:10972-10981): Basic Feline counts 0 in the first playthrough, per the data in New Game Plus, Grandmaster 3 and 6;
     the tooltip and the Equip set note say so; the new Wolf School tiers group like the other sets; new items round-trip through the link."""
-    pg = b.new_page(viewport={"width": 1920, "height": 1080}); pg.goto(base); until(pg, READY); E = pg.evaluate; pg.fill("#lvl", "100")
+    pg = b.new_page(viewport={"width": 1920, "height": 1080}); pg.goto(base); until(pg, READY); E = pg.evaluate; openinv(pg); pg.fill("#lvl", "100")
     BASIC = ["Lynx School steel sword", "Lynx School silver sword", "Lynx School Crossbow", "", "Lynx Armor", "Lynx Gloves 1", "Lynx Pants 1", "Lynx Boots 1"]
     GM = ["Lynx School steel sword 4", "Lynx School silver sword 4", "Lynx School Crossbow", "", "Lynx Armor 4", "Lynx Gloves 5", "Lynx Pants 5", "Lynx Boots 5"]
     CARD = "[document.querySelector('.eqset h3').textContent,document.querySelectorAll('.eqset li.lit').length]"
     gear(pg, BASIC); a = E(CARD); data = E("EQ_SLOTS.map((s,i)=>eqCur(i)).filter(it=>it&&it.set_bonus_piece).length")
     check("%s: a full Basic Feline set (7 pieces) in the first playthrough counts 0 pieces, no bonus lit (%s)" % (label, a), a[0].endswith("0 counted, 7 worn") and a[1] == 0 and data == 0, [a, data])
-    pg.click('#eqpanel [data-rs="ng_plus"]'); until(pg, "S.rs==='ng_plus'&&!!eqData()"); pg.wait_for_timeout(300); c = E(CARD); data = E("EQ_SLOTS.map((s,i)=>eqCur(i)).filter(it=>it&&it.set_bonus_piece).length"); kept = E("S.gear.filter(Boolean).length")
+    pg.click('#topbar [data-rs="ng_plus"]'); until(pg, "S.rs==='ng_plus'&&!!eqData()"); pg.wait_for_timeout(300); c = E(CARD); data = E("EQ_SLOTS.map((s,i)=>eqCur(i)).filter(it=>it&&it.set_bonus_piece).length"); kept = E("S.gear.filter(Boolean).length")
     check("%s: ... the same build switched to New Game Plus: the Sets panel is recomputed from that ruleset's tags (%s; %d of %d pieces carry the tag)" % (label, c, data, kept), kept == 7 and data == 6 and c[0].endswith("6 counted, 7 worn") and c[1] == 2, [c, data, kept])
-    pg.click('#eqpanel [data-rs="ng"]'); until(pg, "S.rs==='ng'"); pg.wait_for_timeout(300); a2 = E(CARD)
+    pg.click('#topbar [data-rs="ng"]'); until(pg, "S.rs==='ng'"); pg.wait_for_timeout(300); a2 = E(CARD)
     check("%s: ... and back to the first playthrough: 0 counted again (%s)" % (label, a2), a2[0].endswith("0 counted, 7 worn") and a2[1] == 0, a2)
     E("(()=>{S.gear.fill(0);save();eqRender(true)})()"); gear(pg, ["", "", "", "", "Lynx Armor 4", "Lynx Gloves 5", "Lynx Pants 5", ""]); three = E(CARD)
     gear(pg, GM); six = E(CARD)
@@ -178,11 +255,11 @@ def countcheck(b, base, check, label):
     WOLF = "[...document.querySelectorAll('#pkgrid .pktile')].map(t=>t.querySelector('span').textContent).filter(c=>/^(enhanced |superior |mastercrafted |grandmaster )?(legendary |legendary )?wolven armor$/i.test(c))"
     pg.click('#eqbody .eqtile[data-i="%d"]' % CHEST); pg.wait_for_selector("#pkgrid .pktile"); pg.fill("#pkq", "wolven armor"); pg.wait_for_timeout(100); cards = E(WOLF)
     check("%s: first playthrough: the Wolven armor cards, one per tier, Basic to Grandmaster (%s)" % (label, cards), cards == ["Wolven armor", "Enhanced Wolven armor", "Superior Wolven armor", "Mastercrafted Wolven armor", "Grandmaster Wolven armor"], cards)
-    pg.keyboard.press("Escape"); pg.click('#eqpanel [data-rs="ng_plus"]'); until(pg, "S.rs==='ng_plus'"); pg.click('#eqbody .eqtile[data-i="%d"]' % CHEST); pg.wait_for_selector("#pkgrid .pktile"); pg.fill("#pkq", "wolven armor"); pg.wait_for_timeout(100); cards = E(WOLF)
+    pg.keyboard.press("Escape"); pg.click('#topbar [data-rs="ng_plus"]'); until(pg, "S.rs==='ng_plus'"); pg.click('#eqbody .eqtile[data-i="%d"]' % CHEST); pg.wait_for_selector("#pkgrid .pktile"); pg.fill("#pkq", "wolven armor"); pg.wait_for_timeout(100); cards = E(WOLF)
     check("%s: New Game Plus: Wolven armor and Legendary Wolven armor are separate cards, each Basic to Grandmaster, each family together (%s)" % (label, cards),
           cards == ["Wolven armor", "Enhanced Wolven armor", "Superior Wolven armor", "Mastercrafted Wolven armor", "Grandmaster Wolven armor", "Legendary Wolven armor", "Enhanced legendary Wolven armor", "Superior legendary Wolven armor", "Mastercrafted legendary Wolven armor", "Grandmaster legendary Wolven armor"]
           or cards == ["Legendary Wolven armor", "Enhanced legendary Wolven armor", "Superior legendary Wolven armor", "Mastercrafted legendary Wolven armor", "Grandmaster legendary Wolven armor", "Wolven armor", "Enhanced Wolven armor", "Superior Wolven armor", "Mastercrafted Wolven armor", "Grandmaster Wolven armor"], cards)
-    pg.keyboard.press("Escape"); pg.click('#eqpanel [data-rs="ng"]'); until(pg, "S.rs==='ng'")
+    pg.keyboard.press("Escape"); pg.click('#topbar [data-rs="ng"]'); until(pg, "S.rs==='ng'")
     # new items round-trip through the link
     NEW = {"steel": "Wolf School steel sword 2", "chest": "Wolf Armor 1", "gloves": "DLC1 Temerian Gloves", "boots": "Nekker Boots", "crossbow": "DLC13 Elven Crossbow"}
     E("(ids=>{const d=eqData();S.gear.fill(0);EQ_SLOTS.forEach((s,i)=>{if(ids[s])S.gear[i]=d.byId.get(ids[s]).n});save();eqRender(true)})", NEW); code = E("location.hash.slice(1)"); want = E("S.gear.join()")
@@ -204,7 +281,7 @@ def levelcheck(b, base, check, label, pg):
     def start(level, bonus=0):
         pg.keyboard.press("Escape") if not E("document.getElementById('eqpick').hidden") else None
         pg.fill("#lvl", str(level)); pg.fill("#bonuspts", str(bonus)); E("(()=>{S.gear.fill(0);save();eqRender(true)})()")
-    if E("S.rs") != "ng": pg.click('#eqpanel [data-rs="ng"]'); until(pg, "S.rs==='ng'")
+    if E("S.rs") != "ng": pg.click('#topbar [data-rs="ng"]'); until(pg, "S.rs==='ng'")
     start(1); opener(EQ_CHEST, "Lynx Armor 1")
     side = E("document.getElementById('pkside').innerText"); why = E("(document.getElementById('pkwhy')||{}).textContent||''")
     check("%s: Level 1, Feline Enhanced chest: Equip is disabled and says 'Requires level 23'; the level is red in the tooltip and on the tile" % label,
@@ -242,23 +319,26 @@ def levelcheck(b, base, check, label, pg):
     check("%s: raising Level back to 40 clears the marks" % label, E("document.querySelectorAll('.eqwarn').length") == 0)
     # the required levels of the sample items, both rulesets, against the hand calculation in LEVELS
     for rs, want_lv in LEVELS.items():
-        if E("S.rs") != rs: pg.click('#eqpanel [data-rs="%s"]' % rs); until(pg, "S.rs==='%s'&&!!eqData()" % rs)
+        if E("S.rs") != rs: pg.click('#topbar [data-rs="%s"]' % rs); until(pg, "S.rs==='%s'&&!!eqData()" % rs)
         got = E("(l=>{const o={};Object.keys(l).forEach(k=>{const it=eqData().byId.get(k);o[k]=it?it.required_level:'missing'});return o})", want_lv)
         check("%s: required levels in %s match the scripts (%s)" % (label, rs, ", ".join("%s %s" % kv for kv in list(want_lv.items())[:3]) + ", ..."), got == want_lv, got)
-    relic = E("(()=>{const it=eqData().byId.get('Wolf');return it?eqLevel(it).t:''})()"); pg.click('#eqpanel [data-rs="ng"]'); until(pg, "S.rs==='ng'"); relic = E("eqLevel(eqData().byId.get('Wolf')).t")
+    relic = E("(()=>{const it=eqData().byId.get('Wolf');return it?eqLevel(it).t:''})()"); pg.click('#topbar [data-rs="ng"]'); until(pg, "S.rs==='ng'"); relic = E("eqLevel(eqData().byId.get('Wolf')).t")
     check("%s: an autogen relic is never blocked (the level is rolled when it drops) and says 'Level varies'" % label, relic.startswith("Level varies") and not E("eqLow(eqData().byId.get('Wolf'))"), relic)
     start(100)
 
 
 def run(b, base, check, label, quick=False):
     errs, events = [], []; pg = b.new_page(viewport={"width": 1400, "height": 950}); pg.on("pageerror", lambda e: errs.append(str(e).split("\n")[0][:100])); E = pg.evaluate
-    pg.on("load", lambda p: events.append("load")); pg.on("request", lambda r: events.append("data") if "/data/items" in r.url else None)
-    pg.goto(base); check("%s: the panel shows right away and the equipment data loads after the page has loaded, only items.js and items_ng.js" % label, until(pg, READY) and E(KEYS) == ["items.js", "items_ng.js"] and events.index("load") < (events.index("data") if "data" in events else 99), [events[:4], E(KEYS)])
-    layout(b, base, check, label); scalecheck(b, base, check, label); scrollcheck(b, base, check, label); guttercheck(b, base, check, label); tiercheck(b, base, check, label); countcheck(b, base, check, label)
+    pg.on("load", lambda p: events.append("load")); pg.on("request", lambda r: events.append("data") if ("/data/items" in r.url or "/data/consumables" in r.url) else None)
+    pg.goto(base); check("%s: the equipment and consumables data load after the page has loaded, only items.js, items_ng.js and consumables.js" % label, until(pg, READY) and sorted(E(KEYS)) == ["consumables.js", "items.js", "items_ng.js"] and events.index("load") < (events.index("data") if "data" in events else 99), [events[:4], E(KEYS)])
+    layoutcheck(b, base, check, label); screencheck(b, base, check, label); conscheck(b, base, check, label); invcheck(b, base, check, label); tiercheck(b, base, check, label); countcheck(b, base, check, label)
+    openinv(pg)
     pg.fill("#lvl", "100")      # the planner starts at Level 1 and the game blocks items above the level, so the walk-through below runs at the top level
-    check("%s: weapons (steel, silver, crossbow, bolts) then armor (chest, gloves, trousers, boots, mask); one greyed strip \"Consumables & bombs, coming later\"" % label,
-          E("[...document.querySelectorAll('#eqbody .eqw .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "steel,silver,crossbow,bolts" and E("[...document.querySelectorAll('#eqbody .eqarm .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "chest,gloves,trousers,boots,mask"
-          and E("document.querySelector('#eqbody .eqstrip').textContent") == "Consumables & bombs, coming later" and E("document.querySelectorAll('#eqbody .eqstrip').length") == 1)
+    check("%s: the slot boxes: weapons (steel, silver, bolts, crossbow), consumables (4), bombs (2), mask; armor (chest, gloves, trousers, boots); no Pockets slot" % label,
+          E("[...document.querySelectorAll('#eqbody .wbox .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "steel,silver,bolts,crossbow" and E("[...document.querySelectorAll('#eqbody .cbox .eqtile[data-i]')].map(b=>b.dataset.i).join()") == "9,10,11,12"
+          and E("[...document.querySelectorAll('#eqbody .bbox .eqtile[data-i]')].map(b=>b.dataset.i).join()") == "13,14" and E("[...document.querySelectorAll('#eqbody .maskbox .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "mask"
+          and E("[...document.querySelectorAll('#eqbody .abox .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "chest,gloves,trousers,boots" and E("document.querySelectorAll('#eqbody .eqtile').length") == 15 and "ocket" not in E("document.getElementById('eqbody').innerText")
+          and E("[...document.querySelectorAll('#eqbody .boxcap')].map(b=>b.textContent).join()") == "Consumables,Bombs")
     # the chooser for EVERY weapon slot, and Equip
     for slot, i in (("steel", 0), ("silver", 1), ("bolts", 3), ("crossbow", 2)):
         pg.click('#eqbody .eqtile[data-i="%d"]' % i); pg.wait_for_selector("#pkgrid .pktile"); n = E("document.querySelectorAll('#pkgrid .pktile').length"); only = E("[...document.querySelectorAll('#pkgrid .pktile')].every(t=>EQ.rs[S.rs].byId.get(t.dataset.id).slot===EQ.pick.slot)")
@@ -293,7 +373,7 @@ def run(b, base, check, label, quick=False):
     E("(()=>{EQ.pick.sel=EQ.rs.ng.byId.get('Wolf');eqPickRender()})()"); relic = E("document.getElementById('pkside').innerText")
     check("%s: an autogen relic shows its rolled ranges and 'Level varies', and has no Equip set button (absent, not disabled)" % label, "Level varies" in relic and " to " in relic and E("document.querySelectorAll('#pkequipset').length") == 0, relic[:80]); pg.keyboard.press("Escape")
     # Equip set, in New Game Plus where every tier carries the set bonus tag
-    pg.click('#eqpanel [data-rs="ng_plus"]'); until(pg, "S.rs==='ng_plus'&&!!eqData()"); E("(()=>{S.gear.fill(0);save();eqRender(true)})()")
+    pg.click('#topbar [data-rs="ng_plus"]'); until(pg, "S.rs==='ng_plus'&&!!eqData()"); E("(()=>{S.gear.fill(0);save();eqRender(true)})()")
     pg.click('#eqbody .eqtile[data-i="4"]'); pg.wait_for_selector("#pkgrid .pktile"); E("(()=>{EQ.pick.sel=EQ.rs.ng_plus.byId.get('Lynx Armor 1');eqPickRender()})()")
     note = E("(document.querySelector('#pkside .pknote')||{}).textContent||''")
     check("%s: Enhanced Feline chest: Equip set is visible, says what it will do and names the tier fallback (the crossbow has only a Basic version)" % label, E("document.querySelectorAll('#pkequipset').length") == 1 and "6 pieces" not in note and "Nearest tier used" in note and "Crossbow" in note, note[:200])
@@ -318,16 +398,16 @@ def run(b, base, check, label, quick=False):
     pg.focus('#eqbody .eqtile[data-i="4"]'); pg.keyboard.press("Delete"); a = E("S.gear[4]"); pg.click('#eqbody .eqtile[data-i="5"]', button="right"); b2 = E("S.gear[5]")
     check("%s: Delete and right-click unequip" % label, a == 0 and b2 == 0)
     # ruleset switch
-    pg.click('#eqpanel [data-rs="ng"]'); until(pg, "S.rs==='ng'"); E("(()=>{S.gear.fill(0);S.gear[4]=EQ.rs.ng.byId.get('Lynx Armor 4').n;S.gear[5]=EQ.rs.ng.byId.get('Lynx Gloves 5').n;save();eqRender(true)})()")
-    pg.click('#eqpanel [data-rs="ng_plus"]'); until(pg, "S.rs==='ng_plus'"); toast = E("document.getElementById('toastMsg').textContent"); kept = E("S.gear[4]>0&&S.gear[5]>0")
+    pg.click('#topbar [data-rs="ng"]'); until(pg, "S.rs==='ng'"); E("(()=>{S.gear.fill(0);S.gear[4]=EQ.rs.ng.byId.get('Lynx Armor 4').n;S.gear[5]=EQ.rs.ng.byId.get('Lynx Gloves 5').n;save();eqRender(true)})()")
+    pg.click('#topbar [data-rs="ng_plus"]'); until(pg, "S.rs==='ng_plus'"); toast = E("document.getElementById('toastMsg').textContent"); kept = E("S.gear[4]>0&&S.gear[5]>0")
     check("%s: switching to New Game Plus keeps items that exist in both and says so" % label, kept and "kept" in toast, toast[:100])
-    E("(()=>{S.gear[4]=EQ.rs.ng_plus.byId.get('NGP Lynx Armor 4').n;save();eqRender(true)})()"); pg.click('#eqpanel [data-rs="ng"]'); until(pg, "S.rs==='ng'"); toast = E("document.getElementById('toastMsg').textContent")
+    E("(()=>{S.gear[4]=EQ.rs.ng_plus.byId.get('NGP Lynx Armor 4').n;save();eqRender(true)})()"); pg.click('#topbar [data-rs="ng"]'); until(pg, "S.rs==='ng'"); toast = E("document.getElementById('toastMsg').textContent")
     check("%s: switching back clears items that do not exist there (an NGP item), with a notice naming it" % label, E("S.gear[4]") == 0 and E("S.gear[5]") > 0 and "Removed" in toast and "armor" in toast.lower(), toast[:120])
     code = E("document.getElementById('link').value").split("#")[-1]; want = E("[S.rs,S.gear.join()]")
     q = b.new_page(); q.goto(base + "#" + code); until(q, READY); got = q.evaluate("[S.rs,S.gear.join()]"); same = q.evaluate("document.querySelector('#eqbody .eqslot.on .eqsl span')&&document.querySelector('#eqbody .eqslot.on .eqsl span').textContent"); q.close()
     check("%s: a gear link reopens with the same gear and the same mode" % label, got == want and same, [got, want, same])
     levelcheck(b, base, check, label, pg)
     check("%s: no script errors" % label, not errs, errs[:2]); pg.close()
-    m = b.new_page(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True); m.goto(base); until(m, READY); m.fill("#lvl", "100")
+    m = b.new_page(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True); m.goto(base); until(m, READY); m.fill("#lvl", "100"); openinv(m)
     m.tap('#eqbody .eqtile[data-i="4"]'); m.wait_for_selector("#pkgrid .pktile"); m.tap("#pkgrid .pktile >> nth=0"); w2 = m.evaluate("document.documentElement.scrollWidth-innerWidth"); m.tap("#pkequip"); m.wait_for_timeout(200)
     check("%s: on a phone the chooser does not scroll sideways, and tapping equips" % label, w2 <= 0 and m.evaluate("S.gear[4]") > 0, w2); m.close()

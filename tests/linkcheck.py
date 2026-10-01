@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 FIX = ROOT / "tests" / "fixtures"
 LEGACY_STATE = "[+document.getElementById('lvl').value,+document.getElementById('bonuspts').value,S.lv,S.slots.slice(0,12),S.muts,S.mres,S.mact]"
-FULL_STATE = "({level:+document.getElementById('lvl').value,bonus:+document.getElementById('bonuspts').value,lv:S.lv,slots:S.slots,muts:S.muts,mres:S.mres,mact:S.mact,gear:S.gear,ruleset:S.rs})"
+FULL_STATE = "({level:+document.getElementById('lvl').value,bonus:+document.getElementById('bonuspts').value,lv:S.lv,slots:S.slots,muts:S.muts,mres:S.mres,mact:S.mact,gear:S.gear,ruleset:S.rs,cons:S.cons,screen:S.scr})"
 READY = "typeof S!=='undefined'&&S&&document.getElementById('slots').children.length>0"
 
 
@@ -42,7 +42,9 @@ def open_and_compare(browser, base, fx):
             got, ex = pg.evaluate(LEGACY_STATE), fx["expect"]
             ok = got[:5] == ex[:5] and (ex[5] is None or (got[5] == ex[5] and got[6] == ex[6])); detail = "" if ok else "expected %s, got %s" % (json.dumps(ex)[:80], json.dumps(got)[:80])
         else:
-            got = pg.evaluate(FULL_STATE); bad = [k for k in fx["expect"] if got.get(k) != fx["expect"][k]]; ok = not bad; detail = "differs in: " + ", ".join(bad) if bad else ""
+            got = pg.evaluate(FULL_STATE); bad = [k for k in fx["expect"] if got.get(k) != fx["expect"][k]]
+            if fx["version"] < "v28" and (got["screen"] != "char" or any(got["cons"])): bad.append("screen/cons (a link made before v28 opens on Character with no consumables)")
+            ok = not bad; detail = "differs in: " + ", ".join(bad) if bad else ""
         if errs: ok, detail = False, "script error: " + errs[0]
         return ok, detail
     except Exception as e:

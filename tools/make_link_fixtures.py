@@ -37,12 +37,14 @@ BUILD = """async spec=>{
  enforceLocks();
  // gear (v27 and later): the items are chosen by id from the real data, stored as their registry numbers
  if(spec.rs){const rs=spec.rs;await eqLoad(rs);S.rs=rs;Object.entries(spec.gear||{}).forEach(([slot,id])=>{const it=EQ.rs[rs].byId.get(id);if(!it||it.slot!==slot)throw new Error('bad gear '+slot+' '+id);S.gear[EQ_SLOTS.indexOf(slot)]=it.n})}
- const state=()=>({level:+document.getElementById('lvl').value,bonus:+document.getElementById('bonuspts').value,lv:S.lv,slots:S.slots,muts:S.muts,mres:S.mres,mact:S.mact,gear:S.gear,ruleset:S.rs});
+ if(spec.cons){await cnLoad();Object.entries(spec.cons).forEach(([k,id])=>{const it=CN.byId.get(id);if(!it||!cnAccepts(k,it))throw new Error('bad consumable '+k+' '+id);S.cons[CN_SLOTS.indexOf(k)]=it.n})}
+ if(spec.scr)S.scr=spec.scr;
+ const state=()=>({level:+document.getElementById('lvl').value,bonus:+document.getElementById('bonuspts').value,lv:S.lv,slots:S.slots,muts:S.muts,mres:S.mres,mact:S.mact,gear:S.gear,ruleset:S.rs,cons:S.cons,screen:S.scr});
  const expect=JSON.parse(JSON.stringify(state())),code=enc().slice(0);
  // sanity: the build must be legal and must survive its own link
  const bad=[];if(spent()>budget())bad.push('overspent '+spent()+'>'+budget());
  const t=dec(code);if(!t)bad.push('does not decode');else{const l=JSON.stringify(expect);
-   const got=JSON.stringify({level:+document.getElementById('lvl').value,bonus:+document.getElementById('bonuspts').value,lv:t.lv,slots:t.slots,muts:t.muts,mres:t.mres,mact:t.mact,gear:t.gear,ruleset:t.rs});if(l!==got)bad.push('round trip differs')}
+   const got=JSON.stringify({level:+document.getElementById('lvl').value,bonus:+document.getElementById('bonuspts').value,lv:t.lv,slots:t.slots,muts:t.muts,mres:t.mres,mact:t.mact,gear:t.gear,ruleset:t.rs,cons:t.cons,screen:t.scr});if(l!==got)bad.push('round trip differs')}
  return {code,expect,bad,spent:spent(),budget:budget()}}"""
 
 
@@ -111,6 +113,22 @@ def gear_specs_b():
     return out
 
 
+def gear_specs_v28():
+    """v28: links with the consumables segment (c1) and the Inventory screen (s1I), in both rulesets, with and without gear and skills."""
+    out = []; add = lambda name, **kw: out.append((name, kw))
+    cons = {"potion1": "Swallow 3", "potion2": "Mutagen 1", "potion3": "Cat 2", "potion4": "White Raffards Decoction 3", "petard1": "Dancing Star 3", "petard2": "Samum 1", "oil_steel": "Beast Oil 3", "oil_silver": "Vampire Oil 2"}
+    gear = {"steel": "Lynx School steel sword 4", "silver": "Lynx School silver sword 4", "chest": "Lynx Armor 4", "gloves": "Lynx Gloves 5", "trousers": "Lynx Pants 5", "boots": "Lynx Boots 5"}
+    add("every consumable slot and both oils, Character screen, first playthrough", level=100, bonus=0, rs="ng", cons=cons)
+    add("every consumable slot and both oils, Inventory screen, first playthrough", level=100, bonus=0, rs="ng", cons=cons, scr="inv")
+    add("Inventory screen, nothing equipped", level=1, bonus=0, scr="inv")
+    add("Inventory screen with gear and every consumable slot, New Game Plus", level=100, bonus=100, rs="ng_plus", cons=cons, gear=gear, scr="inv")
+    add("one decoction and one bomb only, Character screen", level=60, bonus=0, rs="ng", cons={"potion3": "Mutagen 28", "petard2": "Snow Ball"})
+    add("oils only (steel and silver), Inventory screen", level=60, bonus=0, rs="ng", cons={"oil_steel": "Hanged Man Venom 1", "oil_silver": "Necrophage Oil 3"}, scr="inv")
+    add("skills, mutagens, gear and consumables together, Inventory screen", level=100, bonus=100, trees=[2], fill="max", equip=True, research=[0, 1, 2], active=2, muts=[9, 18, 27, 3], rs="ng", gear=gear, cons=cons, scr="inv")
+    add("highest consumable numbers in every slot", level=100, bonus=100, rs="ng", cons={"potion1": "Mutagen 28", "potion2": "White Raffards Decoction 3", "potion3": "Thunderbolt 3", "potion4": "White Honey 3", "petard1": "White Frost 3", "petard2": "Snow Ball", "oil_steel": "Hanged Man Venom 3", "oil_silver": "Vampire Oil 3"})
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--version", required=True, help="the app version whose code makes the links, e.g. v24")
@@ -130,7 +148,7 @@ def main():
         info = pg.evaluate("""({ntrees:TREES.length,nmut:MUT.length,nmutagen:MUTS.length,
             special:MUTS.map((m,i)=>m.special?i:-1).filter(i=>i>=0),regular:MUTS.map((m,i)=>m.special?-1:i).filter(i=>i>=0)})""")
         rows, seen = [], set()
-        use = specs(info) if a.version == "v24" else gear_specs() if a.version == "v27" else gear_specs_b() if a.version == "v27b" else sys.exit("no fixture recipe for %s: add one to this tool" % a.version)
+        use = specs(info) if a.version == "v24" else gear_specs() if a.version == "v27" else gear_specs_b() if a.version == "v27b" else gear_specs_v28() if a.version == "v28" else sys.exit("no fixture recipe for %s: add one to this tool" % a.version)
         top = pg.evaluate("async rs=>{await eqLoad(rs);const o={};EQ_SLOTS.forEach(s=>{const l=EQ.rs[rs].bySlot[s]||[];o[s]=l.reduce((a,b)=>a.n>b.n?a:b).id});return o}", "ng_plus") if a.version in ("v27", "v27b") else {}
         for name, spec in use:
             if spec.get("gear") == {"steel": None, "silver": None}: spec = dict(spec, gear=top)

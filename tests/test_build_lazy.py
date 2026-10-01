@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parent.parent
 class LazyTests(unittest.TestCase):
     def test_marker_becomes_a_url_and_the_data_a_separate_file(self):
         with tempfile.TemporaryDirectory() as d:
-            d = Path(d); src = d / "src"; shutil.copytree(ROOT / "src", src); (src / "equipment.js").unlink(); (src / "equipment.css").unlink()      # without the equipment source nothing refers to the data
+            d = Path(d); src = d / "src"; shutil.copytree(ROOT / "src", src); [(src / n).unlink() for n in ("equipment.js", "consumables.js", "screens.js", "screens.css")]      # without the equipment source nothing refers to the data
             for name, extra in (("plain", ""), ("lazy", "\nconst ITEMS_NG_URL=/*@file:items_ng*/;\n")):
                 out = d / name
                 if extra: (src / "app.js").write_text((ROOT / "src/app.js").read_text(encoding="utf-8") + extra, encoding="utf-8")
