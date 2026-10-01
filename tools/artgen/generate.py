@@ -64,7 +64,7 @@ def main():
     a = ap.parse_args()
     manifest = json.loads((ROOT / "art" / "manifest.json").read_text())
     J = jobs()
-    missing = sorted({k for k, v in manifest.items() if "fallback" not in v} ^ set(J))  # slots with a fallback draw nothing of their own
+    missing = sorted(set(manifest) ^ set(J))
     if missing: sys.exit("generator and manifest disagree on: %s" % missing[:8])
     same_bytes = same_pixels = 0; bad = []
     for sid, (im, fmt, q) in J.items():

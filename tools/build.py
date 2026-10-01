@@ -49,21 +49,14 @@ def main():
     (out / MARK).write_text("generated; safe to delete\n")
 
     manifest = json.loads(read(ROOT / "art" / "manifest.json"))
-    files, fallbacks = {}, []
+    files = {}
 
     def img(match):
         sid = match.group(1)
         if sid not in manifest:
             sys.exit("unknown art id in the source: %s" % sid)
-        # A slot may name a "fallback" slot (the colour icon of a special mutagen): the public build always shows the
-        # fallback's placeholder; the game build uses the slot's own file and, if that is missing, the fallback's, with a warning.
-        fb = manifest[sid].get("fallback")
-        if fb and a.variant == "placeholder":
-            sid = fb
         ext = manifest[sid][a.variant]
         src = art_dir / (sid + "." + ext)
-        if not src.is_file() and fb:
-            fallbacks.append(sid); sid = fb; ext = manifest[sid][a.variant]; src = art_dir / (sid + "." + ext)
         if not src.is_file():
             sys.exit("missing art file: %s" % src)
         data = src.read_bytes()
@@ -89,8 +82,6 @@ def main():
         (out / name).parent.mkdir(parents=True, exist_ok=True)
         (out / name).write_bytes(blob)
     shutil.copytree(ROOT / "static", out, dirs_exist_ok=True)
-    if fallbacks:
-        print("WARNING: %d art slot(s) used their fallback because the file is missing: %s" % (len(fallbacks), ", ".join(sorted(fallbacks))))
     print("Built %s variant into %s (%d images, index.html %d KB)" % (a.variant, out, len(files), len(html) // 1024))
 
 

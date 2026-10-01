@@ -8,7 +8,7 @@
 Setup once:  pip install -r requirements.txt  &&  python -m playwright install chromium
 What it does: builds the site, serves it with the security headers from _headers, drives it with a real browser.
 """
-import argparse, json, random, re, shutil, subprocess, sys, tempfile, threading, urllib.parse, zipfile
+import argparse, json, random, shutil, subprocess, sys, tempfile, threading, urllib.parse, zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -102,13 +102,6 @@ def main():
         sp = E("MUTS.filter(m=>m.special)"); lesser = {"red": 0, "blue": 3, "green": 6}
         check("36 mutagens: 9 regular and 27 special (9 per colour)", E("MUTS.length") == 36 and len(sp) == 27 and all(E("MUTS.filter(m=>m.special&&m.c==='%s').length" % c) == 9 for c in lesser))
         check("every special mutagen has the bonus of the Lesser mutagen of its colour", E("MUTS.filter(m=>m.special).every(m=>{const l=MUTS[{red:0,blue:3,green:6}[m.c]];return m.v===l.v&&m.syn===l.syn&&m.stat===l.stat&&m.pct===l.pct})"))
-        icons = json.loads((ROOT / "data/SPECIAL_MUT_ICONS.json").read_text(encoding="utf-8")); labels = json.loads((ROOT / "data/SPECIAL_MUT.json").read_text(encoding="utf-8"))
-        check("every special mutagen has exactly one icon entry, all with different files and game items", [r["label"] for r in icons] == [l for l, _ in labels] and [r["colour"] for r in icons] == [c for _, c in labels]
-              and len({r["file"] for r in icons}) == 27 and len({r["item"] for r in icons}) == 27 and all(re.fullmatch(r"[a-z0-9_.\-]+", r["file"]) for r in icons))
-        own = E("MUTS.filter(m=>m.special).every(m=>m.img&&m.img!==MUTIMG[m.icon])"); colour = E("MUTS.filter(m=>m.special).every(m=>m.img===MUTIMG[m.icon])")
-        if a.variant == "game": check("each special mutagen uses its own game icon (no fallback colour icon)", own and E("new Set(MUTS.filter(m=>m.special).map(m=>m.img)).size") == 18)
-        else: check("the public build shows the colour placeholder for every special mutagen", colour)
-        check("every special mutagen icon loads", E("Promise.all([...new Set(MUTS.filter(m=>m.special).map(m=>m.img))].map(u=>new Promise(r=>{const i=new Image();i.onload=()=>r(i.naturalWidth>0);i.onerror=()=>r(false);i.src=u}))).then(a=>a.every(Boolean))"))
         print("\n== Links ==")
         E("document.getElementById('lvl').value=40;document.getElementById('bonuspts').value=5;pointsChanged();S.muts[0]=MUTS.findIndex(m=>m.label==='Wraith');S.muts[1]=35;save()")
         code = E("document.getElementById('link').value.split('#')[1]"); link_state = E(FULLSTATE); q = b.new_page(); q.goto(base + "#" + code); q.wait_for_timeout(500)
