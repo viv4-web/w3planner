@@ -209,8 +209,10 @@ def required_level(category, entries, quality, tags, name):
         for t, v in ((1.01, 2), (1.1, 4), (1.2, 8), (1.3, 11), (1.4, 15), (1.5, 19), (1.6, 22), (1.7, 25), (1.8, 27), (1.9, 32)):
             if m > t: level = v
     elif category == "bolt":
-        level = {"Tracking Bolt": 2, "Bait Bolt": 2, "Blunt Bolt": 2, "Broadhead Bolt": 10, "Target Point Bolt": 5, "Split Bolt": 15, "Explosive Bolt": 20, "Blunt Bolt Legendary": 12,
+        level = {"Tracking Bolt": 2, "Bait Bolt": 2, "Blunt Bolt": 2, "Broadhead Bolt": 10, "Target Point Bolt": 5, "Split Bolt": 15, "Explosive Bolt": 20, "Blunt Bolt Legendary": 5,   # the script tests this name twice (5, then 12): the first test wins
                  "Broadhead Bolt Legendary": 20, "Target Point Bolt Legendary": 15, "Split Bolt Legendary": 24, "Explosive Bolt Legendary": 26}.get(name, 0)
+    elif category == "mask":
+        level = 0                     # no category branch in GetItemLevel: the local stays 0 (WitcherScript zero-initialises), so masks end up at level 1
     else:
         return None
     level -= 1
@@ -410,9 +412,12 @@ def rules(g, sc, set_rules):
                            "steel sword": "ceil(1 + (1 + sum(damage_i - 1) - 25) / 8) over slashing, bludgeoning, rending, elemental, fire, silver, piercing",
                            "silver sword": "ceil(1 + (1 + sum(damage_i - 1) - 90) / 10) over silver, bludgeoning, rending, elemental, fire, piercing",
                            "crossbow": "by attack_power multiplier: >1.01 2, >1.1 4, >1.2 8, >1.3 11, >1.4 15, >1.5 19, >1.6 22, >1.7 25, >1.8 27, >1.9 32",
-                           "bolts": "a fixed level per bolt name, minus 14/10/6/4 for quality 5/4/3/2",
+                           "bolts": "a fixed level per bolt name, minus 14/10/6/4 for quality 5/4/3/2 (Blunt Bolt Legendary: the script tests the name twice, the first value 5 wins)",
+                           "masks": "no branch in the script, so the level stays 0 and the result is 1 (no restriction)",
                            "then": "minus 1; at least 1; set gear (quality 5) minus 2, relic (4) minus 1; at least 1; EP1-tagged relic or set gear minus 1; 'OlgierdSabre' minus 3 (capped at the player's maximum level)",
                            "assumption": "an attribute the item does not define counts as 0 (the engine default is not in the scripts); not computed for Autogen items",
+                           "enforcement": {"check": "HasRequiredLevelToEquipItem: GetItemLevel(item) > GetLevel() blocks equipping (r4Player.ws); the Wolf Hour potion lowers every requirement by 2 and is not modelled",
+                                           "ngplus_note": "In New Game Plus the game adds (NG+ start level - 30) steps of autogen_fixed_* damage or armour to every non-autogen weapon and armour piece it picks up (IncreaseNGPItemlevel, one step = one required level); the planner does not know the NG+ start level, so required_level is the value at start level 30"},
                            "source": [sc.ref(IC, r"function GetItemLevel\(item"), sc.ref("game/gameParams.ws", r"function GetItemLevel\(itemCategory"), sc.ref(IC, r"function GetItemLevelColorById")]},
         "primary_stat": {"steel sword": "SlashingDamage, label 'Damage'", "silver sword": "SilverDamage, label 'Damage'", "armor, gloves, boots, trousers": "armor",
                          "crossbow": "'Damage' = the equipped bolt's primary stat (Bodkin Bolt PiercingDamage if none) x the crossbow's attack_power multiplier",

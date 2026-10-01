@@ -2298,9 +2298,14 @@
    "steel sword": "ceil(1 + (1 + sum(damage_i - 1) - 25) / 8) over slashing, bludgeoning, rending, elemental, fire, silver, piercing",
    "silver sword": "ceil(1 + (1 + sum(damage_i - 1) - 90) / 10) over silver, bludgeoning, rending, elemental, fire, piercing",
    "crossbow": "by attack_power multiplier: >1.01 2, >1.1 4, >1.2 8, >1.3 11, >1.4 15, >1.5 19, >1.6 22, >1.7 25, >1.8 27, >1.9 32",
-   "bolts": "a fixed level per bolt name, minus 14/10/6/4 for quality 5/4/3/2",
+   "bolts": "a fixed level per bolt name, minus 14/10/6/4 for quality 5/4/3/2 (Blunt Bolt Legendary: the script tests the name twice, the first value 5 wins)",
+   "masks": "no branch in the script, so the level stays 0 and the result is 1 (no restriction)",
    "then": "minus 1; at least 1; set gear (quality 5) minus 2, relic (4) minus 1; at least 1; EP1-tagged relic or set gear minus 1; 'OlgierdSabre' minus 3 (capped at the player's maximum level)",
    "assumption": "an attribute the item does not define counts as 0 (the engine default is not in the scripts); not computed for Autogen items",
+   "enforcement": {
+    "check": "HasRequiredLevelToEquipItem: GetItemLevel(item) > GetLevel() blocks equipping (r4Player.ws); the Wolf Hour potion lowers every requirement by 2 and is not modelled",
+    "ngplus_note": "In New Game Plus the game adds (NG+ start level - 30) steps of autogen_fixed_* damage or armour to every non-autogen weapon and armour piece it picks up (IncreaseNGPItemlevel, one step = one required level); the planner does not know the NG+ start level, so required_level is the value at start level 30"
+   },
    "source": [
     "scripts/game/components/inventoryComponent.ws:305",
     "scripts/game/gameParams.ws:917",

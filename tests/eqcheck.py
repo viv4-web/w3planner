@@ -5,6 +5,7 @@ READY = "typeof eqData==='function'&&!!eqData()&&!!document.querySelector('#eqbo
 KEYS = "Object.keys(window.W3DATA||{}).map(k=>k+'.js')"   # the data files that were loaded (a script sets W3DATA.<name>)
 BOX = "(sel)=>{const e=document.querySelector(sel);if(!e)return null;const r=e.getBoundingClientRect();return{l:Math.round(r.left),r:Math.round(r.right),t:Math.round(r.top),b:Math.round(r.bottom),w:Math.round(r.width),h:Math.round(r.height)}}"
 CHEST, GLOVES, TROUSERS, BOOTS, STEEL, SILVER = 4, 5, 6, 7, 0, 1
+EQ_CHEST, EQ_SILVER = CHEST, SILVER
 
 
 def until(pg, js, ms=6000):
@@ -50,11 +51,74 @@ def layout(b, base, check, label):
         pg.close()
 
 
+LEVELS = {"ng": {"Lynx Armor": 17, "Lynx Armor 1": 23, "Lynx Armor 2": 29, "Lynx Armor 3": 34, "Lynx Armor 4": 40, "Lynx School Crossbow": 29, "q702_vampire_mask": 1, "Blunt Bolt Legendary": 1},
+          "ng_plus": {"Lynx Armor": 47, "Lynx Armor 1": 53, "Lynx Armor 2": 59, "Lynx Armor 3": 64, "Lynx Armor 4": 70, "NGP Lynx Armor 4": 40, "Lynx School Crossbow": 29, "q702_vampire_mask": 1}}
+# hand-calculated from the game's scripts (GetItemLevel, inventoryComponent.ws:305 and gameParams.ws:917; see the report): armor 120/150/180/205/240 -> 17/23/29/34/40 (Grandmaster has the EP1 tag, minus 1),
+# NG+ armor 270/300/330/355/390 -> 47/53/59/64/70, crossbow attack power x2.25 -> 32 - 1 - 2 = 29, masks have no branch (level 0 -> 1), the first test of 'Blunt Bolt Legendary' (5) wins -> 1
+
+
+def levelcheck(b, base, check, label, pg):
+    """The level requirement: the game blocks GetItemLevel(item) > GetLevel() (r4Player.ws:11723). Only the Level field counts."""
+    E = pg.evaluate
+
+    def opener(i, ident):
+        pg.click('#eqbody .eqtile[data-i="%d"]' % i); pg.wait_for_selector("#pkgrid .pktile"); E("(id=>{EQ.pick.sel=eqData().byId.get(id);eqPickRender()})", ident)
+
+    def start(level, bonus=0):
+        pg.keyboard.press("Escape") if not E("document.getElementById('eqpick').hidden") else None
+        pg.fill("#lvl", str(level)); pg.fill("#bonuspts", str(bonus)); E("(()=>{S.gear.fill(0);save();eqRender(true)})()")
+    if E("S.rs") != "ng": pg.click('#eqpanel [data-rs="ng"]'); until(pg, "S.rs==='ng'")
+    start(1); opener(EQ_CHEST, "Lynx Armor 1")
+    side = E("document.getElementById('pkside').innerText"); why = E("(document.getElementById('pkwhy')||{}).textContent||''")
+    check("%s: Level 1, Feline Enhanced chest: Equip is disabled and says 'Requires level 23'; the level is red in the tooltip and on the tile" % label,
+          E("document.getElementById('pkequip').disabled") and why == "Requires level 23" and E("document.querySelectorAll('#pkside .eqt-lvl.bad').length") == 1 and E("document.querySelectorAll('#pkgrid .pktile.low .pkreq').length") > 0, [why, side[:60]])
+    pg.dblclick("#pkgrid .pktile.sel"); pg.wait_for_timeout(100)
+    check("%s: ... double-click and Enter do not equip it either" % label, E("S.gear[4]") == 0 and not E("document.getElementById('eqpick').hidden"))
+    pg.focus("#pkgrid .pktile.sel"); pg.keyboard.press("Enter"); pg.wait_for_timeout(100)
+    check("%s: ... (Enter)" % label, E("S.gear[4]") == 0)
+    start(23); opener(EQ_CHEST, "Lynx Armor 1")
+    check("%s: Level raised to its requirement (23): Equip is enabled and works" % label, not E("document.getElementById('pkequip').disabled") and E("!document.getElementById('pkwhy')"))
+    pg.click("#pkequip"); pg.wait_for_timeout(100)
+    check("%s: ... the chest is equipped" % label, E("S.gear[4]") > 0 and E("document.querySelectorAll('.eqslot.low').length") == 0)
+    start(1, 100); opener(EQ_CHEST, "Lynx Armor 1")
+    check("%s: Level 1 with 100 bonus points: still disabled (bonus points never count)" % label, E("document.getElementById('pkequip').disabled") and E("S.gear[4]") == 0 and E("document.getElementById('total').textContent") == "100")
+    # Equip set between tiers: Mastercrafted (34) at Level 33 equips what the level allows (the Basic crossbow, 29) and lists the rest
+    start(33); opener(EQ_CHEST, "Lynx Armor 3")
+    note = E("document.getElementById('pkside').innerText")
+    check("%s: Equip set at Level 33 on a Mastercrafted piece (34): the note names the skipped pieces with their levels" % label, "Skipped, level too low" in note and "Chest armor (requires level 34)" in note and "Steel sword (requires level 34)" in note, note[-260:])
+    pg.click("#pkequipset"); pg.wait_for_timeout(200)
+    have = E("(()=>{const o={};EQ_SLOTS.forEach((s,i)=>{const it=eqCur(i);if(it)o[s]=it.id});return o})()")
+    check("%s: ... only the pieces the level allows are equipped (the crossbow); the others stay empty" % label, have == {"crossbow": "Lynx School Crossbow"}, have)
+    start(34); opener(EQ_CHEST, "Lynx Armor 3"); pg.click("#pkequipset"); pg.wait_for_timeout(200)
+    check("%s: ... at Level 34 the whole Mastercrafted set goes on, with no 'skipped' note" % label, E("EQ_SLOTS.map((s,i)=>eqCur(i)).filter(it=>it&&it.set==='lynx').length") == 7)
+    # equip at a high level, then lower Level: the gear stays, marked
+    start(100); opener(EQ_CHEST, "Lynx Armor 4"); pg.click("#pkequip"); pg.wait_for_timeout(100)
+    pg.fill("#lvl", "30"); until(pg, "!!document.querySelector('.eqslot.low')")
+    low = E("[S.gear[4]>0, document.querySelectorAll('.eqslot.low').length, (document.querySelector('.eqslot.low .eqbadge')||{}).textContent, (document.querySelector('.eqwarn')||{}).textContent||'']")
+    border = E("getComputedStyle(document.querySelector('.eqslot.low .eqtile')).borderTopColor")
+    check("%s: lowering Level to 30 keeps the Grandmaster chest, marks the slot with a red border and 'Level too low', and adds a warning line" % label,
+          low[0] and low[1] == 1 and low[2] == "Level too low" and "chest armor (level 40)" in low[3] and border.startswith("rgb(192, 57, 43)"), [low, border])
+    code = E("document.getElementById('link').value").split("#")[-1]; want = E("[S.rs,S.gear.join(),lvl()]")
+    q = b.new_page(); q.goto(base + "#" + code); until(q, READY); got = q.evaluate("[S.rs,S.gear.join(),lvl()]"); shown = q.evaluate("[document.querySelectorAll('.eqslot.low').length,!!document.querySelector('.eqwarn')]"); q.close()
+    check("%s: the link round-trips both the level and the gear, and the reopened page shows the warning" % label, got == want and want[2] == 30 and want[1].split(",")[4] != "0" and shown == [1, True], [got, want, shown])
+    pg.fill("#lvl", "40"); until(pg, "!document.querySelector('.eqslot.low')")
+    check("%s: raising Level back to 40 clears the marks" % label, E("document.querySelectorAll('.eqwarn').length") == 0)
+    # the required levels of the sample items, both rulesets, against the hand calculation in LEVELS
+    for rs, want_lv in LEVELS.items():
+        if E("S.rs") != rs: pg.click('#eqpanel [data-rs="%s"]' % rs); until(pg, "S.rs==='%s'&&!!eqData()" % rs)
+        got = E("(l=>{const o={};Object.keys(l).forEach(k=>{const it=eqData().byId.get(k);o[k]=it?it.required_level:'missing'});return o})", want_lv)
+        check("%s: required levels in %s match the scripts (%s)" % (label, rs, ", ".join("%s %s" % kv for kv in list(want_lv.items())[:3]) + ", ..."), got == want_lv, got)
+    relic = E("(()=>{const it=eqData().byId.get('Wolf');return it?eqLevel(it).t:''})()"); pg.click('#eqpanel [data-rs="ng"]'); until(pg, "S.rs==='ng'"); relic = E("eqLevel(eqData().byId.get('Wolf')).t")
+    check("%s: an autogen relic is never blocked (the level is rolled when it drops) and says 'Level varies'" % label, relic.startswith("Level varies") and not E("eqLow(eqData().byId.get('Wolf'))"), relic)
+    start(100)
+
+
 def run(b, base, check, label, quick=False):
     errs, events = [], []; pg = b.new_page(viewport={"width": 1400, "height": 950}); pg.on("pageerror", lambda e: errs.append(str(e).split("\n")[0][:100])); E = pg.evaluate
     pg.on("load", lambda p: events.append("load")); pg.on("request", lambda r: events.append("data") if "/data/items" in r.url else None)
     pg.goto(base); check("%s: the panel shows right away and the equipment data loads after the page has loaded, only items.js and items_ng.js" % label, until(pg, READY) and E(KEYS) == ["items.js", "items_ng.js"] and events.index("load") < (events.index("data") if "data" in events else 99), [events[:4], E(KEYS)])
     layout(b, base, check, label)
+    pg.fill("#lvl", "100")      # the planner starts at Level 1 and the game blocks items above the level, so the walk-through below runs at the top level
     check("%s: weapons (steel, silver, crossbow, bolts) then armor (chest, gloves, trousers, boots, mask); one greyed strip \"Consumables & bombs, coming later\"" % label,
           E("[...document.querySelectorAll('#eqbody .eqw .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "steel,silver,crossbow,bolts" and E("[...document.querySelectorAll('#eqbody .eqarm .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "chest,gloves,trousers,boots,mask"
           and E("document.querySelector('#eqbody .eqstrip').textContent") == "Consumables & bombs, coming later" and E("document.querySelectorAll('#eqbody .eqstrip').length") == 1)
@@ -123,7 +187,8 @@ def run(b, base, check, label, quick=False):
     code = E("document.getElementById('link').value").split("#")[-1]; want = E("[S.rs,S.gear.join()]")
     q = b.new_page(); q.goto(base + "#" + code); until(q, READY); got = q.evaluate("[S.rs,S.gear.join()]"); same = q.evaluate("document.querySelector('#eqbody .eqslot.on .eqsl span')&&document.querySelector('#eqbody .eqslot.on .eqsl span').textContent"); q.close()
     check("%s: a gear link reopens with the same gear and the same mode" % label, got == want and same, [got, want, same])
+    levelcheck(b, base, check, label, pg)
     check("%s: no script errors" % label, not errs, errs[:2]); pg.close()
-    m = b.new_page(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True); m.goto(base); until(m, READY)
+    m = b.new_page(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True); m.goto(base); until(m, READY); m.fill("#lvl", "100")
     m.tap('#eqbody .eqtile[data-i="4"]'); m.wait_for_selector("#pkgrid .pktile"); m.tap("#pkgrid .pktile >> nth=0"); w2 = m.evaluate("document.documentElement.scrollWidth-innerWidth"); m.tap("#pkequip"); m.wait_for_timeout(200)
     check("%s: on a phone the chooser does not scroll sideways, and tapping equips" % label, w2 <= 0 and m.evaluate("S.gear[4]") > 0, w2); m.close()

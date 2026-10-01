@@ -36,7 +36,11 @@ function eqVal(e){if(e.effect)return'';const r=e.max!==undefined&&e.max!==e.min;
 function eqLines(it){const skip=it.slot==='steel'?'SilverDamage':it.slot==='silver'?'SlashingDamage':'',p=eqPrimary(it).e;
  return[...(it.base||[]),...(it.bonuses||[])].filter(e=>e.line!==undefined&&e.stat!==skip&&e!==p).sort((a,b)=>a.line-b.line)}
 const eqColor=e=>{const t=EQ.disp&&EQ.disp.get(String(e.stat).toLowerCase());return t&&t.color?'#'+t.color:'#BAADA0'};
-function eqLevel(it){if(it.level_varies)return{t:'Level varies',bad:false};if(it.required_level==null)return null;return{t:'Requires level '+it.required_level,bad:it.required_level>lvl()}}
+// The game blocks an item when GetItemLevel(item) > GetLevel() (HasRequiredLevelToEquipItem, r4Player.ws:11723). Only the Level field counts: bonus points, skill points and places of power never enter it.
+const eqReq=it=>it.level_varies||it.required_level==null?null:it.required_level;
+const eqLow=it=>{const r=eqReq(it);return r!=null&&r>lvl()};
+function eqRange(it){const g=n=>{const e=(it.bonuses||[]).find(b=>b.stat===n);return e?e.min:null},a=g('item_level_min'),b=g('item_level_max');return S.rs==='ng'&&a!=null&&b!=null?' ('+a+' to '+b+')':''}   // autogen relics: the level is rolled when the item drops; only some carry the XML range, and in NG+ it moves with the NG+ level
+function eqLevel(it){if(it.level_varies)return{t:'Level varies'+eqRange(it),bad:false};if(it.slot==='mask'||it.required_level==null)return null;return{t:'Requires level '+it.required_level,bad:eqLow(it)}}   // masks: the game's tooltip shows no level for them (guiTooltipComponent.ws:505)
 function eqSetOf(it){return it.set&&EQ.meta?EQ.meta.sets[it.set]:null}
 function eqTip(it,withTiers){const q=EQ_QUAL[it.quality]||['',''],p=eqPrimary(it),lv=eqLevel(it),st=eqSetOf(it),lines=eqLines(it);
  let h=`<div class="eqt"><div class="eqt-name" style="color:${q[1]||'#e6dcc8'}">${eqEsc(it.name)}</div><div class="eqt-rar">${[q[0],it.armor_class?it.armor_class[0].toUpperCase()+it.armor_class.slice(1)+' armor':EQ_NAME[it.slot],it.quest?'Quest item':''].filter(Boolean).map(eqEsc).join(' · ')}</div>`;
@@ -58,8 +62,8 @@ function eqSetHtml(x){const cur=b=>b.per_piece?String(Math.round(+b.per_piece*x.
   (x.counted<x.n?`<p class="dim">${x.n-x.counted} worn piece${x.n-x.counted>1?'s do':' does'} not count: in this mode only some tiers carry the set bonus tag.</p>`:'')+`</section>`}
 
 // ---- the equipment screen ----
-function eqSlotHtml(slot){const i=EQ_SLOTS.indexOf(slot),it=eqCur(i),q=it&&EQ_QUAL[it.quality]?EQ_QUAL[it.quality][1]:'#6b5a42',sq=['bolts','mask'].includes(slot);
- return`<div class="eqslot${it?' on':''}${sq?' sq':''}" data-i="${i}"><button type="button" class="eqtile" data-i="${i}" style="--q:${q}" aria-haspopup="dialog" aria-label="${EQ_NAME[slot]}: ${it?eqEsc(it.name):'empty'}. Open the chooser${it?'. Press Delete to unequip':''}">${it&&it.icon?`<img src="${it.icon}" alt="">`:`<span class="eqempty">${EQ_NAME[slot]}</span>`}</button>
+function eqSlotHtml(slot){const i=EQ_SLOTS.indexOf(slot),it=eqCur(i),low=it&&eqLow(it),q=it&&EQ_QUAL[it.quality]?EQ_QUAL[it.quality][1]:'#6b5a42',sq=['bolts','mask'].includes(slot);
+ return`<div class="eqslot${it?' on':''}${sq?' sq':''}${low?' low':''}" data-i="${i}"><button type="button" class="eqtile" data-i="${i}" style="--q:${q}" aria-haspopup="dialog" aria-label="${EQ_NAME[slot]}: ${it?eqEsc(it.name):'empty'}${low?'. Level too low, requires level '+eqReq(it):''}. Open the chooser${it?'. Press Delete to unequip':''}">${it&&it.icon?`<img src="${it.icon}" alt="">`:`<span class="eqempty">${EQ_NAME[slot]}</span>`}${low?'<i class="eqbadge">Level too low</i>':''}</button>
   <div class="eqsl"><b>${EQ_NAME[slot]}</b><span>${it?eqEsc(it.name):'Empty'}</span></div>${it?`<button type="button" class="eqx" data-i="${i}" aria-label="Unequip ${eqEsc(it.name)}">×</button>`:''}</div>`}
 const eqLater='<div class="eqstrip" aria-disabled="true">Consumables &amp; bombs, coming later</div>';
 function eqItemStats(it){const q=EQ_QUAL[it.quality]||['',''],p=eqPrimary(it),lv=eqLevel(it);
@@ -76,7 +80,8 @@ function eqRender(force){const body=document.getElementById('eqbody');if(!body)r
  else{const sets=eqSets(),items=EQ_SLOTS.map((s,i)=>eqCur(i)).filter(Boolean);
   rest=`<section class="eqsec"><h3>Sets</h3>${sets.length?sets.map(eqSetHtml).join(''):'<p class="dim">No set pieces equipped. Pieces of one witcher school or other set unlock bonuses at 3 and 6 pieces.</p>'}</section>
    <section class="eqsec"><h3>Item stats <small>listed, not added up</small></h3>${items.length?items.map(eqItemStats).join(''):'<p class="dim">Equip an item to see its numbers here.</p>'}</section>`}
- body.innerHTML=`<div class="eqcols"><div class="eqc1">${weapons}</div><div class="eqc2">${armour}</div><div class="eqc3">${rest}</div></div>`;
+ const lows=eqData()?EQ_SLOTS.map((s,i)=>[s,eqCur(i)]).filter(x=>x[1]&&eqLow(x[1])):[],warn=lows.length?`<p class="eqwarn" role="status"><b>Level too low</b> for ${lows.map(x=>EQ_NAME[x[0]].toLowerCase()+' (level '+eqReq(x[1])+')').join(', ')}. The gear stays in the link; raise Level to use it.</p>`:'';
+ body.innerHTML=warn+`<div class="eqcols"><div class="eqc1">${weapons}</div><div class="eqc2">${armour}</div><div class="eqc3">${rest}</div></div>`;
  body.querySelectorAll('.eqtile[data-i]').forEach(b=>{const i=+b.dataset.i;b.onclick=()=>eqPick(i);b.oncontextmenu=e=>{e.preventDefault();eqUnequip(i)};
   b.onkeydown=e=>{if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();eqUnequip(i)}};
   const it=eqCur(i);if(it){b.onmouseenter=()=>eqHoverTip(it,b);b.onmouseleave=eqHideTip;b.onfocus=()=>eqHoverTip(it,b);b.onblur=eqHideTip}});
@@ -116,9 +121,10 @@ function eqPickRender(){const p=EQ.pick;if(!p)return;const list=eqShown(),grid=d
  if(p.sel&&!list.some(c=>c.includes(p.sel)))p.sel=null;if(!p.sel&&list.length)p.sel=eqCur(p.i)&&list.some(c=>c.includes(eqCur(p.i)))?eqCur(p.i):list[0][list[0].length-1];
  document.getElementById('pkcount').textContent=list.length+' item'+(list.length===1?'':'s');
  grid.innerHTML=list.length?list.map(c=>{const rep=p.sel&&c.includes(p.sel)?p.sel:c[c.length-1],q=EQ_QUAL[rep.quality]?EQ_QUAL[rep.quality][1]:'#6b5a42',on=c.includes(p.sel),eq=c.includes(eqCur(p.i));
-  return`<button type="button" class="pktile${on?' sel':''}${eq?' worn':''}" role="option" aria-selected="${on}" data-id="${eqEsc(rep.id)}" style="--q:${q}" title="${eqEsc(rep.name)}">${rep.icon?`<img src="${rep.icon}" alt="" loading="lazy">`:''}<span>${eqEsc(rep.name)}</span>${c.length>1?`<i>${c.length} tiers</i>`:''}${eq?'<em>worn</em>':''}</button>`}).join(''):'<p class="eqmsg">Nothing matches.</p>';
+  return`<button type="button" class="pktile${on?' sel':''}${eq?' worn':''}${eqLow(rep)?' low':''}" role="option" aria-selected="${on}" data-id="${eqEsc(rep.id)}" style="--q:${q}" title="${eqEsc(rep.name)}">${rep.icon?`<img src="${rep.icon}" alt="" loading="lazy">`:''}<span>${eqEsc(rep.name)}</span>${eqLow(rep)?`<small class="pkreq">Level ${eqReq(rep)}</small>`:''}${c.length>1?`<i>${c.length} tiers</i>`:''}${eq?'<em>worn</em>':''}</button>`}).join(''):'<p class="eqmsg">Nothing matches.</p>';
  const side=document.getElementById('pkside'),d=eqData(),it=p.sel;
- side.innerHTML=it?`${eqTip(it,true)}<div class="pkact"><button class="btn" id="pkequip" type="button">${eqCur(p.i)===it?'Equipped':'Equip'}</button>${it.set?'<button class="btn" id="pkequipset" type="button">Equip set</button>':''}${eqCur(p.i)?'<button class="btn" id="pkunequip" type="button">Unequip</button>':''}</div>${it.set?eqSetNote(it):''}`:'<p class="eqmsg">Select an item to see it here.</p>';
+ const lock=it&&eqLow(it),pl=it&&it.set?eqSetPlan(it):null,noset=pl&&!pl.pieces.length;
+ side.innerHTML=it?`${eqTip(it,true)}<div class="pkact"><button class="btn" id="pkequip" type="button"${lock?' disabled aria-describedby="pkwhy"':''}>${eqCur(p.i)===it?'Equipped':'Equip'}</button>${it.set?`<button class="btn" id="pkequipset" type="button"${noset?' disabled aria-describedby="pkwhy"':''}>Equip set</button>`:''}${eqCur(p.i)?'<button class="btn" id="pkunequip" type="button">Unequip</button>':''}</div>${lock||noset?`<p class="pknote bad" id="pkwhy">${lock?'Requires level '+eqReq(it):'No piece of this set can be equipped at level '+lvl()}</p>`:''}${it.set?eqSetNote(it):''}`:'<p class="eqmsg">Select an item to see it here.</p>';
  grid.querySelectorAll('.pktile').forEach(b=>{b.onclick=()=>{p.sel=d.byId.get(b.dataset.id);eqPickRender();const n=document.querySelector('#pkgrid [data-id="'+p.sel.id+'"]');if(n)n.focus()};b.ondblclick=()=>eqEquip(d.byId.get(b.dataset.id));
   b.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();const x=d.byId.get(b.dataset.id);if(e.shiftKey&&x.set)eqEquipSet(x);else eqEquip(x)}else eqGridKey(e,b)}});   // Shift+Enter equips the whole set, like the Equip set button
  side.querySelectorAll('.eqchip').forEach(b=>{b.onclick=()=>{p.sel=d.byId.get(b.dataset.id);eqPickRender();const n=document.querySelector('#pkside [data-id="'+p.sel.id+'"]');if(n)n.focus()}});
@@ -126,19 +132,20 @@ function eqPickRender(){const p=EQ.pick;if(!p)return;const list=eqShown(),grid=d
 function eqGridKey(e,b){const t=[...document.querySelectorAll('#pkgrid .pktile')],k=t.indexOf(b);let n=-1;
  if(e.key==='ArrowRight')n=k+1;else if(e.key==='ArrowLeft')n=k-1;else if(e.key==='ArrowDown'||e.key==='ArrowUp'){const dir=e.key==='ArrowDown'?1:-1;const x=b.offsetLeft;n=k;for(let j=k+dir;j>=0&&j<t.length;j+=dir){if(t[j].offsetTop!==b.offsetTop&&Math.abs(t[j].offsetLeft-x)<4){n=j;break}}}
  if(n>=0&&n<t.length&&n!==k){e.preventDefault();t[n].focus();t[n].click();t[n].focus()}}
-function eqEquip(it){const p=EQ.pick;if(!p||!it)return;S.gear[p.i]=it.n;const i=p.i;save();eqClosePick(true);eqRender(true);notify(it.name+' equipped.');const b=document.querySelector('#eqbody .eqtile[data-i="'+i+'"]');if(b)b.focus()}
+function eqEquip(it){const p=EQ.pick;if(!p||!it)return;if(eqLow(it)){notify('Requires level '+eqReq(it)+'.');return}S.gear[p.i]=it.n;const i=p.i;save();eqClosePick(true);eqRender(true);notify(it.name+' equipped.');const b=document.querySelector('#eqbody .eqtile[data-i="'+i+'"]');if(b)b.focus()}
 // ---- Equip set: every piece of the selected item's set at the same tier and variant (NGP or not), into its slot ----
 const eqWords=t=>t.toLowerCase().split(/[\s_]+/);
-function eqSetPlan(it){const d=eqData();if(!d||!it||!it.set)return null;const ngp=x=>x.id.startsWith('NGP '),pieces=[],notes=[];
+function eqSetPlan(it){const d=eqData();if(!d||!it||!it.set)return null;const ngp=x=>x.id.startsWith('NGP '),pieces=[],notes=[],skipped=[];
  const common=(a,b)=>{const A=eqWords(a),B=eqWords(b);let k=0;while(k<A.length&&k<B.length&&A[k]===B[k])k++;return k};
  EQ_SLOTS.forEach((slot,i)=>{const c=(d.bySlot[slot]||[]).filter(x=>x.set===it.set&&ngp(x)===ngp(it));if(!c.length)return;
   let best=null,bs=1e12;c.forEach(x=>{const sc=(x===it?-1e9:0)+Math.abs((x.tier||1)-(it.tier||1))*1000+(((x.tier||1)>(it.tier||1))?1:0)-common(x.id,it.id)*10;if(sc<bs){bs=sc;best=x}});   // exact item first, then the nearest tier (lower on a tie), then the same family of ids (q702 vs q704, EP1 vs base)
+  if(eqLow(best)){skipped.push({slot,item:best});return}   // only what the current Level allows; the slot keeps what it has
   if((best.tier||1)!==(it.tier||1))notes.push(EQ_NAME[slot]+': '+(best.tier_name||'Basic')+' (there is no '+(it.tier_name||'Basic')+' one)');
   pieces.push({slot,i,item:best})});
- return{pieces,notes}}
-function eqSetNote(it){const pl=eqSetPlan(it);if(!pl)return'';return`<p class="pknote"><b>Equip set</b> puts ${pl.pieces.length} piece${pl.pieces.length===1?'':'s'} of ${eqEsc(EQ.meta.sets[it.set].name)} (${eqEsc(it.tier_name||'Basic')}) in ${pl.pieces.map(x=>EQ_NAME[x.slot].toLowerCase()).join(', ')}, replacing what is there.${pl.notes.length?` <b>Nearest tier used:</b> ${eqEsc(pl.notes.join('; '))}.`:''}</p>`}
+ return{pieces,notes,skipped}}
+function eqSetNote(it){const pl=eqSetPlan(it);if(!pl)return'';const sk=pl.skipped.length?`<p class="pknote"><b>Skipped, level too low:</b> ${eqEsc(pl.skipped.map(x=>EQ_NAME[x.slot]+' (requires level '+eqReq(x.item)+')').join('; '))}.</p>`:'';if(!pl.pieces.length)return sk;return`<p class="pknote"><b>Equip set</b> puts ${pl.pieces.length} piece${pl.pieces.length===1?'':'s'} of ${eqEsc(EQ.meta.sets[it.set].name)} (${eqEsc(it.tier_name||'Basic')}) in ${pl.pieces.map(x=>EQ_NAME[x.slot].toLowerCase()).join(', ')}, replacing what is there.${pl.notes.length?` <b>Nearest tier used:</b> ${eqEsc(pl.notes.join('; '))}.`:''}</p>${sk}`}
 function eqEquipSet(it){const p=EQ.pick,pl=eqSetPlan(it);if(!p||!pl||!pl.pieces.length)return;pl.pieces.forEach(x=>{S.gear[x.i]=x.item.n});const i=p.i;save();eqClosePick(true);eqRender(true);   // one save(): the link changes once
- notify('Set equipped: '+pl.pieces.length+' pieces of '+EQ.meta.sets[it.set].name+'.'+(pl.notes.length?' Nearest tier used for '+pl.notes.join('; ')+'.':''));const b=document.querySelector('#eqbody .eqtile[data-i="'+i+'"]');if(b)b.focus()}
+ notify('Set equipped: '+pl.pieces.length+' pieces of '+EQ.meta.sets[it.set].name+'.'+(pl.notes.length?' Nearest tier used for '+pl.notes.join('; ')+'.':'')+(pl.skipped.length?' Skipped, level too low: '+pl.skipped.map(x=>EQ_NAME[x.slot].toLowerCase()+' (level '+eqReq(x.item)+')').join(', ')+'.':''));const b=document.querySelector('#eqbody .eqtile[data-i="'+i+'"]');if(b)b.focus()}
 function eqClosePick(quiet){const ov=document.getElementById('eqpick'),p=EQ.pick;EQ.pick=null;ov.hidden=true;ov.innerHTML='';if(!quiet&&p&&p.opener&&p.opener.focus)p.opener.focus()}
 document.getElementById('eqbtn').onclick=eqFocusPanel;
 document.querySelectorAll('#eqpanel .eqrs [data-rs]').forEach(b=>{b.onclick=()=>eqSwitch(b.dataset.rs);b.onkeydown=e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();const o=b.dataset.rs==='ng'?'ng_plus':'ng';eqSwitch(o);const n=document.querySelector('#eqpanel .eqrs [data-rs="'+o+'"]');if(n)n.focus()}}});
