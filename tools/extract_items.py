@@ -429,12 +429,29 @@ def rules(g, sc, set_rules):
         "autogen": {"text": AUTOGEN_NOTE}}
 
 
+UI_DROP = ("rulesets", "abilities", "file", "tags", "icon_path")       # provenance: not needed by the page (the extractor still sees it)
+REGISTRY = ROOT / "data" / "item_ids.json"
+
+
+def registry_numbers(ids):
+    """data/item_ids.json: item id -> number (1 to 4095), APPEND-ONLY: the numbers are what a share link stores (CLAUDE.md, gear link). New ids get the next number; none is
+    ever reused or renumbered, ids that left the game files keep theirs."""
+    reg = json.loads(REGISTRY.read_text(encoding="utf-8"))["ids"] if REGISTRY.is_file() else {}
+    for i in ids:
+        if i not in reg: reg[i] = max(reg.values(), default=0) + 1
+    if max(reg.values()) > 4095 or len(set(reg.values())) != len(reg): sys.exit("item id registry out of range or not unique")
+    return reg
+
+
 def split(data):
-    """{file name: text}: data/items.json (sets, rules, slots: small) and one data/items_<ruleset>.json per ruleset (its items, loaded on demand: the UI never embeds them in index.html)."""
-    meta = {k: v for k, v in data.items() if k != "items"}; out = {"items.json": json.dumps(meta, indent=1, ensure_ascii=False) + "\n"}
+    """{file name: text}: data/items.json (sets, rules, slots: small) and one data/items_<ruleset>.json per ruleset (its items, loaded on demand: the UI never embeds them in index.html).
+    The per-ruleset records leave out provenance and null fields, and carry n, the registry number of the id."""
+    reg = registry_numbers(sorted({r["id"] for r in data["items"]}, key=lambda i: next(k for k, r in enumerate(data["items"]) if r["id"] == i)))
+    meta = {k: v for k, v in data.items() if k != "items"}; out = {"items.json": json.dumps(meta, indent=1, ensure_ascii=False) + "\n",
+                                                                  "item_ids.json": json.dumps({"version": 1, "note": "append-only: never reuse or renumber (share links store these numbers)", "ids": dict(sorted(reg.items(), key=lambda kv: kv[1]))}, indent=0, ensure_ascii=False) + "\n"}
     for rs in data["rulesets"]:
-        recs = [{k: v for k, v in r.items() if k != "rulesets"} for r in data["items"] if rs in r["rulesets"]]
-        out["items_%s.json" % rs] = json.dumps({"ruleset": rs, "items": recs}, indent=1, ensure_ascii=False) + "\n"
+        recs = [{k: v for k, v in dict(r, n=reg[r["id"]]).items() if k not in UI_DROP and v is not None} for r in data["items"] if rs in r["rulesets"]]
+        out["items_%s.json" % rs] = json.dumps({"ruleset": rs, "items": recs}, ensure_ascii=False, separators=(",", ":")) + "\n"
     return out
 
 

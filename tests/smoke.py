@@ -42,6 +42,7 @@ def wait_for_site(url, want_sha=None, want_version=None, seconds=0, interval=5, 
     deployment while the plain URL, the one people use, is still answered with the old one; and the fetch should be the browser that
     runs the checks, because two clients asking at the same moment can be answered differently while Cloudflare's edge catches up."""
     end, last, streak = time.time() + seconds, "no answer", 0
+    if seconds <= 0: confirmations = 1                                       # no time to wait: one look
     while True:
         try:
             st, body = fetch(url); sha = hashlib.sha256(body).hexdigest(); m = re.search(rb'APP_VERSION="([^"]*)"', body); ver = m.group(1).decode() if m else None
@@ -86,6 +87,9 @@ def run_smoke(url, expect_version=None, expect_index=None, wait=0, results=None)
         ver = pg.evaluate("APP_VERSION"); check("version is %s" % (expect_version or ver), not expect_version or ver == expect_version, ver)
         imgs = pg.evaluate("[...document.images].filter(i=>!(i.complete&&i.naturalWidth>0)).map(i=>i.src.slice(-40))"); check("every image on the page loads", not imgs, imgs[:3])
         linkcheck.check_fixtures(b, url, "fixtures", check)
+        if pg.evaluate("!!document.getElementById('eqbtn')"):
+            import eqcheck
+            eqcheck.run(b, url, check, "equipment")
         # a new link can be created and reopened
         try:
             E = pg.evaluate; i = E("TREES[1].sk.findIndex(s=>!s.req.length)")

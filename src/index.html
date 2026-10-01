@@ -23,7 +23,7 @@
     <div class="pts">POINTS AVAILABLE <b id="avail2">0</b><img src="@@img:img/skill-point@@" alt=""></div><div class="budget" aria-label="Character points">
     <label>Level <input id="lvl" type="number" min="1" max="100" value="1"></label><label title="Places of Power and other sources">Bonus points <input id="bonuspts" type="number" min="0" max="100" value="0"></label><span>Total <b id="total">8</b></span>
     <span hidden>Points available <b id="avail">0</b></span>
-    <button class="btn" id="mutbtn">Mutations</button><button class="btn" id="reset">Reset build</button>
+    <button class="btn" id="mutbtn">Mutations</button><button class="btn" id="eqbtn">Equipment</button><button class="btn" id="reset">Reset build</button>
   </div><p class="hint" id="treeHint"></p>
   </section>
   <section class="right">
@@ -44,6 +44,13 @@
  <div class="mh"><h2 id="mtitle">MUTATIONS</h2><div class="mctl" aria-label="Character points"><label>Level <input id="mlvl" type="number" min="1" max="100"></label><label title="Places of Power and other sources">Bonus points <input id="mbonus" type="number" min="0" max="100"></label></div><div class="mhead" id="mhead"></div><button class="x" id="mclose" aria-label="Close mutations">✕</button></div>
  <div class="mbody"><div class="mweb"><div class="mtip" id="mtip" hidden role="tooltip"></div><svg id="mweb" viewBox="60 -10 880 480" preserveAspectRatio="xMidYMid meet" aria-label="Mutation tree"></svg></div></div><div class="mfoot"><span id="mhint">Hover a mutation for details · <b>Click</b> to research, then activate · <b>Right-click</b> to undo research</span><button class="btn" id="mundo" disabled>Undo research</button></div>
 </div></div>
+
+<div class="mov" id="eqov" hidden role="dialog" aria-modal="true" aria-labelledby="eqtitle"><div class="mmodal eqmodal">
+ <div class="mh"><h2 id="eqtitle">EQUIPMENT</h2><div class="eqrs" role="radiogroup" aria-label="Game mode"><button class="btn" type="button" role="radio" data-rs="ng" aria-checked="true">First playthrough</button><button class="btn" type="button" role="radio" data-rs="ng_plus" aria-checked="false">New Game Plus</button></div>
+  <span class="eqlvl" title="Character level, set on the main page">Level <b id="eqlvl"></b></span><button class="btn" id="eqclose" type="button">Close</button></div>
+ <div class="eqbody" id="eqbody" aria-live="polite"></div>
+</div></div>
+<div class="mov eqpk" id="eqpick" hidden role="dialog" aria-modal="true" aria-labelledby="pktitle"></div>
 
 <script>{{js}}</script>
 </body>

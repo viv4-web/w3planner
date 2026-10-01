@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parent.parent
 class LazyTests(unittest.TestCase):
     def test_marker_becomes_a_url_and_the_data_a_separate_file(self):
         with tempfile.TemporaryDirectory() as d:
-            d = Path(d); src = d / "src"; shutil.copytree(ROOT / "src", src); plain = d / "plain"
+            d = Path(d); src = d / "src"; shutil.copytree(ROOT / "src", src); (src / "equipment.js").unlink(); (src / "equipment.css").unlink()      # without the equipment source nothing refers to the data
             for name, extra in (("plain", ""), ("lazy", "\nconst ITEMS_NG_URL=/*@file:items_ng*/;\n")):
                 out = d / name
                 if extra: (src / "app.js").write_text((ROOT / "src/app.js").read_text(encoding="utf-8") + extra, encoding="utf-8")
@@ -26,6 +26,9 @@ class LazyTests(unittest.TestCase):
             payload = json.loads(text[text.index(").items_ng=") + len(").items_ng="):].rstrip().rstrip(";")); self.assertGreater(len(payload["items"]), 100)
             icon = next(r["icon"] for r in payload["items"] if r["icon"]); self.assertTrue((d / "lazy" / icon).is_file(), icon)  # the placeholder file exists in the build
             self.assertFalse(list((d / "plain").glob("data")), "no marker, no data folder")
+        # and the real page: the equipment data is on demand, so index.html carries only three URLs
+        real = d / "real"; r = subprocess.run([sys.executable, str(ROOT / "tools/build.py"), "--variant", "placeholder", "--out", str(real)], capture_output=True, text=True); self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(len(list((real / "data").glob("items*.js"))), 3); self.assertLess(len((real / "index.html").read_bytes()), 260_000)
 
 
 if __name__ == "__main__":

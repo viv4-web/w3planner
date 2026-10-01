@@ -19,7 +19,7 @@ import serve
 from playwright.sync_api import sync_playwright
 
 # In-page builder. spec: {level, bonus, trees:[ti..], fill:'max'|'start', research:[mutation ids], active, equip:bool, muts:[mutagen ids]}
-BUILD = """spec=>{
+BUILD = """async spec=>{
  render=()=>{};history.replaceState=()=>{};
  S=blank();document.getElementById('lvl').value=spec.level;document.getElementById('bonuspts').value=spec.bonus;
  const research=i=>{if(S.mres[i])return;MUT[i].req.forEach(research);S.mres[i]=1};
@@ -35,12 +35,14 @@ BUILD = """spec=>{
        if(S.slots[s]||!S.lv[ti][i]||used.has(ti+'.'+i)||!accepts(s,[ti,i]))continue;S.slots[s]=[ti,i];used.add(ti+'.'+i)}}}
  (spec.muts||[]).forEach((m,g)=>{if(sockOpen(g))S.muts[g]=m});
  enforceLocks();
- const state=()=>({level:+document.getElementById('lvl').value,bonus:+document.getElementById('bonuspts').value,lv:S.lv,slots:S.slots,muts:S.muts,mres:S.mres,mact:S.mact});
+ // gear (v27 and later): the items are chosen by id from the real data, stored as their registry numbers
+ if(spec.rs){const rs=spec.rs;await eqLoad(rs);S.rs=rs;Object.entries(spec.gear||{}).forEach(([slot,id])=>{const it=EQ.rs[rs].byId.get(id);if(!it||it.slot!==slot)throw new Error('bad gear '+slot+' '+id);S.gear[EQ_SLOTS.indexOf(slot)]=it.n})}
+ const state=()=>({level:+document.getElementById('lvl').value,bonus:+document.getElementById('bonuspts').value,lv:S.lv,slots:S.slots,muts:S.muts,mres:S.mres,mact:S.mact,gear:S.gear,ruleset:S.rs});
  const expect=JSON.parse(JSON.stringify(state())),code=enc().slice(0);
  // sanity: the build must be legal and must survive its own link
  const bad=[];if(spent()>budget())bad.push('overspent '+spent()+'>'+budget());
  const t=dec(code);if(!t)bad.push('does not decode');else{const l=JSON.stringify(expect);
-   const got=JSON.stringify({level:+document.getElementById('lvl').value,bonus:+document.getElementById('bonuspts').value,lv:t.lv,slots:t.slots,muts:t.muts,mres:t.mres,mact:t.mact});if(l!==got)bad.push('round trip differs')}
+   const got=JSON.stringify({level:+document.getElementById('lvl').value,bonus:+document.getElementById('bonuspts').value,lv:t.lv,slots:t.slots,muts:t.muts,mres:t.mres,mact:t.mact,gear:t.gear,ruleset:t.rs});if(l!==got)bad.push('round trip differs')}
  return {code,expect,bad,spent:spent(),budget:budget()}}"""
 
 
@@ -71,6 +73,24 @@ def specs(info):
     return out
 
 
+def gear_specs():
+    """v27: share links that carry the gear segment (g1): every slot alone in both rulesets, full sets, a mix with skills and mutagens, empty gear."""
+    out = []; add = lambda name, **kw: out.append((name, kw))
+    full = {"steel": "Lynx School steel sword 4", "silver": "Lynx School silver sword 4", "crossbow": "Lynx School Crossbow", "bolts": "Explosive Bolt Legendary", "chest": "Lynx Armor 4",
+            "gloves": "Lynx Gloves 5", "trousers": "Lynx Pants 5", "boots": "Lynx Boots 5", "mask": "Geralt mask Nilf"}
+    add("no gear, first playthrough (no gear segment at all)", level=1, bonus=0)
+    add("no gear, New Game Plus (the segment is only the mode)", level=1, bonus=0, rs="ng_plus")
+    for rs, label in (("ng", "first playthrough"), ("ng_plus", "New Game Plus")):
+        for slot, item in full.items():
+            add("%s only, %s" % (slot, label), level=60, bonus=0, rs=rs, gear={slot: item})
+    add("full gear, Feline Grandmaster, first playthrough", level=100, bonus=100, rs="ng", gear=full)
+    add("full gear, Feline legendary, New Game Plus", level=100, bonus=100, rs="ng_plus", gear=dict(full, mask="Wolf Bandana"))
+    add("mixed sets, first playthrough", level=100, bonus=100, rs="ng", gear={"steel": "Wolf School steel sword 4", "silver": "Aerondight", "chest": "Bear Armor 4", "gloves": "Gryphon Gloves 5", "boots": "Wolf Boots 5", "trousers": "Red Wolf Pants 2", "bolts": "Bodkin Bolt"})
+    add("highest item numbers in every slot", level=100, bonus=100, rs="ng_plus", gear={"steel": None, "silver": None})   # replaced below
+    add("skills, mutagens and gear together", level=100, bonus=100, trees=[1], fill="max", equip=True, research=[0, 1, 2], active=2, muts=[9, 18, 27, 3], rs="ng", gear=full)
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--version", required=True, help="the app version whose code makes the links, e.g. v24")
@@ -89,7 +109,10 @@ def main():
         info = pg.evaluate("""({ntrees:TREES.length,nmut:MUT.length,nmutagen:MUTS.length,
             special:MUTS.map((m,i)=>m.special?i:-1).filter(i=>i>=0),regular:MUTS.map((m,i)=>m.special?-1:i).filter(i=>i>=0)})""")
         rows, seen = [], set()
-        for name, spec in specs(info):
+        use = specs(info) if a.version == "v24" else gear_specs() if a.version == "v27" else sys.exit("no fixture recipe for %s: add one to this tool" % a.version)
+        top = pg.evaluate("async rs=>{await eqLoad(rs);const o={};EQ_SLOTS.forEach(s=>{const l=EQ.rs[rs].bySlot[s]||[];o[s]=l.reduce((a,b)=>a.n>b.n?a:b).id});return o}", "ng_plus") if a.version == "v27" else {}
+        for name, spec in use:
+            if spec.get("gear") == {"steel": None, "silver": None}: spec = dict(spec, gear=top)
             r = pg.evaluate(BUILD, spec)
             if r["bad"] or errs: sys.exit("could not build %r: %s %s" % (name, r["bad"], errs[:1]))
             if r["code"] in seen: sys.exit("duplicate link for %r" % name)

@@ -88,8 +88,9 @@ def main():
         return json.dumps(fname)
 
     src = Path(a.src)
-    css = tokens(read(src / "app.css"))
-    js = re.sub(r"/\*@file:([a-z0-9_]+)\*/", lazy, tokens(re.sub(r"/\*@data:([A-Z_]+)\*/", data, read(src / "app.js"))))
+    extra = lambda name: ("\n" + read(src / name)) if (src / name).is_file() else ""   # equipment.css / equipment.js: more source of the same page (one scope)
+    css = tokens(read(src / "app.css") + extra("equipment.css"))
+    js = re.sub(r"/\*@file:([a-z0-9_]+)\*/", lazy, tokens(re.sub(r"/\*@data:([A-Z_]+)\*/", data, read(src / "app.js") + extra("equipment.js"))))
     html = tokens(read(src / "index.html")).replace("{{css}}", css).replace("{{js}}", js)
     (out / "index.html").write_bytes(html.encode("utf-8"))
     for name, blob in files.items():

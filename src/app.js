@@ -1,5 +1,5 @@
 
-const APP_VERSION="v26";
+const APP_VERSION="v27";
 const CFG=Object.assign({mode:"online",shareBase:""},window.PLANNER_CONFIG||{});
 const DATA=/*@data:DATA*/;
 
@@ -42,7 +42,7 @@ const MUTCOL={red:'#b33b3b',blue:'#3d74d4',green:'#4f9a3e'};
 TREES.forEach(t=>{t.parents=t.sk.map(s=>s.req);t.children=t.sk.map(()=>[]);t.edges.forEach(([p,c])=>t.children[p].push(c));});
 
 let S; // state
-function blank(){return{lv:TREES.map(t=>t.nodes.map(()=>0)),slots:Array(16).fill(null),muts:Array(4).fill(null),mres:Array(12).fill(0),mact:-1}}
+function blank(){return{lv:TREES.map(t=>t.nodes.map(()=>0)),slots:Array(16).fill(null),muts:Array(4).fill(null),mres:Array(12).fill(0),mact:-1,gear:Array(9).fill(0),rs:'ng'}}
 function demo(){const s=blank();const T=TREES[1],ix=id=>T.sk.findIndex(k=>k.id===id);
  ['magic_s42','magic_s3','magic_s11','magic_s35','magic_s37','magic_s40'].forEach(id=>s.lv[1][ix(id)]=1);s.lv[1][ix('magic_s11')]=3;
  ['magic_s11','magic_s3','magic_s35','magic_s37','magic_s40'].forEach((id,k)=>s.slots[k]=[1,ix(id)]);s.muts[0]=6;return s}
@@ -50,14 +50,17 @@ let tab=1, sel=null, selMut=null;
 
 // ---- encoding ----
 const A='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+// ---- gear segment (g1): the 9th segment of a link, only when gear is equipped or the mode is New Game Plus: g1 + A (First playthrough) or B (New Game Plus) + 2 characters per slot (CLAUDE.md, "Gear link format") ----
+function gearSeg(){if(!S.gear.some(Boolean)&&S.rs!=='ng_plus')return'';return'.g1'+(S.rs==='ng_plus'?'B':'A')+S.gear.map(v=>A[v>>6]+A[v&63]).join('')}
 function enc(){const d=S.lv.flat();let o='';for(let i=0;i<d.length;i+=3)o+=A[(d[i]||0)*16+(d[i+1]||0)*4+(d[i+2]||0)];
  o+='.';S.slots.forEach(x=>{const v=x?x[0]*20+x[1]+1:0;o+=A[v>>6]+A[v&63]});
- o+='.';S.muts.forEach(m=>o+=m==null?'-':m.toString(36));o+='.'+lvl()+'.'+bonusPts();o+='.'+parseInt(S.mres.map(x=>x?1:0).reverse().join(''),2).toString(36)+'.'+(S.mact+1);return'v1.'+o}
+ o+='.';S.muts.forEach(m=>o+=m==null?'-':m.toString(36));o+='.'+lvl()+'.'+bonusPts();o+='.'+parseInt(S.mres.map(x=>x?1:0).reverse().join(''),2).toString(36)+'.'+(S.mact+1);return'v1.'+o+gearSeg()}
 function dec(h){try{
  // Link data is untrusted: it is only ever read as numbers, and anything malformed is rejected.
  if(typeof h!=='string'||h.length>400)return null;
- const P=h.split('.');if(P[0]!=='v1'||P.length<4||P.length>8)return null;
- const [,l,sl,m,L,B,MR,MA]=P,ALPHA=[...A],inA=s=>[...s].every(c=>ALPHA.includes(c));
+ const P=h.split('.');if(P[0]!=='v1'||P.length<4||P.length>9)return null;
+ const [,l,sl,m,L,B,MR,MA,G]=P,ALPHA=[...A],inA=s=>[...s].every(c=>ALPHA.includes(c));
+ if(G!==undefined&&!/^g1[AB][A-Za-z0-9_-]{18}$/.test(G))return null;
  const NSK=TREES.reduce((a,t)=>a+t.sk.length,0);
  if(l.length!==Math.ceil(NSK/3)||!inA(l))return null;
  if(!(sl.length===24||sl.length===32)||!inA(sl))return null;
@@ -78,6 +81,7 @@ function dec(h){try{
  if(MR){const bits=parseInt(MR,36)&4095;for(let i=0;i<12;i++)s.mres[i]=(bits>>i)&1}
  if(MA!==undefined){const a=+MA-1;s.mact=(a>=0&&a<12&&s.mres[a])?a:-1}
  if(lv!==null){document.getElementById('lvl').value=lv;document.getElementById('bonuspts').value=bo===null?0:bo}
+ if(G!==undefined){s.rs=G[2]==='B'?'ng_plus':'ng';for(let i=0;i<9;i++)s.gear[i]=A.indexOf(G[3+2*i])*64+A.indexOf(G[4+2*i])}
  return s}catch(e){return null}}
 // ---- rules ----
 const spent=()=>S.lv.flat().reduce((a,b)=>a+b,0)+MUT.reduce((a,m,i)=>a+(S.mres[i]?m.sp:0),0);
@@ -381,5 +385,5 @@ document.getElementById('copy').onclick=async()=>{const b=document.getElementByI
   document.getElementById('imp').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();open()}}}}
 {const sr=document.getElementById('shareRow');if(sr&&CFG.share===false)sr.hidden=true}
 {const ft=document.querySelector('footer'),su=CFG.siteUrl||CFG.shareBase;if(ft){const link=(su&&/^https?:\/\//.test(su))?' · <a href="'+encodeURI(su)+'" style="color:inherit">Latest version online</a>':'';ft.insertAdjacentHTML('beforeend',' · '+(CFG.mode==='offline'?'Offline '+APP_VERSION+link:APP_VERSION))}}
-window.onhashchange=()=>{const s=dec(location.hash.slice(1));if(s){S=s;enforceLocks();render()}};
+window.onhashchange=()=>{const s=dec(location.hash.slice(1));if(s){S=s;enforceLocks();render();if(typeof eqRefresh==='function')eqRefresh()}};
 save();

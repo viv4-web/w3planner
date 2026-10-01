@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 FIX = ROOT / "tests" / "fixtures"
 LEGACY_STATE = "[+document.getElementById('lvl').value,+document.getElementById('bonuspts').value,S.lv,S.slots.slice(0,12),S.muts,S.mres,S.mact]"
-FULL_STATE = "({level:+document.getElementById('lvl').value,bonus:+document.getElementById('bonuspts').value,lv:S.lv,slots:S.slots,muts:S.muts,mres:S.mres,mact:S.mact})"
+FULL_STATE = "({level:+document.getElementById('lvl').value,bonus:+document.getElementById('bonuspts').value,lv:S.lv,slots:S.slots,muts:S.muts,mres:S.mres,mact:S.mact,gear:S.gear,ruleset:S.rs})"
 READY = "typeof S!=='undefined'&&S&&document.getElementById('slots').children.length>0"
 
 
@@ -70,7 +70,7 @@ def append_only_problems():
     Returns (problems, note). `note` says so when there was no main to compare with (a shallow checkout)."""
     ref = next((r for r in ("origin/main", "main") if subprocess.run(["git", "rev-parse", "--verify", "-q", r], cwd=ROOT, capture_output=True).returncode == 0), None)
     if not ref: return [], "no main branch to compare with, append-only check skipped"
-    ls = subprocess.run(["git", "ls-tree", "-r", "--name-only", ref, "tests/fixtures"], cwd=ROOT, capture_output=True, text=True).stdout.split()
+    ls = subprocess.run(["git", "ls-tree", "-r", "--name-only", ref, "tests/fixtures", "data/item_ids.json"], cwd=ROOT, capture_output=True, text=True).stdout.split()   # item_ids.json: the numbers a gear link stores
     problems = []
     for path in ls:
         if path.endswith("tooltips_ref.json") or path.endswith("README.md"): continue
@@ -79,6 +79,9 @@ def append_only_problems():
         if path.endswith(".txt"):
             lost = set(old.split("\n")) - set(cur.split("\n")); lost.discard("")
             if lost: problems.append("%s lost or changed %d links" % (path, len(lost)))
+        elif path.endswith("item_ids.json"):
+            o, c = json.loads(old)["ids"], json.loads(cur)["ids"]; lost = [k for k in o if c.get(k) != o[k]]
+            if lost: problems.append("%s renumbered or dropped %d ids (append-only)" % (path, len(lost)))
         elif path.endswith(".json"):
             o, c = json.loads(old), json.loads(cur)
             if isinstance(o, dict): lost = [k for k in o if c.get(k) != o[k]]
