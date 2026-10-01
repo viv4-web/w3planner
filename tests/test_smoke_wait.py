@@ -56,6 +56,28 @@ class WaitTests(unittest.TestCase):
             self.assertFalse(smoke.wait_for_site(url, None, "v24", seconds=0.2, interval=0.05)[0])
         finally: srv.shutdown()
 
+    def test_needs_the_new_page_twice_in_a_row(self):
+        seq = iter([NEW, OLD, NEW, NEW]); seen = []
+        def fake(url): body = next(seq); seen.append(body); return 200, body
+        ok, detail = smoke.wait_for_site("x", hashlib.sha256(NEW).hexdigest(), "v25", seconds=5, interval=0.01, fetch=fake)
+        self.assertTrue(ok, detail); self.assertEqual(len(seen), 4)   # NEW, OLD resets the streak, NEW, NEW
+
+    def test_one_good_answer_among_old_ones_is_not_enough(self):
+        seq = iter([OLD, NEW, OLD, NEW, OLD] * 100)
+        ok, detail = smoke.wait_for_site("x", None, "v25", seconds=0.3, interval=0.01, fetch=lambda u: (200, next(seq)))
+        self.assertFalse(ok)
+
+    def test_the_wait_works_through_a_real_browser(self):
+        from playwright.sync_api import sync_playwright
+        srv, st, url = serve(old_answers=2)
+        try:
+            with sync_playwright() as pw:
+                b = pw.chromium.launch()
+                try: ok, detail = smoke.wait_for_site(url, hashlib.sha256(NEW).hexdigest(), "v25", seconds=20, interval=0.1, fetch=smoke.browser_fetch(b))
+                finally: b.close()
+        finally: srv.shutdown()
+        self.assertTrue(ok, detail); self.assertTrue(all(p == "/" or p == "/favicon.ico" for p in st["paths"]), st["paths"])
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

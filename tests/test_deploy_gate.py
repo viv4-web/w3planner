@@ -22,8 +22,8 @@ class Fake:
     def wrangler(self, project, branch): self.calls.append(("wrangler", branch)); return 0, "https://abc123.%s.pages.dev" % project
 
     def smoke(self, url, version, wait, built=True):
-        self.calls.append(("smoke", url, built)); ok = self.smoke_results.pop(0)
-        return ok, [] if ok else [("a link fixture opens", False, "differs in: lv")]
+        self.calls.append(("smoke", url, built)); r = self.smoke_results.pop(0)   # True, False (a real fault) or "lag" (only edge-lag checks fail)
+        return r is True, [] if r is True else [("version is v99", False, "v98")] if r == "lag" else [("a link fixture opens", False, "differs in: lv")]
 
     def api(self, method, path, **kw):
         self.calls.append((method, path.split("?")[0].rsplit("/", 2)[-2:] if method == "POST" else "GET"))
@@ -39,13 +39,14 @@ class GateTests(unittest.TestCase):
         self.tmp = Path(tempfile.mkdtemp()); (self.tmp / "dist/game").mkdir(parents=True); (self.tmp / "dist/game/index.html").write_text('<script>const APP_VERSION="v99";</script>')
         self.gate = self.tmp / "dist/gate-preview.json"
         self.env = mock.patch.dict("os.environ", {"CLOUDFLARE_API_TOKEN": "t", "CLOUDFLARE_ACCOUNT_ID": "a"})
+        self.sleeps = []; self.sleep = mock.patch.object(deploy.time, "sleep", lambda s: self.sleeps.append(s))
         self.args = Namespace(art_dir="art", project="w3planner", dry_run=False, yes=True)
         self.git_out = {("rev-parse", "HEAD"): "c" * 40, ("rev-parse", "--short", "HEAD"): "ccccccc", ("status", "--porcelain"): ""}
 
     def patched(self, fake):
         return [
             self.env, mock.patch.object(deploy, "ROOT", self.tmp), mock.patch.object(deploy, "GATE_FILE", self.gate), mock.patch.object(deploy, "git", lambda *a: self.git_out.get(a, "")),
-            mock.patch.object(deploy, "build", lambda *a, **k: None), mock.patch.object(deploy, "wrangler_deploy", fake.wrangler), mock.patch.object(deploy, "smoke", fake.smoke), mock.patch.object(deploy, "cf_api", fake.api)]
+            mock.patch.object(deploy, "build", lambda *a, **k: None), mock.patch.object(deploy, "wrangler_deploy", fake.wrangler), mock.patch.object(deploy, "smoke", fake.smoke), mock.patch.object(deploy, "cf_api", fake.api), self.sleep]
 
     def run_with(self, fake, fn):
         out = io.StringIO()
@@ -87,6 +88,19 @@ class GateTests(unittest.TestCase):
         self.passed_gate(); fake = Fake([False, True]); rc, out = self.run_with(fake, deploy.do_promote)
         self.assertEqual(rc, 3, out); self.assertIn(("POST", ["prev-0000", "rollback"]), fake.calls); self.assertIn("Rolled back to prev-0000", out)
         self.assertEqual(fake.calls[-1], ("smoke", "https://w3planner.pages.dev/", False))  # re-checked after the rollback, against whatever is live now
+
+    def test_edge_lag_that_clears_does_not_roll_back(self):
+        self.passed_gate(); fake = Fake(["lag", "lag", True]); rc, out = self.run_with(fake, deploy.do_promote)
+        self.assertEqual(rc, 0, out); self.assertIn("PRODUCTION OK", out); self.assertFalse([c for c in fake.calls if c[0] == "POST"])
+        self.assertEqual(self.sleeps, [deploy.RECHECK_WAIT] * 2)
+
+    def test_edge_lag_that_does_not_clear_rolls_back_after_the_rechecks(self):
+        self.passed_gate(); fake = Fake(["lag"] * (deploy.RECHECKS + 1) + [True]); rc, out = self.run_with(fake, deploy.do_promote)
+        self.assertEqual(rc, 3, out); self.assertIn(("POST", ["prev-0000", "rollback"]), fake.calls); self.assertEqual(self.sleeps, [deploy.RECHECK_WAIT] * deploy.RECHECKS)
+
+    def test_a_real_fault_rolls_back_at_once_without_rechecks(self):
+        self.passed_gate(); fake = Fake([False, True]); rc, out = self.run_with(fake, deploy.do_promote)
+        self.assertEqual(rc, 3, out); self.assertEqual(self.sleeps, []); self.assertIn(("POST", ["prev-0000", "rollback"]), fake.calls)
 
     def test_failed_rollback_is_reported_with_the_manual_target(self):
         self.passed_gate(); fake = Fake([False], rollback_error="HTTP 500"); rc, out = self.run_with(fake, deploy.do_promote)
