@@ -55,6 +55,9 @@ def main():
         sid = match.group(1)
         if sid not in manifest:
             sys.exit("unknown art id in the source: %s" % sid)
+        # a slot may say "placeholder_as": the public build then shows that slot's placeholder (the equipment icons share one drawn placeholder per slot)
+        if a.variant == "placeholder" and manifest[sid].get("placeholder_as"):
+            sid = manifest[sid]["placeholder_as"]
         ext = manifest[sid][a.variant]
         src = art_dir / (sid + "." + ext)
         if not src.is_file():

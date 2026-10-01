@@ -69,6 +69,14 @@ def main():
     server = serve.make_server(site, 0); port = server.server_address[1]
     threading.Thread(target=server.serve_forever, daemon=True).start(); base = "http://127.0.0.1:%d/" % port
     ref = json.loads((ROOT / "tests/fixtures/tooltips_ref.json").read_text())
+    print("\n== Equipment data (data/items.json) ==")
+    items = json.loads((ROOT / "data/items.json").read_text(encoding="utf-8")); manifest = json.loads((ROOT / "art/manifest.json").read_text()); slots = {x["id"] for x in items["slots"]}; ids = [r["id"] for r in items["items"]]
+    check("%d items, ids unique, every slot and set reference is valid" % len(ids), len(set(ids)) == len(ids) and all(r["slot"] in slots and (r["set"] is None or r["set"] in items["sets"]) for r in items["items"])
+          and all(p in set(ids) for s_ in items["sets"].values() for p in s_["pieces"]) and all(r["name"] for r in items["items"]))
+    icon_ids = sorted({r["icon"][len("@@img:"):-2] for r in items["items"] if r["icon"]}); item_slots = sorted(k for k in manifest if k.startswith("items/") and "/ph-" not in k)
+    check("every icon token has a manifest slot, and no manifest slot is unused", icon_ids == item_slots, sorted(set(icon_ids) ^ set(item_slots))[:3])
+    check("every equipment icon shows the drawn placeholder of its slot in the public build", all(manifest[i].get("placeholder_as") == "items/ph-" + next(r["slot"] for r in items["items"] if r["icon"] == "@@img:%s@@" % i) and (ROOT / "art/placeholder" / (manifest[i]["placeholder_as"] + ".png")).is_file() for i in icon_ids))
+    if a.variant == "game": check("the private art folder has every equipment icon", all((Path(a.art_dir) / (i + ".png")).is_file() for i in icon_ids), [i for i in icon_ids if not (Path(a.art_dir) / (i + ".png")).is_file()][:3])
     N = 60 if a.quick else 300
     with sync_playwright() as pw:
         b = pw.chromium.launch()
