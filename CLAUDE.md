@@ -83,5 +83,5 @@ Known placeholder in the live build: `mutagen/9`, `mutagen/10`, `mutagen/11` (sp
 3. Replace the three placeholder special-mutagen icons with the game's.
 4. Add Firefox and WebKit to `tests/run_all.py` (only Chromium is tested today).
 5. Script the game-data extraction (`docs/DATA-PIPELINE.md`).
-6. GitHub Actions workflows in `.github/workflows` have never run; check them on the first pull request.
+6. GitHub Actions workflows in `.github/workflows` have run: CI is green on `main` (since PR #1). `gh api repos/viv4-web/w3planner/actions/permissions` returns 403 by design (the token has no administration rights); that is not a CI problem.
 7. Later: automate deploys, once manual deploys have been smooth for a while.
