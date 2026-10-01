@@ -6,10 +6,11 @@
 
 Checks: the page loads without console errors, failed requests or Content-Security-Policy violations; the security headers
 and the version are right; every image loads; every link fixture (all versions) opens correctly; a new link can be
-created and reopened. With --expect-index it first waits until the site serves that exact index.html, so a
-deployment that is still spreading is not mistaken for a broken one. Exit code 0 = all passed.
+created and reopened. With --expect-index / --expect-version it first polls the plain URL (no query string, no special headers:
+exactly what a browser loads) until the site serves that index.html and version, for up to --wait seconds, so a deployment
+that is still spreading through Cloudflare's edge is not mistaken for a broken one. Only then can a check fail. Exit code 0 = all passed.
 """
-import argparse, hashlib, json, sys, time, urllib.request
+import argparse, hashlib, json, re, sys, time, urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -20,21 +21,23 @@ NEEDED_HEADERS = ("content-security-policy", "x-content-type-options", "x-frame-
 
 
 def fetch(url):
-    req = urllib.request.Request(url + ("&" if "?" in url else "?") + "smoke=%d" % time.time(), headers={"Cache-Control": "no-cache", "User-Agent": "w3planner-smoke"})
-    with urllib.request.urlopen(req, timeout=20) as r: return r.status, r.read()
+    """GET exactly what a browser's first visit gets: the plain URL, no cache-buster, no cache headers."""
+    with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "w3planner-smoke"}), timeout=20) as r: return r.status, r.read()
 
 
-def wait_for_index(url, want_sha, seconds):
-    """Wait until `url` serves an index.html with this sha256. Returns (ok, detail)."""
+def wait_for_site(url, want_sha=None, want_version=None, seconds=0, interval=5):
+    """Poll `url` until it serves an index.html with this sha256 and this APP_VERSION (whichever are given), for at most `seconds`.
+    Returns (ok, detail). It polls the plain URL because a cache-busting query string can reach the new deployment while the
+    plain URL, the one people and the browser use, is still answered from Cloudflare's edge cache with the old one."""
     end, last = time.time() + seconds, "no answer"
     while True:
         try:
-            st, body = fetch(url); got = hashlib.sha256(body).hexdigest()
-            if st == 200 and got == want_sha: return True, ""
-            last = "HTTP %d, index.html sha256 %s..." % (st, got[:12])
+            st, body = fetch(url); sha = hashlib.sha256(body).hexdigest(); m = re.search(rb'APP_VERSION="([^"]*)"', body); ver = m.group(1).decode() if m else None
+            if st == 200 and (want_sha is None or sha == want_sha) and (want_version is None or ver == want_version): return True, ""
+            last = "HTTP %d, version %s, index.html sha256 %s..." % (st, ver, sha[:12])
         except Exception as e: last = str(e)[:100]
-        if time.time() >= end: return False, "still not serving the expected index.html: " + last
-        time.sleep(5)
+        if time.time() >= end: return False, "still not serving the expected build after %ds: %s" % (seconds, last)
+        time.sleep(interval)
 
 
 def run_smoke(url, expect_version=None, expect_index=None, wait=0, results=None):
@@ -44,9 +47,9 @@ def run_smoke(url, expect_version=None, expect_index=None, wait=0, results=None)
     def check(name, ok, detail=""):
         res.append((name, bool(ok), detail)); print(("  PASS  " if ok else "  FAIL  ") + name + (("  (" + str(detail) + ")") if detail != "" else ""), flush=True)
 
-    if expect_index:
-        sha = hashlib.sha256(Path(expect_index).read_bytes()).hexdigest(); ok, detail = wait_for_index(url, sha, wait)
-        check("%s serves the index.html that was built" % url, ok, detail)
+    if expect_index or expect_version:
+        sha = hashlib.sha256(Path(expect_index).read_bytes()).hexdigest() if expect_index else None; ok, detail = wait_for_site(url, sha, expect_version, wait)
+        check("%s serves the build that was deployed (waited for the plain URL)" % url, ok, detail)
         if not ok: return False, res
     with sync_playwright() as pw:
         b = pw.chromium.launch(); pg = b.new_page(viewport={"width": 1500, "height": 950}); errs, fails, bad = [], [], []
@@ -63,6 +66,7 @@ def run_smoke(url, expect_version=None, expect_index=None, wait=0, results=None)
         check("no console errors or script errors", not errs, errs[:2]); check("no failed requests", not fails, fails[:2]); check("no HTTP errors", not bad, bad[:2])
         check("no Content-Security-Policy violations", pg.evaluate("window.__v") == [], pg.evaluate("window.__v"))
         h = resp.headers; check("security headers are sent", all(h.get(k) for k in NEEDED_HEADERS), [k for k in NEEDED_HEADERS if not h.get(k)])
+        if expect_index: check("the page is served with Cache-Control: no-cache (so a new version shows at once)", "no-cache" in h.get("cache-control", ""), h.get("cache-control"))
         ver = pg.evaluate("APP_VERSION"); check("version is %s" % (expect_version or ver), not expect_version or ver == expect_version, ver)
         imgs = pg.evaluate("[...document.images].filter(i=>!(i.complete&&i.naturalWidth>0)).map(i=>i.src.slice(-40))"); check("every image on the page loads", not imgs, imgs[:3])
         linkcheck.check_fixtures(b, url, "fixtures", check)
