@@ -104,6 +104,22 @@ def scrollcheck(b, base, check, label):
     pg.close()
 
 
+GUTTER = """()=>{const b=document.getElementById('eqbody'),cs=getComputedStyle(b),r=b.getBoundingClientRect();
+ const sbw=b.offsetWidth-b.clientWidth-parseFloat(cs.borderLeftWidth)-parseFloat(cs.borderRightWidth);
+ const edge=r.left+parseFloat(cs.borderLeftWidth)+b.clientWidth-parseFloat(cs.paddingRight);   /* the content box's right edge, left of the scrollbar */
+ const v=[...b.querySelectorAll('.eqgrid b')].map(e=>{const q=e.getBoundingClientRect();return{r:q.right,h:q.height,t:e.textContent}});
+ const lh=Math.max(...v.map(x=>x.h));return{n:v.length,sbw:sbw,pr:parseFloat(cs.paddingRight),edge:edge,over:v.filter(x=>x.r>edge+0.5).map(x=>x.t+'@'+x.r).slice(0,5),maxr:Math.max(...v.map(x=>x.r)),wrapped:v.filter(x=>x.h>lh*1.5).length,gutter:cs.scrollbarGutter,pcts:v.filter(x=>/%/.test(x.t)).length}}"""
+
+
+def guttercheck(b, base, check, label):
+    """The scrollbar never sits on the stat values: every value's right edge is inside the scroller's content box (left of the scrollbar and its gap), and a value like '11 %' stays on one line."""
+    for w, h in ((2560, 1440), (1920, 1080), (1440, 900), (1280, 800)):
+        pg = b.new_page(viewport={"width": w, "height": h}); pg.goto(base); until(pg, READY); pg.fill("#lvl", "100"); gear(pg, URSINE); pg.wait_for_timeout(300); g = pg.evaluate(GUTTER)
+        check("%s: at %dx%d (%s): %d stat values, all end inside the scroller's content box (right edge %.1f, scrollbar %d px, padding %d px, gutter %s), %d with a %% sign, none wrapped" % (label, w, h, "scrolling panel" if w >= 1440 else "stacked, no inner scroll", g["n"], g["edge"], g["sbw"], g["pr"], g["gutter"], g["pcts"]),
+              g["n"] > 20 and g["pcts"] > 0 and not g["over"] and (w < 1440 or g["pr"] >= 12) and g["wrapped"] == 0, g)
+        pg.close()
+
+
 def levelcheck(b, base, check, label, pg):
     """The level requirement: the game blocks GetItemLevel(item) > GetLevel() (r4Player.ws:11723). Only the Level field counts."""
     E = pg.evaluate
@@ -164,7 +180,7 @@ def run(b, base, check, label, quick=False):
     errs, events = [], []; pg = b.new_page(viewport={"width": 1400, "height": 950}); pg.on("pageerror", lambda e: errs.append(str(e).split("\n")[0][:100])); E = pg.evaluate
     pg.on("load", lambda p: events.append("load")); pg.on("request", lambda r: events.append("data") if "/data/items" in r.url else None)
     pg.goto(base); check("%s: the panel shows right away and the equipment data loads after the page has loaded, only items.js and items_ng.js" % label, until(pg, READY) and E(KEYS) == ["items.js", "items_ng.js"] and events.index("load") < (events.index("data") if "data" in events else 99), [events[:4], E(KEYS)])
-    layout(b, base, check, label); scalecheck(b, base, check, label); scrollcheck(b, base, check, label)
+    layout(b, base, check, label); scalecheck(b, base, check, label); scrollcheck(b, base, check, label); guttercheck(b, base, check, label)
     pg.fill("#lvl", "100")      # the planner starts at Level 1 and the game blocks items above the level, so the walk-through below runs at the top level
     check("%s: weapons (steel, silver, crossbow, bolts) then armor (chest, gloves, trousers, boots, mask); one greyed strip \"Consumables & bombs, coming later\"" % label,
           E("[...document.querySelectorAll('#eqbody .eqw .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "steel,silver,crossbow,bolts" and E("[...document.querySelectorAll('#eqbody .eqarm .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "chest,gloves,trousers,boots,mask"

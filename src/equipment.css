@@ -18,7 +18,7 @@ header,footer{width:100%;max-width:2400px;margin-left:auto;margin-right:auto;pad
  .vdiv{height:auto;width:1px;margin:0;background:linear-gradient(180deg,transparent,#8a6a36 4%,#8a6a36 96%,transparent);box-shadow:0 0 14px #8a6a3666}
  .eqarea{position:relative;margin:0;min-height:0}   /* the panel is as tall as the skills area; its header stays, the body scrolls */
  .eqinner{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;padding-bottom:0}.eqhead,.eqrs{flex:none}
- .eqbody{flex:1 1 0;min-height:0;overflow-y:auto;overscroll-behavior:contain}.eqbody>.eqcols,.eqbody>.eqmsg{padding-bottom:16px}   /* the scroller ends at the panel's bottom edge; the 16 px is content, inside it */
+ .eqbody{flex:1 1 0;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;scrollbar-width:thin;scrollbar-color:#8a6a36 transparent;padding-right:12px}.eqbody>.eqcols,.eqbody>.eqmsg{padding-bottom:16px}   /* the scroller ends at the panel's bottom edge; the 16 px is content, inside it */
  #eqbtn{display:none}
 }
 /* >= 1024: tree and mutations side by side. ONE scale (--sc, set by fitSkills() in app.js: min(width, height, 1)) drives both. At --sc 1 the tree svg (700 units wide, art 64 px) and the
@@ -60,7 +60,7 @@ header,footer{width:100%;max-width:2400px;margin-left:auto;margin-right:auto;pad
 .eqset{border:1px solid #3a3025;background:#0d0b09;padding:7px 10px;margin:0 0 8px}.eqset h3{margin:0 0 3px;font-size:22px;color:#fff}.eqset ul{margin:0;padding:0;list-style:none}.eqset li{font-size:1em;padding:2px 0 2px 16px;position:relative;line-height:1.25}
 .eqset li.lit{color:#e9f6df}.eqset li.lit::before{content:"";position:absolute;left:2px;top:8px;width:8px;height:8px;background:var(--green2);box-shadow:0 0 6px var(--green2)}.eqset li.dim{color:var(--dim)}.eqset li.dim::before{content:"";position:absolute;left:2px;top:8px;width:8px;height:8px;border:1px solid #5a4a36}
 .eqset li b{color:inherit;font-weight:600;margin-right:4px}.eqset p{margin:3px 0 0;font-size:.9em}
-.eqitem{border-top:1px solid #2a2219;padding:6px 0}.eqitem h4{margin:0;font-weight:600;font-size:1.15em;line-height:1.15}.eqim{color:var(--dim);font-size:.9em;margin-bottom:3px}.eqgrid{display:grid;grid-template-columns:1fr auto;gap:0 10px;font-size:1em;line-height:1.3}   /* the body size, like the skill detail box */.eqgrid b{text-align:right;font-weight:600}
+.eqitem{border-top:1px solid #2a2219;padding:6px 0}.eqitem h4{margin:0;font-weight:600;font-size:1.15em;line-height:1.15}.eqim{color:var(--dim);font-size:.9em;margin-bottom:3px}.eqgrid{display:grid;grid-template-columns:1fr auto;gap:0 10px;font-size:1em;line-height:1.3}   /* the body size, like the skill detail box */.eqgrid b{text-align:right;font-weight:600;white-space:nowrap}
 .bad{color:#e0604c}.dim{color:var(--dim)}.eqmsg{color:var(--dim);padding:6px 0;font-size:16px}.eqsec p.dim{font-size:14px;opacity:.75;margin:2px 0}
 @media (min-width:1024px) and (max-width:1439px){.eqcols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 22px;align-items:start}}   /* below the skills: weapons | armor | sets and stats */
 @media (min-width:600px) and (max-width:1023px){.eqslots,.eqslots{--tile:min(120px,calc((100cqw - 3*8px)/4))}.eqarm .eqslots{max-width:calc(4*var(--tile) + 3*8px)}}                                       /* stacked: 4 per row */
