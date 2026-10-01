@@ -84,7 +84,7 @@ The gate logic is tested with a fake Cloudflare in `tests/test_deploy_gate.py` (
 
 ## Art system
 Every image has a slot id (for example `skill/sword_s22`, `ga/treebg-0`, `mutagen/9`) listed in `art/manifest.json`. Sources contain tokens like `@@img:ga/treebg-0@@`; `tools/build.py` swaps them for content-hash file names from the chosen variant. To add art: add the token in the source, add the id to the manifest, add a placeholder (extend `tools/artgen/generate.py`, then run it with `--write`), and put the real image at `~/work/w3planner-art/<id>.<ext>`.
-Known placeholder in the live build: `mutagen/9`, `mutagen/10`, `mutagen/11` (special mutagen icons) are my drawings until the game's `mutagen-0N-unique-64x64.png` files are copied in (red 01, green 02, blue 03; check the colours by eye).
+Special mutagen icons (`mutagen/9` red, `mutagen/10` blue, `mutagen/11` green) are the game's `mutagen-01/03/02-unique-64x64.png` since v25 (checked by eye: 01 red, 02 green, 03 blue). The public placeholders in `art/placeholder/` stay as they are.
 
 ## Git workflow
 - Never push to `main`; the ruleset rejects it. One branch per task (`feature/...`, `fix/...`), push it, open a pull request with `gh pr create`. Put in the description what changed, how it was tested, and anything you are unsure about.
@@ -100,8 +100,7 @@ Known placeholder in the live build: `mutagen/9`, `mutagen/10`, `mutagen/11` (sp
 ## Backlog (in rough order)
 1. Equipment overlay (design direction agreed; see the mockup). It should copy the game's inventory screen as closely as possible. Needs screenshots and game files (`items` XML, inventory Flash files, icon textures) from Vivek's PC before any code.
 2. Build guides feature (guides that reference skills and items by stable id).
-3. Replace the three placeholder special-mutagen icons with the game's.
-4. Add Firefox and WebKit to `tests/run_all.py` (only Chromium is tested today).
-5. Script the game-data extraction (`docs/DATA-PIPELINE.md`).
-6. GitHub Actions workflows in `.github/workflows` have run: CI is green on `main` (since PR #1). `gh api repos/viv4-web/w3planner/actions/permissions` returns 403 by design (the token has no administration rights); that is not a CI problem.
-7. Later: automate deploys, once manual deploys have been smooth for a while.
+3. Add Firefox and WebKit to `tests/run_all.py` (only Chromium is tested today).
+4. Script the game-data extraction (`docs/DATA-PIPELINE.md`).
+5. GitHub Actions workflows in `.github/workflows` have run: CI is green on `main` (since PR #1). `gh api repos/viv4-web/w3planner/actions/permissions` returns 403 by design (the token has no administration rights); that is not a CI problem.
+6. Later: automate deploys, once manual deploys have been smooth for a while.
