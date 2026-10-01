@@ -85,14 +85,38 @@ class PcToolTests(unittest.TestCase):
         for n in ast.walk(tree):
             if isinstance(n, ast.Import): mods |= {a.name.split(".")[0] for a in n.names}
             elif isinstance(n, ast.ImportFrom): mods.add(n.module.split(".")[0])
-        self.assertEqual(mods, {"argparse", "os", "struct", "sys", "zipfile", "zlib"})
+        self.assertEqual(mods, {"argparse", "hashlib", "os", "re", "struct", "sys", "zipfile", "zlib"})
         calls = [n for n in ast.walk(tree) if isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id == "open"]
         for c in calls:                                                                                                                    # every open() reads: no write, append or exclusive mode anywhere
             mode = next((k.value.value for k in c.keywords if k.arg == "mode"), c.args[1].value if len(c.args) > 1 else "r"); self.assertTrue(set(mode) <= set("rb"), mode)
         os_used = {n.attr for n in ast.walk(tree) if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id == "os"}
         self.assertEqual(os_used - {"path", "walk", "environ", "replace"}, set())                                                          # no remove, rename, mkdir, makedirs, chmod ...
         zips = [n for n in ast.walk(tree) if isinstance(n, ast.Call) and getattr(n.func, "attr", "") == "ZipFile"]
-        self.assertEqual(len([c for c in zips if len(c.args) > 1 and c.args[1].value == "w"]), 1)                                      # the one zip that is written
+        self.assertEqual(len([c for c in zips if len(c.args) > 1 and c.args[1].value == "w"]), 2)                                      # the zips that are written: icons/csv and --wolf (each to out + ".part", then renamed)
+
+    def test_wolf_mode_finds_definitions_in_any_bundle_and_reports_what_is_missing(self):
+        item = lambda n: ('<item name="%s" category="armor"><tags>WolfSet</tags></item>' % n).encode()
+        ab = lambda n: ('<ability name="%s _Stats"><armor type="add" min="1"/></ability>' % n).encode()
+        a = b"<redxml><definitions><abilities>" + ab("Wolf Armor 1") + ab("Wolf Armor 4") + b"</abilities><items>" + item("Wolf Armor 1") + item("NGP Wolf Armor 1") + item("Wolf Armor 4") + b"""
+            <item_cond name="Wolf Armor 2" collapse="false"/><item_extension name="Wolf Armor 3"/><item
+              name = "Wolf Boots 2" category="boots"/></items></definitions></redxml>"""
+        decoy = b'<recipes><item_cond name="Wolf Gloves 1"/></recipes>'
+        nxt = self.game / "dlc/dlc_next_gen/content/bundles"; nxt.mkdir(parents=True)
+        test_bundle.make_bundle(nxt / "nextgen.bundle", [("dlc\\dlc_next_gen\\data\\gameplay\\items_plus\\def_item_armor.xml", a, 1, zlib.compress(a)), ("gameplay\\items\\decoy.xml", decoy, 0, decoy), ("textures\\x.xbm", b"Wolf", 0, b"Wolf")])
+        before = tree_state(self.game); out = io.StringIO()
+        with contextlib.redirect_stdout(out): rc = pc.main(["--game-dir", str(self.game), "--out", str(self.zip), "--wolf"])
+        self.assertEqual(rc, 0); self.assertEqual(tree_state(self.game), before)
+        z = zipfile.ZipFile(self.zip); names = sorted(z.namelist())
+        self.assertEqual(names, ["SHA256SUMS", "manifest.txt", "not-found.txt", "report.txt", "xml/dlc/dlc_next_gen/content/bundles/nextgen.bundle/dlc/dlc_next_gen/data/gameplay/items_plus/def_item_armor.xml"])   # the decoy and the texture are not copied
+        man = z.read("manifest.txt").decode(); self.assertIn("dlc/dlc_next_gen/content/bundles/nextgen.bundle -> dlc/dlc_next_gen/data/gameplay/items_plus/def_item_armor.xml", man)
+        for found in ("item Wolf Armor 1", "item NGP Wolf Armor 1", "item Wolf Boots 2", "ability Wolf Armor 1 _Stats"): self.assertIn(found, man)
+        nf = z.read("not-found.txt").decode(); self.assertNotIn("item Wolf Armor 1\n", nf); self.assertNotIn("item Wolf Boots 2\n", nf)
+        for missing in ("item Wolf Armor 2\n", "item Wolf Armor 3\n", "item Wolf Gloves 1\n", "ability NGP Wolf Armor 1 _Stats\n", "item Wolf School steel sword 3\n"): self.assertIn(missing, nf)
+        self.assertIn("item Wolf Gloves 5   (control", nf); self.assertNotIn("item Wolf Armor 4   (control", nf)         # a control that is found is not listed
+        sums = dict(l.split("  ", 1)[::-1] for l in z.read("SHA256SUMS").decode().splitlines())
+        self.assertEqual(sorted(sums), [n for n in names if n != "SHA256SUMS"])
+        for n, h in sums.items(): self.assertEqual(h, hashlib.sha256(z.read(n)).hexdigest())
+        self.assertRegex(out.getvalue(), r"SHA256 [0-9a-f]{64}"); self.assertEqual(hashlib.sha256(self.zip.read_bytes()).hexdigest(), out.getvalue().split("SHA256 ")[1].split()[0])
 
     def test_importer_makes_pngs_and_csv_and_refuses_a_hostile_zip(self):
         from PIL import Image
