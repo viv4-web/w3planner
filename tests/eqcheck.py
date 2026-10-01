@@ -140,6 +140,49 @@ def tiercheck(b, base, check, label):
     pg.close()
 
 
+def countcheck(b, base, check, label):
+    """Set pieces count by the SetBonusPiece tag of the chosen ruleset only (playerWitcher.ws:10972-10981): Basic Feline counts 0 in the first playthrough, per the data in New Game Plus, Grandmaster 3 and 6;
+    the tooltip and the Equip set note say so; the new Wolf School tiers group like the other sets; new items round-trip through the link."""
+    pg = b.new_page(viewport={"width": 1920, "height": 1080}); pg.goto(base); until(pg, READY); E = pg.evaluate; pg.fill("#lvl", "100")
+    BASIC = ["Lynx School steel sword", "Lynx School silver sword", "Lynx School Crossbow", "", "Lynx Armor", "Lynx Gloves 1", "Lynx Pants 1", "Lynx Boots 1"]
+    GM = ["Lynx School steel sword 4", "Lynx School silver sword 4", "Lynx School Crossbow", "", "Lynx Armor 4", "Lynx Gloves 5", "Lynx Pants 5", "Lynx Boots 5"]
+    CARD = "[document.querySelector('.eqset h3').textContent,document.querySelectorAll('.eqset li.lit').length]"
+    gear(pg, BASIC); a = E(CARD); data = E("EQ_SLOTS.map((s,i)=>eqCur(i)).filter(it=>it&&it.set_bonus_piece).length")
+    check("%s: a full Basic Feline set (7 pieces) in the first playthrough counts 0 pieces, no bonus lit (%s)" % (label, a), a[0].endswith("0 counted, 7 worn") and a[1] == 0 and data == 0, [a, data])
+    pg.click('#eqpanel [data-rs="ng_plus"]'); until(pg, "S.rs==='ng_plus'&&!!eqData()"); pg.wait_for_timeout(300); c = E(CARD); data = E("EQ_SLOTS.map((s,i)=>eqCur(i)).filter(it=>it&&it.set_bonus_piece).length"); kept = E("S.gear.filter(Boolean).length")
+    check("%s: ... the same build switched to New Game Plus: the Sets panel is recomputed from that ruleset's tags (%s; %d of %d pieces carry the tag)" % (label, c, data, kept), kept == 7 and data == 6 and c[0].endswith("6 counted, 7 worn") and c[1] == 2, [c, data, kept])
+    pg.click('#eqpanel [data-rs="ng"]'); until(pg, "S.rs==='ng'"); pg.wait_for_timeout(300); a2 = E(CARD)
+    check("%s: ... and back to the first playthrough: 0 counted again (%s)" % (label, a2), a2[0].endswith("0 counted, 7 worn") and a2[1] == 0, a2)
+    E("(()=>{S.gear.fill(0);save();eqRender(true)})()"); gear(pg, ["", "", "", "", "Lynx Armor 4", "Lynx Gloves 5", "Lynx Pants 5", ""]); three = E(CARD)
+    gear(pg, GM); six = E(CARD)
+    check("%s: Grandmaster Feline in the first playthrough: 3 pieces light the 3-piece bonus, 6 pieces light both (%s, %s)" % (label, three, six), three[0].endswith("3 counted, 3 worn"), [three, six])
+    check("%s: ... lit bonuses: 1 at 3 counted pieces, 2 at 6 counted (%s, %s)" % (label, three[1], six[1]), three[1] == 1 and six[1] == 2 and six[0].endswith("6 counted, 7 worn"), [three, six])
+    E("(()=>{S.gear.fill(0);save();eqRender(true)})()"); pg.click('#eqbody .eqtile[data-i="%d"]' % CHEST); pg.wait_for_selector("#pkgrid .pktile"); pg.fill("#pkq", "feline"); pg.wait_for_timeout(100)
+    pg.click('#pkside .eqchip[data-id="Lynx Armor 1"]'); tip = E("document.querySelector('#pkside .eqt-set').textContent"); note = E("[...document.querySelectorAll('#pkside .pknote')].map(p=>p.textContent).join(' | ')")
+    check("%s: tooltip on a non-counting tier: '%s' and the Equip set note says what will not count and which tier does (%s)" % (label, tip, note),
+          tip == "Feline \u00b7 does not count toward the set bonus in First playthrough (no set bonus tag in the game data)" and "will not count toward the set bonus in First playthrough (no set bonus tag in the game data); only the Grandmaster tier counts." in note, [tip, note])
+    pg.click('#pkside .eqchip[data-id="Lynx Armor 4"]'); tip = E("document.querySelector('#pkside .eqt-set').textContent")
+    check("%s: ... the Grandmaster tier says it counts (%s)" % (label, tip), tip == "Feline \u00b7 counts toward the set bonus", tip)
+    pg.keyboard.press("Escape")
+    # the Wolven card groups like the others
+    pg.click('#eqbody .eqtile[data-i="%d"]' % CHEST); pg.wait_for_selector("#pkgrid .pktile"); pg.fill("#pkq", "wolven armor"); pg.wait_for_timeout(100)
+    cards = E("[...document.querySelectorAll('#pkgrid .pktile')].map(t=>[t.querySelector('span').textContent,(t.querySelector('.pktr')||{}).textContent||'']).filter(c=>/^(legendary )?wolven armor$/i.test(c[0]))")
+    check("%s: first playthrough: one card 'Wolven armor' with 'Basic \u2013 Grandmaster \u00b7 5 tiers' (%s)" % (label, cards), ["Wolven armor", "Basic \u2013 Grandmaster \u00b7 5 tiers"] in cards and len([c for c in cards if c[0] == "Wolven armor"]) == 1, cards)
+    pg.keyboard.press("Escape"); pg.click('#eqpanel [data-rs="ng_plus"]'); until(pg, "S.rs==='ng_plus'"); pg.click('#eqbody .eqtile[data-i="%d"]' % CHEST); pg.wait_for_selector("#pkgrid .pktile"); pg.fill("#pkq", "wolven armor"); pg.wait_for_timeout(100)
+    cards = E("[...document.querySelectorAll('#pkgrid .pktile')].map(t=>[t.querySelector('span').textContent,(t.querySelector('.pktr')||{}).textContent||'']).filter(c=>/^(legendary )?wolven armor$/i.test(c[0]))")
+    check("%s: New Game Plus: 'Wolven armor' and 'Legendary Wolven armor' are two cards of 5 tiers each (%s)" % (label, cards), sorted(c[0] for c in cards) == ["Legendary Wolven armor", "Wolven armor"] and all(c[1] == "Basic \u2013 Grandmaster \u00b7 5 tiers" for c in cards), cards)
+    pg.keyboard.press("Escape"); pg.click('#eqpanel [data-rs="ng"]'); until(pg, "S.rs==='ng'")
+    # new items round-trip through the link
+    NEW = {"steel": "Wolf School steel sword 2", "chest": "Wolf Armor 1", "gloves": "DLC1 Temerian Gloves", "boots": "Nekker Boots", "crossbow": "DLC13 Elven Crossbow"}
+    E("(ids=>{const d=eqData();S.gear.fill(0);EQ_SLOTS.forEach((s,i)=>{if(ids[s])S.gear[i]=d.byId.get(ids[s]).n});save();eqRender(true)})", NEW); code = E("location.hash.slice(1)"); want = E("S.gear.join()")
+    q = b.new_page(); q.goto(base + "#" + code); until(q, READY); got = q.evaluate("[S.rs,S.gear.join(),EQ_SLOTS.map((s,i)=>eqCur(i)&&eqCur(i).id)]"); q.close()
+    ids = [NEW.get(s) for s in ("steel", "silver", "crossbow", "bolts", "chest", "gloves", "trousers", "boots", "mask")]
+    check("%s: Wolf School, Temerian, Nekker and DLC13 items round-trip through the link (%s)" % (label, code), got[0] == "ng" and got[1] == want and [x for x in got[2] if x] == [NEW[s] for s in ("steel", "crossbow", "chest", "gloves", "boots")], [got, want])
+    n = E("eqData().byId.get('Wolf Armor 1').n"); old = E("eqData().byId.get('Lynx Armor 4').n")
+    check("%s: new items got new numbers after the old ones; old numbers did not move (Wolf Armor 1 = %d, Lynx Armor 4 = %d)" % (label, n, old), n > 572 and old == 275, [n, old])
+    pg.close()
+
+
 def levelcheck(b, base, check, label, pg):
     """The level requirement: the game blocks GetItemLevel(item) > GetLevel() (r4Player.ws:11723). Only the Level field counts."""
     E = pg.evaluate
@@ -200,7 +243,7 @@ def run(b, base, check, label, quick=False):
     errs, events = [], []; pg = b.new_page(viewport={"width": 1400, "height": 950}); pg.on("pageerror", lambda e: errs.append(str(e).split("\n")[0][:100])); E = pg.evaluate
     pg.on("load", lambda p: events.append("load")); pg.on("request", lambda r: events.append("data") if "/data/items" in r.url else None)
     pg.goto(base); check("%s: the panel shows right away and the equipment data loads after the page has loaded, only items.js and items_ng.js" % label, until(pg, READY) and E(KEYS) == ["items.js", "items_ng.js"] and events.index("load") < (events.index("data") if "data" in events else 99), [events[:4], E(KEYS)])
-    layout(b, base, check, label); scalecheck(b, base, check, label); scrollcheck(b, base, check, label); guttercheck(b, base, check, label); tiercheck(b, base, check, label)
+    layout(b, base, check, label); scalecheck(b, base, check, label); scrollcheck(b, base, check, label); guttercheck(b, base, check, label); tiercheck(b, base, check, label); countcheck(b, base, check, label)
     pg.fill("#lvl", "100")      # the planner starts at Level 1 and the game blocks items above the level, so the walk-through below runs at the top level
     check("%s: weapons (steel, silver, crossbow, bolts) then armor (chest, gloves, trousers, boots, mask); one greyed strip \"Consumables & bombs, coming later\"" % label,
           E("[...document.querySelectorAll('#eqbody .eqw .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "steel,silver,crossbow,bolts" and E("[...document.querySelectorAll('#eqbody .eqarm .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "chest,gloves,trousers,boots,mask"

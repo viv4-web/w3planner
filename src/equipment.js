@@ -14,7 +14,8 @@ async function eqLoad(rs){
  if(!EQ.rs[rs]){const key='items_'+rs;if(!(window.W3DATA&&W3DATA[key]))await eqScript(EQ_URL[rs]);
   const items=W3DATA[key].items,byN=new Map(),byId=new Map(),bySlot={},chains=new Map();
   items.forEach(it=>{byN.set(it.n,it);byId.set(it.id,it);(bySlot[it.slot]=bySlot[it.slot]||[]).push(it);
-   const k=it.set?it.set+'|'+it.slot+'|'+it.id.replace(/\s*\d+$/,''):it.id;(chains.get(k)||chains.set(k,[]).get(k)).push(it)});
+   const k=it.set?it.set+'|'+it.slot+'|'+it.id.replace(/^NGP /,'').replace(/\s*\d+$/,'')+'|'+(it.legendary?'L':''):it.id;   // a card = one family and one variant (normal or Legendary): Wolven's normal tiers 1-4 are 'Wolf X', its Grandmaster 'NGP Wolf X 4'
+   (chains.get(k)||chains.set(k,[]).get(k)).push(it)});
   const out=[];   // two items with the same tier cannot be tiers of one card (Manticore 1 and the Legendary Manticore 2 are both 'Basic'): the second one and its like start a card of their own
   chains.forEach(c=>{c.sort((a,b)=>(a.tier||0)-(b.tier||0)||(a.id<b.id?-1:1));const parts=[];c.forEach(it=>{let p=parts.find(x=>!x.some(y=>(y.tier||0)===(it.tier||0)));if(!p){p=[];parts.push(p)}p.push(it)});parts.forEach(x=>{x.forEach(it=>{it.ch=x});out.push(x)})});
   EQ.rs[rs]={items,byN,byId,bySlot,chains:out}}
@@ -51,7 +52,7 @@ function eqTip(it,withTiers){const q=EQ_QUAL[it.quality]||['',''],p=eqPrimary(it
  lines.forEach(e=>{h+=`<div class="eqt-line" style="color:${eqColor(e)}"><span>${eqEsc(e.label||e.stat)}</span><b>${eqEsc(eqVal(e))}</b></div>`});
  const meta=[];if(it.enhancement_slots)meta.push(it.enhancement_slots+' '+(it.enhancement_kind||'upgrade')+' slot'+(it.enhancement_slots>1?'s':''));if(it.weight)meta.push('Weight '+(Math.round(it.weight*100)/100));
  if(meta.length)h+=`<div class="eqt-meta">${eqEsc(meta.join(' · '))}</div>`;
- if(st){h+=`<div class="eqt-set"><b>${eqEsc(st.name)}</b>${st.bonuses.length?(it.set_bonus_piece?' · counts toward the set bonus':' · does not count toward the set bonus: '+eqWhy(it)):' · no set bonus'}</div>`}
+ if(st){h+=`<div class="eqt-set"><b>${eqEsc(st.name)}</b>${st.bonuses.length?(it.set_bonus_piece?' · counts toward the set bonus':' · does not count toward the set bonus'+(it.slot==='crossbow'||it.slot==='bolts'?': '+eqWhy(it):' in '+EQ_RS[S.rs]+' (no set bonus tag in the game data)')):' · no set bonus'}</div>`}
  return h+'</div>'}
 
 // ---- sets: pieces counted by the SetBonusPiece rule, bonuses at 3 and 6 ----
@@ -60,7 +61,7 @@ function eqTip(it,withTiers){const q=EQ_QUAL[it.quality]||['',''],p=eqPrimary(it
 function eqWhy(it){const d=eqData(),sib=((d&&d.bySlot[it.slot])||[]).filter(x=>x.set===it.set),tagged=sib.filter(x=>x.set_bonus_piece);
  if(it.slot==='crossbow'||it.slot==='bolts')return'crossbows and bolts carry no set bonus tag in the game data, so they never count';
  if(!tagged.length)return'no '+EQ_NAME[it.slot].toLowerCase()+' of this set carries the set bonus tag';
- const tiers=[...new Set(tagged.map(x=>x.tier_name||'Basic'))];return'in this mode only the '+tiers.join(', ')+(tiers.length>1?' tiers carry':' tier carries')+' the set bonus tag'}
+ const tiers=[...new Set(tagged.map(x=>x.tier_name||'Basic'))];return'in '+EQ_RS[S.rs]+' only the '+tiers.join(', ')+(tiers.length>1?' tiers carry':' tier carries')+' the set bonus tag'}
 function eqSets(){const d=eqData(),out=[];if(!d||!EQ.meta)return out;
  Object.keys(EQ.meta.sets).forEach(sid=>{const st=EQ.meta.sets[sid],mine=EQ_SLOTS.map((s,i)=>eqCur(i)).filter(it=>it&&it.set===sid);if(!mine.length)return;
   out.push({sid,st,n:mine.length,counted:mine.filter(it=>it.set_bonus_piece).length,skipped:mine.filter(it=>!it.set_bonus_piece)})});return out}
@@ -151,17 +152,22 @@ function eqGridKey(e,b){const t=[...document.querySelectorAll('#pkgrid .pktile')
 function eqEquip(it){const p=EQ.pick;if(!p||!it)return;if(eqLow(it)){notify('Requires level '+eqReq(it)+'.');return}S.gear[p.i]=it.n;const i=p.i;save();eqClosePick(true);eqRender(true);notify(it.name+' equipped.');const b=document.querySelector('#eqbody .eqtile[data-i="'+i+'"]');if(b)b.focus()}
 // ---- Equip set: every piece of the selected item's set at the same tier and variant (NGP or not), into its slot ----
 const eqWords=t=>t.toLowerCase().split(/[\s_]+/);
-function eqSetPlan(it){const d=eqData();if(!d||!it||!it.set)return null;const ngp=x=>x.id.startsWith('NGP '),pieces=[],notes=[],skipped=[];
+function eqSetPlan(it){const d=eqData();if(!d||!it||!it.set)return null;const ngp=x=>!!x.legendary,pieces=[],notes=[],skipped=[];   // the variant: normal or Legendary (in New Game Plus Wolven's lower tiers are the 'NGP' ids, its Grandmaster the plain id)
  const common=(a,b)=>{const A=eqWords(a),B=eqWords(b);let k=0;while(k<A.length&&k<B.length&&A[k]===B[k])k++;return k};
- EQ_SLOTS.forEach((slot,i)=>{const c=(d.bySlot[slot]||[]).filter(x=>x.set===it.set&&ngp(x)===ngp(it));if(!c.length)return;
+ EQ_SLOTS.forEach((slot,i)=>{const all=(d.bySlot[slot]||[]).filter(x=>x.set===it.set),same=all.filter(x=>ngp(x)===ngp(it)),c=same.length?same:all;if(!c.length)return;   // a slot with no piece of the same variant (the set crossbows) takes what the set has
+  
   let best=null,bs=1e12;c.forEach(x=>{const sc=(x===it?-1e9:0)+Math.abs((x.tier||1)-(it.tier||1))*1000+(((x.tier||1)>(it.tier||1))?1:0)-common(x.id,it.id)*10;if(sc<bs){bs=sc;best=x}});   // exact item first, then the nearest tier (lower on a tie), then the same family of ids (q702 vs q704, EP1 vs base)
   if(eqLow(best)){skipped.push({slot,item:best});return}   // only what the current Level allows; the slot keeps what it has
   if((best.tier||1)!==(it.tier||1))notes.push(EQ_NAME[slot]+': '+(best.tier_name||'Basic')+' (there is no '+(it.tier_name||'Basic')+' one)');
   pieces.push({slot,i,item:best})});
- return{pieces,notes,skipped}}
-function eqSetNote(it){const pl=eqSetPlan(it);if(!pl)return'';const sk=pl.skipped.length?`<p class="pknote"><b>Skipped, level too low:</b> ${eqEsc(pl.skipped.map(x=>EQ_NAME[x.slot]+' (requires level '+eqReq(x.item)+')').join('; '))}.</p>`:'';if(!pl.pieces.length)return sk;return`<p class="pknote"><b>Equip set</b> puts ${pl.pieces.length} piece${pl.pieces.length===1?'':'s'} of ${eqEsc(EQ.meta.sets[it.set].name)} (${eqEsc(it.tier_name||'Basic')}) in ${pl.pieces.map(x=>EQ_NAME[x.slot].toLowerCase()).join(', ')}, replacing what is there.${pl.notes.length?` <b>Nearest tier used:</b> ${eqEsc(pl.notes.join('; '))}.`:''}</p>${sk}`}
+ const sb=EQ.meta.sets[it.set],tagged=EQ_SLOTS.map(sl=>(d.bySlot[sl]||[]).filter(x=>x.set===it.set&&ngp(x)===ngp(it)&&x.set_bonus_piece&&x.slot!=='crossbow')).flat(),
+  countTiers=[...new Set(tagged.sort((a,b)=>(a.tier||0)-(b.tier||0)).map(x=>x.tier_name||'Basic'))],
+  uncounted=sb&&sb.bonuses.length?pieces.filter(x=>!x.item.set_bonus_piece&&x.slot!=='crossbow'&&x.slot!=='bolts'):[];   // what the set bonus would not count in this ruleset (the script counts only SetBonusPiece)
+ return{pieces,notes,skipped,uncounted,countTiers}}
+function eqNoCount(pl){if(!pl.uncounted.length)return'';return pl.uncounted.map(x=>EQ_NAME[x.slot].toLowerCase()).join(', ')+' will not count toward the set bonus in '+EQ_RS[S.rs]+' (no set bonus tag in the game data); '+(pl.countTiers.length?'only the '+pl.countTiers.join(', ')+(pl.countTiers.length>1?' tiers count':' tier counts')+'.':'no tier of this set counts there.')}
+function eqSetNote(it){const pl=eqSetPlan(it);if(!pl)return'';const sk=pl.skipped.length?`<p class="pknote"><b>Skipped, level too low:</b> ${eqEsc(pl.skipped.map(x=>EQ_NAME[x.slot]+' (requires level '+eqReq(x.item)+')').join('; '))}.</p>`:'';if(!pl.pieces.length)return sk;return`<p class="pknote"><b>Equip set</b> puts ${pl.pieces.length} piece${pl.pieces.length===1?'':'s'} of ${eqEsc(EQ.meta.sets[it.set].name)} (${eqEsc(it.tier_name||'Basic')}) in ${pl.pieces.map(x=>EQ_NAME[x.slot].toLowerCase()).join(', ')}, replacing what is there.${pl.notes.length?` <b>Nearest tier used:</b> ${eqEsc(pl.notes.join('; '))}.`:''}</p>${pl.uncounted.length?`<p class="pknote"><b>Not counted:</b> ${eqEsc(eqNoCount(pl))}</p>`:''}${sk}`}
 function eqEquipSet(it){const p=EQ.pick,pl=eqSetPlan(it);if(!p||!pl||!pl.pieces.length)return;pl.pieces.forEach(x=>{S.gear[x.i]=x.item.n});const i=p.i;save();eqClosePick(true);eqRender(true);   // one save(): the link changes once
- notify('Set equipped: '+pl.pieces.length+' pieces of '+EQ.meta.sets[it.set].name+'.'+(pl.notes.length?' Nearest tier used for '+pl.notes.join('; ')+'.':'')+(pl.skipped.length?' Skipped, level too low: '+pl.skipped.map(x=>EQ_NAME[x.slot].toLowerCase()+' (level '+eqReq(x.item)+')').join(', ')+'.':''));const b=document.querySelector('#eqbody .eqtile[data-i="'+i+'"]');if(b)b.focus()}
+ notify('Set equipped: '+pl.pieces.length+' pieces of '+EQ.meta.sets[it.set].name+'.'+(pl.notes.length?' Nearest tier used for '+pl.notes.join('; ')+'.':'')+(pl.uncounted.length?' '+eqNoCount(pl).replace(/^./,c=>c.toUpperCase())+(/\.$/.test(eqNoCount(pl))?'':'.'):'')+(pl.skipped.length?' Skipped, level too low: '+pl.skipped.map(x=>EQ_NAME[x.slot].toLowerCase()+' (level '+eqReq(x.item)+')').join(', ')+'.':''));const b=document.querySelector('#eqbody .eqtile[data-i="'+i+'"]');if(b)b.focus()}
 function eqClosePick(quiet){const ov=document.getElementById('eqpick'),p=EQ.pick;EQ.pick=null;ov.hidden=true;ov.innerHTML='';if(!quiet&&p&&p.opener&&p.opener.focus)p.opener.focus()}
 document.getElementById('eqbtn').onclick=eqFocusPanel;
 document.querySelectorAll('#eqpanel .eqrs [data-rs]').forEach(b=>{b.onclick=()=>eqSwitch(b.dataset.rs);b.onkeydown=e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();const o=b.dataset.rs==='ng'?'ng_plus':'ng';eqSwitch(o);const n=document.querySelector('#eqpanel .eqrs [data-rs="'+o+'"]');if(n)n.focus()}}});

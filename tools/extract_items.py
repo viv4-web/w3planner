@@ -54,6 +54,8 @@ PACKAGES = [("xml.bundle", "gameplay"), ("ep1.bundle", "dlc\\ep1\\data\\gameplay
 # the game spells a few stat names differently in the XML and in its strings (each target key exists in en.w3strings)
 LABEL_ALIAS = {"staminaregen_armor_mod": "staminaregen", "dismember_chance": "dismember_chance_mult", "instant_kill_chance": "instant_kill_chance_mult",
                "armor_reduction_perc": "armor_reduction", "staggereffect": "stagger"}
+# plain DLC gear (no set, not a relic): Temerian (DLC1), Nilfgaardian (DLC5), Nekker boots (DLC12), the DLC13 crossbows, Skellige (DLC14); with their NGP copies. Horse items, hair and the rest of those files are not gear.
+DLC_GEAR = re.compile(r"^(NGP )?(DLC1 Temerian|DLC5 Nilfgaardian|DLC14 Skellige) (Armor|Boots|Gloves|Pants)$|^(NGP )?Nekker Boots$|^(NGP )?DLC13 (Nilfgaardian|Elven|Skellige) Crossbow$")
 AUTOGEN_NOTE = ("Autogen item: the game scales damage or armour with the item level, so its base numbers are not in the XML (only formula ranges, autogen.abilities) and "
                 "required_level is null. The UI shows the ranges the XML does give (min to max, as rolled) and the text 'Level varies' (decision: Vivek).")
 
@@ -86,6 +88,9 @@ def xml_sources(game_dir, ruleset):
                 for e in b.match("%s\\%s\\*.xml" % (root, folder)):
                     files[(bname, folder.split("_")[0], e.name.rsplit("\\", 1)[-1])] = b.read(e)
             b.close()
+        extra = d / "dlc-xml"                          # item XML found on the PC in dlc0.bundle (dlc1, 5, 10, 12, 13, 14): see dlc-xml/PROVENANCE.txt. Same rule: _plus replaces the base file.
+        for folder in ("items",) + (("items_plus",) if ruleset == "ng_plus" else ()):
+            for f in sorted(extra.glob("*/%s/*.xml" % folder)): files[("dlc-" + f.parent.parent.name, "items", f.name)] = f.read_bytes()
         return files
     for f in sorted((d / "items").glob("*.xml")): files[("items", "items", f.name)] = f.read_bytes()
     return files
@@ -241,6 +246,7 @@ def build_ruleset(g, sc):
         if cat not in BY_CATEGORY or g.file_of[name] in NPC_FILES: continue
         tags = tags_of(it); slot = BY_CATEGORY[cat]
         if "NoShow" in tags and cat != "mask": continue
+        if g.ruleset == "ng" and name.startswith("NGP "): report["notes"].append("excluded, a New Game Plus carry-over copy (not in the first playthrough): %s" % name); continue
         entries, abnames, missing = stats_of(g, it)
         q = int(sum(e["min"] for e in entries if e["stat"] == "quality"))
         plain = name[4:] if name.startswith("NGP ") else name
@@ -248,7 +254,8 @@ def build_ruleset(g, sc):
         if len(sets) > 1: sys.exit("%s matches several sets: %s" % (name, sets))
         fname = g.file_of[name]
         if sets: group, sid = ("quest_set" if SET_INFO[sets[0]][1] == "quest" else SET_INFO[sets[0]][1]), sets[0]
-        elif slot == "crossbow" and "crossbow" in fname.lower(): group, sid = "crossbow", None
+        elif slot == "crossbow" and ("crossbow" in fname.lower() or DLC_GEAR.match(name)): group, sid = "crossbow", None
+        elif DLC_GEAR.match(name): group, sid = "dlc_gear", None
         elif slot == "bolts" and "bolt" in fname.lower(): group, sid = "bolt", None
         elif slot == "mask" and "NoShow" not in tags: group, sid = "mask", None
         elif q == 4 and slot not in ("crossbow", "bolts", "mask") and "SecondaryWeapon" not in tags: group, sid = "relic", None
@@ -319,7 +326,7 @@ def build(game_dir):
     for rs in per:
         seen = [r["id"] for r in items if rs in r["rulesets"]]
         if len(seen) != len(set(seen)): sys.exit("two different items called the same in ruleset %s" % rs)
-    items.sort(key=lambda r: (ORDER[r["slot"]], ["school", "quest_set", "dlc", "relic", "crossbow", "bolt", "mask"].index(r["group"]), r["set"] or "", r["tier"] or 0, r["id"], r["rulesets"]))
+    items.sort(key=lambda r: (ORDER[r["slot"]], ["school", "quest_set", "dlc", "dlc_gear", "relic", "crossbow", "bolt", "mask"].index(r["group"]), r["set"] or "", r["tier"] or 0, r["id"], r["rulesets"]))
     sets_out, bonus_all = {}, {}
     for rs, g in games.items(): bonus_all[rs], set_rules = set_bonuses(g, sc)
     for s, name, kind, tag, _ in SETS:

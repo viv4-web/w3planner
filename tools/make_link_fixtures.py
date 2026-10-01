@@ -10,7 +10,7 @@ numbering of skills, mutations or mutagens, so the new links join the old ones. 
 into the page state (valid for the rules, see the in-page builder) and the expected state is what was built, not what
 was decoded, so a decoding bug cannot hide in the expectation.
 """
-import argparse, json, subprocess, sys, tempfile, threading
+import argparse, json, re, subprocess, sys, tempfile, threading
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -91,6 +91,26 @@ def gear_specs():
     return out
 
 
+def gear_specs_b():
+    """v27b: links with the items added after the first v27 fixtures (Wolf School tiers 1-4, DLC Temerian, Nilfgaardian, Skellige, Nekker boots, the DLC13 crossbows, and their NGP copies):
+    each in both rulesets where it exists, a full Basic Wolven set, mixes with older items, and the highest item numbers."""
+    out = []; add = lambda name, **kw: out.append((name, kw))
+    wolf = {"steel": "Wolf School steel sword", "silver": "Wolf School silver sword", "chest": "Wolf Armor", "gloves": "Wolf Gloves 1", "trousers": "Wolf Pants 1", "boots": "Wolf Boots 1"}
+    add("Wolven Basic set, first playthrough", level=100, bonus=0, rs="ng", gear=wolf)
+    add("Wolven Basic set, New Game Plus", level=100, bonus=0, rs="ng_plus", gear=wolf)
+    add("Wolven Mastercrafted set, first playthrough", level=100, bonus=0, rs="ng", gear={"steel": "Wolf School steel sword 3", "silver": "Wolf School silver sword 3", "chest": "Wolf Armor 3", "gloves": "Wolf Gloves 4", "trousers": "Wolf Pants 4", "boots": "Wolf Boots 4"})
+    add("Legendary Wolven Basic set, New Game Plus (the NGP ids)", level=100, bonus=0, rs="ng_plus", gear={"steel": "NGP Wolf School steel sword", "silver": "NGP Wolf School silver sword", "chest": "NGP Wolf Armor", "gloves": "NGP Wolf Gloves 1", "trousers": "NGP Wolf Pants 1", "boots": "NGP Wolf Boots 1"})
+    add("Wolven Enhanced chest only, first playthrough", level=60, bonus=0, rs="ng", gear={"chest": "Wolf Armor 1"})
+    add("Temerian armor set, first playthrough", level=100, bonus=0, rs="ng", gear={"chest": "DLC1 Temerian Armor", "gloves": "DLC1 Temerian Gloves", "trousers": "DLC1 Temerian Pants", "boots": "DLC1 Temerian Boots"})
+    add("Temerian armor set, New Game Plus (NGP copies)", level=100, bonus=0, rs="ng_plus", gear={"chest": "NGP DLC1 Temerian Armor", "gloves": "NGP DLC1 Temerian Gloves", "trousers": "NGP DLC1 Temerian Pants", "boots": "NGP DLC1 Temerian Boots"})
+    add("Nilfgaardian and Skellige pieces mixed, first playthrough", level=100, bonus=0, rs="ng", gear={"chest": "DLC5 Nilfgaardian Armor", "gloves": "DLC14 Skellige Gloves", "trousers": "DLC5 Nilfgaardian Pants", "boots": "DLC14 Skellige Boots"})
+    add("Nekker boots and the Elven crossbow, first playthrough", level=100, bonus=0, rs="ng", gear={"boots": "Nekker Boots", "crossbow": "DLC13 Elven Crossbow"})
+    add("Skellige crossbow, New Game Plus", level=100, bonus=0, rs="ng_plus", gear={"crossbow": "DLC13 Skellige Crossbow"})
+    add("new and old items together, first playthrough", level=100, bonus=100, trees=[1], fill="max", equip=True, rs="ng", gear={"steel": "Wolf School steel sword 2", "silver": "Lynx School silver sword 4", "chest": "Wolf Armor 4", "boots": "Nekker Boots", "crossbow": "DLC13 Nilfgaardian Crossbow"})
+    add("highest item numbers in every slot (after the v27b import)", level=100, bonus=100, rs="ng_plus", gear={"steel": None, "silver": None})   # replaced below
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--version", required=True, help="the app version whose code makes the links, e.g. v24")
@@ -101,7 +121,8 @@ def main():
     site = Path(tempfile.mkdtemp(prefix="w3fix-")) / "site"
     if subprocess.run([sys.executable, str(ROOT / "tools/build.py"), "--variant", "placeholder", "--out", str(site)]).returncode: sys.exit("build failed")
     have = subprocess.run(["grep", "-o", 'APP_VERSION="[^"]*"', str(site / "index.html")], capture_output=True, text=True).stdout.strip()
-    if have != 'APP_VERSION="%s"' % a.version: sys.exit("the code being built says %s, not %s" % (have, a.version))
+    app = re.sub(r"[a-z]+$", "", a.version)                      # v27b: more links made by the v27 code (new items)
+    if have != 'APP_VERSION="%s"' % app: sys.exit("the code being built says %s, not %s" % (have, app))
     server = serve.make_server(site, 0); threading.Thread(target=server.serve_forever, daemon=True).start()
     with sync_playwright() as pw:
         b = pw.chromium.launch(); pg = b.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e)))
@@ -109,8 +130,8 @@ def main():
         info = pg.evaluate("""({ntrees:TREES.length,nmut:MUT.length,nmutagen:MUTS.length,
             special:MUTS.map((m,i)=>m.special?i:-1).filter(i=>i>=0),regular:MUTS.map((m,i)=>m.special?-1:i).filter(i=>i>=0)})""")
         rows, seen = [], set()
-        use = specs(info) if a.version == "v24" else gear_specs() if a.version == "v27" else sys.exit("no fixture recipe for %s: add one to this tool" % a.version)
-        top = pg.evaluate("async rs=>{await eqLoad(rs);const o={};EQ_SLOTS.forEach(s=>{const l=EQ.rs[rs].bySlot[s]||[];o[s]=l.reduce((a,b)=>a.n>b.n?a:b).id});return o}", "ng_plus") if a.version == "v27" else {}
+        use = specs(info) if a.version == "v24" else gear_specs() if a.version == "v27" else gear_specs_b() if a.version == "v27b" else sys.exit("no fixture recipe for %s: add one to this tool" % a.version)
+        top = pg.evaluate("async rs=>{await eqLoad(rs);const o={};EQ_SLOTS.forEach(s=>{const l=EQ.rs[rs].bySlot[s]||[];o[s]=l.reduce((a,b)=>a.n>b.n?a:b).id});return o}", "ng_plus") if a.version in ("v27", "v27b") else {}
         for name, spec in use:
             if spec.get("gear") == {"steel": None, "silver": None}: spec = dict(spec, gear=top)
             r = pg.evaluate(BUILD, spec)

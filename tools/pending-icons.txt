@@ -1,0 +1,35 @@
+# item icons the game data refers to that are not in inventory/ yet (path, then the items using it). The items show no picture until the icons are extracted (tools/pc/extract_on_pc.py reads this format); tests/run_all.py allows exactly these items to lack an icon. Delete a line when its icon is imported.
+icons/inventory/armor/nilfgaardian_armor_64x64.png	DLC5 Nilfgaardian Armor; NGP DLC5 Nilfgaardian Armor
+icons/inventory/armor/nilfgaardian_boots_64x128.png	DLC5 Nilfgaardian Boots; NGP DLC5 Nilfgaardian Boots
+icons/inventory/armor/nilfgaardian_gloves_64x128.png	DLC5 Nilfgaardian Gloves; NGP DLC5 Nilfgaardian Gloves
+icons/inventory/armor/nilfgaardian_legs_64x128.png	DLC5 Nilfgaardian Pants; NGP DLC5 Nilfgaardian Pants
+icons/inventory/armors/temerian-jacket-64x128.png	DLC1 Temerian Armor; NGP DLC1 Temerian Armor
+icons/inventory/armors/temerian_boots_64x128.png	DLC1 Temerian Boots; NGP DLC1 Temerian Boots
+icons/inventory/armors/temerian_gloves_64x128.png	DLC1 Temerian Gloves; NGP DLC1 Temerian Gloves
+icons/inventory/armors/temerian_pants_64x128.png	DLC1 Temerian Pants; NGP DLC1 Temerian Pants
+icons/inventory/armors/undvik_chest_64x128.png	DLC14 Skellige Armor; NGP DLC14 Skellige Armor
+icons/inventory/armors/undvik_feet_64x128.png	DLC14 Skellige Boots; NGP DLC14 Skellige Boots
+icons/inventory/armors/undvik_gloves_64x128.png	DLC14 Skellige Gloves; NGP DLC14 Skellige Gloves
+icons/inventory/armors/undvik_legs_64x128.png	DLC14 Skellige Pants; NGP DLC14 Skellige Pants
+icons/inventory/armors/wolf_armor_lvl1_64x128.png	NGP Wolf Armor; Wolf Armor
+icons/inventory/armors/wolf_armor_lvl2_64x128.png	NGP Wolf Armor 1; Wolf Armor 1
+icons/inventory/armors/wolf_armor_lvl3_64x128.png	NGP Wolf Armor 2; Wolf Armor 2
+icons/inventory/armors/wolf_armor_lvl4_64x128.png	NGP Wolf Armor 3; Wolf Armor 3
+icons/inventory/armors/wolf_boots_lvl1_64x128.png	NGP Wolf Boots 1; NGP Wolf Boots 2; Wolf Boots 1; Wolf Boots 2
+icons/inventory/armors/wolf_boots_lvl2_64x128.png	NGP Wolf Boots 3; NGP Wolf Boots 4; Wolf Boots 3; Wolf Boots 4
+icons/inventory/armors/wolf_gloves_lvl1_64x128.png	NGP Wolf Gloves 1; NGP Wolf Gloves 2; Wolf Gloves 1; Wolf Gloves 2
+icons/inventory/armors/wolf_gloves_lvl2_64x128.png	NGP Wolf Gloves 3; NGP Wolf Gloves 4; Wolf Gloves 3; Wolf Gloves 4
+icons/inventory/armors/wolf_legs_lvl1_64x128.png	NGP Wolf Pants 1; NGP Wolf Pants 2; Wolf Pants 1; Wolf Pants 2
+icons/inventory/armors/wolf_legs_lvl2_64x128.png	NGP Wolf Pants 3; NGP Wolf Pants 4; Wolf Pants 3; Wolf Pants 4
+icons/inventory/quests/nekker_shoes_64x128.png	Nekker Boots
+icons/inventory/weapons/crossbow/elven_crossbow_64x128.png	DLC13 Elven Crossbow
+icons/inventory/weapons/crossbow/nilfgaardian_crossbow_64x128.png	DLC13 Nilfgaardian Crossbow
+icons/inventory/weapons/crossbow/skellige_crossbow_64x128.png	DLC13 Skellige Crossbow
+icons/inventory/weapons/witcher_silver_wolf_sword_lvl1_64x128.png	NGP Wolf School silver sword; Wolf School silver sword
+icons/inventory/weapons/witcher_silver_wolf_sword_lvl2_64x128.png	NGP Wolf School silver sword 1; Wolf School silver sword 1
+icons/inventory/weapons/witcher_silver_wolf_sword_lvl3_64x128.png	NGP Wolf School silver sword 2; Wolf School silver sword 2
+icons/inventory/weapons/witcher_silver_wolf_sword_lvl4_64x128.png	NGP Wolf School silver sword 3; Wolf School silver sword 3
+icons/inventory/weapons/witcher_steel_wolf_sword_lvl1_64x128.png	NGP Wolf School steel sword; Wolf School steel sword
+icons/inventory/weapons/witcher_steel_wolf_sword_lvl2_64x128.png	NGP Wolf School steel sword 1; Wolf School steel sword 1
+icons/inventory/weapons/witcher_steel_wolf_sword_lvl3_64x128.png	NGP Wolf School steel sword 2; Wolf School steel sword 2
+icons/inventory/weapons/witcher_steel_wolf_sword_lvl4_64x128.png	NGP Wolf School steel sword 3; Wolf School steel sword 3

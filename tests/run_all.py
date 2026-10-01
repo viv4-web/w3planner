@@ -89,7 +89,9 @@ def main():
     shown = [e for r in recs for e in r.get("base", []) + r.get("bonuses", []) if "line" in e]
     check("stat lines follow tooltip_settings.csv (%d rows; stats sorted by line, percent flags set)" % len(items["stat_display"]), len(items["stat_display"]) > 80 and shown and all(r.get("base", []) == sorted(r.get("base", []), key=lambda e: e.get("line", 9999)) for r in recs)
           and all(e["percent"] for e in shown if e.get("type") == "mult"))
-    check("every item has its icon (none missing)", all(r.get("icon") for r in recs), [r["id"] for r in recs if not r.get("icon")][:3])
+    pending = {n.strip() for l in (ROOT / "tools" / "pending-icons.txt").read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#") for n in l.split("\t")[1].split(";")}   # items whose icon is not extracted yet
+    nopic = sorted(r["id"] for r in recs if not r.get("icon"))
+    check("every item has its icon, except the ones listed in tools/pending-icons.txt (%d pending), and no pending item has one" % len(pending), all(i in pending for i in nopic) and not [r["id"] for r in recs if r.get("icon") and r["id"] in pending], [i for i in nopic if i not in pending][:3])
     icon_ids = sorted({r["icon"][len("@@img:"):-2] for r in recs if r.get("icon")}); item_slots = sorted(k for k in manifest if k.startswith("items/") and "/ph-" not in k)
     check("every icon token has a manifest slot, and no manifest slot is unused", icon_ids == item_slots, sorted(set(icon_ids) ^ set(item_slots))[:3])
     check("every equipment icon shows the drawn placeholder of its slot in the public build", all(manifest[i].get("placeholder_as") == "items/ph-" + next(r["slot"] for r in recs if r.get("icon") == "@@img:%s@@" % i) and (ROOT / "art/placeholder" / (manifest[i]["placeholder_as"] + ".png")).is_file() for i in icon_ids))
