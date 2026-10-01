@@ -6,9 +6,11 @@
 
 Checks: the page loads without console errors, failed requests or Content-Security-Policy violations; the security headers
 and the version are right; every image loads; every link fixture (all versions) opens correctly; a new link can be
-created and reopened. With --expect-index / --expect-version it first polls the plain URL (no query string, no special headers:
-exactly what a browser loads) until the site serves that index.html and version, for up to --wait seconds, so a deployment
-that is still spreading through Cloudflare's edge is not mistaken for a broken one. Only then can a check fail. Exit code 0 = all passed.
+created and reopened. With --expect-index / --expect-version it first waits, for up to --wait seconds, until the site serves that
+index.html and version TWICE IN A ROW to the very browser that runs the checks (a fresh browser context each time, the plain URL,
+no cache-buster), so a deployment that is still spreading through Cloudflare's edge is not mistaken for a broken one. A Python
+HTTP client is not good enough: after the v25 and v26 promotes it saw the new page while the browser, seconds later, still saw
+the old one. Only then can a check fail. Exit code 0 = all passed.
 """
 import argparse, hashlib, json, re, sys, time, urllib.request
 from pathlib import Path
@@ -25,17 +27,29 @@ def fetch(url):
     with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "w3planner-smoke"}), timeout=20) as r: return r.status, r.read()
 
 
-def wait_for_site(url, want_sha=None, want_version=None, seconds=0, interval=5):
-    """Poll `url` until it serves an index.html with this sha256 and this APP_VERSION (whichever are given), for at most `seconds`.
-    Returns (ok, detail). It polls the plain URL because a cache-busting query string can reach the new deployment while the
-    plain URL, the one people and the browser use, is still answered from Cloudflare's edge cache with the old one."""
-    end, last = time.time() + seconds, "no answer"
+def browser_fetch(browser):
+    """A fetch() that is a real browser visit: a fresh context (no HTTP cache, no cookies) loading the plain URL."""
+    def get(url):
+        ctx = browser.new_context()
+        try: r = ctx.new_page().goto(url, timeout=30000); return r.status, r.body()
+        finally: ctx.close()
+    return get
+
+
+def wait_for_site(url, want_sha=None, want_version=None, seconds=0, interval=5, fetch=fetch, confirmations=2):
+    """Wait until `fetch(url)` returns an index.html with this sha256 and this APP_VERSION (whichever are given) `confirmations` times
+    in a row, for at most `seconds`. Returns (ok, detail). The plain URL is used because a cache-busting query string can reach the new
+    deployment while the plain URL, the one people use, is still answered with the old one; and the fetch should be the browser that
+    runs the checks, because two clients asking at the same moment can be answered differently while Cloudflare's edge catches up."""
+    end, last, streak = time.time() + seconds, "no answer", 0
     while True:
         try:
             st, body = fetch(url); sha = hashlib.sha256(body).hexdigest(); m = re.search(rb'APP_VERSION="([^"]*)"', body); ver = m.group(1).decode() if m else None
-            if st == 200 and (want_sha is None or sha == want_sha) and (want_version is None or ver == want_version): return True, ""
-            last = "HTTP %d, version %s, index.html sha256 %s..." % (st, ver, sha[:12])
-        except Exception as e: last = str(e)[:100]
+            if st == 200 and (want_sha is None or sha == want_sha) and (want_version is None or ver == want_version):
+                streak += 1
+                if streak >= confirmations: return True, ""
+            else: streak = 0; last = "HTTP %d, version %s, index.html sha256 %s..." % (st, ver, sha[:12])
+        except Exception as e: streak = 0; last = str(e)[:100]
         if time.time() >= end: return False, "still not serving the expected build after %ds: %s" % (seconds, last)
         time.sleep(interval)
 
@@ -47,12 +61,14 @@ def run_smoke(url, expect_version=None, expect_index=None, wait=0, results=None)
     def check(name, ok, detail=""):
         res.append((name, bool(ok), detail)); print(("  PASS  " if ok else "  FAIL  ") + name + (("  (" + str(detail) + ")") if detail != "" else ""), flush=True)
 
-    if expect_index or expect_version:
-        sha = hashlib.sha256(Path(expect_index).read_bytes()).hexdigest() if expect_index else None; ok, detail = wait_for_site(url, sha, expect_version, wait)
-        check("%s serves the build that was deployed (waited for the plain URL)" % url, ok, detail)
-        if not ok: return False, res
     with sync_playwright() as pw:
-        b = pw.chromium.launch(); pg = b.new_page(viewport={"width": 1500, "height": 950}); errs, fails, bad = [], [], []
+        b = pw.chromium.launch()
+        if expect_index or expect_version:
+            sha = hashlib.sha256(Path(expect_index).read_bytes()).hexdigest() if expect_index else None
+            ok, detail = wait_for_site(url, sha, expect_version, wait, fetch=browser_fetch(b))
+            check("%s serves the build that was deployed (browser, plain URL, twice in a row)" % url, ok, detail)
+            if not ok: b.close(); return False, res
+        pg = b.new_page(viewport={"width": 1500, "height": 950}); errs, fails, bad = [], [], []
         pg.add_init_script("window.__v=[];document.addEventListener('securitypolicyviolation',e=>window.__v.push(e.violatedDirective+' '+e.blockedURI))")
         pg.on("pageerror", lambda e: errs.append(str(e).split("\n")[0][:120]))
         pg.on("console", lambda m: errs.append("console: " + m.text[:120]) if m.type == "error" else None)

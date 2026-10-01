@@ -15,7 +15,8 @@ The gate, in order:
   3. a short report, and stop. Production needs --promote, only after Vivek has reviewed the preview and said yes in a message written after the report (CLAUDE.md rule 11).
 --promote refuses unless dist/game is exactly the build (same git commit, same files) that passed on preview.
 After the production upload it runs the same smoke tests against https://<project>.pages.dev. If they fail it rolls
-production back to the previous production deployment through the Cloudflare API and reports. That rollback is the only
+production back to the previous production deployment through the Cloudflare API and reports (failures that only edge lag can cause, such as the
+version seen by the browser, get two more looks, 60 s apart, first; see LAG_CHECKS). That rollback is the only
 thing this script does without asking.
 
 Needs, in the environment:  CLOUDFLARE_API_TOKEN  (a token with Cloudflare Pages: Edit and nothing else)
@@ -28,6 +29,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tests"))
 PREVIEW_BRANCH = "preview"
+# After an upload Cloudflare's edge can answer different clients differently for several minutes (seen on the v25 and v26 promotes: the page
+# was right and the check saw the old version). Failures of only these checks get RECHECKS more looks, RECHECK_WAIT seconds apart, before
+# any rollback; any other failure (script errors, a link that does not open, ...) is a real fault and rolls back at once.
+LAG_CHECKS = ("serves the build that was deployed", "version is", "Cache-Control")
+RECHECKS, RECHECK_WAIT = 2, 60
 GATE_FILE = ROOT / "dist" / "gate-preview.json"  # outside dist/game, so it is never uploaded
 API = os.environ.get("CF_API_BASE", "https://api.cloudflare.com/client/v4")
 
@@ -96,6 +102,11 @@ def smoke(url, expect_version, wait, built=True):
     return ok, [r for r in res if not r[1]]
 
 
+def lag_only(failed):
+    """True if every failed check is one that edge lag alone can cause."""
+    return bool(failed) and all(any(k in f[0] for k in LAG_CHECKS) for f in failed)
+
+
 def app_version():
     m = re.search(r'APP_VERSION="([^"]*)"', (ROOT / "dist/game/index.html").read_text(encoding="utf-8")); return m.group(1) if m else None
 
@@ -162,6 +173,10 @@ def do_promote(a):
     new = latest_deployment(a.project, "production", started) or {}
     print("\nSmoke tests against production %s" % prod, flush=True)
     ok, failed = smoke(prod, version, wait=300)  # the plain URL can lag behind the upload for a few minutes
+    for n in range(1, RECHECKS + 1):
+        if ok or not lag_only(failed): break
+        print("\nOnly edge-lag style checks failed (%s). Looking again in %ds (%d of %d) before any rollback." % ("; ".join(f[0] for f in failed), RECHECK_WAIT, n, RECHECKS), flush=True)
+        time.sleep(RECHECK_WAIT); ok, failed = smoke(prod, version, wait=60)
     if ok:
         print("\n== PRODUCTION OK ==\nversion %s is live at %s\nnew deployment %s %s\nprevious deployment (rollback target): %s" % (version, prod, new.get("id", "?"), new.get("url", ""), previous["id"] if previous else "none")); return 0
     print("\n== PRODUCTION SMOKE TESTS FAILED (%d): %s ==" % (len(failed), "; ".join(f[0] + (" (%s)" % f[2] if f[2] != "" else "") for f in failed[:5])))
