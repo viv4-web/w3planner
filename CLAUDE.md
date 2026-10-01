@@ -74,6 +74,7 @@ Known placeholder in the live build: `mutagen/9`, `mutagen/10`, `mutagen/11` (sp
 
 ## Secrets and limits
 - Tokens live in `~/.config/w3planner/*.env` (mode 600). Never print them, log them, commit them or put them in command lines that get stored. The daily GitHub token has no administration rights on purpose; do not ask for more without telling Vivek.
+- `gh` (in `~/.local/bin`) gets its auth from `~/.config/w3planner/gh.env` and does not log in by itself. Before any `gh` command run `set -a; . ~/.config/w3planner/gh.env; set +a` (and never print the token), or it fails with "gh auth login".
 - The `w3dev` account has no sudo and no docker, and is capped at about 3 GB RAM and 2 CPUs because this server also runs other things. Use `--quick` while iterating; run the full suite before a pull request.
 
 ## Backlog (in rough order)
@@ -82,5 +83,5 @@ Known placeholder in the live build: `mutagen/9`, `mutagen/10`, `mutagen/11` (sp
 3. Replace the three placeholder special-mutagen icons with the game's.
 4. Add Firefox and WebKit to `tests/run_all.py` (only Chromium is tested today).
 5. Script the game-data extraction (`docs/DATA-PIPELINE.md`).
-6. GitHub Actions workflows in `.github/workflows` have never run; check them on the first pull request.
+6. GitHub Actions workflows in `.github/workflows` have run: CI is green on `main` (since PR #1). `gh api repos/viv4-web/w3planner/actions/permissions` returns 403 by design (the token has no administration rights); that is not a CI problem.
 7. Later: automate deploys, once manual deploys have been smooth for a while.
