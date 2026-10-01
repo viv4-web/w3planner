@@ -54,8 +54,8 @@ PACKAGES = [("xml.bundle", "gameplay"), ("ep1.bundle", "dlc\\ep1\\data\\gameplay
 # the game spells a few stat names differently in the XML and in its strings (each target key exists in en.w3strings)
 LABEL_ALIAS = {"staminaregen_armor_mod": "staminaregen", "dismember_chance": "dismember_chance_mult", "instant_kill_chance": "instant_kill_chance_mult",
                "armor_reduction_perc": "armor_reduction", "staggereffect": "stagger"}
-AUTOGEN_NOTE = ("Autogen item: the XML holds only the formula ranges (autogen.abilities); the game scales damage or armour with the item level, "
-                "so the base numbers are not in the files and required_level is null")
+AUTOGEN_NOTE = ("Autogen item: the game scales damage or armour with the item level, so its base numbers are not in the XML (only formula ranges, autogen.abilities) and "
+                "required_level is null. The UI shows the ranges the XML does give (min to max, as rolled) and the text 'Level varies' (decision: Vivek).")
 
 
 def tags_of(it):
@@ -266,7 +266,7 @@ def build_ruleset(g, sc):
                "base": [{k: v for k, v in e.items() if k != "ability"} for e in base], "bonuses": [{k: v for k, v in e.items() if k != "ability"} for e in bonus],
                "enhancement_slots": enh, "enhancement_kind": {"weapon": "rune", "armor": "glyph"}.get(SLOT_KIND[slot]) if enh else None,
                "set_bonus_piece": ("SetBonusPiece" in tags) or None, "quest": (("Quest" in tags) or bool(re.match(r"^(q|mq|sq)\d", name))) or None,
-               "autogen": bool(autogen) or None, "description": desc, "icon_path": ic, "icon": "@@img:%s@@" % slot_id if slot_id else None,
+               "autogen": bool(autogen) or None, "level_varies": bool(autogen) or None, "description": desc, "icon_path": ic, "icon": "@@img:%s@@" % slot_id if slot_id else None,
                "tags": tags, "abilities": abnames, "file": fname}
         if missing: report["notes"].append("%s: abilities not defined in the files: %s" % (name, missing))
         items.append(rec)
@@ -313,7 +313,7 @@ def build(game_dir):
     g0 = next(iter(games.values()))
     ag = {n: [{k: v for k, v in (("stat", c.tag), ("type", c.get("type")), ("min", num(c.get("min"))), ("max", num(c.get("max")) if c.get("max") is not None else None)) if v is not None}
               for c in a if c.get("min") is not None] for n, a in g0.abilities.items() if n.startswith("autogen_")}
-    data = {"version": 3, "rulesets": {"ng": "first playthrough (gameplay/items, gameplay/abilities)", "ng_plus": "New Game Plus (the *_plus folders); 'NGP X' items are the carry-over copies of X"},
+    data = {"version": 4, "default_ruleset": "ng", "rulesets": {"ng": "first playthrough (gameplay/items, gameplay/abilities)", "ng_plus": "New Game Plus (the *_plus folders); 'NGP X' items are the carry-over copies of X"},
             "slots": [{"id": s, "category": c, "label": l, "kind": k} for s, c, l, k in SLOTS], "sets": sets_out, "rules": rules(g0, sc, set_rules),
             "autogen": {"note": AUTOGEN_NOTE, "abilities": ag}, "items": items}
     report = {"notes": notes, "unresolved_stat_labels": unresolved, "duplicate_item_definitions": dup, "per_ruleset": {rs: len(v) for rs, v in per.items()},
@@ -410,6 +410,15 @@ def rules(g, sc, set_rules):
         "autogen": {"text": AUTOGEN_NOTE}}
 
 
+def split(data):
+    """{file name: text}: data/items.json (sets, rules, slots: small) and one data/items_<ruleset>.json per ruleset (its items, loaded on demand: the UI never embeds them in index.html)."""
+    meta = {k: v for k, v in data.items() if k != "items"}; out = {"items.json": json.dumps(meta, indent=1, ensure_ascii=False) + "\n"}
+    for rs in data["rulesets"]:
+        recs = [{k: v for k, v in r.items() if k != "rulesets"} for r in data["items"] if rs in r["rulesets"]]
+        out["items_%s.json" % rs] = json.dumps({"ruleset": rs, "items": recs}, indent=1, ensure_ascii=False) + "\n"
+    return out
+
+
 def summarise(data, report):
     items = data["items"]; out = ["%d distinct items (%s records per ruleset)" % (len(items), report["per_ruleset"]), "per slot: " + ", ".join("%s %d" % (s["id"], sum(r["slot"] == s["id"] for r in items)) for s in data["slots"])]
     out.append("per group: " + ", ".join("%s %d" % (k, v) for k, v in sorted(Counter(r["group"] for r in items).items())))
@@ -444,19 +453,28 @@ def update_manifest(icons):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--game-dir", required=True); ap.add_argument("--art-dir", help="copy the icons to <art-dir>/items/ and register them (the private art folder, never this repo)")
-    ap.add_argument("--check", action="store_true", help="verify data/items.json against the game files; write nothing")
+    ap.add_argument("--check", action="store_true", help="verify data/items*.json against the game files; write nothing")
+    ap.add_argument("--missing-icons", help="also write the icon files that items refer to but inventory/ lacks (the list tools/pc/extract_on_pc.py reads)")
     a = ap.parse_args()
-    data, icons, report = build(a.game_dir); text = json.dumps(data, indent=1, ensure_ascii=False) + "\n"
+    data, icons, report = build(a.game_dir); files = split(data)
     for r in data["items"]:
         if r["icon"]: ICON_SLOT[r["icon"][len("@@img:"):-2]] = r["slot"]
     used = {r["icon"][len("@@img:"):-2] for r in data["items"] if r["icon"]}; icons = {k: v for k, v in icons.items() if k in used}   # icons of dropped items are not needed
     print(summarise(data, report))
-    out = ROOT / "data" / "items.json"
+    if a.missing_icons:
+        miss = defaultdict(set)
+        for r in data["items"]:
+            if not r["icon"] and r["icon_path"]: miss[r["icon_path"].replace("\\", "/")].add(r["id"])
+        Path(a.missing_icons).write_text("# item icons the game data refers to that are not in inventory/ (path, then the items using it); read by tools/pc/extract_on_pc.py\n" +
+                                         "".join("%s\t%s\n" % (k, "; ".join(sorted(v)[:6])) for k, v in sorted(miss.items())), encoding="utf-8")
+        print("wrote %s (%d icon files)" % (a.missing_icons, len(miss)))
     if a.check:
-        if not out.is_file() or out.read_text(encoding="utf-8") != text: sys.exit("data/items.json is not what the game files produce: re-run without --check")
-        print("data/items.json is up to date"); return
-    out.write_text(text, encoding="utf-8"); update_manifest(icons)
-    print("wrote %s (%d KB), %d icon slots in art/manifest.json" % (out.relative_to(ROOT), len(text) // 1024, len(icons)))
+        bad = [n for n, t in files.items() if not (ROOT / "data" / n).is_file() or (ROOT / "data" / n).read_text(encoding="utf-8") != t]
+        if bad: sys.exit("%s is not what the game files produce: re-run without --check" % ", ".join("data/" + n for n in bad))
+        print("data/items*.json is up to date"); return
+    for n, t in files.items(): (ROOT / "data" / n).write_text(t, encoding="utf-8")
+    update_manifest(icons)
+    print("wrote %s; %d icon slots in art/manifest.json" % (", ".join("data/%s (%d KB)" % (n, len(t) // 1024) for n, t in files.items()), len(icons)))
     if a.art_dir:
         hashes = ROOT / "tools" / "game-art-hashes.txt"; lines = hashes.read_text().splitlines(); have = {l.split()[0] for l in lines if l.strip() and not l.startswith("#")}; add = []
         for sid, (src, _) in sorted(icons.items()):
