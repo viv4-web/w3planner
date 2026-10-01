@@ -14,11 +14,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 import serve
+import linkcheck
 from playwright.sync_api import sync_playwright
 
 RESULTS = []
 ALL_TIPS = "(()=>{const o={};TREES.forEach((t,ti)=>t.sk.forEach((s,i)=>{for(let L=1;L<=3;L++)o[ti+'.'+i+'.'+L]=tipText(ti,i,L)}));return o})()"
-STATE = "[+document.getElementById('lvl').value,+document.getElementById('bonuspts').value,S.lv,S.slots.slice(0,12),S.muts,S.mres,S.mact]"
 FULLSTATE = "JSON.stringify([+document.getElementById('lvl').value,+document.getElementById('bonuspts').value,S.lv,S.slots,S.muts,S.mres,S.mact])"
 INV = """(()=>{const bad=[];
  S.lv.forEach((row,ti)=>row.forEach((v,i)=>{if(!(Number.isInteger(v)&&v>=0&&v<=TREES[ti].sk[i].max))bad.push('skill level out of range')}));
@@ -68,7 +68,7 @@ def main():
     if subprocess.run(cmd).returncode: sys.exit("build failed")
     server = serve.make_server(site, 0); port = server.server_address[1]
     threading.Thread(target=server.serve_forever, daemon=True).start(); base = "http://127.0.0.1:%d/" % port
-    ref = json.loads((ROOT / "tests/fixtures/tooltips_ref.json").read_text()); legacy = json.loads((ROOT / "tests/fixtures/legacy_links.json").read_text())
+    ref = json.loads((ROOT / "tests/fixtures/tooltips_ref.json").read_text())
     N = 60 if a.quick else 300
     with sync_playwright() as pw:
         b = pw.chromium.launch()
@@ -106,9 +106,8 @@ def main():
         E("document.getElementById('lvl').value=40;document.getElementById('bonuspts').value=5;pointsChanged();S.muts[0]=MUTS.findIndex(m=>m.label==='Wraith');S.muts[1]=35;save()")
         code = E("document.getElementById('link').value.split('#')[1]"); link_state = E(FULLSTATE); q = b.new_page(); q.goto(base + "#" + code); q.wait_for_timeout(500)
         check("a link with special mutagens reopens identically", q.evaluate(FULLSTATE) == link_state); q.close()
-        for entry in legacy:
-            o = b.new_page(); o.goto(base + "#" + entry["code"]); o.wait_for_timeout(400); got = o.evaluate(STATE); ex = entry["expect"]
-            check("a link made by %s still opens identically" % entry["made_by"], got[:5] == ex[:5] and (ex[5] is None or (got[5] == ex[5] and got[6] == ex[6]))); o.close()
+        problems, note = linkcheck.append_only_problems(); check("link fixtures are append-only (%s)" % note, not problems, "; ".join(problems))
+        linkcheck.check_fixtures(b, base, "online", check)
         rt = b.new_page(); rt.goto(base); rt.wait_for_timeout(600); r = rt.evaluate(ROUNDTRIP); rt.close(); check("%d random builds survive a link round trip unchanged (%d with special mutagens)" % (r["n"], r["spec"]), r["bad"] == 0, r["bad"])
         h2 = b.new_page(viewport={"width": 1300, "height": 900}); herrs = []; h2.on("pageerror", lambda e: herrs.append(str(e).split("\n")[0][:80])); h2.goto(base); h2.wait_for_timeout(700)
         h2.evaluate("document.getElementById('bonuspts').value=20;pointsChanged();const i=TREES[1].sk.findIndex(s=>!s.req.length);add(1,i);add(1,i);S.slots[0]=[1,i];S.muts[0]=3;save();openMut()")
@@ -125,6 +124,9 @@ def main():
             rr = pg.request.get(base + name); check("%s is served" % name, rr.status == 200 and "<title>" in rr.text())
         m = b.new_page(viewport={"width": 390, "height": 844}, is_mobile=True); m.goto(base); m.wait_for_timeout(500)
         check("no sideways scrolling on a phone", m.evaluate("document.documentElement.scrollWidth-innerWidth") <= 0)
+        print("\n== Release gate logic (tools/deploy.py, with a fake Cloudflare) ==")
+        gt = subprocess.run([sys.executable, str(ROOT / "tests/test_deploy_gate.py")], capture_output=True, text=True)
+        check("preview never touches production; promote and automatic rollback behave", gt.returncode == 0, "" if gt.returncode == 0 else gt.stderr.strip()[-300:])
         if a.variant == "placeholder":
             print("\n== Offline package ==")
             rel = tmp / "release"; res = subprocess.run([sys.executable, str(ROOT / "tools/make_offline.py"), "--site", str(site), "--out", str(rel)], capture_output=True, text=True)
@@ -137,6 +139,7 @@ def main():
                 vis = lambda s: OE("(()=>{const e=document.querySelector('%s');return !!e&&e.offsetParent!==null})()" % s)
                 check("offline copy cannot create links, only open them", (not vis("#copy")) and vis("#imp"))
                 otips = OE(ALL_TIPS); check("offline tooltips match the reference", all(ref[k] == otips.get(k) for k in ref))
+                linkcheck.check_fixtures(b, off, "offline", check)
                 o.fill("#imp", "https://w3planner.pages.dev/#" + code); o.click("#impbtn"); o.wait_for_timeout(300)
                 check("a link from the website opens in the offline copy", OE(FULLSTATE) == link_state)
                 o.fill("#imp", "https://example.com/"); o.click("#impbtn"); check("a link with no build in it is refused and does not navigate", o.url.startswith("file://") and "does not look" in o.inner_text("#impmsg"))
