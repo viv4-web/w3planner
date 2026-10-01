@@ -13,10 +13,11 @@ What it does:
   c) writes everything into one zip (w3planner-extract.zip) on your Desktop, plus report.txt (what was found and what was not),
      and prints the number of files and the size.
 
-Second mode, --wolf: looks in EVERY .bundle under the game folder (content0..content*, dlc\\*, the Next-Gen folders) for the definition XML of the Wolf School
-gear whose lower tiers are missing from our data (Wolf Armor, Gloves, Pants, Boots, steel and silver swords: the base item and tiers 1-3 or 1-4, and the
-NGP copies, with their "<id> _Stats" abilities). It writes w3planner-wolf.zip on the Desktop: every XML file that defines one of them (items and
-items_plus, so New Game and New Game Plus), manifest.txt (bundle -> file -> ids), not-found.txt, report.txt and SHA256SUMS.
+Second mode, --missing: looks in EVERY .bundle under the game folder (content0..content*, dlc\\*, the Next-Gen folders) for the definition XML of every
+item id in wanted-items.txt (the ids the game refers to but our data does not define: gear, consumables, ... made by tools/make_wanted_items.py), or whose
+name key is one of the unused name strings listed there, plus their "<id> _Stats" abilities and the abilities a found item lists. It writes
+w3planner-missing.zip on the Desktop: every XML file with such a definition (items and items_plus, so New Game and New Game Plus), manifest.txt
+(bundle -> file -> what is defined there), not-found.txt, report.txt and SHA256SUMS. --wolf does the same for the Wolf School gear only.
 
 It only READS the game folder (every game file is opened read-only, nothing is written there, and it refuses to write the zip inside
 the game folder). It uses no network: the only modules it imports are argparse, os, struct, sys, zipfile and zlib. Send the zip back.
@@ -169,24 +170,45 @@ def bundle_csvs(path):
     return out
 
 
-# ---------- --wolf: item definition XML for the Wolf School gear ----------
+# ---------- --missing / --wolf: item definition XML we do not have yet ----------
 WOLF_SLOTS = {"Wolf Armor": 3, "Wolf Gloves": 4, "Wolf Pants": 4, "Wolf Boots": 4, "Wolf School steel sword": 3, "Wolf School silver sword": 3}
-WOLF_KNOWN = ["Wolf Armor 4", "Wolf Gloves 5", "Wolf Pants 5", "Wolf Boots 5", "Wolf School steel sword 4", "Wolf School silver sword 4"]   # controls: already in B&W, so the search must find them
-WOLF_RE = re.compile(rb'<(item|ability)\b[^>]*?\bname\s*=\s*"((?:NGP )?Wolf (?:School|Armor|Gloves|Pants|Boots)[^"]*)"')   # a definition, not an item_cond / item_extension / loot reference
+CONTROLS = ["Wolf Armor 4", "Wolf Gloves 5", "Wolf Pants 5", "Wolf Boots 5", "Wolf School steel sword 4", "Wolf School silver sword 4"]   # already defined in the Blood and Wine bundle: the search must find them
+DEF_RE = re.compile(rb'<(item|ability)\b((?:[^>"]|"[^"]*")*?)(/?)>')                                                                        # a definition: <item name=...> or <ability name=...>; item_cond, item_extension etc. do not match
+NAME_RE, KEY_RE, A_RE = re.compile(rb'\bname\s*=\s*"([^"]*)"'), re.compile(rb'\blocalisation_key_name\s*=\s*"([^"]*)"'), re.compile(rb"<a>([^<]+)</a>")
 
 
-def wolf_ids():
-    """[(id, is control)]: for every slot the base item and its tiers, with and without the NGP prefix."""
+def key_hash(key):
+    """the game's hash of a localisation key (lower case, 31 * x + c, 32 bits): the same as tools/extract/w3dec.py h()"""
+    x = 0
+    for c in key.lower().encode("latin1", "replace"): x = (x * 31 + c) & 0xFFFFFFFF
+    return x
+
+
+def wolf_wanted():
+    """[(id, category)]: for every Wolf School slot the base item and its tiers, with and without the NGP prefix."""
     out = []
     for base, top in WOLF_SLOTS.items():
-        for pre in ("", "NGP "):
-            out += [(pre + base, False)] + [("%s%s %d" % (pre, base, n), False) for n in range(1, top + 1)]
-    out += [(pre + k, True) for k in WOLF_KNOWN for pre in ("", "NGP ")]
+        for pre in ("", "NGP "): out += [(pre + base, "wolf")] + [("%s%s %d" % (pre, base, n), "wolf") for n in range(1, top + 1)]
     return out
 
 
-def bundle_xml(path):
-    """[(internal path, bytes or None, why not)] for every .xml in one bundle (None for a bundle that is not one)."""
+def read_wanted(path):
+    """(ids [(id, category)], key hashes {int: text}, ability names we already have) from wanted-items.txt (tab separated; lines starting with #key are name-key hashes; other # lines are comments)."""
+    ids, keys, have = [], {}, set()
+    with open(path, encoding="utf-8-sig") as f:                         # the list file: read only
+        for line in f:
+            line = line.rstrip("\n")
+            if line.startswith("#key\t"):
+                p = line.split("\t", 2)
+                if len(p) == 3 and p[1].isdigit(): keys[int(p[1])] = p[2]
+            elif line.startswith("#have\t"): have.add(line.split("\t", 1)[1])
+            elif line.strip() and not line.startswith("#"):
+                p = line.split("\t"); ids.append((p[0], p[1] if len(p) > 1 else ""))
+    return ids, keys, have
+
+
+def bundle_xml_entries(path):
+    """[dict(name, off, size, zsize, comp)] for every .xml in one bundle (None for a file that is not a bundle)."""
     f = open_ro(path); out = []
     try:
         h = f.read(HEADER)
@@ -194,49 +216,84 @@ def bundle_xml(path):
         table = struct.unpack("<3I", h[8:20])[2]; raw = f.read(table)
         for k in range(table // ENTRY):
             e = raw[k * ENTRY:(k + 1) * ENTRY]; name = e[:256].split(b"\0")[0].decode("latin1")
-            if not name.lower().endswith(".xml"): continue
-            off, _, size, zsize, crc, comp = struct.unpack("<6I", e[272:296]); f.seek(off); blob = f.read(zsize)
-            try:
-                data = blob if comp == 0 else zlib.decompress(blob) if comp == 1 else snappy(blob) if comp == 2 else lz4(blob, size) if comp in (4, 5) else None
-                out.append((name, data, None if data is not None else "compression %d is not supported here" % comp))
-            except Exception as ex:
-                out.append((name, None, "could not decompress: %s" % ex))
+            if name.lower().endswith(".xml"):
+                off, _, size, zsize, crc, comp = struct.unpack("<6I", e[272:296]); out.append({"name": name, "off": off, "size": size, "zsize": zsize, "comp": comp})
     finally:
         f.close()
     return out
 
 
-def wolf_defs(data):
-    """{(kind, name)} of the Wolf definitions in one XML file."""
-    return {(m.group(1).decode(), m.group(2).decode("latin1")) for m in WOLF_RE.finditer(data)} if b"Wolf" in data else set()
+def read_entry(f, e):
+    f.seek(e["off"]); blob = f.read(e["zsize"]); comp = e["comp"]
+    if comp == 0: return blob
+    if comp == 1: return zlib.decompress(blob)
+    if comp == 2: return snappy(blob)
+    if comp in (4, 5): return lz4(blob, e["size"])
+    raise ValueError("compression %d is not supported here" % comp)
 
 
-def run_wolf(game, bundles, z, report):
-    """Search every bundle, write the matching files plus manifest.txt, not-found.txt, report.txt and SHA256SUMS into z. Returns (files with a hit, wanted ids not found)."""
-    ids = wolf_ids(); seen = {}; manifest = []; skipped = []; nxml = 0; hashes = []
+def xml_defs(data):
+    """[(kind, name, localisation key hash or None, [ability names the item lists])] for every item and ability definition in one XML file."""
+    out = []
+    if b"<item" not in data and b"<ability" not in data: return out
+    for m in DEF_RE.finditer(data):
+        n = NAME_RE.search(m.group(2))
+        if not n: continue
+        kind = m.group(1).decode(); key = KEY_RE.search(m.group(2)); refs = []
+        if kind == "item" and not m.group(3):
+            end = data.find(b"</item>", m.end()); refs = [x.decode("latin1").strip() for x in A_RE.findall(data[m.end():end if end > 0 else m.end()])]
+        out.append((kind, n.group(1).decode("latin1"), key_hash(key.group(1).decode("latin1")) if key else None, refs))
+    return out
+
+
+def run_missing(game, bundles, z, report, wanted, keys, have=frozenset()):
+    """Search every bundle for the definition of every wanted id (and of its abilities), write the files into z, plus manifest.txt, not-found.txt, report.txt and SHA256SUMS."""
+    ids = {i for i, _ in wanted}; cat = dict(wanted); hits = {}; abil_at = {}; hashes = []; skipped = []; nxml = 0; found = {}; written = {}
+    ctl = [(c, "control") for c in CONTROLS] + [("NGP " + c, "control") for c in CONTROLS]; ids |= {c for c, _ in ctl}; cat.update(dict(ctl))
 
     def put(arc, data):
         z.writestr(arc, data); hashes.append("%s  %s" % (hashlib.sha256(data).hexdigest(), arc))
     for b in bundles:
         rel = os.path.relpath(b, game).replace("\\", "/")
-        try: res = bundle_xml(b)
+        try: entries = bundle_xml_entries(b)
         except Exception as ex: report.append("skipped bundle %s: %s" % (rel, ex)); continue
-        if res is None: report.append("skipped %s: not a bundle" % rel); continue
-        for name, data, reason in res:
-            nxml += 1
-            if data is None: skipped.append("%s :: %s (%s)" % (rel, name, reason)); continue
-            defs = wolf_defs(data)
-            if not defs: continue
-            internal = name.replace("\\", "/"); put("xml/%s/%s" % (rel, internal), data)
-            for kind, n in defs: seen.setdefault((kind, n), []).append("%s :: %s" % (rel, internal))
-            manifest.append("%s -> %s\n      %s" % (rel, internal, "; ".join("%s %s" % (k, n) for k, n in sorted(defs, key=lambda d: (d[1], d[0])))))
-    nf = []
-    for i, ctl in ids:
-        for kind, n in (("item", i), ("ability", i + " _Stats")):
-            if (kind, n) not in seen: nf.append("%s %s%s" % (kind, n, "   (control: it is already in the B&W data, so a miss here means the search is wrong)" if ctl else ""))
-    put("manifest.txt", ("bundle (relative to the game folder) -> file inside it, and the Wolf definitions found there\n\n" + ("\n".join(manifest) or "(nothing found)") + "\n").encode("utf-8"))
+        if entries is None: report.append("skipped %s: not a bundle" % rel); continue
+        f = open_ro(b)
+        try:
+            for e in entries:
+                nxml += 1
+                try: data = read_entry(f, e)
+                except Exception as ex: skipped.append("%s :: %s (%s)" % (rel, e["name"], ex)); continue
+                why = []; internal = e["name"].replace("\\", "/")
+                for kind, name, kh, refs in xml_defs(data):
+                    if kind == "ability": abil_at.setdefault(name, []).append((b, e, rel, internal))
+                    elif name in ids: why.append("item %s" % name); found.setdefault(name, []).append((rel, internal)); hits[(rel, internal)] = refs + hits.get((rel, internal), [])
+                    elif kh is not None and kh in keys: why.append("item %s (its name key is the unused string \"%s\")" % (name, keys[kh])); found.setdefault(name, []).append((rel, internal)); hits[(rel, internal)] = refs + hits.get((rel, internal), [])
+                    if kind == "item" and name in ids: hits.setdefault((rel, internal), [])
+                if why: written[(rel, internal)] = why; put("xml/%s/%s" % (rel, internal), data)
+        finally:
+            f.close()
+    # abilities: "<id> _Stats" (the game's naming) and whatever a found item lists in <base_abilities>
+    want_ab = set()
+    for n in found: want_ab |= {n + " _Stats", n + "_Stats"}
+    for refs in hits.values(): want_ab |= {r for r in refs if r not in have}
+    afound = set(); manifest = []
+    for name in sorted(want_ab):
+        for b, e, rel, internal in abil_at.get(name, []):
+            afound.add(name)
+            if (rel, internal) not in written:
+                f = open_ro(b)
+                try: data = read_entry(f, e)
+                finally: f.close()
+                written[(rel, internal)] = []; put("xml/%s/%s" % (rel, internal), data)
+            written[(rel, internal)].append("ability %s" % name)
+    for (rel, internal), why in sorted(written.items()): manifest.append("%s -> %s\n      %s" % (rel, internal, "; ".join(sorted(set(why)))))
+    nf = ["item %s   [%s]%s" % (i, cat.get(i, ""), "   (control: it is already in the B&W data, so a miss here means the search is wrong)" if cat.get(i) == "control" else "") for i in sorted(ids) if i not in found]
+    nf += ["ability %s   (listed by a found item or named <id> _Stats, but no definition exists)" % a for a in sorted(want_ab) if a not in afound and not a.endswith("_Stats")]
+    nf += ["ability %s _Stats   (of a found item)" % i for i in sorted(found) if i + " _Stats" not in afound and i + "_Stats" not in afound]
+    put("manifest.txt", ("bundle (relative to the game folder) -> file inside it, and what is defined there\n\n" + ("\n".join(manifest) or "(nothing found)") + "\n").encode("utf-8"))
     put("not-found.txt", ("searched for, no definition found in any bundle:\n" + ("\n".join(nf) or "(everything was found)") + "\n\nXML files that could not be read (they may hide a definition):\n" + ("\n".join(skipped) or "(none)") + "\n").encode("utf-8"))
-    report.append("searched %d bundles, %d xml files; %d files with a Wolf definition; %d wanted definitions not found; %d xml files unreadable" % (len(bundles), nxml, len(manifest), len(nf), len(skipped)))
+    report.append("searched %d bundles, %d xml files; wanted %d ids and %d name keys; %d ids found; %d files written; %d ids not found; %d xml files unreadable" % (len(bundles), nxml, len(wanted), len(keys), len(found), len(manifest), len([x for x in nf if x.startswith("item")]), len(skipped)))
     put("report.txt", ("\n".join(report) + "\n").encode("utf-8"))
     z.writestr("SHA256SUMS", "\n".join(hashes) + "\n")
     return len(manifest), nf
@@ -278,21 +335,28 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--game-dir"); ap.add_argument("--list", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "missing-icons.txt"))
     ap.add_argument("--out", help="the zip to write (default: w3planner-extract.zip, or w3planner-wolf.zip with --wolf, on the Desktop)")
-    ap.add_argument("--wolf", action="store_true", help="instead of icons and CSV: find the item definition XML of the Wolf School gear in every bundle")
+    ap.add_argument("--missing", action="store_true", help="instead of icons and CSV: find the item definition XML of every id in wanted-items.txt in every bundle")
+    ap.add_argument("--wanted", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "wanted-items.txt"), help="the list for --missing")
+    ap.add_argument("--wolf", action="store_true", help="like --missing, for the Wolf School gear only")
     a = ap.parse_args(argv)
     game = a.game_dir or next((d for d in GAME_DIRS if os.path.isdir(d)), None)
     while not game or not os.path.isdir(game):
         game = input("Folder of your Witcher 3 installation (the one that contains 'content'): ").strip().strip('"')
-    out = os.path.abspath(a.out or os.path.join(desktop(), "w3planner-wolf.zip" if a.wolf else "w3planner-extract.zip"))
+    out = os.path.abspath(a.out or os.path.join(desktop(), "w3planner-missing.zip" if a.missing else "w3planner-wolf.zip" if a.wolf else "w3planner-extract.zip"))
     if inside(out, game): sys.exit("refusing to write the zip inside the game folder: %s" % out)
-    if a.wolf:
+    if a.wolf or a.missing:
         caches, bundles = find_files(game); tmp = out + ".part"
+        if a.missing:
+            if not os.path.isfile(a.wanted): sys.exit("list file not found: %s" % a.wanted)
+            wanted, keys, have = read_wanted(a.wanted)
+        else: wanted, keys, have = wolf_wanted(), {}, frozenset()
         with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
-            hits, nf = run_wolf(game, bundles, z, ["game folder: %s" % game, "mode: --wolf", "bundles: %d" % len(bundles)])
+            hits, nf = run_missing(game, bundles, z, ["game folder: %s" % game, "mode: %s" % ("--missing " + a.wanted if a.missing else "--wolf"), "bundles: %d" % len(bundles)], wanted, keys, have)
         os.replace(tmp, out)
         with zipfile.ZipFile(out) as z: count = len(z.namelist())
         with open_ro(out) as zf: digest = hashlib.sha256(zf.read()).hexdigest()
-        print("%d files (%d xml files with a Wolf definition), %d bytes (%.1f MB)\n%s\nSHA256 %s\n%d wanted definition(s) not found (listed in not-found.txt inside the zip)" % (count, hits, os.path.getsize(out), os.path.getsize(out) / 1048576.0, out, digest, len(nf)))
+        nmiss = len([x for x in nf if x.startswith("item")])
+        print("%d files (%d xml files with a wanted definition), %d bytes (%.1f MB)\n%s\nSHA256 %s\n%d of %d wanted ids not found (listed in not-found.txt inside the zip)" % (count, hits, os.path.getsize(out), os.path.getsize(out) / 1048576.0, out, digest, nmiss, len(wanted) + 2 * len(CONTROLS)))
         return 0
     if not os.path.isfile(a.list): sys.exit("list file not found: %s" % a.list)
     wanted = read_list(a.list); caches, bundles = find_files(game)

@@ -1,0 +1,4069 @@
+# written by tools/make_wanted_items.py: ids the game files refer to but the XML we have does not define (tab separated: id, category, where it is referenced)
+Dwimeritum Bomb 1	consumable	script: item call
+Magical Oil 2	consumable	script: item call
+Mutagen	consumable	script: name literal of a known family
+Mutagen Alchemy	consumable	script: item call
+Mutagen Magic	consumable	script: item call
+Mutagen Sword	consumable	script: item call
+Mutagen Ulti	consumable	script: item call
+Mutagen23	consumable	script: name literal of a known family
+Necrophage Oil	consumable	script: item call, script: name literal of a known family
+Petris Philtre 1	consumable	script: item call
+Petris Philtre 2	consumable	script: item call
+Recipe for Beast Oil	consumable	script: item call, script: name literal of a known family
+Recipe for Cat	consumable	script: item call, script: name literal of a known family
+Recipe for Dimeritum Bomb 1	consumable	script: item call
+Recipe for Dimeritum Bomb 2	consumable	script: item call
+Recipe for Dimeritum Bomb 3	consumable	script: item call
+Recipe for Grapeshot	consumable	script: item call, script: name literal of a known family
+Recipe for Hanged Man Venom	consumable	script: item call, script: name literal of a known family
+Recipe for Lesser White Honey	consumable	script: item call
+Recipe for Necrophage Oil	consumable	script: item call, script: name literal of a known family
+Recipe for Samum	consumable	script: item call, script: name literal of a known family
+Recipe for Swallow	consumable	script: item call, script: name literal of a known family
+Recipe for Trial Potion 1	consumable	script: item call
+Recipe for Trial Potion 2	consumable	script: item call
+Recipe for Trial Potion 3	consumable	script: item call
+Recipe for White Honey	consumable	script: item call, script: name literal of a known family
+Recipe for White Raffard Decoction 1	consumable	script: item call
+Recipe for White Raffard Decoction 2	consumable	script: item call
+Recipe for White Raffard Decoction 3	consumable	script: item call
+Recipe for White gull 1	consumable	script: item call, script: name literal of a known family
+Samum	consumable	script: item call, script: name literal of a known family
+Swallow	consumable	script: item call, script: name literal of a known family
+Vampire Vision Potion	consumable	script: item call
+White Honey	consumable	script: item call, script: name literal of a known family
+mq7023_venom	consumable	xml: ingredient.item_name
+q704_antidote_recipe	consumable	script: item call
+sq703_potion_herbs	consumable	xml: ingredient.item_name
+sq703_potion_shrooms	consumable	xml: ingredient.item_name
+sq703_potion_wine	consumable	xml: ingredient.item_name
+sq703_sleeping_potion	consumable	xml: recipe.cookedItem_name
+202_hornval_horn	other	script: item call
+Barhest essence	other	script: item call
+Basilisk hide	other	script: item call
+Chain Proto	other	script: item call
+Chicken Sandwich	other	script: item call, script: name literal of a known family
+Diamond	other	script: item call, script: name literal of a known family
+Draconide leather schematic	other	script: item call, script: name literal of a known family
+Draconide leather schematic 1	other	script: item call, script: name literal of a known family
+Draconide leather schematic 2	other	script: item call, script: name literal of a known family
+Draconide leather schematic 3	other	script: item call, script: name literal of a known family
+Drowned Dead Trophy	other	script: item call
+Dye Blue Lavender	other	script: item call
+Dye Burgundy	other	script: item call
+Dye Dreamy Blue	other	script: item call
+Dye Gold	other	script: item call
+Dye Pale Green	other	script: item call
+Dye Silver	other	script: item call
+Forgotten soul	other	script: item call
+Forktail hide	other	script: item call
+Freeze to death	other	script: item call
+Gargoyle Dust	other	script: item call, script: name literal of a known family
+Gargoyle Heart	other	script: item call, script: name literal of a known family
+Green gold ore schematic1	other	script: item call
+Hardened leather schematic 1	other	script: item call, script: name literal of a known family
+Hardened leather schematic 2	other	script: item call, script: name literal of a known family
+Hardened leather schematic 3	other	script: item call, script: name literal of a known family
+Hardened leather schematic 4	other	script: item call, script: name literal of a known family
+Hardened timber schematic 1h	other	script: item call
+Horn_of_Hornwales	other	script: item call
+Infused draconide leather	other	script: item call
+Lead	other	script: item call
+Leather schematic 1	other	script: item call, script: name literal of a known family
+Leather schematic 2	other	script: item call, script: name literal of a known family
+Leather schematic 3	other	script: item call, script: name literal of a known family
+Leather schematic 4	other	script: item call, script: name literal of a known family
+Leather schematic 5	other	script: item call, script: name literal of a known family
+Leather schematic 6	other	script: item call, script: name literal of a known family
+Leather schematic 7	other	script: item call, script: name literal of a known family
+Leather schematic 8	other	script: item call, script: name literal of a known family
+Leather straps schematic	other	script: item call
+Medallion	other	script: name literal of a known family
+Mohawk With Ponytail Hairstyle	other	script: item call, xml: item_extension.name
+Monniers horse blinders	other	script: item call
+Nekkers Trophy	other	script: item call
+Nilfgaardian Hairstyle	other	script: item call, xml: item_extension.name
+Philosophers stone	other	script: item call
+Phosphorescent crystal	other	script: item call
+Plain Shirt	other	script: item call
+Recipe Dye Default	other	script: item call
+Recipe Dye Silver	other	script: item call
+RopeAndHook	other	script: item call
+RopeAndHook Projectile	other	script: item call
+Science	other	script: item call
+Scrambled Eggs	other	xml: recipe.cookedItem_name
+Shattered core	other	script: item call
+Short Loose Hairstyle	other	script: item call, xml: item_extension.name
+Silver ingot schematic 1a	other	script: item call
+Silver ingot schematic 2a	other	script: item call
+Silver ingot schematic 3a	other	script: item call
+Skellige Casual Suit	other	script: item call, script: name literal of a known family
+Thrall_Pitchfork_Broken	other	script: item call
+Vial	other	script: item call
+Werewolf Trophy	other	script: item call
+XXXXXXXXXXXXXXXXXXXXXX	other	xml: item_extension.name
+Yennefer's Omelette	other	xml: recipe.cookedItem_name
+broom_slot	other	script: item call
+c_01_hd__champron_lvl2	other	script: item call
+c_01_hd__champron_lvl3	other	script: item call
+gwint_card_dun_banner_medic	other	xml: loot_entry.name
+gwint_card_poor_infantry2	other	xml: loot_entry.name
+gwint_card_poor_infantry3	other	xml: loot_entry.name
+gwint_card_siegfried	other	xml: loot_entry.name
+gwint_card_stennis	other	xml: loot_entry.name
+i_01_hd__bags_lvl2	other	script: item call
+i_01_hd__bags_lvl3	other	script: item call
+l_weapon	other	script: item call
+lw_cp_glinsk_cage_key_1	other	script: item call
+lw_tm12_refugee_camp_key	other	script: item call
+mh203_drowned_dead_trophy	other	script: item call
+mh205_leshy_trophy	other	script: item call
+mh209_fogling_trophy	other	script: item call
+mh211_bies_trophy	other	script: item call
+mh212_erynie_trophy	other	script: item call
+mh701_usable_lur	other	script: item call
+mq1024_water_hag_trophy	other	script: item call
+mq1058_doll	other	script: item call
+mq3036_rosas_letter	other	script: item call
+mq3036_rosas_second_letter	other	script: item call
+mq7023_athelas	other	xml: ingredient.item_name
+mq7023_centipede_albumen	other	xml: loot_entry.name
+mq7023_energy_crystal_1	other	xml: loot_entry.name
+mq7023_energy_crystal_2	other	xml: loot_entry.name
+mq7023_formaldehyde	other	xml: ingredient.item_name, xml: loot_entry.name
+mq7023_megascope_crystal	other	script: item call
+mq7023_mutation_serum	other	xml: recipe.cookedItem_name
+mq7023_notes_moreau_2	other	xml: loot_entry.name
+mq7023_portal_key	other	script: item call
+mq7023_red_sewant_mushrooms	other	xml: ingredient.item_name
+poi_car_a_01_note	other	xml: loot_entry.name
+poi_car_a_01_orb	other	xml: loot_entry.name
+q103_spinning_topc	other	script: item call
+q105_johnnys_dollc	other	script: item call
+q202_ice_giant_trophy	other	script: item call
+q205_gaelnos_rootc	other	script: item call
+q205_gland_formula	other	script: item call
+q205_mushroom_formula	other	script: item call
+q206_arits_letterble	other	script: item call
+q302_casino_registerble	other	script: item call
+q302_roche_letterble	other	script: item call
+q302_zdenek_contractble	other	script: item call
+q309_three_keys_combined r	other	script: item call
+q310_backdoor_keyc	other	script: item call
+q311_aen_elle_notesble	other	script: item call
+q311_spiral_key	other	xml: usable_item.name
+q403_treaty hold	other	script: item call
+q702_dog_token	other	xml: loot_entry.name
+r_weapon	other	script: item call
+s_01_hd__saddle_lvl1	other	script: item call
+s_01_hd__saddle_lvl2	other	script: item call
+s_01_hd__saddle_lvl3	other	script: item call
+s_01_hd__saddle_lvl4	other	script: item call
+sq101_letter_from_keiray	other	script: item call
+sq108_smith_toolsc	other	script: item call
+sq201_chamber_keyc	other	script: item call
+sq201_padlock_keyc	other	script: item call
+sq201_rotten_meatc	other	script: item call
+sq208_portait_tyrc	other	script: item call
+sq210_burnt_heartc	other	script: item call
+sq210_golems_charged_heartg	other	script: item call
+sq303_robbery_speechble	other	script: item call
+sq304_ledger_bookble	other	script: item call
+sq309_girl_notebookble	other	script: item call
+sq310_attic_key	other	script: item call
+sq310_card_1	other	script: item call
+sq310_card_2	other	script: item call
+sq310_card_3	other	script: item call
+sq310_package	other	script: item call
+sq703_kikimora_eggs	other	xml: ingredient.item_name
+th700_air_stone	other	xml: loot_entry.name
+th700_alchemy_book	other	xml: loot_entry.name
+th700_earth_stone	other	xml: loot_entry.name
+th700_fire_stone	other	xml: loot_entry.name
+th700_water_stone	other	xml: loot_entry.name
+Crossbow	other weapon/armour	script: name literal of a known family
+DLC1 Temerian Armor	other weapon/armour	script: item call, xml: item_cond.name, xml: item_extension.name
+DLC1 Temerian Boots	other weapon/armour	script: item call
+DLC1 Temerian Gloves	other weapon/armour	script: item call
+DLC1 Temerian Pants	other weapon/armour	script: item call, xml: item_extension.name
+DLC14 Skellige Armor	other weapon/armour	xml: item_extension.name
+DLC14 Skellige Pants	other weapon/armour	xml: item_extension.name
+DLC5 Nilfgaardian Armor	other weapon/armour	xml: item_cond.name, xml: item_extension.name
+DLC5 Nilfgaardian Pants	other weapon/armour	xml: item_extension.name
+EP1 Witcher Silver Sword	other weapon/armour	script: item call, script: name literal of a known family
+Elemental rune	other weapon/armour	script: item call
+Flaming Rose Armor	other weapon/armour	script: item call
+Gloves 05	other weapon/armour	script: item call, script: name literal of a known family
+Glyphword 1	other weapon/armour	xml: schematic.name_name
+Glyphword 10	other weapon/armour	xml: schematic.name_name
+Glyphword 12	other weapon/armour	xml: schematic.name_name
+Glyphword 14	other weapon/armour	xml: schematic.name_name
+Glyphword 15	other weapon/armour	xml: schematic.name_name
+Glyphword 17	other weapon/armour	xml: schematic.name_name
+Glyphword 18	other weapon/armour	xml: schematic.name_name
+Glyphword 2	other weapon/armour	xml: schematic.name_name
+Glyphword 20	other weapon/armour	xml: schematic.name_name
+Glyphword 3	other weapon/armour	xml: schematic.name_name
+Glyphword 4	other weapon/armour	xml: schematic.name_name
+Glyphword 5	other weapon/armour	xml: schematic.name_name
+Glyphword 6	other weapon/armour	xml: schematic.name_name
+Glyphword 7	other weapon/armour	xml: schematic.name_name
+Guard Lvl1 A steel sword 3 schematic	other weapon/armour	script: item call
+Guard Lvl2 A steel sword 3 schematic	other weapon/armour	script: item call
+Medium Armor 10 schematic	other weapon/armour	script: item call
+Medium Armor 5 schematic	other weapon/armour	script: item call
+Medium Armor 6 schematic	other weapon/armour	script: item call
+Medium Armor 7 schematic	other weapon/armour	script: item call
+Medium Armor 8 schematic	other weapon/armour	script: item call
+Medium Armor 9 schematic	other weapon/armour	script: item call
+NGP Bath Towel Pants 01	other weapon/armour	xml: item_extension.name
+NGP DLC1 Temerian Armor	other weapon/armour	script: item call, xml: item_cond.name
+NGP DLC1 Temerian Boots	other weapon/armour	script: item call
+NGP DLC1 Temerian Gloves	other weapon/armour	script: item call
+NGP DLC1 Temerian Pants	other weapon/armour	script: item call, xml: item_extension.name
+NGP DLC14 Skellige Armor	other weapon/armour	script: item call
+NGP DLC14 Skellige Boots	other weapon/armour	script: item call
+NGP DLC14 Skellige Gloves	other weapon/armour	script: item call
+NGP DLC14 Skellige Pants	other weapon/armour	script: item call, xml: item_extension.name
+NGP DLC5 Nilfgaardian Armor	other weapon/armour	script: item call, xml: item_cond.name
+NGP DLC5 Nilfgaardian Boots	other weapon/armour	script: item call
+NGP DLC5 Nilfgaardian Gloves	other weapon/armour	script: item call
+NGP DLC5 Nilfgaardian Pants	other weapon/armour	script: item call, xml: item_extension.name
+NGP Heavy pants 01	other weapon/armour	xml: item_extension.name
+NGP Heavy pants 01_crafted	other weapon/armour	xml: item_extension.name
+NGP Heavy pants 02	other weapon/armour	xml: item_extension.name
+NGP Heavy pants 02_crafted	other weapon/armour	xml: item_extension.name
+NGP Heavy pants 03	other weapon/armour	xml: item_extension.name
+NGP Heavy pants 03_crafted	other weapon/armour	xml: item_extension.name
+NGP Heavy pants 04	other weapon/armour	xml: item_extension.name
+NGP Heavy pants 04_crafted	other weapon/armour	xml: item_extension.name
+NGP Nilfgaardian Casual Pants	other weapon/armour	xml: item_extension.name
+NGP Pants 01	other weapon/armour	xml: item_extension.name
+NGP Pants 01 q2	other weapon/armour	xml: item_extension.name
+NGP Pants 01_crafted	other weapon/armour	xml: item_extension.name
+NGP Pants 02	other weapon/armour	xml: item_extension.name
+NGP Pants 02_crafted	other weapon/armour	xml: item_extension.name
+NGP Pants 03	other weapon/armour	xml: item_extension.name
+NGP Pants 03_crafted	other weapon/armour	xml: item_extension.name
+NGP Pants 04	other weapon/armour	xml: item_extension.name
+NGP Pants 04_crafted	other weapon/armour	xml: item_extension.name
+NGP Skellige Casual Pants 01	other weapon/armour	xml: item_extension.name
+NGP Skellige Casual Pants 02	other weapon/armour	xml: item_extension.name
+NGP Starting Pants	other weapon/armour	xml: item_extension.name
+Perun rune	other weapon/armour	script: item call
+Runeword 1	other weapon/armour	xml: schematic.name_name
+Runeword 10	other weapon/armour	xml: schematic.name_name
+Runeword 11	other weapon/armour	xml: schematic.name_name
+Runeword 12	other weapon/armour	xml: schematic.name_name
+Runeword 2	other weapon/armour	xml: schematic.name_name
+Runeword 4	other weapon/armour	xml: schematic.name_name
+Runeword 5	other weapon/armour	xml: schematic.name_name
+Runeword 6	other weapon/armour	xml: schematic.name_name
+Runeword 8	other weapon/armour	xml: schematic.name_name
+Skellige sword 3	other weapon/armour	script: item call, script: name literal of a known family
+Squire steel sword 3 schematic	other weapon/armour	script: item call
+Svarog rune	other weapon/armour	script: item call
+Veles rune	other weapon/armour	script: item call
+Worn Leather Boots	other weapon/armour	script: item call
+Worn Leather Gloves	other weapon/armour	script: item call
+Worn Pants	other weapon/armour	script: item call
+Zoria rune	other weapon/armour	script: item call
+q703_mandragora_mask_female	other weapon/armour	script: item call
+q703_mandragora_mask_male	other weapon/armour	script: item call
+q704_vampire_lure_bolt_recipe	other weapon/armour	script: item call
+sq301_triss_mask_for_shop	other weapon/armour	script: item call
+sq308_martin_maskask	other weapon/armour	script: item call
+steel_sword_back_slot	other weapon/armour	script: item call
+troll_bane_gloves	other weapon/armour	script: item call
+th050_map_bear_jacket_upgrade1	set: Bear (Ursine)	script: item call
+th051_map_bear_jacket_upgrade2	set: Bear (Ursine)	script: item call
+th052_map_bear_jacket_upgrade3	set: Bear (Ursine)	script: item call
+th053_map_bear_gloves_upgrade1	set: Bear (Ursine)	script: item call
+th054_map_bear_pants_upgrade1	set: Bear (Ursine)	script: item call
+th055_map_bear_boots_upgrade1	set: Bear (Ursine)	script: item call
+th056_map_bear_silver_sword_upgrade1	set: Bear (Ursine)	script: item call
+th057_map_bear_silver_sword_upgrade2	set: Bear (Ursine)	script: item call
+th058_map_bear_silver_sword_upgrade3	set: Bear (Ursine)	script: item call
+th059_map_bear_steel_sword_upgrade1	set: Bear (Ursine)	script: item call
+th060_map_bear_steel_sword_upgrade2	set: Bear (Ursine)	script: item call
+th061_map_bear_steel_sword_upgrade3	set: Bear (Ursine)	script: item call
+th034_map_gryphon_jacket_upgrade1	set: Gryphon (Griffin)	script: item call
+th035_map_gryphon_jacket_upgrade2	set: Gryphon (Griffin)	script: item call
+th036_map_gryphon_jacket_upgrade3	set: Gryphon (Griffin)	script: item call
+th037_map_gryphon_gloves_upgrade1	set: Gryphon (Griffin)	script: item call
+th038_map_gryphon_pants_upgrade1	set: Gryphon (Griffin)	script: item call
+th039_map_gryphon_boots_upgrade1	set: Gryphon (Griffin)	script: item call
+th040_map_gryphon_silver_sword_upgrade1	set: Gryphon (Griffin)	script: item call
+th041_map_gryphon_silver_sword_upgrade2	set: Gryphon (Griffin)	script: item call
+th042_map_gryphon_silver_sword_upgrade3	set: Gryphon (Griffin)	script: item call
+th043_map_gryphon_steel_sword_upgrade1	set: Gryphon (Griffin)	script: item call
+th044_map_gryphon_steel_sword_upgrade2	set: Gryphon (Griffin)	script: item call
+th045_map_gryphon_steel_sword_upgrade3	set: Gryphon (Griffin)	script: item call
+Lynx School silver sword Upgrade schematic	set: Lynx (Feline)	script: item call, script: name literal of a known family
+th020_map_lynx_jacket_upgrade1	set: Lynx (Feline)	script: item call
+th020_map_lynx_jacket_upgrade2	set: Lynx (Feline)	script: item call
+th021_map_lynx_jacket_upgrade3	set: Lynx (Feline)	script: item call
+th022_map_lynx_gloves_upgrade1	set: Lynx (Feline)	script: item call
+th023_map_lynx_pants_upgrade1	set: Lynx (Feline)	script: item call
+th024_map_lynx_boots_upgrade1	set: Lynx (Feline)	script: item call
+th025_map_lynx_silver_sword_upgrade1	set: Lynx (Feline)	script: item call
+th026_map_lynx_silver_sword_upgrade2	set: Lynx (Feline)	script: item call
+th027_map_lynx_silver_sword_upgrade3	set: Lynx (Feline)	script: item call
+th028_map_lynx_steel_sword_upgrade1	set: Lynx (Feline)	script: item call
+th029_map_lynx_steel_sword_upgrade2	set: Lynx (Feline)	script: item call
+th030_map_lynx_steel_sword_upgrade3	set: Lynx (Feline)	script: item call
+Viper School Silver sword	set: Viper	script: item call, script: name literal of a known family
+NGP Witcher Wolf Boots Upgrade schematic 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Witcher Wolf Boots Upgrade schematic 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Witcher Wolf Boots Upgrade schematic 3	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Witcher Wolf Gloves Upgrade schematic 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Witcher Wolf Gloves Upgrade schematic 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Witcher Wolf Gloves Upgrade schematic 3	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Witcher Wolf Jacket Upgrade schematic 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Witcher Wolf Jacket Upgrade schematic 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Witcher Wolf Jacket Upgrade schematic 3	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Witcher Wolf Pants Upgrade schematic 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Witcher Wolf Pants Upgrade schematic 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Witcher Wolf Pants Upgrade schematic 3	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf Armor	set: Wolf (Wolven)	script: item call, script: name literal of a known family, xml: item_cond.name
+NGP Wolf Armor 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family, xml: item_cond.name
+NGP Wolf Armor 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family, xml: item_cond.name
+NGP Wolf Armor 3	set: Wolf (Wolven)	script: item call, script: name literal of a known family, xml: ingredient.item_name, xml: item_cond.name
+NGP Wolf Armor schematic	set: Wolf (Wolven)	script: item call
+NGP Wolf Boots 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf Boots 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf Boots 3	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf Boots 4	set: Wolf (Wolven)	script: item call, script: name literal of a known family, xml: ingredient.item_name
+NGP Wolf Boots schematic	set: Wolf (Wolven)	script: item call
+NGP Wolf Gloves 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf Gloves 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf Gloves 3	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf Gloves 4	set: Wolf (Wolven)	script: item call, script: name literal of a known family, xml: ingredient.item_name
+NGP Wolf Gloves schematic	set: Wolf (Wolven)	script: item call
+NGP Wolf Pants 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf Pants 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf Pants 3	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf Pants 4	set: Wolf (Wolven)	script: item call, script: name literal of a known family, xml: ingredient.item_name
+NGP Wolf Pants schematic	set: Wolf (Wolven)	script: item call
+NGP Wolf School silver sword	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf School silver sword 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf School silver sword 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf School silver sword 3	set: Wolf (Wolven)	script: item call, script: name literal of a known family, xml: ingredient.item_name
+NGP Wolf School silver sword Upgrade schematic 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf School silver sword Upgrade schematic 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf School silver sword Upgrade schematic 3	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf School silver sword schematic	set: Wolf (Wolven)	script: item call
+NGP Wolf School steel sword	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf School steel sword 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf School steel sword 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf School steel sword 3	set: Wolf (Wolven)	script: item call, script: name literal of a known family, xml: ingredient.item_name
+NGP Wolf School steel sword Upgrade schematic 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf School steel sword Upgrade schematic 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf School steel sword Upgrade schematic 3	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+NGP Wolf School steel sword schematic	set: Wolf (Wolven)	script: item call
+Witcher Wolf Boots Upgrade schematic 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Witcher Wolf Boots Upgrade schematic 2	set: Wolf (Wolven)	script: name literal of a known family
+Witcher Wolf Boots Upgrade schematic 3	set: Wolf (Wolven)	script: name literal of a known family
+Witcher Wolf Gloves Upgrade schematic 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Witcher Wolf Gloves Upgrade schematic 2	set: Wolf (Wolven)	script: name literal of a known family
+Witcher Wolf Gloves Upgrade schematic 3	set: Wolf (Wolven)	script: name literal of a known family
+Witcher Wolf Jacket Upgrade schematic 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Witcher Wolf Jacket Upgrade schematic 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Witcher Wolf Jacket Upgrade schematic 3	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Witcher Wolf Pants Upgrade schematic 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Witcher Wolf Pants Upgrade schematic 2	set: Wolf (Wolven)	script: name literal of a known family
+Witcher Wolf Pants Upgrade schematic 3	set: Wolf (Wolven)	script: name literal of a known family
+Wolf Armor	set: Wolf (Wolven)	script: item call, script: name literal of a known family, xml: item_cond.name, xml: item_extension.name
+Wolf Armor 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family, xml: item_cond.name, xml: item_extension.name
+Wolf Armor 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family, xml: item_cond.name, xml: item_extension.name
+Wolf Armor 3	set: Wolf (Wolven)	script: item call, script: name literal of a known family, xml: ingredient.item_name, xml: item_cond.name, xml: item_extension.name
+Wolf Armor schematic	set: Wolf (Wolven)	script: item call
+Wolf Boots 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Wolf Boots 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Wolf Boots 4	set: Wolf (Wolven)	script: item call, script: name literal of a known family, xml: ingredient.item_name
+Wolf Boots schematic	set: Wolf (Wolven)	script: item call
+Wolf Gloves 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Wolf Gloves 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Wolf Gloves 4	set: Wolf (Wolven)	script: item call, script: name literal of a known family, xml: ingredient.item_name
+Wolf Gloves schematic	set: Wolf (Wolven)	script: item call
+Wolf Pants 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Wolf Pants 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Wolf Pants 4	set: Wolf (Wolven)	script: item call, script: name literal of a known family, xml: ingredient.item_name
+Wolf Pants schematic	set: Wolf (Wolven)	script: item call
+Wolf School silver sword	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Wolf School silver sword 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Wolf School silver sword 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Wolf School silver sword 3	set: Wolf (Wolven)	script: item call, script: name literal of a known family, xml: ingredient.item_name
+Wolf School silver sword Upgrade schematic 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Wolf School silver sword Upgrade schematic 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Wolf School silver sword Upgrade schematic 3	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Wolf School steel sword	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Wolf School steel sword 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Wolf School steel sword 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Wolf School steel sword 3	set: Wolf (Wolven)	script: item call, script: name literal of a known family, xml: ingredient.item_name
+Wolf School steel sword Upgrade schematic 1	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Wolf School steel sword Upgrade schematic 2	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+Wolf School steel sword Upgrade schematic 3	set: Wolf (Wolven)	script: item call, script: name literal of a known family
+# name keys: gear or consumable looking strings of en.w3strings that no defined item uses (hash of the key, text). A definition whose localisation_key_name has one of these hashes is wanted too
+#key	34695285	Formula: Blue mutagen
+#key	45233837	Scarlet Crest Armor
+#key	46070063	Scarlet Crest Boots
+#key	47774911	Diagram: Leather straps
+#key	47861026	Sturdy armor ready to weather decades on the Path.
+#key	60209633	Skellige Armor Set
+#key	68980809	Undvik Armor
+#key	69068147	Damage per second - silver sword
+#key	79743797	Passer-by! Bow before Lebioda!
+#key	92721848	The mask of Uroboros has been damaged and can never be used again.
+#key	102241981	Vesemir’s steel sword
+#key	103420245	Silver sword. Used when fighting monsters.
+#key	108335608	Legendary Wolven boots
+#key	138101800	Collect the formulae for 6 different bomb types.
+#key	141956184	Nilfgaardian Boots
+#key	185936247	Wolven trousers
+#key	196619717	A battle axe.
+#key	245974463	Right Button – Draw/Sheathe Silver Sword
+#key	254304016	Draw Steel Sword
+#key	269905053	Diagram: Enhanced Manticore silver sword
+#key	303026897	Wolven silver sword
+#key	304907182	Diagram: Wolven silver sword - enhanced
+#key	304907183	Diagram: Wolven silver sword - superior
+#key	304907184	Diagram: Wolven silver sword - mastercrafted
+#key	311107358	Diagram: Koviri-style silver ingot
+#key	311107359	Diagram: Ban Ard-style silver ingot
+#key	331910803	Temerian Boots
+#key	334853503	Diagram: Enhanced Wolven trousers
+#key	334853504	Diagram: Superior Wolven trousers
+#key	334853505	Diagram: Mastercrafted Wolven trousers
+#key	334853507	Diagram: Grandmaster Wolven trousers
+#key	346445162	Chest Armor
+#key	347281388	Boots
+#key	359725930	Diagram: Wolven boots
+#key	359792647	Trousers
+#key	366848280	Extends effective duration of all mutagen decoctions by $I$%.
+#key	366848285	Increases bonus for mutagen placed in mutagen slot by $I$%.
+#key	368177673	Ammunition for crossbow.
+#key	372221742	Steel sword oils
+#key	378072760	Diagram: Velen longsword
+#key	381182224	Silvered bolt
+#key	384715515	Silver Sword
+#key	414235719	Apply Oil
+#key	426392472	Enhanced Manticore trousers
+#key	431636953	Order of the Flaming Rose boots
+#key	444148212	Order of the Flaming Rose trousers
+#key	465450824	Diagram: Toussaint knight's tourney trousers
+#key	470164807	Maximum bomb and potion charge bonus already reached.
+#key	479344977	Crossbow. Ranged weapon that hurls bolts.
+#key	484361275	Enhanced Manticore armor
+#key	484830651	Diagram: Hardened timber
+#key	510373332	For Sale: Nilfgaardian Helmet, Used
+#key	522025035	Ranged weapon that loses bolts.
+#key	527482918	Increases crossbow critical hit chance by $I$%.
+#key	535082199	Potion which invokes visions showing Dettlaff's memories.
+#key	538654102	Legendary Wolven steel sword
+#key	552966467	Wolven steel sword
+#key	556223951	Wolven Boots
+#key	572301728	Diagram: Enhanced legendary Manticore boots
+#key	586401907	Sturdy armor ready to weather decades on the Path.
+#key	592608305	Diagram: Enhanced legendary Wolven boots
+#key	592608306	Diagram: Superior legendary Wolven boots
+#key	592608307	Diagram: Mastercrafted legendary Wolven boots
+#key	606424168	Diagram: Freya's Warriors' armor
+#key	610839286	Fox Mask
+#key	612714734	Increases bonuses for mutagens placed in mutagen slots by $I$%.
+#key	612714735	Increases bonuses for mutagens placed in mutagen slots by $I$%.
+#key	616701881	Toxicity governs how many potion doses you can drink.
+#key	625760229	Diagram: Leather hardened using the Maribor method
+#key	625760230	Diagram: Leather hardened using the Koviri method
+#key	625760231	Diagram: Leather hardened using the Ban Ard method
+#key	625760232	Diagram: Leather hardened using the Zerrikanian method
+#key	627401047	Crossbow bolt.
+#key	633835904	Formula: Green mutagen
+#key	666255001	Diagram: Splitting bolt
+#key	679710594	Armor piercing
+#key	744695111	Apply Oil
+#key	767388907	Diagram: Toussaint knight's tourney armor
+#key	772172174	Steel sword strong attack critical hit damage
+#key	794166347	Diagram: Enhanced legendary Manticore armor
+#key	795286564	Manuscript page: Cursed oil
+#key	813064833	Diagram: Legendary Wolven steel sword
+#key	829913469	Silvered broadhead bolt
+#key	830311953	Diagram: Enhanced Wolven gauntlets
+#key	830311954	Diagram: Superior Wolven gauntlets
+#key	830311955	Diagram: Mastercrafted Wolven gauntlets
+#key	830311957	Diagram: Grandmaster Wolven gauntlets
+#key	835281703	Trousers
+#key	835861175	Mutagen ingredient. Used to create decoctions and improve Abilities.
+#key	848299503	Perform fast melee attacks with either sword.
+#key	848299504	Allows you to perform strong melee attacks which ignore enemy armor.
+#key	848299506	Allows you to wield a light hand-held crossbow.
+#key	851124726	Increases bonuses for mutagens placed in mutagen slots by $I$%.
+#key	863356073	Steel sword fast attack critical hit damage
+#key	869822161	LEFT BUTTON - Draw/Sheathe Steel Sword
+#key	879883318	Legendary Wolven trousers
+#key	879883319	Enhanced legendary Wolven trousers
+#key	879883320	Superior legendary Wolven trousers
+#key	879883321	Mastercrafted legendary Wolven trousers
+#key	883931302	Bolts. Discharged from crossbows.
+#key	884806171	Pull Axe From Stump
+#key	910137868	Bombs and crossbow bolts can activate Deadly Precision.
+#key	937852121	Enhanced legendary Wolven armor
+#key	937852122	Superior legendary Wolven armor
+#key	937852123	Mastercrafted legendary Wolven armor
+#key	972521185	Kaer Morhen trousers.
+#key	980402951	Bomb. Explodes upon striking target.
+#key	1011510002	Silver sword strong attack damage
+#key	1020966426	Wolven armor
+#key	1073143490	Diagram: Order of the Flaming Rose trousers
+#key	1083931037	Diagram: Draconid leather cured using the Maribor method
+#key	1083931038	Diagram: Draconid leather cured using the Koviri method
+#key	1083931039	Diagram: Draconid leather cured using the Ban Ard method
+#key	1083931040	Diagram: Draconid leather cured using the Zerrikanian method
+#key	1086609074	Enhanced Manticore silver sword
+#key	1090352883	Nilfgaardian Trousers
+#key	1096717005	Mutagen work table
+#key	1099933604	Enhanced Armor
+#key	1111458296	Crafting Diagram
+#key	1119460827	Crossbow shot
+#key	1133435185	Rusty sword
+#key	1155007173	Bolts
+#key	1180381171	Undvik Boots
+#key	1182247881	Diagram: Legendary Wolven silver sword
+#key	1204894702	Clan an Craite ancestral sword.
+#key	1211936098	Legendary Feline crossbow
+#key	1221044451	Mutagen. Improves witcher Abilities when placed in a mutagen slot.
+#key	1232452178	Diagram: Legendary Wolven trousers
+#key	1249472059	Diagram: Enhanced legendary Manticore trousers
+#key	1261894399	Legendary Ursine crossbow
+#key	1269778636	Diagram: Enhanced legendary Wolven trousers
+#key	1269778637	Diagram: Superior legendary Wolven trousers
+#key	1269778638	Diagram: Mastercrafted legendary Wolven trousers
+#key	1280307502	Temerian Trousers
+#key	1285291600	Potion description
+#key	1287974461	Enhanced Manticore boots
+#key	1291628596	Locked mutagen slot
+#key	1294842786	Manuscript page: Blunt bolt
+#key	1307609372	Armor
+#key	1308689528	Diagram: Toussaint Ducal Guard Captain's steel sword
+#key	1313244187	Enhanced legendary Manticore steel sword
+#key	1316961364	Story and Sword!
+#key	1321416876	Surprisingly comfortable boots with stylish claws on the uppers.
+#key	1324933054	Wild Hunt warrior's boots
+#key	1326276261	Diagram already known.
+#key	1334396408	LEFT BUTTON - Draw/Sheathe Steel Sword
+#key	1342562116	Sword of a Thousand Flowers
+#key	1354153070	Equip mutagen potions in these slots.
+#key	1364102887	Legendary Wolven armor
+#key	1378853509	Diagram: Squire's steel sword
+#key	1396675850	Crossbow Bolt
+#key	1399965653	Diagram: Grandmaster Griffin boots
+#key	1423670264	Diagram: Enhanced legendary Wolven armor
+#key	1423670265	Diagram: Superior legendary Wolven armor
+#key	1423670266	Diagram: Mastercrafted legendary Wolven armor
+#key	1443977233	Worn gauntlets
+#key	1444650767	Chest armor
+#key	1445486993	Boots
+#key	1471639728	Diagram: Legendary Feline crossbow
+#key	1476840046	Silver sword strong attack critical hit damage
+#key	1498948627	Bomb damage increases by $F$% per point of Toxicity.
+#key	1498948628	Bomb damage increases by $F$% per point of Toxicity.
+#key	1500080976	Mythical mask of a Skellige deity.
+#key	1509862166	Temerian Armor
+#key	1513894673	Temerian Armor Set
+#key	1517588757	Nilfgaardian Armor Set
+#key	1523525149	Bolt placed too near another lure, choose another spot.
+#key	1530823560	Each potion dose heals $I$% Vitality.
+#key	1531237741	Increases crossbow damage by $I$% of current silver sword damage.
+#key	1534390261	Diagram: Legendary Wolven armor
+#key	1537504388	Legendary Wolven trousers
+#key	1544370866	Elite Crossbow Set
+#key	1545294387	Skellige Armor Set
+#key	1554258958	Armor
+#key	1568535825	Elite Crossbow Set
+#key	1570229454	Alternate Nilfgaardian Armor
+#key	1613454817	“A sword is but one of many tools at a ruler’s disposal.”
+#key	1623765010	Return My Helmet
+#key	1643016379	Nilfgaardian Gauntlets
+#key	1648212468	New Crafting Diagram
+#key	1683435790	Formula / diagram will now appear in Shop panel.
+#key	1684987507	Diagram: Enhanced Manticore steel sword
+#key	1713118835	Formula: Garkain bait bolt
+#key	1726807734	The Spice Merchant - 1212, by E. van der Knoob, oil on canvas
+#key	1737325968	Armor
+#key	1741465307	Legendary Wolven boots
+#key	1741465308	Enhanced legendary Wolven boots
+#key	1741465309	Superior legendary Wolven boots
+#key	1741465310	Mastercrafted legendary Wolven boots
+#key	1751720075	Toussaint Color Guardsman's steel sword
+#key	1771000293	Additional armor stands now available at Corvo Bianco.
+#key	1775820169	Silver sword fast attack critical hit damage
+#key	1777960613	Enhanced legendary Manticore trousers
+#key	1788965485	Diagram: Grandmaster Feline boots
+#key	1793145100	Decoction Toxicity
+#key	1795760915	Undvik Gauntlets
+#key	1799274841	Elven crossbow
+#key	1802549489	Sturdy armor ready to weather decades on the Path.
+#key	1815206913	Diagram: Legendary Gulet jacket
+#key	1830474599	Crossbow bolts deal more damage when they strike your target's head.
+#key	1835929416	Enhanced legendary Manticore armor
+#key	1838226089	Wolven trousers
+#key	1838226090	Enhanced Wolven trousers
+#key	1838226091	Superior Wolven trousers
+#key	1838226092	Mastercrafted Wolven trousers
+#key	1849649597	Diagram: Byelobog runestone
+#key	1896194892	Enhanced Wolven armor
+#key	1896194893	Superior Wolven armor
+#key	1896194894	Mastercrafted Wolven armor
+#key	1904657063	Diagram: Steel plates
+#key	1924574040	Bird mask
+#key	1939941230	Oil Preparation
+#key	1939941231	Bomb Creation
+#key	1943285673	Steel sword fast attack critical hit chance
+#key	1946572167	Skellige crossbow
+#key	1967986838	You ignore bomb and special bolt effects.
+#key	1967986839	You can shoot one additional bolt before you must reload.
+#key	1967986840	Damage dealt by a bomb's explosion generates $F$ Adrenaline Points.
+#key	1970463407	Potion duration time and bomb damage
+#key	1979466007	Enhanced legendary Manticore gauntlets
+#key	1982969140	Wolven armor
+#key	1985392731	Wolven trousers
+#key	2000800618	Gloves
+#key	2005382993	Diagram: Wolven steel sword
+#key	2009283052	RIGHT BUTTON – Draw/Sheathe Silver Sword
+#key	2018644944	Potion used in the Trial of the Grasses.
+#key	2018644945	Potion used in the Trial of the Grasses.
+#key	2018644946	Potion used in the Trial of the Grasses.
+#key	2018644947	Potion used in the Trial of the Grasses.
+#key	2018644948	Potion used in the Trial of the Grasses.
+#key	2019187973	Formula: Silver armor dye
+#key	2023959174	Dun Banner heavy armor
+#key	2038142309	Increases crossbow damage by $I$% of current silver sword damage.
+#key	2038142310	Increases crossbow damage by $I$% of current silver sword damage.
+#key	2053062345	Scarlet Crest Trousers
+#key	2053272813	Diagram: Toussaint knight's tourney boots
+#key	2065111451	Undvik Trousers
+#key	2077135984	Diagram: Grandmaster Griffin trousers
+#key	2088876653	Sturdy armor ready to weather decades on the Path.
+#key	2094124841	Kaer Morhen gauntlets.
+#key	2158483104	“He ploughin’ wears golden armor. Golden. ‘Course he’s an arsehole.”
+#key	2162929080	Light mandragora mask
+#key	2171198944	Diagram: Legendary Wolven gauntlets
+#key	2177870757	Potion. Grants beneficial effects when imbibed.
+#key	2194938366	Et in Kovir Ego - N. Boussin, 1210, oil on canvas
+#key	2218204685	Diagram: Legendary Ursine crossbow
+#key	2241951716	Diagram: Enhanced Manticore gauntlets
+#key	2250519496	Legendary Wolven steel sword - enhanced
+#key	2250519497	Legendary Wolven steel sword - superior
+#key	2250519498	Legendary Wolven steel sword - mastercrafted
+#key	2261823677	Oil
+#key	2265563465	Draw Sword / Attack
+#key	2268138768	Legendary Wolven silver sword - enhanced
+#key	2268138769	Legendary Wolven silver sword - superior
+#key	2268138770	Legendary Wolven silver sword - mastercrafted
+#key	2268442161	Diagram: Vitis
+#key	2268850491	Diagram: Legendary Wolven silver sword - enhanced
+#key	2268850492	Diagram: Legendary Wolven silver sword - superior
+#key	2268850493	Diagram: Legendary Wolven silver sword - mastercrafted
+#key	2278425147	A Vessel Leaving Port - 1220, by Z. Burner, oil on wood
+#key	2295427123	The Battle of Anghiari - 1206, by V. da Linci, oil on canvas
+#key	2313153225	Silver sword fast attack critical hit chance
+#key	2316165231	Gauntlets
+#key	2334094117	Carnival mask, hides wearer's identity.
+#key	2341490493	Silver sword
+#key	2350952968	Enhanced Manticore steel sword
+#key	2353477818	Oil applied to blades has a $I$% chance of poisoning the target.
+#key	2353477819	Oil applied to blades has a $I$% chance of poisoning the target.
+#key	2353837684	Little Red... Hood
+#key	2355934917	Crafting Diagram
+#key	2365177034	Standard bolt used to kill monsters.
+#key	2367138460	Increases potion overdose threshold from $S$% to $S$%.
+#key	2367138461	Each potion dose imbibed heals $I$% of maximum Vitality.
+#key	2368522923	Elegant mask for a masquerade ball.
+#key	2391519818	Every bolt that reaches its target generates $F$ Adrenaline point(s).
+#key	2428734950	Legendary Wolven gauntlets
+#key	2429507342	Gharasham tribe sword
+#key	2434768846	Diagram: Griffin steel sword
+#key	2455625222	Unknown diagram
+#key	2468979657	Trousers. Increase Armor.
+#key	2482719033	Nilfgaardian Armor Set
+#key	2489356945	To equip bolts, you must first have a crossbow equipped.
+#key	2505762213	Diagram: Enhanced Wolven armor
+#key	2505762214	Diagram: Superior Wolven armor
+#key	2505762215	Diagram: Mastercrafted Wolven armor
+#key	2510260615	Scarlet Crest Gauntlets
+#key	2510502887	Bomb explosion radius
+#key	2525208391	Silvered precision bolt
+#key	2535113644	Diagram: Feline steel sword
+#key	2535389312	Each potion dose heals $I$% Vitality.
+#key	2535389313	Each potion dose heals $I$% Vitality.
+#key	2535530442	Diagram: Grandmaster Ursine boots
+#key	2545255154	Nekker hide boots
+#key	2562206066	Training sword
+#key	2567492105	Bomb
+#key	2576734920	Potion
+#key	2576795603	Kill Golyat with a crossbow bolt to his eye.
+#key	2577308415	Breastplate. Increases Armor.
+#key	2606781620	DPS - Steel Sword
+#key	2632987278	Very sharp, bloodstained dagger.
+#key	2639542602	Enhanced legendary Manticore boots
+#key	2660965479	Diagram: Order of the Flaming Rose boots
+#key	2677999003	Superior-quality Skellige sword.
+#key	2690205136	Silver sword oils
+#key	2699808078	Wolven boots
+#key	2699808079	Enhanced Wolven boots
+#key	2699808080	Superior Wolven boots
+#key	2699808081	Mastercrafted Wolven boots
+#key	2711584804	Left Button - Draw/Sheathe Steel Sword
+#key	2711909996	Ornate boots
+#key	2730162519	Sunder Armor
+#key	2768336363	Nine-Tailed Vixen silver sword
+#key	2782365394	Potion effects don't wear off until potion Toxicity falls to 0.
+#key	2783107527	Steel Sword
+#key	2794495264	Diagram: Wolven steel sword - enhanced
+#key	2794495265	Diagram: Wolven steel sword - superior
+#key	2794495266	Diagram: Wolven steel sword - mastercrafted
+#key	2814611318	Extends the duration of all mutagen decoctions by $I$%.
+#key	2814611319	Extends the duration of all mutagen decoctions by $I$%.
+#key	2820274167	Diagram: Legendary Wolven boots
+#key	2822378927	Rusty short sword
+#key	2831319323	Legendary forgotten Wolven silver sword
+#key	2840736838	Armor. Protects against incoming blows.
+#key	2859537569	Diagram: Leather cured using the Maribor method
+#key	2859537570	Diagram: Leather cured using the Koviri method
+#key	2859537571	Diagram: Leather cured using the Ban Ard method
+#key	2859537572	Diagram: Leather cured using the Zerrikanian method
+#key	2859537573	Diagram: Leather cured using the Novigrad method
+#key	2859537574	Diagram: Leather cured using the Oxenfurt method
+#key	2859537575	Diagram: Leather cured using the Vole method
+#key	2859537576	Diagram: Leather cured using the Toussaint method
+#key	2876088697	Diagram: Dorian sword
+#key	2908332425	Potion jar
+#key	2916494285	Cover to a container used as a bomb.
+#key	2926476364	No armor in inventory that can be placed here.
+#key	2940158817	Mandragora mask
+#key	2961954770	Steel sword strong attack damage
+#key	2985766840	Diagram: Greater Byelobog runestone
+#key	2987797225	Nine-Tailed Vixen steel sword
+#key	3016289213	Melt Armor
+#key	3023763263	Armor Attrition
+#key	3030526596	Enhanced Manticore gauntlets
+#key	3051734763	Wolven boots
+#key	3058713695	Clears Toxicity and potion effects.
+#key	3059079131	Sleet, snow or sludge - I'll clean your boots of every smudge!
+#key	3060909153	Gauntlets. Increase Armor.
+#key	3063913922	Oil applied to blades has a $I$% chance of poisoning the target.
+#key	3066871237	Diagram: Wolven trousers
+#key	3067836008	Triss' mask
+#key	3085311906	Oil slot
+#key	3089798354	Wolf mask
+#key	3089798355	Human mask
+#key	3089798356	Hummingbird mask
+#key	3100405886	Extends the duration of all mutagen decoctions by $I$%.
+#key	3100793700	Manual Sword Drawing/Sheathing
+#key	3101342847	Diagram: Stigsel
+#key	3107088879	You can replenish your potion supplies by Meditating.
+#key	3119800373	Wolven steel sword - enhanced
+#key	3119800374	Wolven steel sword - superior
+#key	3119800375	Wolven steel sword - mastercrafted
+#key	3133453060	Boots. Increase Armor.
+#key	3134405444	Draw Sword - Hold to Sheathe
+#key	3143505096	Monsters with high Armor are vulnerable to Armor-impairing attacks.
+#key	3158480836	Silver sword strong attack critical hit chance
+#key	3170835819	Sunder Armor
+#key	3192652110	Formula: Red mutagen
+#key	3203614925	Diagram: Wolven gauntlets
+#key	3207519428	Silver armor dye
+#key	3212700773	Diagram: Grandmaster Ursine trousers
+#key	3223461184	Pinned Formula / Diagram
+#key	3227804040	Worn armor
+#key	3228640266	Worn boots
+#key	3236642272	Temerian Gauntlets
+#key	3241151525	Worn trousers
+#key	3242395028	DPS - Silver Sword
+#key	3273387036	Melt Armor
+#key	3277375231	Enhanced legendary Manticore silver sword
+#key	3279419018	Reaver armor
+#key	3279419019	Dryad hunter's armor
+#key	3301461192	Diagram: Grandmaster Griffin gauntlets
+#key	3318793369	Diagram: Toussaint Color Guardsman's steel sword
+#key	3334537281	Legendary Wolven armor
+#key	3341426195	Diagram: Mahakaman heavy armor
+#key	3350247383	Steel sword fast attack damage
+#key	3353087873	Silver sword. For fighting monsters.
+#key	3360327140	Diagram: Lesser Byelobog runestone
+#key	3362610027	Dagger Luzi used to take her own life.
+#key	3368809320	Diagram: Wolven armor
+#key	3413683383	Diagram: Enhanced legendary Manticore gauntlets
+#key	3421697710	Medium Armor
+#key	3428371695	Wolven gauntlets
+#key	3443997907	Diagram: Enhanced Manticore boots
+#key	3446042179	Wolven silver sword - enhanced
+#key	3446042180	Wolven silver sword - superior
+#key	3446042181	Wolven silver sword - mastercrafted
+#key	3454586102	Steel sword scabbard
+#key	3467068435	Time slowed by an additional $I$% while aiming the crossbow.
+#key	3467068437	Each bolt that hits its target adds $F$ Adrenaline Points.
+#key	3475599814	Diagram: Enhanced legendary Manticore steel sword
+#key	3479795539	Wolven gauntlets
+#key	3487403857	Learn 12 potion formulae.
+#key	3495582667	Brokvar. Clan an Craite ancestral sword.
+#key	3502226706	Armor
+#key	3510437015	Vesemir’s silver sword
+#key	3516866911	Wolf mask
+#key	3524699306	Harlequin mask
+#key	3526988535	Silver sword fast attack damage
+#key	3529183786	Legendary Gulet sword
+#key	3532192012	Still Life - J. de Varvari, 1222, oil on canvas
+#key	3532704691	Alternate Nilfgaardian Armor
+#key	3536443231	Diagram: Wolven silver sword
+#key	3568334983	Mutagen ingredient. Used for brewing mutagen decoctions.
+#key	3570372980	Temerian Armor Set
+#key	3577365826	Every bolt that reaches its target generates $F$ Adrenaline point(s).
+#key	3577365827	Every bolt that reaches its target generates $F$ Adrenaline point(s).
+#key	3578523240	Draw Silver Sword
+#key	3592983216	Armor reduction
+#key	3598103768	Kill a frozen opponent with a crossbow bolt.
+#key	3604321594	Sword of a Thousand Flowers
+#key	3609943701	Got a taste for my darling Hilde? Prepare to taste my axe.<br>– Ormur
+#key	3615377149	Light Armor
+#key	3624596691	Oil. Smeared on the blade of a sword.
+#key	3635615312	Available mutagen potions
+#key	3651063728	You can repair your armor here.
+#key	3665714081	Crossbow bolts deal $I$% more damage.
+#key	3668756128	Armor Stand
+#key	3688109439	Crossbow
+#key	3712247183	You don't have the right bomb.
+#key	3721091879	White Tiger of the West armor
+#key	3721928105	White Tiger of the West boots
+#key	3724698007	Clears Toxicity and renews the duration of all active potion effects.
+#key	3728482564	Radovid's pompous boots.
+#key	3730556801	Pierces armor.
+#key	3734439364	White Tiger of the West trousers
+#key	3750113254	Temporarily increased armor
+#key	3753842048	Armor
+#key	3764425881	Child’s wooden sword
+#key	3838319701	Kaer Morhen boots.
+#key	3847695793	Wolven gauntlets
+#key	3847695794	Enhanced Wolven gauntlets
+#key	3847695795	Superior Wolven gauntlets
+#key	3847695796	Mastercrafted Wolven gauntlets
+#key	3876563827	Bomb throw
+#key	3883877205	Zerrikanian crossbow
+#key	3887259901	RIGHT BUTTON - Draw/Sheathe Silver Sword
+#key	3917401976	Diagram: Enhanced Manticore armor
+#key	3933255595	Tesham Mutna silver sword
+#key	3952650468	Diagram: Enhanced Wolven boots
+#key	3952650469	Diagram: Superior Wolven boots
+#key	3952650470	Diagram: Mastercrafted Wolven boots
+#key	3952650472	Diagram: Grandmaster Wolven boots
+#key	3966226931	Diagram: Legendary Wolven steel sword - enhanced
+#key	3966226932	Diagram: Legendary Wolven steel sword - superior
+#key	3966226933	Diagram: Legendary Wolven steel sword - mastercrafted
+#key	3976728241	Damage per second - steel sword
+#key	4003020098	Silver sword scabbard
+#key	4008631082	Toussaint Ducal Guard Captain's steel sword
+#key	4025174670	Bolt placed too low, find higher spot.
+#key	4026186222	Heavy Armor
+#key	4043187300	Diagram: Enhanced legendary Wolven gauntlets
+#key	4043187301	Diagram: Superior legendary Wolven gauntlets
+#key	4043187302	Diagram: Mastercrafted legendary Wolven gauntlets
+#key	4059455668	Ran the Gauntlet
+#key	4083141491	Armor piercing
+#key	4086450156	Change Bolt
+#key	4099358706	White Raffard's Decoction
+#key	4119134676	Place a mutagen here to activate it.
+#key	4121168238	Diagram: Enhanced Manticore trousers
+#key	4144231283	Diagram: Grandmaster Ursine gauntlets
+#key	4145387544	Diagram: Vamir
+#key	4145903325	Fill all mutagen slots.
+#key	4154310878	Legendary Wolven silver sword
+#key	4163960746	Diagram: Toussaint knight's tourney gauntlets
+#key	4179277587	Manuscript page: Beast oil
+#key	4198048932	Steel sword strong attack critical hit chance
+#key	4203840964	Legendary Wolven gauntlets
+#key	4203840965	Enhanced legendary Wolven gauntlets
+#key	4203840966	Superior legendary Wolven gauntlets
+#key	4203840967	Mastercrafted legendary Wolven gauntlets
+#key	4211203569	Nilfgaardian Armor
+#key	4239279018	Diagram: Enhanced legendary Manticore silver sword
+#key	4241783672	Diagram: Legendary Gulet sword
+#key	4245086153	Armor Maintenance
+#key	4252627483	Bomb damage increases by $F$% per point of Toxicity.
+# abilities we already have (the PC script does not copy those): one per line
+#have	AardShrineBuff
+#have	Abarad_Stats
+#have	AbilityOnLowHPEffect
+#have	AcidEffect
+#have	AcidSpit
+#have	Adaptation
+#have	Addandeith_Stats
+#have	AdditiveHits
+#have	AdrenalineDrainEffect
+#have	AerondightEffect
+#have	Aerondight_EP2_Stats
+#have	Aerondight_Stats
+#have	Aggressive
+#have	AirBoostEffect
+#have	AirDrainDiveEffect
+#have	AirDrainEffect
+#have	Anathema_Stats
+#have	Angivare_Stats
+#have	Anth_Stats
+#have	Arainne_Stats
+#have	Arbitrator_Stats
+#have	Arbitrator_crafted_Stats
+#have	ArchesporEating
+#have	ArchesporHard
+#have	ArchesporNormal
+#have	ArchesporNormal_LW
+#have	ArchesporTaunt
+#have	ArchesporTurret
+#have	Ardaenye_Stats
+#have	Arinbjorn boatbuilder _abl
+#have	Arinbjorn inn _abl
+#have	Arinbjorn smith _abl
+#have	Armor repair kit 1
+#have	Armor repair kit 2
+#have	Armor repair kit 3
+#have	ArmorBreastplate_01
+#have	ArmorBreastplate_02
+#have	ArmorChainmail_01
+#have	ArmorChainmail_02
+#have	ArmorCombatJacket
+#have	ArmorLeatherJacket_01
+#have	ArmorLeatherJacket_02
+#have	ArmorPlatemail_01
+#have	ArmorPlatemail_02
+#have	ArmorRear_Rock
+#have	ArmorRepairKit_1
+#have	ArmorRepairKit_2
+#have	ArmorRepairKit_3
+#have	Armored
+#have	Ashrune_Stats
+#have	Autogen Armor _Stats
+#have	Autogen Gloves _Stats
+#have	Autogen Starting Boots _Stats
+#have	Autogen Starting Pants _Stats
+#have	Autogen silver sword _Stats
+#have	Autogen steel sword _Stats
+#have	AvoidanceEffect
+#have	Axe 1 _Stats
+#have	Axe 2 _Stats
+#have	AxiiGuardMeEffect
+#have	AxiiShrineBuff
+#have	Azurewrath_Stats
+#have	Barbersurgeon_Stats
+#have	Baron Keep armorer _abl
+#have	Baron Keep barber _abl
+#have	Baron Keep general _abl
+#have	Baron Keep inn _abl
+#have	Baron Keep quartermaster _abl
+#have	Base Bear Armor 1 _Stats
+#have	Base Bear Armor 2 _Stats
+#have	Base Bear Armor 3 _Stats
+#have	Base Bear Armor _Stats
+#have	Base Bear Boots 1 _Stats
+#have	Base Bear Boots 2 _Stats
+#have	Base Bear Boots 3 _Stats
+#have	Base Bear Boots 4 _Stats
+#have	Base Bear Gloves 1 _Stats
+#have	Base Bear Gloves 2 _Stats
+#have	Base Bear Gloves 3 _Stats
+#have	Base Bear Gloves 4 _Stats
+#have	Base Bear Pants 1 _Stats
+#have	Base Bear Pants 2 _Stats
+#have	Base Bear Pants 3 _Stats
+#have	Base Bear Pants 4 _Stats
+#have	Base Bear School silver sword 1 _Stats
+#have	Base Bear School silver sword 2 _Stats
+#have	Base Bear School silver sword 3 _Stats
+#have	Base Bear School silver sword _Stats
+#have	Base Bear School steel sword 1 _Stats
+#have	Base Bear School steel sword 2 _Stats
+#have	Base Bear School steel sword 3 _Stats
+#have	Base Bear School steel sword _Stats
+#have	Base Gryphon Armor 1 _Stats
+#have	Base Gryphon Armor 2 _Stats
+#have	Base Gryphon Armor 3 _Stats
+#have	Base Gryphon Armor _Stats
+#have	Base Gryphon Boots 1 _Stats
+#have	Base Gryphon Boots 2 _Stats
+#have	Base Gryphon Boots 3 _Stats
+#have	Base Gryphon Boots 4 _Stats
+#have	Base Gryphon Gloves 1 _Stats
+#have	Base Gryphon Gloves 2 _Stats
+#have	Base Gryphon Gloves 3 _Stats
+#have	Base Gryphon Gloves 4 _Stats
+#have	Base Gryphon Pants 1 _Stats
+#have	Base Gryphon Pants 2 _Stats
+#have	Base Gryphon Pants 3 _Stats
+#have	Base Gryphon Pants 4 _Stats
+#have	Base Gryphon School silver sword 1 _Stats
+#have	Base Gryphon School silver sword 2 _Stats
+#have	Base Gryphon School silver sword 3 _Stats
+#have	Base Gryphon School silver sword _Stats
+#have	Base Gryphon School steel sword 1 _Stats
+#have	Base Gryphon School steel sword 2 _Stats
+#have	Base Gryphon School steel sword 3 _Stats
+#have	Base Gryphon School steel sword _Stats
+#have	Base Lynx Armor 1 _Stats
+#have	Base Lynx Armor 2 _Stats
+#have	Base Lynx Armor 3 _Stats
+#have	Base Lynx Armor _Stats
+#have	Base Lynx Boots 1 _Stats
+#have	Base Lynx Boots 2 _Stats
+#have	Base Lynx Boots 3 _Stats
+#have	Base Lynx Boots 4 _Stats
+#have	Base Lynx Gloves 1 _Stats
+#have	Base Lynx Gloves 2 _Stats
+#have	Base Lynx Gloves 3 _Stats
+#have	Base Lynx Gloves 4 _Stats
+#have	Base Lynx Pants 1 _Stats
+#have	Base Lynx Pants 2 _Stats
+#have	Base Lynx Pants 3 _Stats
+#have	Base Lynx Pants 4 _Stats
+#have	Base Lynx School silver sword 1 _Stats
+#have	Base Lynx School silver sword 2 _Stats
+#have	Base Lynx School silver sword 3 _Stats
+#have	Base Lynx School silver sword _Stats
+#have	Base Lynx School steel sword 1 _Stats
+#have	Base Lynx School steel sword 2 _Stats
+#have	Base Lynx School steel sword 3 _Stats
+#have	Base Lynx School steel sword _Stats
+#have	Base Viper School silver sword _Stats
+#have	Base Viper School steel sword _Stats
+#have	BasicQuenEffect
+#have	Bath House alchemist _abl
+#have	BattleTranceEffect
+#have	Beannshie_Stats
+#have	Beannshie_crafted_Stats
+#have	Bear Armor 1 _Stats
+#have	Bear Armor 2 _Stats
+#have	Bear Armor 3 _Stats
+#have	Bear Armor 4 _Stats
+#have	Bear Armor _Stats
+#have	Bear Boots 1 _Stats
+#have	Bear Boots 2 _Stats
+#have	Bear Boots 3 _Stats
+#have	Bear Boots 4 _Stats
+#have	Bear Boots 5 _Stats
+#have	Bear Gloves 1 _Stats
+#have	Bear Gloves 2 _Stats
+#have	Bear Gloves 3 _Stats
+#have	Bear Gloves 4 _Stats
+#have	Bear Gloves 5 _Stats
+#have	Bear Pants 1 _Stats
+#have	Bear Pants 2 _Stats
+#have	Bear Pants 3 _Stats
+#have	Bear Pants 4 _Stats
+#have	Bear Pants 5 _Stats
+#have	Bear School Crossbow _Stats
+#have	Bear School silver sword 1 _Stats
+#have	Bear School silver sword 2 _Stats
+#have	Bear School silver sword 3 _Stats
+#have	Bear School silver sword 4 _Stats
+#have	Bear School silver sword _Stats
+#have	Bear School steel sword 1 _Stats
+#have	Bear School steel sword 2 _Stats
+#have	Bear School steel sword 3 _Stats
+#have	Bear School steel sword 4 _Stats
+#have	Bear School steel sword _Stats
+#have	Beast
+#have	BeastOil_1
+#have	BeastOil_2
+#have	BeastOil_3
+#have	BeverageQuality_1
+#have	BeverageQuality_2
+#have	BeverageQuality_3
+#have	BiesCharge
+#have	BiesCustomHypnosis
+#have	BiesHypnosis
+#have	BlackBloodDebuff
+#have	BlackBloodEffect_Level1
+#have	BlackBloodEffect_Level2
+#have	BlackBloodEffect_Level3
+#have	BlackBlood_1
+#have	BlackBlood_2
+#have	BlackBlood_3
+#have	BlackSpiderLarge
+#have	Blackjack _Stats
+#have	Blackunicorn_Stats
+#have	Blackunicorn_crafted_Stats
+#have	Bladeofys_Stats
+#have	Blandare general _abl
+#have	BleedingEffect
+#have	BleedingEffect1
+#have	BleedingEffect2
+#have	BleedingEffect3
+#have	BleedingEffect_BroadheadBolt
+#have	BleedingTrackingEffect
+#have	BlindnessEffect
+#have	BlindnessEffect_Samum_1
+#have	BlindnessEffect_Samum_2
+#have	BlindnessEffect_Samum_3
+#have	BlizzardEffect_Level1
+#have	BlizzardEffect_Level2
+#have	BlizzardEffect_Level3
+#have	Blizzard_1
+#have	Blizzard_2
+#have	Blizzard_3
+#have	Block
+#have	Bloedeaedd_Stats
+#have	BloodBuff
+#have	Bloodsword_Stats
+#have	BoatBoltsAffinity
+#have	Boiling
+#have	BookshelfBuffEffect
+#have	BoostedEssenceRegen
+#have	BoostedStaminaRegen
+#have	BoostedVitalityRegen
+#have	BoostedVitalityRegenExt
+#have	Boots 01 _Stats
+#have	Boots 01 q2 _Stats
+#have	Boots 012 _Stats
+#have	Boots 01_crafted _Stats
+#have	Boots 02 _Stats
+#have	Boots 022 _Stats
+#have	Boots 02_crafted _Stats
+#have	Boots 03 _Stats
+#have	Boots 032 _Stats
+#have	Boots 03_crafted _Stats
+#have	Boots 04 _Stats
+#have	Boots 04_crafted _Stats
+#have	Boots 05 _Stats
+#have	Boots 06 _Stats
+#have	Boots 07 _Stats
+#have	Boots 07_crafted _Stats
+#have	Borrows general _abl
+#have	Boss
+#have	BossNGPLevelBonus
+#have	BounceBoltsWildhunt
+#have	Bow 1 _Stats
+#have	Bow 2 _Stats
+#have	BreakThroughParryOnHit
+#have	Breathofthenorth_Stats
+#have	Brokvar boatbuilder _abl
+#have	Brokvar general _abl
+#have	Brokvar inn _abl
+#have	Brokvar smith _abl
+#have	Brokvar village barber _abl
+#have	Broom_Not_Work _Stats
+#have	Brothel district inn _abl
+#have	BurnIgnore
+#have	BurnNoAnim
+#have	Burning Rose Armor B _Stats
+#have	Burning Rose Armor _Stats
+#have	Burning Rose Gloves B _Stats
+#have	Burning Rose Gloves _Stats
+#have	Burning Rose Sword B _Stats
+#have	Burning Rose Sword _Stats
+#have	BurningEffect
+#have	BurningEffect_DancingStar_1
+#have	BurningEffect_DancingStar_2
+#have	BurningEffect_DancingStar_3
+#have	BurningEffect_FireStream
+#have	BurningEffect_TestAuraFire
+#have	Burrow
+#have	Butchers ranch general _abl
+#have	Caerme_Stats
+#have	CanPlayIdleAnim
+#have	CanSpawnBulbs
+#have	CannotBeAttackedFromAllSides
+#have	CannotBeAttackedFromBehind
+#have	CannotBeCountered
+#have	Caranthil Staff _Stats
+#have	CaranthirDeath
+#have	CaranthirStrong
+#have	CaranthirWeak
+#have	Caroline_Stats
+#have	Casual pants _Stats
+#have	Casual shoes _Stats
+#have	CatEffectPerk29
+#have	CatEffect_Level1
+#have	CatEffect_Level2
+#have	CatEffect_Level3
+#have	Cat_1
+#have	Cat_2
+#have	Cat_3
+#have	CatalystEffect
+#have	ChainHitImmune
+#have	Charge
+#have	Cheesecutter_Stats
+#have	ChokingEffect
+#have	Ciri armor 01 _Stats
+#have	Ciri gloves 01 _Stats
+#have	Ciri pants 01 _Stats
+#have	CiriBlink
+#have	CiriCannotTeleport
+#have	CiriCharge
+#have	CiriHardcoreDebuffHuman
+#have	CiriHardcoreDebuffMonster
+#have	Ciri_CombatRegen
+#have	Ciri_Q111
+#have	Ciri_Q205
+#have	Ciri_Q305
+#have	Ciri_Q403
+#have	Ciri_Q501
+#have	Ciri_Rage
+#have	Ciri_RegenGroup
+#have	Citizen district general _abl
+#have	Citizen district inn _abl
+#have	Citizen district smith _abl
+#have	Clanlord Keep armorer _abl
+#have	Clanlord Keep smith _abl
+#have	ClearingPotion_stats
+#have	Cleaver_Stats
+#have	Club _Stats
+#have	CommonMutagenAbility
+#have	Commoner
+#have	ConAthletic
+#have	ConAverage
+#have	ConDefault
+#have	ConDefaultSilver
+#have	ConFat
+#have	ConFrail
+#have	ConGeralt
+#have	ConImmortal
+#have	ConPudzian
+#have	ConWitcher
+#have	ConfusionEffect
+#have	ContactBlindness
+#have	ContactSlowdown
+#have	ConvergenceTheoryEffect
+#have	CounterCriticalEffects
+#have	CounterStrikeHitEffect
+#have	Crafted Burning Rose Armor _Stats
+#have	Crafted Burning Rose Gloves _Stats
+#have	Crafted Burning Rose Sword _Stats
+#have	Crafted Ofir Armor _Stats
+#have	Crafted Ofir Boots _Stats
+#have	Crafted Ofir Gloves _Stats
+#have	Crafted Ofir Pants _Stats
+#have	Crafted Ofir Steel Sword _Stats
+#have	Crematory alchemist _abl
+#have	Crossbow 01 _Stats
+#have	Crossbow 1 _Stats
+#have	Crossbow 1 q1 _Stats
+#have	Crossbow 2 _Stats
+#have	Crossbow 3 _Stats
+#have	Crossbow 4 _Stats
+#have	Crossbow 5 _Stats
+#have	Crossbow 6 _Stats
+#have	Crossbow 7 _Stats
+#have	Crossbow q206 _Stats
+#have	Crossroads inn _abl
+#have	Cursed
+#have	CursedOil_1
+#have	CursedOil_2
+#have	CursedOil_3
+#have	DLC10_Remorse _Stats
+#have	DamageBuff
+#have	Damien sword_Stats
+#have	Dancer_Stats
+#have	DancingStar_1_impact
+#have	DancingStar_1_loop
+#have	DancingStar_2_impact
+#have	DancingStar_2_loop
+#have	DancingStar_3_impact
+#have	DancingStar_3_loop
+#have	Daystar_Stats
+#have	Deargdeith_Stats
+#have	Default Book _Stats
+#have	Default Junk _Stats
+#have	Default Note _Stats
+#have	Default armor _Stats
+#have	Default weapon _Stats
+#have	Default_ArmorRepairKit_Stats
+#have	Default_WeaponRepairKit_Stats
+#have	Deireadh_Stats
+#have	Deithwen_Stats
+#have	DettlaffEssenceRegen
+#have	DettlaffVampire_q704
+#have	DettlaffWeakenedState
+#have	DevilSaddle
+#have	DevilsPuffball_1_impact
+#have	DevilsPuffball_1_loop
+#have	DevilsPuffball_2_impact
+#have	DevilsPuffball_2_loop
+#have	DevilsPuffball_3_impact
+#have	DevilsPuffball_3_loop
+#have	Devine_Stats
+#have	Digging
+#have	Dimun boatbuilder _abl
+#have	Dimun general _abl
+#have	Dimun inn _abl
+#have	Dimun smith _abl
+#have	Dimun village barber _abl
+#have	DisableCounterAttack
+#have	DisableDismemberment
+#have	DisableFinishers
+#have	DisableHorsePanic
+#have	DisableSpecialIfCountered
+#have	DjinnRage
+#have	DjinnWeak
+#have	DoTHPRegenReduceEffect
+#have	Docks boatbuilder _abl
+#have	Dol Blathanna Armor _Stats
+#have	Dol Blathanna Boots _Stats
+#have	Dol Blathanna Gloves _Stats
+#have	Dol Blathanna Pants _Stats
+#have	Dol Blathanna longsword _Stats
+#have	DontAddFactsOnDeath
+#have	DontDropWeaponsOnDismemberment
+#have	Doppelganger
+#have	Draconide
+#have	DraconideOil_1
+#have	DraconideOil_2
+#have	DraconideOil_3
+#have	DragonsDream_1
+#have	DragonsDream_2
+#have	DragonsDream_3
+#have	DrowningEffect
+#have	Druid Grove alchemist _abl
+#have	Druid Grove barber _abl
+#have	DrunkennessEffect
+#have	DustCloud
+#have	Dwarven Axe _Stats
+#have	Dwarven Hammer _Stats
+#have	Dwarven crossbow _Stats
+#have	Dwarven silver sword 1 _Stats
+#have	Dwarven silver sword 1_crafted _Stats
+#have	Dwarven silver sword 2 _Stats
+#have	Dwarven silver sword 2_crafted _Stats
+#have	Dwarven sword 1 _Stats
+#have	Dwarven sword 1_crafted _Stats
+#have	Dwarven sword 2 _Stats
+#have	Dwarven sword 2_crafted _Stats
+#have	DwimeritiumBomb_1
+#have	DwimeritiumBomb_2
+#have	DwimeritiumBomb_3
+#have	Dyaebl_Stats
+#have	Dye Black Color
+#have	Dye Blue Color
+#have	Dye Brown Color
+#have	Dye Default Color
+#have	Dye Gray Color
+#have	Dye Green Color
+#have	Dye Orange Color
+#have	Dye Pink Color
+#have	Dye Purple Color
+#have	Dye Red Color
+#have	Dye Turquoise Color
+#have	Dye White Color
+#have	Dye Yellow Color
+#have	E3_Boost
+#have	E3_Demo_Health_Mod
+#have	E3_Demo_Vesemir_Mod
+#have	EP1 Crafted Witcher Silver Sword _Stats
+#have	EP1 Standalone Starting Armor _Stats
+#have	EP1 Standalone Starting Boots _Stats
+#have	EP1 Standalone Starting Gloves _Stats
+#have	EP1 Standalone Starting Pants _Stats
+#have	EP1 Standalone Starting Silver Sword _Stats
+#have	EP1 Standalone Starting Steel Sword _Stats
+#have	EP1 Viper School silver sword _Stats
+#have	EP1 Viper School steel sword _Stats
+#have	EP1 Witcher Armor _Stats
+#have	EP1 Witcher Boots _Stats
+#have	EP1 Witcher Gloves _Stats
+#have	EP1 Witcher Pants _Stats
+#have	EP1Leshy
+#have	EP2 Silver sword 1 _Stats
+#have	EP2 Silver sword 1R _Stats
+#have	EP2 Silver sword 2 _Stats
+#have	EP2 Silver sword 3 _Stats
+#have	EP2 Silver sword 3R _Stats
+#have	EP2 Standalone Starting Armor _Stats
+#have	EP2 Standalone Starting Boots _Stats
+#have	EP2 Standalone Starting Gloves _Stats
+#have	EP2 Standalone Starting Pants _Stats
+#have	EP2 Standalone Starting Silver Sword _Stats
+#have	EP2 Standalone Starting Steel Sword _Stats
+#have	EdibleEffect_Level1
+#have	EdibleEffect_Level2
+#have	EdibleEffect_Level3
+#have	ElementOfSurpriseEffect
+#have	Elven bow _Stats
+#have	Elven silver sword 1 _Stats
+#have	Elven silver sword 1_crafted _Stats
+#have	Elven silver sword 2 _Stats
+#have	Elven silver sword 2_crafted _Stats
+#have	EnhancedArmorEffect
+#have	EnhancedWeaponEffect
+#have	Eredin Sword _Stats
+#have	EredinFireResistance
+#have	EredinStaminaRegen
+#have	EssenceRegen
+#have	EssenceRestore
+#have	EtherealActivating
+#have	EtherealActive
+#have	EtherealBuff
+#have	EtherealMashingFix
+#have	EtherealMashingFixBeforeSkill4
+#have	EtherealSkill_1
+#have	EtherealSkill_2
+#have	EtherealSkill_3
+#have	EtherealSkill_4
+#have	EtherealSkill_5
+#have	EvadeFinisher
+#have	FCR3HighDamageBoost
+#have	FCR3HighDamageNerf
+#have	FCR3LowDamageBoost
+#have	FCR3LowDamageNerf
+#have	FCR3MedDamageBoost
+#have	FCR3MedDamageNerf
+#have	FactPotion
+#have	FairytaleWitchDelay
+#have	Fate_Stats
+#have	Ferlund general _abl
+#have	Ferlund smith _abl
+#have	Fire Horse Blinders _Stats
+#have	Fire Horse Saddle _Stats
+#have	Fire Horse Saddlebags _Stats
+#have	Fire Horse blinders _Stats
+#have	Fire fists _Stats
+#have	FireAttackEffect
+#have	FireAuraEffect
+#have	FireImmunity
+#have	FireShield
+#have	Fireball
+#have	Flashstep
+#have	Flying
+#have	FoglingNoSummons
+#have	FoodEdibleCornucopia
+#have	FoodEdibleQuality_1
+#have	FoodEdibleQuality_2
+#have	FoodEdibleQuality_3
+#have	ForceCriticalEffects
+#have	ForceCriticalEffectsAnim
+#have	ForceCriticalEffectsAnimNPCOnly
+#have	ForceCriticalHits
+#have	ForceDismemberment
+#have	ForceFinisher
+#have	ForceHeadbuttFinisher
+#have	ForceHiltFinisher
+#have	ForceInstantKill
+#have	Forgottenvransword_Stats
+#have	Freckle Hill general _abl
+#have	Freya Temple alchemist _abl
+#have	Frost
+#have	FrozenEffect
+#have	FrozenEffect_WhiteFrost1
+#have	FrozenEffect_WhiteFrost2
+#have	FrozenEffect_WhiteFrost3
+#have	FullMoon
+#have	FullMoonEffect_Level1
+#have	FullMoonEffect_Level2
+#have	FullMoonEffect_Level3
+#have	FullMoonOnSteroids
+#have	FullMoon_1
+#have	FullMoon_2
+#have	FullMoon_3
+#have	Fyresdal general _abl
+#have	Fyresdal inn _abl
+#have	Fyresdal smith _abl
+#have	Fyresdal village barber _abl
+#have	Fyresdal village boatbuilder _abl
+#have	Gargoyle
+#have	Geralt Fistfight Fists _Stats
+#have	Geralt Kontusz Boots R _Stats
+#have	Geralt Kontusz Boots _Stats
+#have	Geralt fists _Stats
+#have	GeraltMult
+#have	GeraltSkills
+#have	GeraltSkills_Testing
+#have	Geralt_kontusz _Stats
+#have	Geralt_kontusz_r _Stats
+#have	Geralt_mask _Stats
+#have	Geralt_shirt _Stats
+#have	Glinsk smith _abl
+#have	Gloryofthenorth_Stats
+#have	Gloves 01 _Stats
+#have	Gloves 01 q2 _Stats
+#have	Gloves 01_crafted _Stats
+#have	Gloves 02 _Stats
+#have	Gloves 02_crafted _Stats
+#have	Gloves 03 _Stats
+#have	Gloves 03_crafted _Stats
+#have	Gloves 04 _Stats
+#have	Gloves 04_crafted _Stats
+#have	Glyph aard _Stats
+#have	Glyph aard greater _Stats
+#have	Glyph aard lesser _Stats
+#have	Glyph axii _Stats
+#have	Glyph axii greater _Stats
+#have	Glyph axii lesser _Stats
+#have	Glyph binding _Stats
+#have	Glyph binding greater _Stats
+#have	Glyph binding lesser _Stats
+#have	Glyph igni _Stats
+#have	Glyph igni greater _Stats
+#have	Glyph igni lesser _Stats
+#have	Glyph mending _Stats
+#have	Glyph mending greater _Stats
+#have	Glyph mending lesser _Stats
+#have	Glyph quen _Stats
+#have	Glyph quen greater _Stats
+#have	Glyph quen lesser _Stats
+#have	Glyph reinforcement _Stats
+#have	Glyph reinforcement greater _Stats
+#have	Glyph reinforcement lesser _Stats
+#have	Glyph warding _Stats
+#have	Glyph warding greater _Stats
+#have	Glyph warding lesser _Stats
+#have	Glyph yrden _Stats
+#have	Glyph yrden greater _Stats
+#have	Glyph yrden lesser _Stats
+#have	Glyphword 1 _Stats
+#have	Glyphword 10 _Stats
+#have	Glyphword 12 _Stats
+#have	Glyphword 14 _Stats
+#have	Glyphword 15 _Stats
+#have	Glyphword 17 _Stats
+#have	Glyphword 18 _Stats
+#have	Glyphword 2 _Stats
+#have	Glyphword 20 _Stats
+#have	Glyphword 3 _Stats
+#have	Glyphword 4 _Stats
+#have	Glyphword 5 _Stats
+#have	Glyphword 6 _Stats
+#have	Glyphword 7 _Stats
+#have	Glyphword 8 _Stats
+#have	Gnomish silver sword 1 _Stats
+#have	Gnomish silver sword 1_crafted _Stats
+#have	Gnomish silver sword 2 _Stats
+#have	Gnomish silver sword 2_crafted _Stats
+#have	Gnomish sword 1 _Stats
+#have	Gnomish sword 1_crafted _Stats
+#have	Gnomish sword 2 _Stats
+#have	Gnomish sword 2_crafted _Stats
+#have	GoldenOrioleEffect_Level1
+#have	GoldenOrioleEffect_Level2
+#have	GoldenOrioleEffect_Level3
+#have	GoldenOriole_1
+#have	GoldenOriole_2
+#have	GoldenOriole_3
+#have	GourmetEffect
+#have	Grapeshot_1
+#have	Grapeshot_2
+#have	Grapeshot_3
+#have	Great Axe 1 _Stats
+#have	Great Axe 2 _Stats
+#have	GroundSlam
+#have	Gryphon Armor 1 _Stats
+#have	Gryphon Armor 2 _Stats
+#have	Gryphon Armor 3 _Stats
+#have	Gryphon Armor 4 _Stats
+#have	Gryphon Armor _Stats
+#have	Gryphon Boots 1 _Stats
+#have	Gryphon Boots 2 _Stats
+#have	Gryphon Boots 3 _Stats
+#have	Gryphon Boots 4 _Stats
+#have	Gryphon Boots 5 _Stats
+#have	Gryphon Gloves 1 _Stats
+#have	Gryphon Gloves 2 _Stats
+#have	Gryphon Gloves 3 _Stats
+#have	Gryphon Gloves 4 _Stats
+#have	Gryphon Gloves 5 _Stats
+#have	Gryphon Pants 1 _Stats
+#have	Gryphon Pants 2 _Stats
+#have	Gryphon Pants 3 _Stats
+#have	Gryphon Pants 4 _Stats
+#have	Gryphon Pants 5 _Stats
+#have	Gryphon School silver sword 1 _Stats
+#have	Gryphon School silver sword 2 _Stats
+#have	Gryphon School silver sword 3 _Stats
+#have	Gryphon School silver sword 4 _Stats
+#have	Gryphon School silver sword _Stats
+#have	Gryphon School steel sword 1 _Stats
+#have	Gryphon School steel sword 2 _Stats
+#have	Gryphon School steel sword 3 _Stats
+#have	Gryphon School steel sword 4 _Stats
+#have	Gryphon School steel sword _Stats
+#have	GryphonSetBonusEffect
+#have	GryphonSetBonusYrdenEffect
+#have	Guard Lvl1 A Armor 1 _Stats
+#have	Guard Lvl1 A Armor 2 _Stats
+#have	Guard Lvl1 A Armor 3 _Stats
+#have	Guard Lvl1 A Boots 1 _Stats
+#have	Guard Lvl1 A Boots 2 _Stats
+#have	Guard Lvl1 A Boots 3 _Stats
+#have	Guard Lvl1 A Gloves 1 _Stats
+#have	Guard Lvl1 A Gloves 2 _Stats
+#have	Guard Lvl1 A Gloves 3 _Stats
+#have	Guard Lvl1 A Pants 1 _Stats
+#have	Guard Lvl1 A Pants 2 _Stats
+#have	Guard Lvl1 A Pants 3 _Stats
+#have	Guard Lvl1 Armor 1 _Stats
+#have	Guard Lvl1 Armor 2 _Stats
+#have	Guard Lvl1 Armor 3 _Stats
+#have	Guard Lvl1 Boots 1 _Stats
+#have	Guard Lvl1 Boots 2 _Stats
+#have	Guard Lvl1 Boots 3 _Stats
+#have	Guard Lvl1 Gloves 1 _Stats
+#have	Guard Lvl1 Gloves 2 _Stats
+#have	Guard Lvl1 Gloves 3 _Stats
+#have	Guard Lvl1 Pants 1 _Stats
+#have	Guard Lvl1 Pants 2 _Stats
+#have	Guard Lvl1 Pants 3 _Stats
+#have	Guard Lvl1 steel sword 1 _Stats
+#have	Guard Lvl1 steel sword 2 _Stats
+#have	Guard Lvl2 A Armor 1 _Stats
+#have	Guard Lvl2 A Armor 2 _Stats
+#have	Guard Lvl2 A Armor 3 _Stats
+#have	Guard Lvl2 A Boots 1 _Stats
+#have	Guard Lvl2 A Boots 2 _Stats
+#have	Guard Lvl2 A Boots 3 _Stats
+#have	Guard Lvl2 A Gloves 1 _Stats
+#have	Guard Lvl2 A Gloves 2 _Stats
+#have	Guard Lvl2 A Gloves 3 _Stats
+#have	Guard Lvl2 A Pants 1 _Stats
+#have	Guard Lvl2 A Pants 2 _Stats
+#have	Guard Lvl2 A Pants 3 _Stats
+#have	Guard Lvl2 Armor 1 _Stats
+#have	Guard Lvl2 Armor 2 _Stats
+#have	Guard Lvl2 Armor 3 _Stats
+#have	Guard Lvl2 Boots 1 _Stats
+#have	Guard Lvl2 Boots 2 _Stats
+#have	Guard Lvl2 Boots 3 _Stats
+#have	Guard Lvl2 Gloves 1 _Stats
+#have	Guard Lvl2 Gloves 2 _Stats
+#have	Guard Lvl2 Gloves 3 _Stats
+#have	Guard Lvl2 Pants 1 _Stats
+#have	Guard Lvl2 Pants 2 _Stats
+#have	Guard Lvl2 Pants 3 _Stats
+#have	Guard Lvl2 steel sword 1 _Stats
+#have	Guard Lvl2 steel sword 2 _Stats
+#have	Guard lvl1 steel sword 3 Autogen _Stats
+#have	Guard lvl1 steel sword 3 _Stats
+#have	Guard lvl2 steel sword 3 _Stats
+#have	Guisarme 1 _Stats
+#have	Guisarme 2 _Stats
+#have	Gwent steel sword 1 _Stats
+#have	Gwestog_Stats
+#have	Gwyhyr_Stats
+#have	Gynvael_Stats
+#have	Gynvaelaedd_Stats
+#have	Hakland Sabre _Stats
+#have	HaklandMage
+#have	HaklandMagePhase1
+#have	HaklandSoldier
+#have	Halberd 1 _Stats
+#have	Halberd 2 _Stats
+#have	HangedManVenom_1
+#have	HangedManVenom_2
+#have	HangedManVenom_3
+#have	Hanza steel sword 0 _Stats
+#have	Hanza steel sword 1 _Stats
+#have	Hanza steel sword 2 _Stats
+#have	Hanza steel sword 3 _Stats
+#have	Harpy_Stats
+#have	Harpy_crafted_Stats
+#have	Harvall_Stats
+#have	Hatchet _Stats
+#have	Havcaaren_Stats
+#have	Headtaker_Stats
+#have	HealthBuff
+#have	HealthFistFightEasy
+#have	HealthFistFightHard
+#have	HealthFistFightMedium
+#have	HealthFistFightTutorial
+#have	HeartPhysicalRes
+#have	Heavy armor 01 _Stats
+#have	Heavy armor 01_crafted _Stats
+#have	Heavy armor 01r _Stats
+#have	Heavy armor 02 _Stats
+#have	Heavy armor 02_crafted _Stats
+#have	Heavy armor 02r _Stats
+#have	Heavy armor 03 _Stats
+#have	Heavy armor 03_crafted _Stats
+#have	Heavy armor 03r _Stats
+#have	Heavy armor 04 _Stats
+#have	Heavy armor 04_crafted _Stats
+#have	Heavy armor 04r _Stats
+#have	Heavy armor 05 _Stats
+#have	Heavy armor 05r _Stats
+#have	Heavy boots 01 _Stats
+#have	Heavy boots 01_crafted _Stats
+#have	Heavy boots 02 _Stats
+#have	Heavy boots 02_crafted _Stats
+#have	Heavy boots 03 _Stats
+#have	Heavy boots 03_crafted _Stats
+#have	Heavy boots 04 _Stats
+#have	Heavy boots 04_crafted _Stats
+#have	Heavy boots 05 _Stats
+#have	Heavy boots 06 _Stats
+#have	Heavy boots 07 _Stats
+#have	Heavy boots 07_crafted _Stats
+#have	Heavy boots 08 _Stats
+#have	Heavy boots 08_crafted _Stats
+#have	Heavy gloves 01 _Stats
+#have	Heavy gloves 01_crafted _Stats
+#have	Heavy gloves 02 _Stats
+#have	Heavy gloves 02_crafted _Stats
+#have	Heavy gloves 03 _Stats
+#have	Heavy gloves 03_crafted _Stats
+#have	Heavy gloves 04 _Stats
+#have	Heavy gloves 04_crafted _Stats
+#have	Heavy pants 01 _Stats
+#have	Heavy pants 01_crafted _Stats
+#have	Heavy pants 02 _Stats
+#have	Heavy pants 02_crafted _Stats
+#have	Heavy pants 03 _Stats
+#have	Heavy pants 03_crafted _Stats
+#have	Heavy pants 04 _Stats
+#have	Heavy pants 04_crafted _Stats
+#have	HeavyKnockdownEffect
+#have	HeavySwimmingStaminaDrain
+#have	HelpPlayerWithRifts
+#have	Herbalist community alchemist _abl
+#have	HitWindowOpened
+#have	Hjalmar_Short_Steel_Sword _Stats
+#have	Holmstein general _abl
+#have	HorseAxiiBuff
+#have	HorseBag1
+#have	HorseBag2
+#have	HorseBag3
+#have	HorseBlinders1
+#have	HorseBlinders2
+#have	HorseBlinders3
+#have	HorseLevel1
+#have	HorseLevel2
+#have	HorseLevel3
+#have	HorseSaddle1
+#have	HorseSaddle1v2
+#have	HorseSaddle1v3
+#have	HorseSaddle1v4
+#have	HorseSaddle2
+#have	HorseSaddle2v2
+#have	HorseSaddle2v3
+#have	HorseSaddle2v4
+#have	HorseSaddle3
+#have	HorseSaddle3v2
+#have	HorseSaddle3v3
+#have	HorseSaddle3v4
+#have	HorseSaddle4
+#have	HorseSaddle5
+#have	HorseSaddle6
+#have	HorseStableBuff
+#have	HorseStableBuffEffect
+#have	Hybrid
+#have	HybridOil_1
+#have	HybridOil_2
+#have	HybridOil_3
+#have	Hypnosis
+#have	HypnotizedEffect
+#have	IceArmor
+#have	IgniShrineBuff
+#have	IgnoreDodgeMinimumDistance
+#have	IgnoreHitAnimFromSigns
+#have	IgnoreLevelDiffForParryTest
+#have	IgnorePainEffect
+#have	Imlerith Mace _Stats
+#have	Imlerith Shield_Stats
+#have	ImlerithSecondStage
+#have	ImlerithTurtle
+#have	ImmobilizedEffect
+#have	InSmallSpace
+#have	IncreaseHitReactionSeverityWithHitCounter
+#have	Inis_Stats
+#have	Inn _abl
+#have	Inquisitor sword 1 _Stats
+#have	Inquisitor sword 1_crafted _Stats
+#have	Inquisitor sword 2 _Stats
+#have	Inquisitor sword 2_crafted _Stats
+#have	Insectoid
+#have	InsectoidOil_1
+#have	InsectoidOil_2
+#have	InsectoidOil_3
+#have	InstantKillImmune
+#have	Invisibility
+#have	InvisibilityDetected
+#have	Iron Poker _Stats
+#have	IsNotScaredOfMonsters
+#have	JumpAttack
+#have	Kaer Trolde castle armorer _abl
+#have	Kaer Trolde castle smith _abl
+#have	Kaer Trolde village alchemist _abl
+#have	Kaer Trolde village armorer _abl
+#have	Kaer Trolde village barber _abl
+#have	Kaer Trolde village boatbuilder _abl
+#have	Kaer Trolde village general _abl
+#have	Kaer Trolde village inn _abl
+#have	Karabela_Stats
+#have	KeiraDmg
+#have	KillerWhaleEffect_Level1
+#have	KillerWhaleEffect_Level2
+#have	KillerWhaleEffect_Level3
+#have	KillerWhale_1
+#have	KillerWhale_2
+#have	KillerWhale_3
+#have	Knight Geralt A Armor 1 _Stats
+#have	Knight Geralt A Armor 2 _Stats
+#have	Knight Geralt A Armor 3 _Stats
+#have	Knight Geralt A Boots 1 _Stats
+#have	Knight Geralt A Boots 2 _Stats
+#have	Knight Geralt A Boots 3 _Stats
+#have	Knight Geralt A Gloves 1 _Stats
+#have	Knight Geralt A Gloves 2 _Stats
+#have	Knight Geralt A Gloves 3 _Stats
+#have	Knight Geralt A Pants 1 _Stats
+#have	Knight Geralt A Pants 2 _Stats
+#have	Knight Geralt A Pants 3 _Stats
+#have	Knight Geralt Armor 1 _Stats
+#have	Knight Geralt Armor 2 _Stats
+#have	Knight Geralt Armor 3 _Stats
+#have	Knight Geralt Boots 1 _Stats
+#have	Knight Geralt Boots 2 _Stats
+#have	Knight Geralt Boots 3 _Stats
+#have	Knight Geralt Gloves 1 _Stats
+#have	Knight Geralt Gloves 2 _Stats
+#have	Knight Geralt Gloves 3 _Stats
+#have	Knight Geralt Pants 1 _Stats
+#have	Knight Geralt Pants 2 _Stats
+#have	Knight Geralt Pants 3 _Stats
+#have	Knight Mace 1 _Stats
+#have	Knight Mace 2 _Stats
+#have	Knight Mace 3 _Stats
+#have	Knight Shield _Stats
+#have	Knights steel sword 1 _Stats
+#have	Knights steel sword 2 _Stats
+#have	Knights steel sword 3 _Stats
+#have	KnockdownEffect
+#have	KnockdownTypeApplicator
+#have	Larvik armorer _abl
+#have	Larvik boatbuilder _abl
+#have	Larvik general _abl
+#have	Larvik smith _abl
+#have	LastBreath
+#have	Laundry stick _Stats
+#have	Light armor 01 _Stats
+#have	Light armor 01_crafted _Stats
+#have	Light armor 01r _Stats
+#have	Light armor 02 _Stats
+#have	Light armor 02_crafted _Stats
+#have	Light armor 02r _Stats
+#have	Light armor 03 _Stats
+#have	Light armor 03_crafted _Stats
+#have	Light armor 03r _Stats
+#have	Light armor 04 _Stats
+#have	Light armor 04_crafted _Stats
+#have	Light armor 04r _Stats
+#have	Light armor 05_crafted _Stats
+#have	Light armor 06 _Stats
+#have	Light armor 06_crafted _Stats
+#have	Light armor 06r _Stats
+#have	Light armor 07 _Stats
+#have	Light armor 07_crafted _Stats
+#have	Light armor 07r _Stats
+#have	Light armor 08 _Stats
+#have	Light armor 08_crafted _Stats
+#have	Light armor 08r _Stats
+#have	Light armor 09 _Stats
+#have	Light armor 09r _Stats
+#have	Lightning fists _Stats
+#have	LikedInNoMansLand
+#have	LikedInNovigrad
+#have	LikedInSkelige
+#have	Loathen_Stats
+#have	Long Steel Sword _Stats
+#have	Long bow 1 _Stats
+#have	Long bow 2 _Stats
+#have	Long metal pole _Stats
+#have	LongStaggerEffect
+#have	Longclaw_Stats
+#have	Longclaw_crafted_Stats
+#have	LowHealthEffect
+#have	Lucerne Hammer _Stats
+#have	Lune_Stats
+#have	Lvl10
+#have	Lvl100
+#have	Lvl11
+#have	Lvl12
+#have	Lvl13
+#have	Lvl14
+#have	Lvl15
+#have	Lvl16
+#have	Lvl17
+#have	Lvl18
+#have	Lvl19
+#have	Lvl2
+#have	Lvl20
+#have	Lvl21
+#have	Lvl22
+#have	Lvl23
+#have	Lvl24
+#have	Lvl25
+#have	Lvl26
+#have	Lvl27
+#have	Lvl28
+#have	Lvl29
+#have	Lvl3
+#have	Lvl30
+#have	Lvl31
+#have	Lvl32
+#have	Lvl33
+#have	Lvl34
+#have	Lvl35
+#have	Lvl36
+#have	Lvl37
+#have	Lvl38
+#have	Lvl39
+#have	Lvl4
+#have	Lvl40
+#have	Lvl41
+#have	Lvl42
+#have	Lvl43
+#have	Lvl44
+#have	Lvl45
+#have	Lvl46
+#have	Lvl47
+#have	Lvl48
+#have	Lvl49
+#have	Lvl5
+#have	Lvl50
+#have	Lvl51
+#have	Lvl52
+#have	Lvl53
+#have	Lvl54
+#have	Lvl55
+#have	Lvl56
+#have	Lvl57
+#have	Lvl58
+#have	Lvl59
+#have	Lvl6
+#have	Lvl60
+#have	Lvl61
+#have	Lvl62
+#have	Lvl63
+#have	Lvl64
+#have	Lvl65
+#have	Lvl66
+#have	Lvl67
+#have	Lvl68
+#have	Lvl69
+#have	Lvl7
+#have	Lvl71
+#have	Lvl72
+#have	Lvl73
+#have	Lvl74
+#have	Lvl75
+#have	Lvl76
+#have	Lvl77
+#have	Lvl78
+#have	Lvl79
+#have	Lvl8
+#have	Lvl80
+#have	Lvl81
+#have	Lvl82
+#have	Lvl83
+#have	Lvl84
+#have	Lvl85
+#have	Lvl86
+#have	Lvl87
+#have	Lvl88
+#have	Lvl89
+#have	Lvl9
+#have	Lvl90
+#have	Lvl91
+#have	Lvl92
+#have	Lvl93
+#have	Lvl94
+#have	Lvl95
+#have	Lvl96
+#have	Lvl97
+#have	Lvl98
+#have	Lvl99
+#have	Lynx Armor 1 _Stats
+#have	Lynx Armor 2 _Stats
+#have	Lynx Armor 3 _Stats
+#have	Lynx Armor 4 _Stats
+#have	Lynx Armor _Stats
+#have	Lynx Boots 1 _Stats
+#have	Lynx Boots 2 _Stats
+#have	Lynx Boots 3 _Stats
+#have	Lynx Boots 4 _Stats
+#have	Lynx Boots 5 _Stats
+#have	Lynx Gloves 1 _Stats
+#have	Lynx Gloves 2 _Stats
+#have	Lynx Gloves 3 _Stats
+#have	Lynx Gloves 4 _Stats
+#have	Lynx Gloves 5 _Stats
+#have	Lynx Pants 1 _Stats
+#have	Lynx Pants 2 _Stats
+#have	Lynx Pants 3 _Stats
+#have	Lynx Pants 4 _Stats
+#have	Lynx Pants 5 _Stats
+#have	Lynx School Crossbow _Stats
+#have	Lynx School silver sword 1 _Stats
+#have	Lynx School silver sword 2 _Stats
+#have	Lynx School silver sword 3 _Stats
+#have	Lynx School silver sword 4 _Stats
+#have	Lynx School silver sword _Stats
+#have	Lynx School steel sword 1 _Stats
+#have	Lynx School steel sword 2 _Stats
+#have	Lynx School steel sword 3 _Stats
+#have	Lynx School steel sword 4 _Stats
+#have	Lynx School steel sword _Stats
+#have	LynxSetBonusEffect
+#have	MA_AardIntensity
+#have	MA_AdrenalineGain
+#have	MA_Armor
+#have	MA_ArmorPenetration
+#have	MA_AttackPowerAdd
+#have	MA_AttackPowerMult
+#have	MA_AxiiIntensity
+#have	MA_BleedingChance
+#have	MA_BleedingResistance
+#have	MA_BludgeoningResistance
+#have	MA_BurningChance
+#have	MA_BurningResistance
+#have	MA_ConfusionChance
+#have	MA_CriticalChance
+#have	MA_CriticalDamage
+#have	MA_ElementalResistance
+#have	MA_FreezingChance
+#have	MA_Gore
+#have	MA_Herbs
+#have	MA_HtH
+#have	MA_HtH_stats
+#have	MA_HumanHunter
+#have	MA_IgniIntensity
+#have	MA_Indestructible
+#have	MA_Money
+#have	MA_MonsterHunter
+#have	MA_PiercingResistance
+#have	MA_PoisonChance
+#have	MA_PoisonResistance
+#have	MA_Precision
+#have	MA_QuenIntensity
+#have	MA_Reinforced
+#have	MA_RendingResistance
+#have	MA_Shield
+#have	MA_SilverStuds
+#have	MA_SlashingResistance
+#have	MA_StaggerChance
+#have	MA_StaminaRegeneration
+#have	MA_Vitality
+#have	MA_YrdenIntensity
+#have	Mace 1 _Stats
+#have	Mace 2 _Stats
+#have	Magic _Stats
+#have	MagicShield
+#have	Magical
+#have	MagicalsOil_1
+#have	MagicalsOil_2
+#have	MagicalsOil_3
+#have	Makeshift Boats camp boatbuilder _abl
+#have	MariborForestEffect_Level1
+#have	MariborForestEffect_Level2
+#have	MariborForestEffect_Level3
+#have	MariborForest_1
+#have	MariborForest_2
+#have	MariborForest_3
+#have	Market alchemist _abl
+#have	Market books _abl
+#have	Market general 1 _abl
+#have	Market general 2 _abl
+#have	Market general 3 _abl
+#have	Market inn _abl
+#have	Market smith _abl
+#have	Master _Stats
+#have	MedDamage
+#have	Medium armor 01 _Stats
+#have	Medium armor 01_crafted _Stats
+#have	Medium armor 01r _Stats
+#have	Medium armor 02 _Stats
+#have	Medium armor 02_crafted _Stats
+#have	Medium armor 02r _Stats
+#have	Medium armor 03 _Stats
+#have	Medium armor 03_crafted _Stats
+#have	Medium armor 03r _Stats
+#have	Medium armor 04 _Stats
+#have	Medium armor 04_crafted _Stats
+#have	Medium armor 04r _Stats
+#have	Medium armor 05 _Stats
+#have	Medium armor 05r _Stats
+#have	Medium armor 07 _Stats
+#have	Medium armor 07r _Stats
+#have	Medium armor 10 _Stats
+#have	Medium armor 10r _Stats
+#have	Medium armor 11 _Stats
+#have	Medium armor 11r _Stats
+#have	Midcotts boatbuilder _abl
+#have	Midcotts general _abl
+#have	Midcotts smith _abl
+#have	MinDamage
+#have	MiniBoss
+#have	MistCharge
+#have	MistCharge_Spawn
+#have	MistForm
+#have	MonsterHunt
+#have	MonsterLevelBonus
+#have	MonsterLevelBonusArmored
+#have	MonsterLevelBonusDeadly
+#have	MonsterLevelBonusGroup
+#have	MonsterLevelBonusGroupArmored
+#have	MonsterLevelBonusHigh
+#have	MonsterLevelBonusLow
+#have	MonsterMHBoss
+#have	Moonblade_Stats
+#have	Mourner_Stats
+#have	Mouths alchemist _abl
+#have	Mouths armorer _abl
+#have	Mouths barber _abl
+#have	Mouths general _abl
+#have	MudAttack
+#have	MudTeleport
+#have	Mutagen01Effect
+#have	Mutagen02Effect
+#have	Mutagen04Effect
+#have	Mutagen05Effect
+#have	Mutagen06Effect
+#have	Mutagen07Effect
+#have	Mutagen08Effect
+#have	Mutagen09Effect
+#have	Mutagen10Effect
+#have	Mutagen11Effect
+#have	Mutagen12Effect
+#have	Mutagen13Effect
+#have	Mutagen14Effect
+#have	Mutagen15Effect
+#have	Mutagen16Effect
+#have	Mutagen17Effect
+#have	Mutagen18Effect
+#have	Mutagen19Effect
+#have	Mutagen20Effect
+#have	Mutagen21Effect
+#have	Mutagen22Effect
+#have	Mutagen24Effect
+#have	Mutagen25Effect
+#have	Mutagen26Effect
+#have	Mutagen27Effect
+#have	Mutagen28Effect
+#have	Mutagen_1
+#have	Mutagen_10
+#have	Mutagen_11
+#have	Mutagen_12
+#have	Mutagen_13
+#have	Mutagen_14
+#have	Mutagen_15
+#have	Mutagen_16
+#have	Mutagen_17
+#have	Mutagen_18
+#have	Mutagen_19
+#have	Mutagen_2
+#have	Mutagen_20
+#have	Mutagen_21
+#have	Mutagen_22
+#have	Mutagen_23
+#have	Mutagen_24
+#have	Mutagen_25
+#have	Mutagen_26
+#have	Mutagen_27
+#have	Mutagen_28
+#have	Mutagen_3
+#have	Mutagen_4
+#have	Mutagen_5
+#have	Mutagen_6
+#have	Mutagen_7
+#have	Mutagen_8
+#have	Mutagen_9
+#have	Mutation Master
+#have	Mutation1
+#have	Mutation10Effect
+#have	Mutation11
+#have	Mutation11BuffEffect
+#have	Mutation11DebuffEffect
+#have	Mutation11ImmortalEffect
+#have	Mutation12
+#have	Mutation12CatEffect
+#have	Mutation2
+#have	Mutation3
+#have	Mutation3Effect
+#have	Mutation4BloodDebuff
+#have	Mutation4Effect
+#have	Mutation5
+#have	Mutation5Effect
+#have	Mutation6
+#have	Mutation7Buff
+#have	Mutation7BuffEffect
+#have	Mutation7Debuff
+#have	Mutation7DebuffEffect
+#have	Mutation8
+#have	Mutation9
+#have	NGP Bear Armor 4 _Stats
+#have	NGP Bear Boots 5 _Stats
+#have	NGP Bear Gloves 5 _Stats
+#have	NGP Bear Pants 5 _Stats
+#have	NGP Bear School silver sword 4 _Stats
+#have	NGP Bear School steel sword 4 _Stats
+#have	NGP Crafted Burning Rose Armor _Stats
+#have	NGP Crafted Burning Rose Gloves _Stats
+#have	NGP Crafted Burning Rose Sword _Stats
+#have	NGP Crafted Ofir Armor _Stats
+#have	NGP Crafted Ofir Boots _Stats
+#have	NGP Crafted Ofir Gloves _Stats
+#have	NGP Crafted Ofir Pants _Stats
+#have	NGP Crafted Ofir Steel Sword _Stats
+#have	NGP DLC Compatibility Armor Mod
+#have	NGP DLC Compatibility Chest Armor Mod
+#have	NGP Dol Blathanna Armor _Stats
+#have	NGP Dol Blathanna Boots _Stats
+#have	NGP Dol Blathanna Gloves _Stats
+#have	NGP Dol Blathanna Pants _Stats
+#have	NGP Dol Blathanna longsword _Stats
+#have	NGP EP1 Crafted Witcher Silver Sword _Stats
+#have	NGP EP1 Viper School silver sword _Stats
+#have	NGP EP1 Viper School steel sword _Stats
+#have	NGP EP1 Witcher Armor _Stats
+#have	NGP EP1 Witcher Boots _Stats
+#have	NGP EP1 Witcher Gloves _Stats
+#have	NGP EP1 Witcher Pants _Stats
+#have	NGP Gryphon Armor 4 _Stats
+#have	NGP Gryphon Boots 5 _Stats
+#have	NGP Gryphon Gloves 5 _Stats
+#have	NGP Gryphon Pants 5 _Stats
+#have	NGP Gryphon School silver sword 4 _Stats
+#have	NGP Gryphon School steel sword 4 _Stats
+#have	NGP Guard Lvl1 A Armor 3 _Stats
+#have	NGP Guard Lvl1 A Boots 3 _Stats
+#have	NGP Guard Lvl1 A Gloves 3 _Stats
+#have	NGP Guard Lvl1 A Pants 3 _Stats
+#have	NGP Guard Lvl1 Armor 3 _Stats
+#have	NGP Guard Lvl1 Boots 3 _Stats
+#have	NGP Guard Lvl1 Gloves 3 _Stats
+#have	NGP Guard Lvl1 Pants 3 _Stats
+#have	NGP Guard Lvl2 A Armor 3 _Stats
+#have	NGP Guard Lvl2 A Boots 3 _Stats
+#have	NGP Guard Lvl2 A Gloves 3 _Stats
+#have	NGP Guard Lvl2 A Pants 3 _Stats
+#have	NGP Guard Lvl2 Armor 3 _Stats
+#have	NGP Guard Lvl2 Boots 3 _Stats
+#have	NGP Guard Lvl2 Gloves 3 _Stats
+#have	NGP Guard Lvl2 Pants 3 _Stats
+#have	NGP Guard lvl1 steel sword 3 _Stats
+#have	NGP Guard lvl2 steel sword 3 _Stats
+#have	NGP Hanza steel sword 3 _Stats
+#have	NGP Knight Geralt A Armor 3 _Stats
+#have	NGP Knight Geralt A Boots 3 _Stats
+#have	NGP Knight Geralt A Gloves 3 _Stats
+#have	NGP Knight Geralt A Pants 3 _Stats
+#have	NGP Knight Geralt Armor 3 _Stats
+#have	NGP Knight Geralt Boots 3 _Stats
+#have	NGP Knight Geralt Gloves 3 _Stats
+#have	NGP Knight Geralt Pants 3 _Stats
+#have	NGP Knights steel sword 3 _Stats
+#have	NGP Lynx Armor 4 _Stats
+#have	NGP Lynx Boots 5 _Stats
+#have	NGP Lynx Gloves 5 _Stats
+#have	NGP Lynx Pants 5 _Stats
+#have	NGP Lynx School silver sword 4 _Stats
+#have	NGP Lynx School steel sword 4 _Stats
+#have	NGP Netflix Armor 1 _Stats
+#have	NGP Netflix Armor 2 _Stats
+#have	NGP Netflix Armor _Stats
+#have	NGP Netflix Boots 1 _Stats
+#have	NGP Netflix Boots 2 _Stats
+#have	NGP Netflix Boots _Stats
+#have	NGP Netflix Gloves 1 _Stats
+#have	NGP Netflix Gloves 2 _Stats
+#have	NGP Netflix Gloves _Stats
+#have	NGP Netflix Pants 1 _Stats
+#have	NGP Netflix Pants 2 _Stats
+#have	NGP Netflix Pants _Stats
+#have	NGP Netflix silver sword 1 _Stats
+#have	NGP Netflix silver sword 2 _Stats
+#have	NGP Netflix silver sword _Stats
+#have	NGP Netflix steel sword 1 _Stats
+#have	NGP Netflix steel sword 2 _Stats
+#have	NGP Netflix steel sword _Stats
+#have	NGP Ofir Armor _Stats
+#have	NGP Ofir Sabre 2 _Stats
+#have	NGP PC Olgierd Sabre _Stats
+#have	NGP Red Wolf Armor 1 _Stats
+#have	NGP Red Wolf Boots 1 _Stats
+#have	NGP Red Wolf Gloves 1 _Stats
+#have	NGP Red Wolf Pants 1 _Stats
+#have	NGP Red Wolf Pants 2 _Stats
+#have	NGP Red Wolf School silver sword 1 _Stats
+#have	NGP Red Wolf School steel sword 1 _Stats
+#have	NGP Serpent Silver Sword 1 _Stats
+#have	NGP Serpent Silver Sword 2 _Stats
+#have	NGP Serpent Silver Sword 3 _Stats
+#have	NGP Serpent Steel Sword 1 _Stats
+#have	NGP Serpent Steel Sword 2 _Stats
+#have	NGP Serpent Steel Sword 3 _Stats
+#have	NGP Silver Vixen _Stats
+#have	NGP Steel Vixen _Stats
+#have	NGP Toussaint steel sword 3 _Stats
+#have	NGP White Tiger Armor _Stats
+#have	NGP White Tiger Boots _Stats
+#have	NGP White Tiger Gloves _Stats
+#have	NGP White Tiger Pants _Stats
+#have	NGP White Widow of Dol Blathanna _Stats
+#have	NGP Wolf Armor 4 _Stats
+#have	NGP Wolf Boots 5 _Stats
+#have	NGP Wolf Gloves 5 _Stats
+#have	NGP Wolf Pants 5 _Stats
+#have	NGP Wolf School silver sword 4 _Stats
+#have	NGP Wolf School steel sword 4 _Stats
+#have	NGP q702 vampire steel sword _Stats
+#have	NGP q702_vampire_armor _Stats
+#have	NGP q702_vampire_boots _Stats
+#have	NGP q702_vampire_gloves _Stats
+#have	NGP q702_vampire_pants _Stats
+#have	NPC Beannshie _Stats
+#have	NPC Chainmail Armor
+#have	NPC Cyprianwhorenson sword _Stats
+#have	NPC Dandelion Short Steel Sword _Stats
+#have	NPC Dwarven sword 1 _Stats
+#have	NPC Dwarven sword 2 _Stats
+#have	NPC Eredin Sword _Stats
+#have	NPC Full Plate Armor
+#have	NPC Gnomish sword 1 _Stats
+#have	NPC Gnomish sword 2 _Stats
+#have	NPC Hanza steel sword _Stats
+#have	NPC Heavy Leather Armor
+#have	NPC Hjalmar_Short_Steel_Sword _Stats
+#have	NPC Inquisitor sword 1 _Stats
+#have	NPC Inquisitor sword 2 _Stats
+#have	NPC Leather Armor
+#have	NPC Long Steel Sword _Stats
+#have	NPC Nilfgaardian sword 1 _Stats
+#have	NPC Nilfgaardian sword 2 _Stats
+#have	NPC Nilfgaardian sword 3 _Stats
+#have	NPC Nilfgaardian sword 4 _Stats
+#have	NPC No Mans Land sword 1 _Stats
+#have	NPC No Mans Land sword 1 q2 _Stats
+#have	NPC No Mans Land sword 2 _Stats
+#have	NPC No Mans Land sword 3 _Stats
+#have	NPC No Mans Land sword 4 _Stats
+#have	NPC Novigraadan sword 1 _Stats
+#have	NPC Novigraadan sword 2 _Stats
+#have	NPC Novigraadan sword 3 _Stats
+#have	NPC Novigraadan sword 4 _Stats
+#have	NPC Olgierd Sabre _Stats
+#have	NPC Partial Plate Armor
+#have	NPC Rusty Nilfgaardian sword _Stats
+#have	NPC Rusty No Mans Land sword _Stats
+#have	NPC Rusty Novigraadan sword _Stats
+#have	NPC Rusty Skellige sword _Stats
+#have	NPC Scoiatael sword 1 _Stats
+#have	NPC Scoiatael sword 2 _Stats
+#have	NPC Scoiatael sword 3 _Stats
+#have	NPC Scoiatael sword 4 _Stats
+#have	NPC Short sword 1 _Stats
+#have	NPC Short sword 2 _Stats
+#have	NPC Short_Steel_Sword_Stats
+#have	NPC Skellige sword 1 _Stats
+#have	NPC Skellige sword 2 _Stats
+#have	NPC Skellige sword 3 _Stats
+#have	NPC Skellige sword 4 _Stats
+#have	NPC Wild Hunt sword 1 _Stats
+#have	NPC Wild Hunt sword 2 _Stats
+#have	NPC Wild Hunt sword 3 _Stats
+#have	NPC Wild Hunt sword 4 _Stats
+#have	NPC Wooden sword _Stats
+#have	NPC fists _Stats
+#have	NPC torch _Stats
+#have	NPCDoNotGainBoost
+#have	NPCDoNotGainNGPlusLevel
+#have	NPCLevelBonus
+#have	NPCLevelBonusDeadly
+#have	NPCLevelBonusHigh
+#have	NPCLevelBonusLow
+#have	NPCLevelModFistFightHigher
+#have	NPCLevelModFistFightLower
+#have	NPCNoRunning
+#have	NPC_Wild_Hunt_Armor
+#have	NPC_Witcher_Silver_Sword _Stats
+#have	NPC_Witcher_Silver_Sword_q403_Upgrade _Stats
+#have	NPC_Witcher_Steel_Sword _Stats
+#have	Naevdeseidhe_Stats
+#have	Necrophage
+#have	NecrophageOil_1
+#have	NecrophageOil_2
+#have	NecrophageOil_3
+#have	Negotiator_Stats
+#have	Negotiator_crafted_Stats
+#have	Netflix Armor 1 _Stats
+#have	Netflix Armor 2 _Stats
+#have	Netflix Armor _Stats
+#have	Netflix Boots 1 _Stats
+#have	Netflix Boots 2 _Stats
+#have	Netflix Boots _Stats
+#have	Netflix Gloves 1 _Stats
+#have	Netflix Gloves 2 _Stats
+#have	Netflix Gloves _Stats
+#have	Netflix Pants 1 _Stats
+#have	Netflix Pants 2 _Stats
+#have	Netflix Pants _Stats
+#have	Netflix silver sword 1 _Stats
+#have	Netflix silver sword 2 _Stats
+#have	Netflix silver sword _Stats
+#have	Netflix steel sword 1 _Stats
+#have	Netflix steel sword 2 _Stats
+#have	Netflix steel sword _Stats
+#have	NewGamePlusFakeLevel
+#have	Nilfgaardian crossbow _Stats
+#have	Nilfgaardian sword 1 _Stats
+#have	Nilfgaardian sword 1_crafted _Stats
+#have	Nilfgaardian sword 2 _Stats
+#have	Nilfgaardian sword 3 _Stats
+#have	Nilfgaardian sword 4 _Stats
+#have	Nilfgaardian sword 4_crafted _Stats
+#have	Nilfgaardian_suit _Stats
+#have	No Mans Land sword 1 _Stats
+#have	No Mans Land sword 1 q2 _Stats
+#have	No Mans Land sword 1_crafted _Stats
+#have	No Mans Land sword 2 _Stats
+#have	No Mans Land sword 2_crafted _Stats
+#have	No Mans Land sword 3 _Stats
+#have	No Mans Land sword 3_crafted _Stats
+#have	No Mans Land sword 4 _Stats
+#have	No Mans Land sword 4_crafted _Stats
+#have	NoAdaptBalance
+#have	NoBloodSpill
+#have	NoCloseCombatCheat
+#have	NoJournalEntry
+#have	NoRegenEffect
+#have	NoShadows
+#have	NoTransOnHitCheat
+#have	Norbukt general _abl
+#have	Novigraadan sword 1 _Stats
+#have	Novigraadan sword 1_crafted _Stats
+#have	Novigraadan sword 2 _Stats
+#have	Novigraadan sword 2_crafted _Stats
+#have	Novigraadan sword 3 _Stats
+#have	Novigraadan sword 3_crafted _Stats
+#have	Novigraadan sword 4 _Stats
+#have	Novigraadan sword 4_crafted _Stats
+#have	Oar _Stats
+#have	Oathbreaker armor _Stats
+#have	Ofir Armor B _Stats
+#have	Ofir Armor _Stats
+#have	Ofir Boots B _Stats
+#have	Ofir Boots _Stats
+#have	Ofir Crossbow R _Stats
+#have	Ofir Crossbow _Stats
+#have	Ofir Pants B _Stats
+#have	Ofir Pants _Stats
+#have	Ofir Sabre 1 _Stats
+#have	Ofir Sabre 2 _Stats
+#have	OfirHorseBag
+#have	OfirHorseBlinders
+#have	Ogre
+#have	OgreOil_1
+#have	OgreOil_2
+#have	OgreOil_3
+#have	OilEffect
+#have	OneHit
+#have	OneShotImmune
+#have	OverEncumberedEffect
+#have	Oxenfurt alchemist _abl
+#have	Oxenfurt armorer _abl
+#have	Oxenfurt barber _abl
+#have	Oxenfurt boatbuilder _abl
+#have	Oxenfurt general _abl
+#have	Oxenfurt inn _abl
+#have	Oxenfurt smith _abl
+#have	PC Caretaker Shovel _Stats
+#have	PC Olgierd Sabre _Stats
+#have	POIGorA10Effect
+#have	Paint_Bomb_stats_blue
+#have	Paint_Bomb_stats_green
+#have	Paint_Bomb_stats_purple
+#have	Paint_Bomb_stats_red
+#have	Paint_Bomb_stats_yellow
+#have	Paling _Stats
+#have	Pants 01 _Stats
+#have	Pants 01 q2 _Stats
+#have	Pants 01_crafted _Stats
+#have	Pants 02 _Stats
+#have	Pants 02_crafted _Stats
+#have	Pants 03 _Stats
+#have	Pants 03_crafted _Stats
+#have	Pants 04 _Stats
+#have	Pants 04_crafted _Stats
+#have	ParalyzedEffect
+#have	Perk21InternalCooldownEffect
+#have	PersistentCameraLock
+#have	PetriPhiltreEffect_Level1
+#have	PetriPhiltreEffect_Level2
+#have	PetriPhiltreEffect_Level3
+#have	PetriPhiltre_1
+#have	PetriPhiltre_2
+#have	PetriPhiltre_3
+#have	PheromoneEffect_Bear
+#have	PheromoneEffect_Drowner
+#have	PheromoneEffect_Nekker
+#have	PheromonePotionBear_1
+#have	PheromonePotionDrowner_1
+#have	PheromonePotionNekker_1
+#have	Pickaxe _Stats
+#have	Pitchfork _Stats
+#have	Plague Pit general _abl
+#have	Plank _Stats
+#have	PoisonAppleToxicity
+#have	PoisonCloud
+#have	PoisonCriticalEffect
+#have	PoisonDeath
+#have	PoisonEffect
+#have	PoisonEffect_DevilsPuffball_1
+#have	PoisonEffect_DevilsPuffball_2
+#have	PoisonEffect_DevilsPuffball_3
+#have	Poker _Stats
+#have	PolishedGenitalsEffect
+#have	Poor district alchemist _abl
+#have	Poor district armorer _abl
+#have	Poor district bank _abl
+#have	Poor district barber _abl
+#have	Poor district general 1 _abl
+#have	Poor district general 2 _abl
+#have	Poor district inn _abl
+#have	PopsImmunity
+#have	PreventChangingCombatStyle
+#have	Princessxenthiasword_Stats
+#have	PrologModifier
+#have	Pull
+#have	Q502_Scarab
+#have	QuenShrineBuff
+#have	Radovid boots 01 _Stats
+#have	RagdollEffect
+#have	Rage
+#have	RageActive
+#have	RageThorn
+#have	Rake _Stats
+#have	Ranged
+#have	Rannavaig general _abl
+#have	Reachofthedamned_Stats
+#have	Red Wolf Armor 1 _Stats
+#have	Red Wolf Armor 2 _Stats
+#have	Red Wolf Boots 1 _Stats
+#have	Red Wolf Boots 2 _Stats
+#have	Red Wolf Gloves 1 _Stats
+#have	Red Wolf Gloves 2 _Stats
+#have	Red Wolf Pants 1 _Stats
+#have	Red Wolf Pants 2 _Stats
+#have	Red Wolf School silver sword 1 _Stats
+#have	Red Wolf School silver sword 2 _Stats
+#have	Red Wolf School steel sword 1 _Stats
+#have	Red Wolf School steel sword 2 _Stats
+#have	ReflectMeleeAttacks
+#have	ReflectOnBeingParried
+#have	Refugees barber _abl
+#have	ReinaldPhiltre
+#have	ReinaldPhiltreEffect_1
+#have	Relic
+#have	Relic Heavy 3 armor _Stats
+#have	Relic Heavy 3 armor crafted _Stats
+#have	Relic _Stats
+#have	RelicOil_1
+#have	RelicOil_2
+#have	RelicOil_3
+#have	RepulseProjectiles
+#have	ResistCriticalStates
+#have	RestoringPotion_stats
+#have	Rich district armorer _abl
+#have	Rich district bank _abl
+#have	Rich district barber _abl
+#have	Rich district general _abl
+#have	Rich district inn _abl
+#have	Riverbank inn _abl
+#have	Robustswordofdolblathanna_Stats
+#have	Roche camp armorer _abl
+#have	Roseofaelirenn_Stats
+#have	RoyalArcher
+#have	Rudnik general _abl
+#have	Rudnik smith _abl
+#have	Rune dazhbog _Stats
+#have	Rune dazhbog greater _Stats
+#have	Rune dazhbog lesser _Stats
+#have	Rune devana _Stats
+#have	Rune devana greater _Stats
+#have	Rune devana lesser _Stats
+#have	Rune elemental _Stats
+#have	Rune elemental greater _Stats
+#have	Rune elemental lesser _Stats
+#have	Rune morana _Stats
+#have	Rune morana greater _Stats
+#have	Rune morana lesser _Stats
+#have	Rune perun _Stats
+#have	Rune perun greater _Stats
+#have	Rune perun lesser _Stats
+#have	Rune pierog _Stats
+#have	Rune quentin lesser _Stats
+#have	Rune stribog _Stats
+#have	Rune stribog greater _Stats
+#have	Rune stribog lesser _Stats
+#have	Rune svarog _Stats
+#have	Rune svarog greater _Stats
+#have	Rune svarog lesser _Stats
+#have	Rune triglav _Stats
+#have	Rune triglav greater _Stats
+#have	Rune triglav lesser _Stats
+#have	Rune tvarog _Stats
+#have	Rune veles _Stats
+#have	Rune veles greater _Stats
+#have	Rune veles lesser _Stats
+#have	Rune zoria _Stats
+#have	Rune zoria greater _Stats
+#have	Rune zoria lesser _Stats
+#have	Runeword 1 _Stats
+#have	Runeword 10 _Stats
+#have	Runeword 11 _Stats
+#have	Runeword 12 _Stats
+#have	Runeword 2 _Stats
+#have	Runeword 4 _Stats
+#have	Runeword 5 _Stats
+#have	Runeword 6 _Stats
+#have	Runeword 8 Regen
+#have	Runeword 8 _Stats
+#have	Runeword8Effect
+#have	Rusty Nilfgaardian sword _Stats
+#have	Rusty No Mans Land sword _Stats
+#have	Rusty Novigraadan sword _Stats
+#have	Rusty Skellige sword _Stats
+#have	Samum_1
+#have	Samum_2
+#have	Samum_3
+#have	SandAttack
+#have	Scarlet Crest Armor _Stats
+#have	Scarlet Crest Boots _Stats
+#have	Scarlet Crest Gauntlets _Stats
+#have	Scarlet Crest Trousers _Stats
+#have	ScoiaTael camp general 1 _abl
+#have	ScoiaTael camp general 2 _abl
+#have	Scoiatael sword 1 _Stats
+#have	Scoiatael sword 1_crafted _Stats
+#have	Scoiatael sword 2 _Stats
+#have	Scoiatael sword 2_crafted _Stats
+#have	Scoiatael sword 3 _Stats
+#have	Scoiatael sword 3_crafted _Stats
+#have	Scoiatael sword 4 _Stats
+#have	Scoiatael sword 4_crafted _Stats
+#have	Scoop _Stats
+#have	Scream
+#have	Scythe _Stats
+#have	Serpent Silver Sword 1 Autogen _Stats
+#have	Serpent Silver Sword 1 _Stats
+#have	Serpent Silver Sword 2 _Stats
+#have	Serpent Silver Sword 3 _Stats
+#have	Serpent Steel Sword 1 _Stats
+#have	Serpent Steel Sword 2 _Stats
+#have	Serpent Steel Sword 3 _Stats
+#have	SetBonusAbilityWolf_1
+#have	SetItem _Stats
+#have	Shadaal armor _Stats
+#have	ShadowForm
+#have	ShadowFormActive
+#have	Shapeshifter
+#have	Shepard stick _Stats
+#have	Shiadhal armor _Stats
+#have	Shield_Stats
+#have	Short Steel Sword _Stats
+#have	Short sword 1 _Stats
+#have	Short sword 1_crafted _Stats
+#have	Short sword 2 _Stats
+#have	Short sword 2_crafted _Stats
+#have	Shout
+#have	Shovel _Stats
+#have	ShrineAardEffect
+#have	ShrineAttackPowerPermanentBuff
+#have	ShrineAxiiEffect
+#have	ShrineIgniEffect
+#have	ShrineQuenEffect
+#have	ShrineResistancesPermanentBuff
+#have	ShrineSpellPowerPermanentBuff
+#have	ShrineStaminaPermanentBuff
+#have	ShrineVitalityPermanentBuff
+#have	ShrineYrdenEffect
+#have	Silver Vixen _Stats
+#have	Silver sword 1 _Stats
+#have	Silver sword 1_crafted _Stats
+#have	Silver sword 2 _Stats
+#have	Silver sword 2_crafted _Stats
+#have	Silver sword 3 _Stats
+#have	Silver sword 3_crafted _Stats
+#have	Silver sword 4 _Stats
+#have	Silver sword 4_crafted _Stats
+#have	Silver sword 5 _Stats
+#have	Silver sword 5_crafted _Stats
+#have	Silver sword 6 _Stats
+#have	Silver sword 6_crafted _Stats
+#have	Silver sword 7 _Stats
+#have	Silver sword 7_crafted _Stats
+#have	Silver sword 8 _Stats
+#have	SilverDustBomb_1
+#have	SilverDustBomb_2
+#have	SilverDustBomb_3
+#have	SilverDustEffect_Level1
+#have	SilverDustEffect_Level2
+#have	SilverDustEffect_Level3
+#have	Skellige sword 1 _Stats
+#have	Skellige sword 1_crafted _Stats
+#have	Skellige sword 2 _Stats
+#have	Skellige sword 2_crafted _Stats
+#have	Skellige sword 3 _Stats
+#have	Skellige sword 3_crafted _Stats
+#have	Skellige sword 4 _Stats
+#have	Skellige sword 4_crafted _Stats
+#have	Skellige_suit _Stats
+#have	SkillArchmage
+#have	SkillBoss
+#have	SkillBrigand
+#have	SkillCiri
+#have	SkillElite
+#have	SkillFistsEasy
+#have	SkillFistsHard
+#have	SkillFistsMedium
+#have	SkillGregoire
+#have	SkillGregoireGhost
+#have	SkillGuard
+#have	SkillMage
+#have	SkillMercenary
+#have	SkillOfficer
+#have	SkillPeasant
+#have	SkillShield
+#have	SkillShieldHard
+#have	SkillSoldier
+#have	SkillSorceress
+#have	SkillThug
+#have	SkillTwoHanded
+#have	SkillWitcher
+#have	SlowdownEffect
+#have	SlowdownFrostEffect
+#have	Small Blackjack _Stats
+#have	SmallPanterNoRagdoll
+#have	Snots alchemist _abl
+#have	Snots barber _abl
+#have	Snots general _abl
+#have	Snots smith _abl
+#have	Snow_Ball_stats
+#have	SnowstormEffect
+#have	SpawnAlpor
+#have	SpawnArena
+#have	SpawnBruxa
+#have	Spear 1 _Stats
+#have	Spear 2 _Stats
+#have	Specter
+#have	SpecterOil_1
+#have	SpecterOil_2
+#have	SpecterOil_3
+#have	Spikes
+#have	SpooncollectorDashAttack
+#have	SpooncollectorSubmergeAttack
+#have	Squire steel sword 1 _Stats
+#have	Squire steel sword 2 _Stats
+#have	Squire steel sword 3 _Stats
+#have	Staff _Stats
+#have	StaggerAuraEffect
+#have	StaggerCounter
+#have	StaggerEffect
+#have	StaminaDrainEffect
+#have	StaminaDrainSwimmingEffect
+#have	StaminaTutorialProlog
+#have	Starting Armor 1 _Stats
+#have	Starting Armor _Stats
+#have	Starting Boots _Stats
+#have	Starting Gloves _Stats
+#have	Starting Pants _Stats
+#have	StaticShooter
+#have	StatsFistsEasy
+#have	StatsFistsHard
+#have	StatsFistsMedium
+#have	StatsFistsTutorial
+#have	StatsRangedLame
+#have	StatsRangedNormal
+#have	StatsRangedSuperLame
+#have	Steel Vixen _Stats
+#have	StinkCloud
+#have	StuckAfterCharge
+#have	Suburbs barber _abl
+#have	Suburbs general _abl
+#have	Suburbs inn _abl
+#have	Summon
+#have	SummonGuards
+#have	SwallowEffect_Level1
+#have	SwallowEffect_Level2
+#have	SwallowEffect_Level3
+#have	Swallow_1
+#have	Swallow_2
+#have	Swallow_3
+#have	SwarmDamageBuff
+#have	SwarmEffect
+#have	SwarmShield
+#have	SwarmSpam
+#have	SwarmTeleport
+#have	Swarms
+#have	SwiftLearner
+#have	Tail
+#have	TawnyOwlEffect_Level1
+#have	TawnyOwlEffect_Level2
+#have	TawnyOwlEffect_Level3
+#have	TawnyOwl_1
+#have	TawnyOwl_2
+#have	TawnyOwl_3
+#have	Teleport
+#have	Temple district alchemist _abl
+#have	ThMapBase
+#have	Thief Armor B _Stats
+#have	Thief Armor No Medallion _Stats
+#have	Thief Armor Y _Stats
+#have	Thief Armor _Stats
+#have	Thief Boots B _Stats
+#have	Thief Boots No Medallion _Stats
+#have	Thief Boots Y _Stats
+#have	Thief Boots _Stats
+#have	Thief Gloves B _Stats
+#have	Thief Gloves No Medallion _Stats
+#have	Thief Gloves Y _Stats
+#have	Thief Gloves _Stats
+#have	Thief Pants B _Stats
+#have	Thief Pants No Medallion _Stats
+#have	Thief Pants Y _Stats
+#have	Thief Pants _Stats
+#have	Thorns
+#have	Throw
+#have	ThrowFire
+#have	ThrowIce
+#have	ThrowStone
+#have	ThunderboltEffect_Level1
+#have	ThunderboltEffect_Level2
+#have	ThunderboltEffect_Level3
+#have	Thunderbolt_1
+#have	Thunderbolt_2
+#have	Thunderbolt_3
+#have	Thyssen armor _Stats
+#have	Thyssen armor crafted _Stats
+#have	Tlareg_Stats
+#have	ToadStuck
+#have	ToadYrden
+#have	Toderas general _abl
+#have	TongueAttack
+#have	Top Notch Silver sword _Stats
+#have	Top Notch Steel Sword _Stats
+#have	Torlara_Stats
+#have	Tornado
+#have	TornadoEffect
+#have	Torzirael_Stats
+#have	Toussaint Armor 2 _Stats
+#have	Toussaint Armor 3 _Stats
+#have	Toussaint Boots 2 _Stats
+#have	Toussaint Boots 3 _Stats
+#have	Toussaint Crossbow 1 _Stats
+#have	Toussaint Crossbow 2 _Stats
+#have	Toussaint Gloves 2 _Stats
+#have	Toussaint Gloves 3 _Stats
+#have	Toussaint Pants 2 _Stats
+#have	Toussaint Pants 3 _Stats
+#have	Toussaint steel sword 2 _Stats
+#have	Toussaint steel sword 3 _Stats
+#have	ToussaintHorseBag
+#have	ToussaintHorseBlinders
+#have	ToussaintSaddle
+#have	ToxicityEffect
+#have	ToxicityVenomEffect
+#have	Tuiseach boatbuilder _abl
+#have	Tuiseach general _abl
+#have	Tuiseach inn _abl
+#have	Tuiseach smith _abl
+#have	Tuiseach village armorer _abl
+#have	Tuiseach village barber _abl
+#have	TutorialStaminaRegenHack
+#have	Tutorial_Bomb_stats
+#have	Twohanded Hammer 1 _Stats
+#have	Twohanded Hammer 2 _Stats
+#have	Ultimatum_Stats
+#have	UndyingEffect
+#have	Unique silver sword _Stats
+#have	Unique steel sword _Stats
+#have	Vampire
+#have	VampireOil_1
+#have	VampireOil_2
+#have	VampireOil_3
+#have	Venom
+#have	VesemirDamage
+#have	VesemirTutorialFreestyle
+#have	Village alchemist _abl
+#have	Village general _abl
+#have	Village smith _abl
+#have	VillagePosion
+#have	Viper School silver sword _Stats
+#have	Viper School steel sword _Stats
+#have	Virgin_Stats
+#have	VitalityDrainEffect
+#have	VitalityRegen
+#have	Vulnerable
+#have	VulnerableFromFront
+#have	Vynbleidd_Stats
+#have	W_Axe 1 _Stats
+#have	W_Axe 2 _Stats
+#have	W_Axe 3 _Stats
+#have	W_Axe 4 _Stats
+#have	W_Axe 5 _Stats
+#have	W_Axe 6 _Stats
+#have	W_Club _Stats
+#have	W_Mace 1 _Stats
+#have	W_Mace 2 _Stats
+#have	W_Pickaxe _Stats
+#have	W_Poker _Stats
+#have	Wand _Stats
+#have	WasRead
+#have	Wave
+#have	WeakToAard
+#have	WeakenEffect
+#have	WeakenedState
+#have	WeakeningAuraEffect
+#have	Weapon repair kit 1
+#have	Weapon repair kit 2
+#have	Weapon repair kit 3
+#have	WeaponRepairKit_1
+#have	WeaponRepairKit_2
+#have	WeaponRepairKit_3
+#have	WeatherBonusEffect
+#have	WeatherBonusEffect_Dawn
+#have	WeatherBonusEffect_Dawn_Rain
+#have	WeatherBonusEffect_Dawn_RedMoon
+#have	WeatherBonusEffect_Dawn_Snow
+#have	WeatherBonusEffect_Dusk
+#have	WeatherBonusEffect_Dusk_Rain
+#have	WeatherBonusEffect_Dusk_RedMoon
+#have	WeatherBonusEffect_Dusk_Snow
+#have	WeatherBonusEffect_Midnight
+#have	WeatherBonusEffect_Midnight_Rain
+#have	WeatherBonusEffect_Midnight_RedMoon
+#have	WeatherBonusEffect_Midnight_Snow
+#have	WeatherBonusEffect_Noon_Rain
+#have	WeatherBonusEffect_Noon_RedMoon
+#have	WeatherBonusEffect_Noon_Snow
+#have	WeatherBonusEffect_beasts1
+#have	WeatherBonusEffect_beasts2
+#have	WeatherBonusEffect_cursed
+#have	WeatherBonusEffect_diurnal
+#have	WeatherBonusEffect_nocturnal
+#have	WeatherBonusEffect_vampire
+#have	WeatherBonusEffect_wraith
+#have	Weeper_Stats
+#have	Weeper_crafted_Stats
+#have	WellFedEffect_Cornucopia
+#have	WellFedEffect_Level1
+#have	WellFedEffect_Level2
+#have	WellFedEffect_Level3
+#have	WellHydratedEffect_Level1
+#have	WellHydratedEffect_Level2
+#have	WellHydratedEffect_Level3
+#have	WellRestedEffect
+#have	White Tiger Armor _Stats
+#have	White Tiger Boots _Stats
+#have	White Tiger Gloves _Stats
+#have	White Tiger Pants _Stats
+#have	White Widow of Dol Blathanna _Stats
+#have	WhiteFrost_1_impact
+#have	WhiteFrost_1_loop
+#have	WhiteFrost_2_impact
+#have	WhiteFrost_2_loop
+#have	WhiteFrost_3_impact
+#have	WhiteFrost_3_loop
+#have	WhiteHoneyEffect_Level1
+#have	WhiteHoneyEffect_Level2
+#have	WhiteHoneyEffect_Level3
+#have	WhiteHoney_1
+#have	WhiteHoney_2
+#have	WhiteHoney_3
+#have	WhiteRaffardDecoctionEffect_Level1
+#have	WhiteRaffardDecoctionEffect_Level2
+#have	WhiteRaffardDecoctionEffect_Level3
+#have	WhiteRaffardDecoction_1
+#have	WhiteRaffardDecoction_2
+#have	WhiteRaffardDecoction_3
+#have	WightMudAttack
+#have	WightTeleport
+#have	Wild Hunt armor 01 _Stats
+#have	Wild Hunt boots 01 _Stats
+#have	Wild Hunt gloves 01 _Stats
+#have	Wild Hunt pants 01 _Stats
+#have	Wild Hunt sword 1 _Stats
+#have	Wild Hunt sword 2 _Stats
+#have	Wild Hunt sword 3 _Stats
+#have	Wild Hunt sword 4 _Stats
+#have	WildHunt_Caranthir
+#have	WildHunt_Caranthir_NGPlus
+#have	WildHunt_Eredin
+#have	WildHunt_Eredin_NGPlus
+#have	WildHunt_Imlerith
+#have	WildHunt_Imlerith_NGPlus
+#have	Witcher Silver Sword _Stats
+#have	WitcherSilverWolf_Stats
+#have	Wolf Armor 4 _Stats
+#have	Wolf Boots 5 _Stats
+#have	Wolf Gloves 5 _Stats
+#have	Wolf Pants 5 _Stats
+#have	Wolf School silver sword 4 _Stats
+#have	Wolf School steel sword 4 _Stats
+#have	WolfHourEffect
+#have	WolfHowl
+#have	Wolf_Stats
+#have	Wooden sword _Stats
+#have	WraithBlindnessEffect
+#have	YenDmg
+#have	Yennefer's Dress _Stats
+#have	Yennefers Dress _Stats
+#have	YrdenDebuff
+#have	YrdenHealthDrainEffect
+#have	YrdenHide
+#have	YrdenIgnore
+#have	YrdenShrineBuff
+#have	YrdenTrap
+#have	Zero_XP
+#have	Zerrikanterment_Stats
+#have	Zireael 01 _Stats
+#have	Zireael armor _Stats
+#have	_Monster_group_base
+#have	_Monster_group_base _Stats
+#have	_Monster_solo_base
+#have	_Monster_solo_base _Stats
+#have	_canBeFollower
+#have	_combatFollowerHardE
+#have	_combatFollowerHardV
+#have	_combatFollowerHardcoreE
+#have	_combatFollowerHardcoreV
+#have	_q403Follower
+#have	ablAttackKnockeddownTarget
+#have	ablComboAttacks
+#have	ablCounterHeavyAttacks
+#have	ablFireArrows
+#have	ablIgnoreSigns
+#have	ablMagic
+#have	ablParryHeavyAttacks
+#have	ablPrioritizeAvoidingHeavyAttacks
+#have	ablShielded
+#have	ablShieldedWide
+#have	ablSignAttacks
+#have	ablTeleport
+#have	alchemy_potionduration
+#have	alchemy_s1
+#have	alchemy_s10
+#have	alchemy_s11
+#have	alchemy_s12
+#have	alchemy_s13
+#have	alchemy_s14
+#have	alchemy_s15
+#have	alchemy_s16
+#have	alchemy_s17
+#have	alchemy_s18
+#have	alchemy_s19
+#have	alchemy_s2
+#have	alchemy_s22
+#have	alchemy_s23
+#have	alchemy_s24
+#have	alchemy_s25
+#have	alchemy_s26
+#have	alchemy_s27
+#have	alchemy_s3
+#have	alchemy_s4
+#have	alchemy_s5
+#have	alchemy_s6
+#have	alchemy_s7
+#have	alchemy_s8
+#have	alchemy_s9
+#have	alco_toxicity
+#have	all_NPC_ability
+#have	all_PC_ability
+#have	an_skellig_harbor
+#have	animal_default_animal
+#have	animal_rat_base
+#have	apple_stats
+#have	arachas_trophy_stats
+#have	area_nml
+#have	area_novigrad
+#have	area_skellige
+#have	arinbjorn
+#have	arsehole_cave
+#have	attack_explosion
+#have	attack_heavy
+#have	attack_heavy_knockdown
+#have	attack_heavy_noparry
+#have	attack_heavy_special
+#have	attack_heavy_stagger
+#have	attack_knockdown_applicator
+#have	attack_light
+#have	attack_light_knockdown
+#have	attack_light_stagger
+#have	attack_long_stagger
+#have	attack_punch
+#have	attack_punch2h
+#have	attack_speed_based
+#have	attack_stagger
+#have	attack_super_heavy
+#have	autogen_armor_armor
+#have	autogen_armor_base
+#have	autogen_fixed_armor_armor
+#have	autogen_fixed_armor_base
+#have	autogen_fixed_gloves_armor
+#have	autogen_fixed_gloves_base
+#have	autogen_fixed_pants_armor
+#have	autogen_fixed_pants_base
+#have	autogen_fixed_silver_base
+#have	autogen_fixed_silver_dmg
+#have	autogen_fixed_steel_base
+#have	autogen_fixed_steel_dmg
+#have	autogen_gloves_armor
+#have	autogen_gloves_base
+#have	autogen_pants_armor
+#have	autogen_pants_base
+#have	autogen_silver_base
+#have	autogen_silver_dmg
+#have	autogen_steel_base
+#have	autogen_steel_dmg
+#have	bait_bolt _Stats
+#have	banshee_rapunzel
+#have	banshee_regen_fast
+#have	banshee_regen_slow
+#have	banshee_summons
+#have	barghest_hardcore
+#have	base_edible_stats
+#have	base_trophy_stats
+#have	basilisk_hardcore
+#have	bies_trophy_stats
+#have	bleeding_light
+#have	blunt_bolt _Stats
+#have	blunt_bolt_legendary _Stats
+#have	bodkin_bolt _Stats
+#have	bounce_arrows
+#have	bread_stats
+#have	broadhead_bolt _Stats
+#have	broadhead_bolt_legendary _Stats
+#have	camm_trophy_stats
+#have	candy_stats
+#have	cave_troll_trophy_stats
+#have	cheese_stats
+#have	chicken_leg_stats
+#have	cockatrice_trophy_stats
+#have	counter_attack_light
+#have	craite_harbor
+#have	cyclops_trophy_stats
+#have	czart_trophy_stats
+#have	dafne_hardcore
+#have	dao_trophy_stats
+#have	default_bomb_stats
+#have	default_oil_level1_stats
+#have	default_oil_level2_stats
+#have	default_oil_level3_stats
+#have	default_oil_stats
+#have	default_potion_stats
+#have	dettlaff_construct_easy
+#have	dettlaff_construct_hard
+#have	dettlaff_construct_hardcore
+#have	dettlaff_construct_medium
+#have	dettlaff_construct_normal
+#have	dettlaff_hard
+#have	dettlaff_hardcore
+#have	dettlaff_medium
+#have	dettlaff_monster_hard
+#have	dettlaff_monster_hardcore
+#have	dettlaff_monster_medium
+#have	difficulty_CommonEasy
+#have	difficulty_CommonHard
+#have	difficulty_CommonHardcore
+#have	difficulty_CommonMedium
+#have	doppler_trophy_stats
+#have	dracolizard_fire
+#have	dracolizard_trophy_stats
+#have	drowned_dead_trophy_stats
+#have	ekimma_trophy_stats
+#have	environment_DamageStats
+#have	ep1_poi1_ornesta_ghost
+#have	ep2_pantherwitch_hardcore
+#have	eredinBlink
+#have	eredinDebug
+#have	eredinIcePillar
+#have	eredinLightbringer
+#have	eredinMeteorite
+#have	eredinPhaseChange
+#have	erynie_trophy_stats
+#have	ethereal_default_stats
+#have	explosive_bolt _Stats
+#have	explosive_bolt_legendary _Stats
+#have	faroe_harbor
+#have	ff202_einar
+#have	ff203_grim
+#have	fiend_trophy_stats
+#have	fire_light
+#have	fistfight_minigame
+#have	fistfight_q002
+#have	fogling_trophy_stats
+#have	forktail_trophy_stats
+#have	garkain_trophy_stats
+#have	ghoul_hardcore
+#have	gravehag_trophy_stats
+#have	greater_mutagen_color_blue
+#have	greater_mutagen_color_blue_synergy_bonus
+#have	greater_mutagen_color_blue_x
+#have	greater_mutagen_color_green
+#have	greater_mutagen_color_green_synergy_bonus
+#have	greater_mutagen_color_green_x
+#have	greater_mutagen_color_red
+#have	greater_mutagen_color_red_synergy_bonus
+#have	greater_mutagen_color_red_x
+#have	gryphon_mh301_trophy_stats
+#have	gryphon_sq108_trophy_stats
+#have	gryphon_trophy_stats
+#have	guardKnight
+#have	hardcore_bruxa
+#have	hardcore_doge
+#have	hardcore_worm
+#have	harpoon_bolt _Stats
+#have	holmstein_harbor
+#have	horse_charging
+#have	katakan_trophy_stats
+#have	kikimora_easy
+#have	kikimora_hard
+#have	kikimora_hardcore
+#have	kikimora_hardcore_big
+#have	kikimora_normal
+#have	lamia_trophy_stats
+#have	larvik
+#have	leshy_mh302_trophy_stats
+#have	leshy_trophy_stats
+#have	lesser_mutagen_color_blue
+#have	lesser_mutagen_color_blue_x
+#have	lesser_mutagen_color_green
+#have	lesser_mutagen_color_green_x
+#have	lesser_mutagen_color_red
+#have	lesser_mutagen_color_red_x
+#have	lofoten_bay
+#have	magic_1
+#have	magic_2
+#have	magic_3
+#have	magic_4
+#have	magic_5
+#have	magic_s1
+#have	magic_s10
+#have	magic_s11
+#have	magic_s12
+#have	magic_s13
+#have	magic_s14
+#have	magic_s15
+#have	magic_s16
+#have	magic_s17
+#have	magic_s18
+#have	magic_s19
+#have	magic_s2
+#have	magic_s20
+#have	magic_s28
+#have	magic_s3
+#have	magic_s31
+#have	magic_s33
+#have	magic_s35
+#have	magic_s36
+#have	magic_s37
+#have	magic_s38
+#have	magic_s39
+#have	magic_s4
+#have	magic_s40
+#have	magic_s41
+#have	magic_s42
+#have	magic_s5
+#have	magic_s6
+#have	magic_s7
+#have	magic_s8
+#have	magic_s9
+#have	magic_staminaregen
+#have	max_card_0
+#have	max_card_1
+#have	max_card_2
+#have	max_card_3
+#have	max_card_4
+#have	max_card_5
+#have	mh106_HAG
+#have	mh202_nekker
+#have	mh207_wraith
+#have	mh207_wraith_boss
+#have	mh301_Gryphon
+#have	mh302_Leshy
+#have	mh303_suc
+#have	mh305_doppler
+#have	mh305_doppler_geralt
+#have	mh306_dao
+#have	mh307_Minion
+#have	minion_trophy_stats
+#have	mon_EP2_EEG
+#have	mon_EP2_Endriags
+#have	mon_EP2_PalmerinSharley
+#have	mon_EP2_SpoonCollector
+#have	mon_EP2_Troll
+#have	mon_EP2_barghestbufz
+#have	mon_EP2_bear
+#have	mon_EP2_beggersend
+#have	mon_EP2_bossekhardnerf
+#have	mon_EP2_clubDwarfs
+#have	mon_EP2_cystus
+#have	mon_EP2_dotTO_AMP
+#have	mon_EP2_dwarfy
+#have	mon_EP2_endriagaWorker
+#have	mon_EP2_eventFleder
+#have	mon_EP2_eventRotfiend
+#have	mon_EP2_ffquicki
+#have	mon_EP2_fogling
+#have	mon_EP2_followerUberNerf
+#have	mon_EP2_followernerf
+#have	mon_EP2_ghouls
+#have	mon_EP2_grifin
+#have	mon_EP2_hardcore_FF
+#have	mon_EP2_hermit
+#have	mon_EP2_jackdoge
+#have	mon_EP2_mh_wampi
+#have	mon_EP2_panterwitch
+#have	mon_EP2_pezer
+#have	mon_EP2_q702_event
+#have	mon_EP2_q704detlaf
+#have	mon_EP2_scoloEarly
+#have	mon_EP2_scoloMID
+#have	mon_EP2_wraiths
+#have	mon_EP_dafne
+#have	mon_PantNoDodge
+#have	mon_alghoul
+#have	mon_alghoul_weapon _Stats
+#have	mon_alghoulsghost_ep1
+#have	mon_alp
+#have	mon_alpha_wolf_weapon _Stats
+#have	mon_ancient_leshen_weapon _Stats
+#have	mon_arachas
+#have	mon_arachas_armored
+#have	mon_arachas_armored_weapon _Stats
+#have	mon_arachas_base
+#have	mon_arachas_poison_weapon _Stats
+#have	mon_arachas_weapon _Stats
+#have	mon_archespor
+#have	mon_archespor_base
+#have	mon_archespor_hard
+#have	mon_archespor_petals
+#have	mon_archespor_turret
+#have	mon_archespor_weapon _Stats
+#have	mon_auctionGuards_ep1
+#have	mon_banshe_regen_easy
+#have	mon_banshe_regen_hard
+#have	mon_banshe_regen_hardcore
+#have	mon_banshe_regen_medium
+#have	mon_banshee_weapon _Stats
+#have	mon_barghest
+#have	mon_barghest_base
+#have	mon_barghest_bite _Stats
+#have	mon_barghest_body _Stats
+#have	mon_barghest_wight_minion
+#have	mon_baronswife
+#have	mon_baronswife_weapon _Stats
+#have	mon_basilisk
+#have	mon_basilisk_weapon _Stats
+#have	mon_bear_base
+#have	mon_bear_berserker
+#have	mon_bear_black
+#have	mon_bear_ep1
+#have	mon_bear_fistfight
+#have	mon_bear_grizzly
+#have	mon_bear_grizzly_weapon _Stats
+#have	mon_bear_weapon _Stats
+#have	mon_bear_white
+#have	mon_bear_white_weapon _Stats
+#have	mon_berserker_weapon _Stats
+#have	mon_bies
+#have	mon_bies_base
+#have	mon_bies_lesser
+#have	mon_bigbadwolf
+#have	mon_black_spider
+#have	mon_black_spider_base
+#have	mon_black_spider_ep2
+#have	mon_black_spider_ep2_base
+#have	mon_black_spider_ep2_large
+#have	mon_black_spider_ep2_weapon _Stats
+#have	mon_black_spider_large
+#have	mon_black_spider_large_ep2_weapon _Stats
+#have	mon_black_spider_large_weapon _Stats
+#have	mon_black_spider_weapon _Stats
+#have	mon_black_troll
+#have	mon_boarNG_ep1
+#have	mon_boar_base
+#have	mon_boar_charge _Stats
+#have	mon_boar_ep2_base
+#have	mon_boarnerf_ep1
+#have	mon_broom_base
+#have	mon_brothers_ep1
+#have	mon_bruxa
+#have	mon_bruxa_weapon _Stats
+#have	mon_cannibals_ep1
+#have	mon_caretaker_ep1
+#have	mon_caretakereasy_ep1
+#have	mon_caretakerhard_ep1
+#have	mon_caretakerhardcore_ep1
+#have	mon_caretakermedium_ep1
+#have	mon_cave_troll
+#have	mon_cave_troll_young
+#have	mon_cloud_giant
+#have	mon_cockatrice
+#have	mon_cockatrice_weapon _Stats
+#have	mon_companions_ep1
+#have	mon_cyclops
+#have	mon_cyclops_weapon _Stats
+#have	mon_czart
+#have	mon_czart_weapon _Stats
+#have	mon_dao_lesser_weapon _Stats
+#have	mon_dao_weapon _Stats
+#have	mon_demodwarf_ep1
+#have	mon_dettlaff_base
+#have	mon_dettlaff_bossbar_dummy
+#have	mon_dettlaff_claws_weapon _Stats
+#have	mon_dettlaff_column_strong
+#have	mon_dettlaff_column_weak
+#have	mon_dettlaff_construct_base
+#have	mon_dettlaff_monster_base
+#have	mon_dettlaff_monster_weapon _Stats
+#have	mon_dettlaff_vampire_base
+#have	mon_devourer_weapon _Stats
+#have	mon_djinn
+#have	mon_djinn_weapon _Stats
+#have	mon_dogs_ep1
+#have	mon_draco_base
+#have	mon_draco_easy
+#have	mon_draco_hardcore
+#have	mon_draco_normal
+#have	mon_dracolizard_head_weapon _Stats
+#have	mon_dracolizard_tail_weapon _Stats
+#have	mon_drowned_dead_weapon _Stats
+#have	mon_drowneddead
+#have	mon_drowner
+#have	mon_drowner_base
+#have	mon_drowner_ep1
+#have	mon_drowner_underwater
+#have	mon_drowner_weapon _Stats
+#have	mon_ekimma
+#have	mon_ekimma_weapon _Stats
+#have	mon_elemental_dao
+#have	mon_elemental_dao_lesser
+#have	mon_elemental_fire
+#have	mon_elemental_fire_q211
+#have	mon_endriaga_base
+#have	mon_endriaga_soldier_spikey
+#have	mon_endriaga_soldier_tailed
+#have	mon_endriaga_soldier_weapon _Stats
+#have	mon_endriaga_spikey_weapon _Stats
+#have	mon_endriaga_worker
+#have	mon_endriaga_worker_weapon _Stats
+#have	mon_erynia
+#have	mon_erynia_weapon _Stats
+#have	mon_ethereal_ep1
+#have	mon_evil_dog
+#have	mon_evil_dog_lvl12
+#have	mon_evil_dog_weapon _Stats
+#have	mon_ewald_ep1
+#have	mon_fairytale_witch
+#have	mon_fariywitch_weapon _Stats
+#have	mon_ff204olaf
+#have	mon_ff205troll
+#have	mon_fiend_lesser_weapon _Stats
+#have	mon_fiend_weapon _Stats
+#have	mon_flaming_mace_ep1
+#have	mon_flaming_rose_buff
+#have	mon_flaming_rose_halberd_ep1
+#have	mon_flaming_rose_hammer_ep1
+#have	mon_flaming_rose_noARM
+#have	mon_flaming_sword_ep1
+#have	mon_fleder
+#have	mon_fogling
+#have	mon_fogling_doppelganger
+#have	mon_fogling_doppelganger_weapon _Stats
+#have	mon_fogling_lesser
+#have	mon_fogling_mh
+#have	mon_fogling_stronger
+#have	mon_fogling_weapon _Stats
+#have	mon_forktail
+#have	mon_forktail_mh
+#have	mon_forktail_tail_weapon _Stats
+#have	mon_forktail_weapon _Stats
+#have	mon_forktail_young
+#have	mon_forktail_young_tail_weapon _Stats
+#have	mon_forktail_young_weapon _Stats
+#have	mon_frogiehard_ep1
+#have	mon_frogiehardcore_ep1
+#have	mon_ft_bear_grizzly
+#have	mon_ft_boar_ep2_base
+#have	mon_ft_wolf
+#have	mon_fugas
+#have	mon_fugas_base
+#have	mon_fugas_lesser
+#have	mon_fugas_lesser_weapon _Stats
+#have	mon_fugas_vomit _Stats
+#have	mon_fugas_weapon _Stats
+#have	mon_gargoyl_ep1
+#have	mon_gargoyle
+#have	mon_gargoyle_vomit _Stats
+#have	mon_gargoyle_weapon _Stats
+#have	mon_garkain
+#have	mon_gaurdknight_hard
+#have	mon_gaurdknight_hardcore
+#have	mon_ghostbigspider_ep1
+#have	mon_ghosts_ep1
+#have	mon_ghostsnerf_ep1
+#have	mon_ghostspiders_ep1
+#have	mon_ghoul
+#have	mon_ghoul_base
+#have	mon_ghoul_ep1
+#have	mon_ghoul_lesser
+#have	mon_ghoul_lesser_weapon _Stats
+#have	mon_ghoul_stronger
+#have	mon_ghoul_weapon _Stats
+#have	mon_giant_weapon _Stats
+#have	mon_golem
+#have	mon_golem_base
+#have	mon_golem_ep1
+#have	mon_golem_lvl1
+#have	mon_golem_weapon _Stats
+#have	mon_golem_weapon_lvl1 _Stats
+#have	mon_grave_hag_weapon _Stats
+#have	mon_gravehag
+#have	mon_gravehag_base
+#have	mon_gravier
+#have	mon_greater_miscreant
+#have	mon_greater_miscreant_weapon _Stats
+#have	mon_griffon_volcanic_weapon _Stats
+#have	mon_griffon_weapon _Stats
+#have	mon_griffon_weapon_lesser _Stats
+#have	mon_gryphon
+#have	mon_gryphon_base
+#have	mon_gryphon_ep1
+#have	mon_gryphon_lesser
+#have	mon_gryphon_stronger
+#have	mon_gryphon_volcanic
+#have	mon_guardsWooden
+#have	mon_hammer2h_ep1
+#have	mon_harpy
+#have	mon_harpy_base
+#have	mon_harpy_weapon _Stats
+#have	mon_heart_miniboss
+#have	mon_him
+#have	mon_him_weapon _Stats
+#have	mon_horse_weapon _Stats
+#have	mon_horst
+#have	mon_horst_guards
+#have	mon_hym_ep1
+#have	mon_ice_giant
+#have	mon_ice_giant_weapon _Stats
+#have	mon_ice_golem
+#have	mon_ice_golem_weapon _Stats
+#have	mon_ice_troll
+#have	mon_ifrit_weapon _Stats
+#have	mon_iris_weapon _Stats
+#have	mon_iriseasy_ep1
+#have	mon_irishard_ep1
+#have	mon_irishardcore_ep1
+#have	mon_irismedium_ep1
+#have	mon_katakan
+#have	mon_katakan_large
+#have	mon_katakan_large_weapon _Stats
+#have	mon_katakan_weapon _Stats
+#have	mon_kikimora_warrior
+#have	mon_kikimora_worker
+#have	mon_kikimore_base
+#have	mon_kikimore_big
+#have	mon_kikimore_small
+#have	mon_knight_giant
+#have	mon_lamia
+#have	mon_lamia_stronger
+#have	mon_lamia_weapon _Stats
+#have	mon_large_nekker_weapon _Stats
+#have	mon_leshen_weapon _Stats
+#have	mon_lessog
+#have	mon_lessog_ancient
+#have	mon_lessog_base
+#have	mon_lycanthrope
+#have	mon_lycanthrope_weapon _Stats
+#have	mon_mq7010_dracolizard
+#have	mon_mq7018_basilisk
+#have	mon_mq7071_ghost_knight
+#have	mon_nekker
+#have	mon_nekker_base
+#have	mon_nekker_ep1
+#have	mon_nekker_warrior
+#have	mon_nekker_weapon _Stats
+#have	mon_nekkers_ep1
+#have	mon_nightwraith
+#have	mon_nightwraith_banshee
+#have	mon_nightwraith_iris
+#have	mon_nightwraith_mh
+#have	mon_nightwraith_weapon _Stats
+#have	mon_nightwraith_weapon_mh _Stats
+#have	mon_noonwraith
+#have	mon_noonwraith_base
+#have	mon_noonwraith_doppelganger
+#have	mon_noonwraith_mh
+#have	mon_noonwraith_weapon _Stats
+#have	mon_olgierdeasy_ep1
+#have	mon_olgierdhard_ep1
+#have	mon_olgierdmedium_ep1
+#have	mon_olgierhardcore_ep1
+#have	mon_omerta_ep1
+#have	mon_panther
+#have	mon_panther_base
+#have	mon_panther_ep2_hardcore
+#have	mon_panther_ghost
+#have	mon_panther_ghost_hardcore
+#have	mon_pesta
+#have	mon_pesta_weapon _Stats
+#have	mon_poison_arachas
+#have	mon_q701_VITtoESN
+#have	mon_q701_bandits
+#have	mon_q701_bandits_hardcore
+#have	mon_q701_bandits_ranged
+#have	mon_q701_bruxa
+#have	mon_q701_giant
+#have	mon_q701_giant_ep2_fist _Stats
+#have	mon_q701_giant_ep2_weapon _Stats
+#have	mon_q701_leaderNoArm
+#have	mon_q701_sharkley
+#have	mon_q701_sharkley_hardcore
+#have	mon_q702_event_hardcore
+#have	mon_q702_humanDetalf
+#have	mon_q703_BosekKnight
+#have	mon_q703_WineWars_archespor
+#have	mon_q703_arena_knights
+#have	mon_q703_mqsidqpyt
+#have	mon_q704_VAMPIRE
+#have	mon_q704_bruxa
+#have	mon_q704_ft_CloudGiant
+#have	mon_q704_ft_pigs_evil
+#have	mon_q704_ft_pixies
+#have	mon_q704_ft_wilk
+#have	mon_q704_garkain
+#have	mon_q704_katakan
+#have	mon_q705_bruxy
+#have	mon_qmq7004_witch
+#have	mon_qmq7007_mages
+#have	mon_qmq7007_statues
+#have	mon_rat_weapon _Stats
+#have	mon_rotfiend
+#have	mon_rotfiend_large
+#have	mon_rotfiend_large_weapon _Stats
+#have	mon_rotfiend_weapon _Stats
+#have	mon_scolopendromorph_base
+#have	mon_scolopendromorph_weapon _Stats
+#have	mon_sharley
+#have	mon_sharley_base
+#have	mon_sharley_black_weapon _Stats
+#have	mon_sharley_weapon _Stats
+#have	mon_sharley_young
+#have	mon_sharley_young_weapon _Stats
+#have	mon_simulakrum_weapon _Stats
+#have	mon_siren
+#have	mon_siren_base
+#have	mon_siren_weapon _Stats
+#have	mon_spiderboss_ep1
+#have	mon_spiders604_ep1
+#have	mon_spidersbank_ep1
+#have	mon_spooncollector
+#have	mon_sprigan
+#have	mon_sprigan_base
+#have	mon_succubus_weapon _Stats
+#have	mon_toad_base
+#have	mon_toad_claw_weapon _Stats
+#have	mon_toad_tongue_weapon _Stats
+#have	mon_trapmonsters_ep1
+#have	mon_troll_base
+#have	mon_troll_black_weapon _Stats
+#have	mon_troll_fistfight
+#have	mon_troll_weapon _Stats
+#have	mon_troll_weapon_bart _Stats
+#have	mon_troll_young_weapon _Stats
+#have	mon_type_ethereal
+#have	mon_type_flyer
+#have	mon_type_huge
+#have	mon_type_quadruped
+#have	mon_vampiress_base
+#have	mon_water_hag_greater_weapon _Stats
+#have	mon_water_hag_weapon _Stats
+#have	mon_waterhag
+#have	mon_waterhag_greater
+#have	mon_werewolf
+#have	mon_werewolf_base
+#have	mon_werewolf_lesser
+#have	mon_werewolf_lesser_weapon _Stats
+#have	mon_werewolf_weapon _Stats
+#have	mon_wight
+#have	mon_wild_hunt_default
+#have	mon_wild_hunt_minion
+#have	mon_wild_hunt_minionMH
+#have	mon_wild_hunt_minion_lesser
+#have	mon_wild_hunt_minion_lesser_weapon _Stats
+#have	mon_wild_hunt_minion_weak
+#have	mon_wild_hunt_minion_weapon _Stats
+#have	mon_willo_wisp_weapon _Stats
+#have	mon_witch1
+#have	mon_witch1_weapon _Stats
+#have	mon_witch2
+#have	mon_witch2_weapon _Stats
+#have	mon_witch3
+#have	mon_witch3_NGP
+#have	mon_witch3_weapon _Stats
+#have	mon_witchhunters_ep1
+#have	mon_wolf
+#have	mon_wolf_alpha
+#have	mon_wolf_alpha_weak
+#have	mon_wolf_base
+#have	mon_wolf_ep1
+#have	mon_wolf_ngnerf
+#have	mon_wolf_summon
+#have	mon_wolf_summon_were
+#have	mon_wolf_weapon _Stats
+#have	mon_wolf_white
+#have	mon_wolf_white_weapon _Stats
+#have	mon_wolfq201
+#have	mon_wolfq205
+#have	mon_wraith
+#have	mon_wraith_base
+#have	mon_wraith_mh
+#have	mon_wraith_mh_weapon _Stats
+#have	mon_wraith_weapon _Stats
+#have	mon_wraith_weapon_mh207 _Stats
+#have	mon_wraiths_ep1
+#have	mon_wyvern
+#have	mon_wyvern_base
+#have	mon_wyvern_ep1
+#have	mon_wyvern_weapon _Stats
+#have	mq0003_noonwraith
+#have	mq1001_dog
+#have	mq1019_priestFakeLevel
+#have	mq1060_Reinald
+#have	mq2003_wraith
+#have	mq2012_cyclop
+#have	mq2024_spirit_warrior
+#have	mq3035
+#have	mq4005 Silver sword 6_crafted _Stats
+#have	mq7001 Toussaint steel sword _Stats
+#have	mq7004_PantNoJump
+#have	mq7004_witch_hardcore
+#have	mq7007 Elven Sword _Stats
+#have	mq7011 Cianfanelli steel sword _Stats
+#have	mq7020_ballsStamina
+#have	mq7023_cake Stats
+#have	mq7023_cake_vitality_bonus
+#have	mutagen_color_blue
+#have	mutagen_color_blue_synergy_bonus
+#have	mutagen_color_blue_x
+#have	mutagen_color_green
+#have	mutagen_color_green_synergy_bonus
+#have	mutagen_color_green_x
+#have	mutagen_color_lesser_blue_synergy_bonus
+#have	mutagen_color_lesser_green_synergy_bonus
+#have	mutagen_color_lesser_red_synergy_bonus
+#have	mutagen_color_red
+#have	mutagen_color_red_synergy_bonus
+#have	mutagen_color_red_x
+#have	nekker_warrior_trophy_stats
+#have	nekkers_trophy_stats
+#have	nightwraith_trophy_stats
+#have	noonwraith_mh308_trophy_stats
+#have	noonwraith_trophy_stats
+#have	northern_torch
+#have	olgierd_default_stats
+#have	perk_1
+#have	perk_10
+#have	perk_11
+#have	perk_12
+#have	perk_13
+#have	perk_15
+#have	perk_18
+#have	perk_19
+#have	perk_1_day_ability
+#have	perk_1_night_ability
+#have	perk_2
+#have	perk_20
+#have	perk_21
+#have	perk_22
+#have	perk_23
+#have	perk_24
+#have	perk_25
+#have	perk_26
+#have	perk_27
+#have	perk_28
+#have	perk_29
+#have	perk_3
+#have	perk_30
+#have	perk_31
+#have	perk_32
+#have	perk_33
+#have	perk_34
+#have	perk_35
+#have	perk_36
+#have	perk_37
+#have	perk_38
+#have	perk_38_day_ability
+#have	perk_38_night_ability
+#have	perk_39
+#have	perk_4
+#have	perk_40
+#have	perk_41
+#have	perk_42
+#have	perk_43
+#have	perk_44
+#have	perk_5
+#have	perk_6
+#have	perk_7
+#have	philippaSecondStage
+#have	pig_contest_trophy_stats
+#have	poi_gor_a_10_vine
+#have	poison_light
+#have	prologue_ghoul
+#have	prologue_wolf
+#have	q100_PrologGriffon
+#have	q100_Ratzz
+#have	q101_wilddog
+#have	q102_WaterHag
+#have	q103_baron_fist_fight
+#have	q103_basilisk
+#have	q103_botchling
+#have	q103_werewolf
+#have	q103_wolf
+#have	q103_wraith
+#have	q104_dao
+#have	q104_evilKeira
+#have	q104_gargoyle
+#have	q104_wh
+#have	q104_whboss
+#have	q104_whminion
+#have	q105_WH_replacer
+#have	q105_Werewolf
+#have	q105_bandits
+#have	q106_MorowaD
+#have	q107_FIEND
+#have	q107_drowndead
+#have	q108 Medium armor 10 _Stats
+#have	q108_drowners
+#have	q108_wraith
+#have	q109_keira
+#have	q111_biesBUFFS
+#have	q111_fugas
+#have	q201_Lugos_fist_fight
+#have	q201_StuffedAnimalsTrp
+#have	q201_StuffedAnimalsTrpWOLFS
+#have	q202_IceGiantDOOM
+#have	q202_fogling
+#have	q202_him
+#have	q202_troll
+#have	q203_cyclop
+#have	q203_mind_resistance
+#have	q203_udalryk
+#have	q205CiriWH
+#have	q205CiriWHminion
+#have	q206_arnvald
+#have	q206_berserkerhaj
+#have	q210_Arachas
+#have	q210_PhilipaDMGBoost
+#have	q210_WH_Ghost
+#have	q210_Wraith
+#have	q210_dao
+#have	q210_philippa
+#have	q302_DwarfsDMG
+#have	q302_Mace _Stats
+#have	q302_ReplacerThugs
+#have	q302_bear
+#have	q302_mh104
+#have	q302_whorenson
+#have	q304_fist_fight_vagrants
+#have	q305_Kidnaper
+#have	q308 Iron Poker _Stats
+#have	q308_fist_fight
+#have	q308_wampire
+#have	q309_katakan
+#have	q309_rats
+#have	q310_bartTroll
+#have	q310_stable_guard_fist_fight
+#have	q310_wh_officer
+#have	q401_cyclop
+#have	q401_wyvern
+#have	q402 Skellige sword 3 _Stats
+#have	q402_bies
+#have	q402_sword_upgrade _Stats
+#have	q403BuffUp
+#have	q403_CiriWHn
+#have	q403wildhunt_minion_nerf
+#have	q501_wildhunt_ciri
+#have	q503_WWnerf
+#have	q503_banditsFakeLevels
+#have	q503_replacer
+#have	q505 crafted sword _Stats
+#have	q603_sharley_trophy_stats
+#have	q604_caretaker
+#have	q604_shades
+#have	q701_bruxa_hardcore
+#have	q701_giant_hardcore
+#have	q701_giant_peasant
+#have	q702 vampire steel sword _Stats
+#have	q702_vampire_armor _Stats
+#have	q702_vampire_boots _Stats
+#have	q702_vampire_gloves _Stats
+#have	q702_vampire_pants _Stats
+#have	q703_arena_knights_hardcore
+#have	q704 vampire silver sword _Stats
+#have	q704 vampire steel sword _Stats
+#have	q704_garkain_hardcore
+#have	q704_mon_protofleder
+#have	q704_vampire_armor _Stats
+#have	q704_vampire_boots _Stats
+#have	q704_vampire_gloves _Stats
+#have	q704_vampire_lure_bolt _Stats
+#have	q704_vampire_pants _Stats
+#have	q705_tissue_extractor_Stats
+#have	qBanditos
+#have	qGargoyleGuardingTreasure
+#have	qHagGuardingTreasure
+#have	qMH101_cockatrice
+#have	qMH208_Noonwraith
+#have	qMq3005_NobleEscort
+#have	qPhilippa_NG
+#have	qRosaVarAttre
+#have	qRose
+#have	qSUMMONwolfs
+#have	qSergeantFistFIght
+#have	qVES_HP
+#have	qWyverneGuardingTreasure
+#have	qdjange
+#have	qmh108_fogling
+#have	qmh206_bies
+#have	qmh208_forktail
+#have	qmh210_lamia
+#have	qmh304_ekima
+#have	qmq2017
+#have	qmq2038_gundar
+#have	qmq3031
+#have	qs302_ifryt
+#have	qsTEINGRIM
+#have	qsq102_Letho
+#have	qth1003_kiyan
+#have	quality_common_armor
+#have	quality_common_boots
+#have	quality_common_gloves
+#have	quality_common_pants
+#have	quality_common_silversword
+#have	quality_common_steelsword
+#have	quality_magical_armor
+#have	quality_magical_boots
+#have	quality_magical_gloves
+#have	quality_magical_pants
+#have	quality_magical_silversword
+#have	quality_magical_steelsword
+#have	quality_masterwork_armor
+#have	quality_masterwork_boots
+#have	quality_masterwork_gloves
+#have	quality_masterwork_pants
+#have	quality_masterwork_silversword
+#have	quality_masterwork_steelsword
+#have	quality_relic_armor
+#have	quality_relic_boots
+#have	quality_relic_gloves
+#have	quality_relic_pants
+#have	quality_relic_silversword
+#have	quality_relic_steelsword
+#have	rannvaig
+#have	redgill
+#have	relic_edible_stats
+#have	repair_object_armor_bonus
+#have	repair_object_weapon_bonus
+#have	setBonusAbilityBear_1
+#have	setBonusAbilityBear_2
+#have	setBonusAbilityLynx_2
+#have	setBonusAbilityRedWolf_2
+#have	setBonusAbilityVampire
+#have	sharley_easy
+#have	sharley_hardcore
+#have	sharley_matriarch_trophy_stats
+#have	sharley_medium
+#have	spikeroog_harbor
+#have	split_bolt _Stats
+#have	split_bolt_legendary _Stats
+#have	spooncollector_hard
+#have	spooncollector_hardcore
+#have	spriggan_trophy_stats
+#have	sq104_WW
+#have	sq108_heavy_armor _Stats
+#have	sq201_werewolf
+#have	sq204_Leshywolf
+#have	sq204_alpha
+#have	sq204_wolfs
+#have	sq204_wolfs23
+#have	sq205_cyclop
+#have	sq205_fogling
+#have	sq205_suc
+#have	sq209_brans_warriors_vision_ghostly
+#have	sq209_eredin
+#have	sq209_eredin_vision_ghostly
+#have	sq209_lugos_the_mad_vison_ghostly
+#have	sq303_fist_fight_bandits
+#have	sq304 Novigraadan sword 4 _Stats
+#have	sq304_sword_upgrade _Stats
+#have	sq308_familiar_ghostly
+#have	sq308_martin_officer_ghostly
+#have	sq315_troll
+#have	sq701 Geralt of Rivia Sword _Stats
+#have	sq701 Ravix of Fourhorn Sword _Stats
+#have	sq701_geralt_armor _Stats
+#have	sq701_geralt_boots _Stats
+#have	sq701_geralt_gloves _Stats
+#have	sq701_geralt_pants _Stats
+#have	sq701_ravix_armor _Stats
+#have	succubus_trophy_stats
+#have	survival_vitality
+#have	sword_2
+#have	sword_5
+#have	sword_adrenalinegain
+#have	sword_s1
+#have	sword_s10
+#have	sword_s11
+#have	sword_s12
+#have	sword_s13
+#have	sword_s15
+#have	sword_s16
+#have	sword_s17
+#have	sword_s18
+#have	sword_s19
+#have	sword_s2
+#have	sword_s20
+#have	sword_s21
+#have	sword_s22
+#have	sword_s23
+#have	sword_s24
+#have	sword_s25
+#have	sword_s26
+#have	sword_s27
+#have	sword_s28
+#have	sword_s29
+#have	sword_s3
+#have	sword_s30
+#have	sword_s31
+#have	sword_s32
+#have	sword_s33
+#have	sword_s34
+#have	sword_s35
+#have	sword_s36
+#have	sword_s4
+#have	sword_s5
+#have	sword_s6
+#have	sword_s7
+#have	sword_s8
+#have	sword_s9
+#have	target_point_bolt _Stats
+#have	target_point_bolt_legendary _Stats
+#have	testAblCheckNavmesh
+#have	test_AM
+#have	the_roast_kipper_tavern
+#have	tracking_bolt _Stats
+#have	undvik_ship_rails
+#have	undvik_shore_harbor
+#have	water_hag_trophy_stats
+#have	white_basilisk_trophy_stats
+#have	wight_trophy_stats
+#have	wild_dog_lvl9
+#have	wolfsbane_stats
+#have	wraith_trophy_stats
+#have	wyvern_mq1051_trophy_stats
+#have	wyvern_trophy_stats

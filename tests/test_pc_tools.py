@@ -110,13 +110,31 @@ class PcToolTests(unittest.TestCase):
         self.assertEqual(names, ["SHA256SUMS", "manifest.txt", "not-found.txt", "report.txt", "xml/dlc/dlc_next_gen/content/bundles/nextgen.bundle/dlc/dlc_next_gen/data/gameplay/items_plus/def_item_armor.xml"])   # the decoy and the texture are not copied
         man = z.read("manifest.txt").decode(); self.assertIn("dlc/dlc_next_gen/content/bundles/nextgen.bundle -> dlc/dlc_next_gen/data/gameplay/items_plus/def_item_armor.xml", man)
         for found in ("item Wolf Armor 1", "item NGP Wolf Armor 1", "item Wolf Boots 2", "ability Wolf Armor 1 _Stats"): self.assertIn(found, man)
-        nf = z.read("not-found.txt").decode(); self.assertNotIn("item Wolf Armor 1\n", nf); self.assertNotIn("item Wolf Boots 2\n", nf)
-        for missing in ("item Wolf Armor 2\n", "item Wolf Armor 3\n", "item Wolf Gloves 1\n", "ability NGP Wolf Armor 1 _Stats\n", "item Wolf School steel sword 3\n"): self.assertIn(missing, nf)
-        self.assertIn("item Wolf Gloves 5   (control", nf); self.assertNotIn("item Wolf Armor 4   (control", nf)         # a control that is found is not listed
+        nf = z.read("not-found.txt").decode(); self.assertNotIn("item Wolf Armor 1 ", nf); self.assertNotIn("item Wolf Boots 2 ", nf)
+        for missing in ("item Wolf Armor 2   [wolf]", "item Wolf Armor 3   [wolf]", "item Wolf Gloves 1   [wolf]", "ability NGP Wolf Armor 1 _Stats   (of a found item)", "item Wolf School steel sword 3   [wolf]"): self.assertIn(missing, nf)
+        self.assertIn("item Wolf Gloves 5   [control]", nf); self.assertNotIn("item Wolf Armor 4   [control]", nf)         # a control that is found is not listed
         sums = dict(l.split("  ", 1)[::-1] for l in z.read("SHA256SUMS").decode().splitlines())
         self.assertEqual(sorted(sums), [n for n in names if n != "SHA256SUMS"])
         for n, h in sums.items(): self.assertEqual(h, hashlib.sha256(z.read(n)).hexdigest())
         self.assertRegex(out.getvalue(), r"SHA256 [0-9a-f]{64}"); self.assertEqual(hashlib.sha256(self.zip.read_bytes()).hexdigest(), out.getvalue().split("SHA256 ")[1].split()[0])
+
+    def test_missing_mode_uses_the_list_finds_by_name_key_and_follows_abilities(self):
+        key = pc.key_hash("item_name_mystery_helm")
+        a = (b'<redxml><abilities><ability name="Rare Helm _Stats"><armor type="add" min="1"/></ability><ability name="Shared_Stats"><x/></ability><ability name="Other Thing _Stats"/></abilities><items>'
+             b'<item name="Rare Helm" category="armor" localisation_key_name="item_name_rare_helm"><base_abilities><a>Rare Helm _Stats</a><a>Shared_Stats</a><a>Extra Ab</a></base_abilities></item>'
+             b'<item name="Odd Id" category="armor" localisation_key_name="item_name_mystery_helm"/><item_cond name="Never Defined"/></items></redxml>'
+             b'<abilities><ability name="Extra Ab"/></abilities>')
+        nxt = self.game / "dlc/dlc_x/content/bundles"; nxt.mkdir(parents=True)
+        test_bundle.make_bundle(nxt / "x.bundle", [("dlc\\x\\data\\gameplay\\items\\def_item_x.xml", a, 0, a), ("gameplay\\items\\no.xml", b"<items><item name='Q'/></items>", 0, b"<items><item name='Q'/></items>")])
+        wl = Path(self.tmp.name) / "wanted-items.txt"
+        wl.write_text("# c\nRare Helm\trelic\tx\nNever Defined\tother\tx\n#key\t%d\tMystery helm\n#have\tShared_Stats\n" % key, encoding="utf-8")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out): rc = pc.main(["--game-dir", str(self.game), "--out", str(self.zip), "--missing", "--wanted", str(wl)])
+        self.assertEqual(rc, 0); z = zipfile.ZipFile(self.zip); man = z.read("manifest.txt").decode(); nf = z.read("not-found.txt").decode()
+        self.assertEqual(sorted(n for n in z.namelist() if n.startswith("xml/")), ["xml/dlc/dlc_x/content/bundles/x.bundle/dlc/x/data/gameplay/items/def_item_x.xml"])      # one file holds the item, the key match, the abilities
+        for w in ("item Rare Helm", "item Odd Id (its name key is the unused string \"Mystery helm\")", "ability Rare Helm _Stats", "ability Extra Ab"): self.assertIn(w, man)
+        self.assertNotIn("ability Shared_Stats", man)                                                                                                     # in the #have list: not wanted again
+        self.assertIn("item Never Defined   [other]", nf); self.assertNotIn("item Rare Helm ", nf)
 
     def test_importer_makes_pngs_and_csv_and_refuses_a_hostile_zip(self):
         from PIL import Image
