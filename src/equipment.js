@@ -12,13 +12,12 @@ function eqScript(url){return new Promise((ok,no)=>{const e=document.createEleme
 async function eqLoad(rs){
  if(!EQ.meta){if(!(window.W3DATA&&W3DATA.items))await eqScript(EQ_URL.meta);EQ.meta=W3DATA.items;EQ.disp=new Map(EQ.meta.stat_display.map(t=>[t.stat.toLowerCase(),t]))}
  if(!EQ.rs[rs]){const key='items_'+rs;if(!(window.W3DATA&&W3DATA[key]))await eqScript(EQ_URL[rs]);
-  const items=W3DATA[key].items,byN=new Map(),byId=new Map(),bySlot={},chains=new Map();
-  items.forEach(it=>{byN.set(it.n,it);byId.set(it.id,it);(bySlot[it.slot]=bySlot[it.slot]||[]).push(it);
-   const k=it.set?it.set+'|'+it.slot+'|'+it.id.replace(/^NGP /,'').replace(/\s*\d+$/,'')+'|'+(it.legendary?'L':''):it.id;   // a card = one family and one variant (normal or Legendary): Wolven's normal tiers 1-4 are 'Wolf X', its Grandmaster 'NGP Wolf X 4'
-   (chains.get(k)||chains.set(k,[]).get(k)).push(it)});
-  const out=[];   // two items with the same tier cannot be tiers of one card (Manticore 1 and the Legendary Manticore 2 are both 'Basic'): the second one and its like start a card of their own
-  chains.forEach(c=>{c.sort((a,b)=>(a.tier||0)-(b.tier||0)||(a.id<b.id?-1:1));const parts=[];c.forEach(it=>{let p=parts.find(x=>!x.some(y=>(y.tier||0)===(it.tier||0)));if(!p){p=[];parts.push(p)}p.push(it)});parts.forEach(x=>{x.forEach(it=>{it.ch=x});out.push(x)})});
-  EQ.rs[rs]={items,byN,byId,bySlot,chains:out}}
+  const items=W3DATA[key].items,byN=new Map(),byId=new Map(),bySlot={},first=new Map();
+  items.forEach((it,k)=>{byN.set(it.n,it);byId.set(it.id,it);(bySlot[it.slot]=bySlot[it.slot]||[]).push(it);
+   it.fk=it.set?it.set+'|'+it.slot+'|'+it.id.replace(/^NGP /,'').replace(/\s*\d+$/,'')+'|'+(it.legendary?'L':''):it.id;   // a family = one set, slot and variant (normal or Legendary): Wolven's normal tiers 1-4 are 'Wolf X', its Grandmaster 'NGP Wolf X 4'
+   if(!first.has(it.fk))first.set(it.fk,k)});
+  Object.values(bySlot).forEach(l=>l.sort((x,y)=>first.get(x.fk)-first.get(y.fk)||(x.tier||0)-(y.tier||0)||(x.id<y.id?-1:1)));   // the picker lists a family together, Basic to Grandmaster; families in the order of the data
+  EQ.rs[rs]={items,byN,byId,bySlot}}
  return EQ.rs[rs]}
 const eqData=()=>EQ.rs[S.rs]||null;
 const eqCur=i=>{const d=eqData();return d&&S.gear[i]?d.byN.get(S.gear[i])||null:null};
@@ -44,9 +43,8 @@ const eqLow=it=>{const r=eqReq(it);return r!=null&&r>lvl()};
 function eqRange(it){const g=n=>{const e=(it.bonuses||[]).find(b=>b.stat===n);return e?e.min:null},a=g('item_level_min'),b=g('item_level_max');return S.rs==='ng'&&a!=null&&b!=null?' ('+a+' to '+b+')':''}   // autogen relics: the level is rolled when the item drops; only some carry the XML range, and in NG+ it moves with the NG+ level
 function eqLevel(it){if(it.level_varies)return{t:'Level varies'+eqRange(it),bad:false};if(it.slot==='mask'||it.required_level==null)return null;return{t:'Requires level '+it.required_level,bad:eqLow(it)}}   // masks: the game's tooltip shows no level for them (guiTooltipComponent.ws:505)
 function eqSetOf(it){return it.set&&EQ.meta?EQ.meta.sets[it.set]:null}
-function eqTip(it,withTiers){const q=EQ_QUAL[it.quality]||['',''],p=eqPrimary(it),lv=eqLevel(it),st=eqSetOf(it),lines=eqLines(it);
+function eqTip(it){const q=EQ_QUAL[it.quality]||['',''],p=eqPrimary(it),lv=eqLevel(it),st=eqSetOf(it),lines=eqLines(it);
  let h=`<div class="eqt"><div class="eqt-name" style="color:${q[1]||'#e6dcc8'}">${eqEsc(it.name)}</div><div class="eqt-rar">${[q[0],it.armor_class?it.armor_class[0].toUpperCase()+it.armor_class.slice(1)+' armor':EQ_NAME[it.slot],it.quest?'Quest item':''].filter(Boolean).map(eqEsc).join(' · ')}</div>`;
- if(withTiers&&it.ch&&it.ch.length>1)h+=`<div class="eqt-tiers" role="group" aria-label="Tier">${it.ch.map(x=>`<button type="button" class="btn eqchip" data-id="${eqEsc(x.id)}" aria-pressed="${x===it}">${eqEsc(x.tier_name||'Basic')}</button>`).join('')}</div>`;
  if(lv)h+=`<div class="eqt-lvl${lv.bad?' bad':''}">${lv.t}</div>`;
  if(p.label){const e=p.e;h+=`<div class="eqt-prim">${e?`<b>${eqVal({...e,percent:false})}</b> ${eqEsc(p.label)}${p.note?` <small>${eqEsc(p.note)}</small>`:''}`:it.autogen?`<span class="dim">${eqEsc(p.label)} varies with the item's level</span>`:''}</div>`}
  lines.forEach(e=>{h+=`<div class="eqt-line" style="color:${eqColor(e)}"><span>${eqEsc(e.label||e.stat)}</span><b>${eqEsc(eqVal(e))}</b></div>`});
@@ -112,39 +110,33 @@ async function eqSwitch(rs){if(rs===S.rs)return;
  notify('Switched to '+EQ_RS[rs]+'. '+(dropped.length?'Removed because they do not exist in this mode: '+dropped.join(', ')+'.':'')+(kept?(dropped.length?' ':'')+kept+' item'+(kept>1?'s':'')+' kept (same item in both modes; its numbers are the new mode\'s).':(dropped.length?'':'Nothing was equipped.')))}
 
 // ---- the chooser ----
-function eqCands(slot){const d=eqData();return d?d.chains.filter(c=>c[0].slot===slot):[]}
-function eqFilterOpts(slot){const ch=eqCands(slot),sets=new Map();let relic=0,other=0;
- ch.forEach(c=>{const it=c[0];if(it.set)sets.set(it.set,EQ.meta.sets[it.set].name);else if(it.group==='relic')relic++;else other++});
+function eqCands(slot){const d=eqData();return d?d.bySlot[slot]||[]:[]}
+function eqFilterOpts(slot){const sets=new Map();let relic=0,other=0;
+ eqCands(slot).forEach(it=>{if(it.set)sets.set(it.set,EQ.meta.sets[it.set].name);else if(it.group==='relic')relic++;else other++});
  const o=[['all','All items']];Object.keys(EQ.meta.sets).forEach(s=>{if(sets.has(s))o.push(['set:'+s,sets.get(s)+' set'])});if(relic)o.push(['relic','Relics']);if(other)o.push(['other',slot==='mask'?'Masks':slot==='bolts'?'Bolts':slot==='crossbow'?'Crossbows':'Other']);return o}
-// A card is one family of tiers. Title = the lowest tier's name without a tier word ("Feline armor"); the tooltip keeps the selected tier's full name.
-const eqFamily=c=>c[0].name.replace(/^(enhanced|superior|mastercrafted|grandmaster)\s+/i,'').replace(/\s+-\s+(enhanced|superior|mastercrafted|grandmaster)$/i,'');
-const eqTierLine=c=>c.length>1?(c[0].tier_name||'Basic')+' \u2013 '+(c[c.length-1].tier_name||'Basic')+' \u00b7 '+c.length+' tiers':'';
-// Search: every word must be found in one tier's name, tier name or id ("enhanced feline" finds the Enhanced tier of the Feline card). Returns the matching tiers.
-function eqMatch(c,q){const w=q.split(/\s+/).filter(Boolean);return w.length?c.filter(x=>{const t=(x.name+' '+(x.tier_name||'Basic')+' '+x.id).toLowerCase();return w.every(k=>t.includes(k))}):c}
-// Default tier of a card: the equipped one, else the highest whose required level <= Level, else the lowest.
-function eqDefTier(c,only){const o=only&&only.length?only:c,cur=eqCur(EQ.pick.i);if(cur&&o.includes(cur))return cur;
- let b=null;o.forEach(x=>{const r=eqReq(x);if(r==null||r<=lvl())b=x});return b||o[0]}
-function eqShown(){const p=EQ.pick;const q=p.q.trim().toLowerCase();
- return eqCands(p.slot).filter(c=>{const it=c[0];return p.filter==='all'||(p.filter==='relic'?it.group==='relic'&&!it.set:p.filter==='other'?!it.set&&it.group!=='relic':p.filter==='set:'+it.set)}).filter(c=>eqMatch(c,q).length)}
-function eqPick(i){const slot=EQ_SLOTS[i],cur=eqCur(i);EQ.pick={i,slot,filter:'all',q:'',sel:cur,opener:document.activeElement};
+const EQ_TIERS=['Basic','Enhanced','Superior','Mastercrafted','Grandmaster'];
+// Search: every word must be found in the item's name, tier name or id ("enhanced griffin" finds the Enhanced Griffin card only).
+const eqHit=(it,w)=>{const t=(it.name+' '+(it.tier_name||'')+' '+it.id).toLowerCase();return w.every(k=>t.includes(k))};
+function eqShown(){const p=EQ.pick,w=p.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+ return eqCands(p.slot).filter(it=>(p.filter==='all'||(p.filter==='relic'?it.group==='relic'&&!it.set:p.filter==='other'?!it.set&&it.group!=='relic':p.filter==='set:'+it.set))&&(p.tier==='all'||it.tier_name===p.tier)&&eqHit(it,w))}   // the tier filter applies to tiered items (those of a set); a relic has no tier
+function eqPick(i){const slot=EQ_SLOTS[i],cur=eqCur(i);EQ.pick={i,slot,filter:'all',tier:'all',q:'',sel:cur,opener:document.activeElement,scroll:true};   // the worn item is selected (and scrolled into view); with nothing worn nothing is
  const ov=document.getElementById('eqpick');
- ov.innerHTML=`<div class="mmodal eqpmodal"><div class="mh"><h2 id="pktitle">${eqEsc(EQ_NAME[slot])}</h2><label>Show <select id="pkset"></select></label><input id="pkq" type="search" placeholder="Search by name" aria-label="Search by name" autocomplete="off"><span class="dim" id="pkcount" aria-live="polite"></span><button class="btn" id="pkclose" type="button">Close</button></div>
+ ov.innerHTML=`<div class="mmodal eqpmodal"><div class="mh"><h2 id="pktitle">${eqEsc(EQ_NAME[slot])}</h2><label>Show <select id="pkset"></select></label><label>Tier <select id="pktier"><option value="all">All tiers</option>${EQ_TIERS.map(t=>`<option>${t}</option>`).join('')}</select></label><input id="pkq" type="search" placeholder="Search by name" aria-label="Search by name" autocomplete="off"><span class="dim" id="pkcount" aria-live="polite"></span><button class="btn" id="pkclose" type="button">Close</button></div>
   <div class="pkbody"><div class="pkgrid" id="pkgrid" role="listbox" aria-label="${eqEsc(EQ_NAME[slot])} items"></div><div class="pkside" id="pkside"></div></div></div>`;
  ov.hidden=false;const sel=document.getElementById('pkset');sel.innerHTML=eqFilterOpts(slot).map(o=>`<option value="${eqEsc(o[0])}">${eqEsc(o[1])}</option>`).join('');
- sel.onchange=()=>{EQ.pick.filter=sel.value;eqPickRender()};document.getElementById('pkq').oninput=e=>{EQ.pick.q=e.target.value;eqPickRender()};document.getElementById('pkclose').onclick=()=>eqClosePick();
+ sel.onchange=()=>{EQ.pick.filter=sel.value;eqPickRender()};document.getElementById('pktier').onchange=e=>{EQ.pick.tier=e.target.value;eqPickRender()};document.getElementById('pkq').oninput=e=>{EQ.pick.q=e.target.value;eqPickRender()};document.getElementById('pkclose').onclick=()=>eqClosePick();
  ov.onclick=e=>{if(e.target===ov)eqClosePick()};eqPickRender();document.getElementById('pkq').focus()}
 function eqPickRender(){const p=EQ.pick;if(!p)return;const list=eqShown(),grid=document.getElementById('pkgrid');
- const sq=p.q.trim().toLowerCase();if(p.sq!==sq){p.sq=sq;if(sq)p.sel=null}   // a new search picks the tier again
- if(p.sel&&!list.some(c=>c.includes(p.sel)))p.sel=null;if(!p.sel&&list.length){const cur=eqCur(p.i),c0=cur&&list.find(c=>c.includes(cur))||list[0];p.sel=eqDefTier(c0,eqMatch(c0,sq))}
+ if(p.sel&&!list.includes(p.sel))p.sel=null;   // a filter or search that hides the selected card clears the selection; nothing else is picked for you
  document.getElementById('pkcount').textContent=list.length+' item'+(list.length===1?'':'s');
- grid.innerHTML=list.length?list.map(c=>{const rep=p.sel&&c.includes(p.sel)?p.sel:eqDefTier(c,eqMatch(c,sq)),q=EQ_QUAL[rep.quality]?EQ_QUAL[rep.quality][1]:'#6b5a42',on=c.includes(p.sel),eq=c.includes(eqCur(p.i));
-  return`<button type="button" class="pktile${on?' sel':''}${eq?' worn':''}${eqLow(rep)?' low':''}" role="option" aria-selected="${on}" data-id="${eqEsc(rep.id)}" style="--q:${q}" title="${eqEsc(c.length>1?eqFamily(c)+' ('+rep.name+')':rep.name)}">${rep.icon?`<img src="${rep.icon}" alt="" loading="lazy">`:''}<span>${eqEsc(c.length>1?eqFamily(c):rep.name)}</span>${c.length>1?`<small class="pktr">${eqEsc(eqTierLine(c))}</small>`:''}${eqLow(rep)?`<small class="pkreq">Level ${eqReq(rep)}</small>`:''}${eq?'<em>worn</em>':''}</button>`}).join(''):'<p class="eqmsg">Nothing matches.</p>';
+ grid.innerHTML=list.length?list.map(it=>{const q=EQ_QUAL[it.quality]?EQ_QUAL[it.quality][1]:'#6b5a42',on=it===p.sel,eq=it===eqCur(p.i);
+  return`<button type="button" class="pktile${on?' sel':''}${eq?' worn':''}${eqLow(it)?' low':''}" role="option" aria-selected="${on}" data-id="${eqEsc(it.id)}" style="--q:${q}" title="${eqEsc(it.name)}">${it.icon?`<img src="${it.icon}" alt="" loading="lazy">`:''}<span>${eqEsc(it.name)}</span>${it.set&&it.tier_name?`<small class="pktr">${eqEsc(it.tier_name)}</small>`:''}${eqLow(it)?`<small class="pkreq">Level ${eqReq(it)}</small>`:''}${eq?'<em>worn</em>':''}</button>`}).join(''):'<p class="eqmsg">Nothing matches.</p>';
  const side=document.getElementById('pkside'),d=eqData(),it=p.sel;
  const lock=it&&eqLow(it),pl=it&&it.set?eqSetPlan(it):null,noset=pl&&!pl.pieces.length;
- side.innerHTML=it?`${eqTip(it,true)}<div class="pkact"><button class="btn" id="pkequip" type="button"${lock?' disabled aria-describedby="pkwhy"':''}>${eqCur(p.i)===it?'Equipped':'Equip'}</button>${it.set?`<button class="btn" id="pkequipset" type="button"${noset?' disabled aria-describedby="pkwhy"':''}>Equip set</button>`:''}${eqCur(p.i)?'<button class="btn" id="pkunequip" type="button">Unequip</button>':''}</div>${lock||noset?`<p class="pknote bad" id="pkwhy">${lock?'Requires level '+eqReq(it):'No piece of this set can be equipped at level '+lvl()}</p>`:''}${it.set?eqSetNote(it):''}`:'<p class="eqmsg">Select an item to see it here.</p>';
+ side.innerHTML=it?`${eqTip(it)}<div class="pkact"><button class="btn" id="pkequip" type="button"${lock?' disabled aria-describedby="pkwhy"':''}>${eqCur(p.i)===it?'Equipped':'Equip'}</button>${it.set?`<button class="btn" id="pkequipset" type="button"${noset?' disabled aria-describedby="pkwhy"':''}>Equip set</button>`:''}${eqCur(p.i)?'<button class="btn" id="pkunequip" type="button">Unequip</button>':''}</div>${lock||noset?`<p class="pknote bad" id="pkwhy">${lock?'Requires level '+eqReq(it):'No piece of this set can be equipped at level '+lvl()}</p>`:''}${it.set?eqSetNote(it):''}`:'<p class="eqmsg">Select an item to see it here.</p>';
  grid.querySelectorAll('.pktile').forEach(b=>{b.onclick=()=>{p.sel=d.byId.get(b.dataset.id);eqPickRender();const n=document.querySelector('#pkgrid [data-id="'+p.sel.id+'"]');if(n)n.focus()};b.ondblclick=()=>eqEquip(d.byId.get(b.dataset.id));
   b.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();const x=d.byId.get(b.dataset.id);if(e.shiftKey&&x.set)eqEquipSet(x);else eqEquip(x)}else eqGridKey(e,b)}});   // Shift+Enter equips the whole set, like the Equip set button
- side.querySelectorAll('.eqchip').forEach(b=>{b.onclick=()=>{p.sel=d.byId.get(b.dataset.id);eqPickRender();const n=document.querySelector('#pkside [data-id="'+p.sel.id+'"]');if(n)n.focus()}});
+ if(p.scroll){p.scroll=false;const n=grid.querySelector('.pktile.sel');if(n)n.scrollIntoView({block:'center'})}
  const eb=document.getElementById('pkequip');if(eb)eb.onclick=()=>eqEquip(it);const sb=document.getElementById('pkequipset');if(sb)sb.onclick=()=>eqEquipSet(it);const ub=document.getElementById('pkunequip');if(ub)ub.onclick=()=>{const i=p.i;eqClosePick(true);eqUnequip(i)}}
 function eqGridKey(e,b){const t=[...document.querySelectorAll('#pkgrid .pktile')],k=t.indexOf(b);let n=-1;
  if(e.key==='ArrowRight')n=k+1;else if(e.key==='ArrowLeft')n=k-1;else if(e.key==='ArrowDown'||e.key==='ArrowUp'){const dir=e.key==='ArrowDown'?1:-1;const x=b.offsetLeft;n=k;for(let j=k+dir;j>=0&&j<t.length;j+=dir){if(t[j].offsetTop!==b.offsetTop&&Math.abs(t[j].offsetLeft-x)<4){n=j;break}}}

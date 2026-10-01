@@ -65,12 +65,12 @@ header,footer{width:100%;max-width:2400px;margin-left:auto;margin-right:auto;pad
 @media (min-width:1024px) and (max-width:1439px){.eqcols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 22px;align-items:start}}   /* below the skills: weapons | armor | sets and stats */
 @media (min-width:600px) and (max-width:1023px){.eqslots,.eqslots{--tile:min(120px,calc((100cqw - 3*8px)/4))}.eqarm .eqslots{max-width:calc(4*var(--tile) + 3*8px)}}                                       /* stacked: 4 per row */
 @media (max-width:599px){.eqslots{--tile:calc((100cqw - 2*8px)/3)}.eqarm .eqslots{max-width:calc(3*var(--tile) + 2*8px)}.eqrs .btn,.eqx{min-height:44px}.eqx{width:30px;height:30px;min-height:0}.eqx::before{inset:-8px}
- .eqpmodal{width:100%;height:100%;border:0;outline:0}.eqpk{padding:0}.pkgrid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}.pktile,.eqchip,.eqpmodal .btn{min-height:44px}.eqpmodal .mh{padding:10px 12px}}
+ .eqpmodal{width:100%;height:100%;border:0;outline:0}.eqpk{padding:0}.pkgrid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}.pktile,.eqpmodal .btn{min-height:44px}.eqpmodal .mh{padding:10px 12px}}
 .eqtip{position:fixed;z-index:70;width:290px;background:#0d0c0bf7;border:1px solid #8a6a36;padding:10px 12px;box-shadow:0 8px 30px #000;pointer-events:none}.eqtip[hidden]{display:none}
 .eqt-name{font-size:23px;font-weight:600;line-height:1.1}.eqt-rar{color:var(--dim);font-size:15px;margin-bottom:6px}.eqt-lvl{color:#a09588;font-size:16px}.eqt-lvl.bad{color:#e0604c}
 .eqt-prim{margin:2px 0 6px}.eqt-prim b{font-size:36px;color:#fff;font-weight:500;line-height:1}.eqt-prim small{color:var(--dim);font-size:14px}
 .eqt-line{display:flex;justify-content:space-between;gap:14px;font-size:16px}.eqt-line b{font-weight:600}.eqt-meta,.eqt-set{color:var(--dim);font-size:15px;margin-top:6px}.eqt-set b{color:var(--ink)}
-.eqt-tiers{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 8px}.eqchip{padding:1px 8px;font-size:14px}.eqchip[aria-pressed="true"]{border-color:var(--gold);background:#1d1811;color:#fff}
+
 
 /* ---- The chooser (an overlay, as before) ---- */
 .eqpk{z-index:40}.eqpmodal{width:min(1120px,100%);height:min(88vh,820px);display:flex;flex-direction:column;overflow:hidden}.eqpmodal .mh h2{font-size:32px}.eqpmodal select,.eqpmodal input[type=search]{background:#0d0c0a;border:1px solid var(--line);color:var(--ink);font:inherit;padding:3px 8px}.eqpmodal label{color:var(--dim);display:flex;gap:8px;align-items:center}
@@ -78,7 +78,7 @@ header,footer{width:100%;max-width:2400px;margin-left:auto;margin-right:auto;pad
 @media (max-width:820px){.pkbody{grid-template-columns:1fr;overflow:auto}.eqpmodal{height:100%}}
 .pkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;overflow:auto;align-content:start;padding:3px;min-height:140px}
 .pktile{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 4px 5px;border:1px solid var(--q,#6b5a42);color:var(--ink);background:#0a0908;background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--q,#6b5a42) 40%,#0a0908),#0a0908 80%);font-size:13px;line-height:1.1;text-align:center}
-.pktile img{height:92px;width:auto;max-width:100%;object-fit:contain}.pktile span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.2em}
+.pktile img{height:92px;width:auto;max-width:100%;object-fit:contain}.pktile span{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:2.2em}
 .pktile i{position:absolute;top:3px;left:3px;font-style:normal;font-size:11px;background:#000a;padding:0 4px;color:var(--gold)}.pktile em{position:absolute;top:3px;right:3px;font-style:normal;font-size:11px;background:#1f3d18;color:#cdeebd;padding:0 4px}
 .pktile:hover{border-color:var(--gold)}.pktile.sel{outline:2px solid var(--gold);outline-offset:1px}.pktile:focus-visible{outline:2px solid #fff;outline-offset:1px}
 .pkside{overflow:auto;padding-right:4px}.pkact{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.pkact .btn{min-width:90px}.pknote{margin:8px 0 0;font-size:15px;color:var(--dim);line-height:1.3}.pknote b{color:var(--ink);font-weight:600}

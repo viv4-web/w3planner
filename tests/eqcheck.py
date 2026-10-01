@@ -121,22 +121,32 @@ def guttercheck(b, base, check, label):
 
 
 def tiercheck(b, base, check, label):
-    """A tiered card is one family: title without a tier prefix, a tier line, no duplicate badge; the tooltip names the selected tier; search matches tier names; the default tier follows Level."""
+    """The picker shows every tier as its own card (full in-game name, tier label), a family together from Basic to Grandmaster; the Tier filter and the search narrow the cards; the tooltip is the selected card only;
+    the worn item is selected when the picker opens and nothing is selected when nothing is worn."""
     pg = b.new_page(viewport={"width": 1920, "height": 1080}); pg.goto(base); until(pg, READY); E = pg.evaluate
     E("(()=>{S.gear.fill(0);save();eqRender(true)})()"); pg.fill("#lvl", "30"); pg.click('#eqbody .eqtile[data-i="%d"]' % CHEST); pg.wait_for_selector("#pkgrid .pktile")
-    CARD = "(q=>{const t=[...document.querySelectorAll('#pkgrid .pktile')].filter(x=>x.querySelector('span').textContent.toLowerCase().startsWith(q))[0];return t?{title:t.querySelector('span').textContent,tier:(t.querySelector('.pktr')||{}).textContent||'',badge:!!t.querySelector('i'),sel:t.classList.contains('sel')}:null})"
-    pg.fill("#pkq", "feline"); pg.wait_for_timeout(100); c = E(CARD + "('feline')"); tip = E("document.querySelector('#pkside .eqt-name').textContent"); on = E("[...document.querySelectorAll('#pkside .eqchip')].filter(b=>b.getAttribute('aria-pressed')==='true').map(b=>b.textContent)")
-    check("%s: Chest armor, search 'feline': the card is titled 'Feline armor' with the tier line 'Basic \u2013 Grandmaster \u00b7 5 tiers' and no second badge (%s)" % (label, c), c and c["title"] == "Feline armor" and c["tier"] == "Basic \u2013 Grandmaster \u00b7 5 tiers" and not c["badge"], c)
-    check("%s: ... at Level 30 the default tier is Superior (the highest with required level <= 30; Mastercrafted needs 34) and the tooltip names it in full (%s, %s)" % (label, tip, on), on == ["Superior"] and tip == "Superior Feline armor", [tip, on])
-    pg.click('#pkside .eqchip[data-id="Lynx Armor 1"]'); tip = E("document.querySelector('#pkside .eqt-name').textContent")
-    check("%s: clicking the Enhanced chip makes the tooltip title 'Enhanced Feline armor' (%s)" % (label, tip), tip == "Enhanced Feline armor", tip)
-    pg.fill("#pkq", "enhanced feline"); pg.wait_for_timeout(100); n = E("document.querySelectorAll('#pkgrid .pktile').length"); tip = E("document.querySelector('#pkside .eqt-name').textContent"); on = E("[...document.querySelectorAll('#pkside .eqchip')].filter(b=>b.getAttribute('aria-pressed')==='true').map(b=>b.textContent)")
-    check("%s: search 'enhanced feline' finds the Feline card with Enhanced preselected (%d card, %s)" % (label, n, on), n == 1 and on == ["Enhanced"] and tip == "Enhanced Feline armor", [n, on, tip])
-    pg.fill("#pkq", ""); pg.fill("#pkq", "feline"); pg.wait_for_timeout(100); n = E("document.querySelectorAll('#pkgrid .pktile').length")
-    check("%s: search 'feline' alone still finds the card (%d)" % (label, n), n == 1, n)
-    pg.fill("#pkq", ""); pg.keyboard.press("Escape"); pg.fill("#lvl", "40"); E("(()=>{const d=eqData();S.gear[%d]=d.byId.get('Lynx Armor 2').n;save();eqRender(true)})()" % CHEST); pg.click('#eqbody .eqtile[data-i="%d"]' % CHEST); pg.wait_for_selector("#pkgrid .pktile"); pg.fill("#pkq", "feline"); pg.wait_for_timeout(100)
-    tip = E("document.querySelector('#pkside .eqt-name').textContent"); tile = E("document.querySelector('#eqbody .eqtile[data-i=\"%d\"]').getAttribute('aria-label')" % CHEST); st = E("document.querySelector('#eqbody .eqitem h4').textContent")
-    check("%s: the equipped tier is the default (Level 40 would otherwise give Grandmaster), and the slot tile and Item stats card keep the full name (%s | %s | %s)" % (label, tip, tile, st), tip == "Superior Feline armor" and "Superior Feline armor" in tile and st == "Superior Feline armor", [tip, tile, st])
+    CARDS = "[...document.querySelectorAll('#pkgrid .pktile')].map(t=>({title:t.querySelector('span').textContent,tier:(t.querySelector('.pktr')||{}).textContent||'',low:t.classList.contains('low'),sel:t.classList.contains('sel'),worn:t.classList.contains('worn')}))"
+    check("%s: opened with nothing worn: nothing is selected, the detail says so (%s)" % (label, E("document.getElementById('pkside').textContent")), E("document.querySelectorAll('#pkgrid .pktile.sel').length") == 0 and "Select an item" in E("document.getElementById('pkside').textContent"))
+    pg.fill("#pkq", "griffin"); pg.wait_for_timeout(100); cards = E(CARDS)
+    check("%s: Chest armor, search 'griffin': 5 cards, one per tier, each with its full in-game name and a tier label, Basic to Grandmaster (%s)" % (label, [(c["title"], c["tier"]) for c in cards]),
+          [c["tier"] for c in cards] == ["Basic", "Enhanced", "Superior", "Mastercrafted", "Grandmaster"] and [c["title"] for c in cards] == ["Griffin armor", "Enhanced Griffin armor", "Superior Griffin armor", "Mastercrafted Griffin armor", "Grandmaster Griffin armor"], cards)
+    check("%s: ... at Level 30 the Mastercrafted (34) and Grandmaster (40) cards are greyed but visible, the others are not (%s)" % (label, [c["low"] for c in cards]), [c["low"] for c in cards] == [False, False, False, True, True], cards)
+    pg.click('#pkgrid .pktile[data-id="Gryphon Armor 1"]'); tip = E("document.querySelector('#pkside .eqt-name').textContent"); sets = E("document.querySelector('#pkside .eqt-set').textContent"); chips = E("document.querySelectorAll('#pkside .eqchip').length")
+    check("%s: clicking the Enhanced card: the tooltip is that item only, no tier chips (%s | %s | %d chips)" % (label, tip, sets, chips), tip == "Enhanced Griffin armor" and "does not count toward the set bonus in First playthrough" in sets and chips == 0, [tip, sets, chips])
+    pg.select_option("#pktier", "Grandmaster"); pg.wait_for_timeout(100); n = E("document.querySelectorAll('#pkgrid .pktile').length"); sel = E("document.querySelectorAll('#pkgrid .pktile.sel').length")
+    check("%s: Tier filter 'Grandmaster' (with the search 'griffin') leaves 1 card, and the Enhanced selection is cleared (%d cards, %d selected)" % (label, n, sel), n == 1 and sel == 0, [n, sel])
+    pg.fill("#pkq", ""); pg.select_option("#pkset", "set:gryphon"); pg.wait_for_timeout(100); n = E("document.querySelectorAll('#pkgrid .pktile').length")
+    check("%s: ... the same filter with the Griffin set filter and no search: 1 card (%d)" % (label, n), n == 1, n)
+    pg.select_option("#pktier", "all"); pg.select_option("#pkset", "all"); pg.fill("#pkq", "enhanced griffin"); pg.wait_for_timeout(100); cards = E(CARDS)
+    check("%s: search 'enhanced griffin' leaves 1 card (%s)" % (label, [c["title"] for c in cards]), [c["title"] for c in cards] == ["Enhanced Griffin armor"], cards)
+    pg.fill("#pkq", "griffin"); pg.wait_for_timeout(100); n = E("document.querySelectorAll('#pkgrid .pktile').length")
+    check("%s: search 'griffin' alone: all 5 Griffin cards again (%d)" % (label, n), n == 5, n)
+    pg.fill("#pkq", ""); pg.keyboard.press("Escape"); pg.fill("#lvl", "40"); E("(()=>{const d=eqData();S.gear[%d]=d.byId.get('Gryphon Armor 2').n;save();eqRender(true)})()" % CHEST)
+    pg.click('#eqbody .eqtile[data-i="%d"]' % CHEST); pg.wait_for_selector("#pkgrid .pktile"); pg.wait_for_timeout(200); tip = E("(document.querySelector('#pkside .eqt-name')||{}).textContent"); cards = E(CARDS)
+    vis = E("(()=>{const t=document.querySelector('#pkgrid .pktile.sel'),g=document.getElementById('pkgrid').getBoundingClientRect(),r=t&&t.getBoundingClientRect();return !!r&&r.top>=g.top-1&&r.bottom<=g.bottom+1})()")
+    tile = E("document.querySelector('#eqbody .eqtile[data-i=\"%d\"]').getAttribute('aria-label')" % CHEST); st = E("document.querySelector('#eqbody .eqitem h4').textContent")
+    check("%s: reopened with a Superior Griffin chest worn: its card is selected, marked worn and in view; the slot tile and Item stats keep the full name (%s | %s | %s)" % (label, tip, tile, st),
+          tip == "Superior Griffin armor" and [c["title"] for c in cards if c["sel"]] == ["Superior Griffin armor"] and [c["title"] for c in cards if c["worn"]] == ["Superior Griffin armor"] and vis and "Superior Griffin armor" in tile and st == "Superior Griffin armor", [tip, cards, vis, tile, st])
     pg.close()
 
 
@@ -158,19 +168,20 @@ def countcheck(b, base, check, label):
     check("%s: Grandmaster Feline in the first playthrough: 3 pieces light the 3-piece bonus, 6 pieces light both (%s, %s)" % (label, three, six), three[0].endswith("3 counted, 3 worn"), [three, six])
     check("%s: ... lit bonuses: 1 at 3 counted pieces, 2 at 6 counted (%s, %s)" % (label, three[1], six[1]), three[1] == 1 and six[1] == 2 and six[0].endswith("6 counted, 7 worn"), [three, six])
     E("(()=>{S.gear.fill(0);save();eqRender(true)})()"); pg.click('#eqbody .eqtile[data-i="%d"]' % CHEST); pg.wait_for_selector("#pkgrid .pktile"); pg.fill("#pkq", "feline"); pg.wait_for_timeout(100)
-    pg.click('#pkside .eqchip[data-id="Lynx Armor 1"]'); tip = E("document.querySelector('#pkside .eqt-set').textContent"); note = E("[...document.querySelectorAll('#pkside .pknote')].map(p=>p.textContent).join(' | ')")
+    pg.click('#pkgrid .pktile[data-id="Lynx Armor 1"]'); tip = E("document.querySelector('#pkside .eqt-set').textContent"); note = E("[...document.querySelectorAll('#pkside .pknote')].map(p=>p.textContent).join(' | ')")
     check("%s: tooltip on a non-counting tier: '%s' and the Equip set note says what will not count and which tier does (%s)" % (label, tip, note),
           tip == "Feline \u00b7 does not count toward the set bonus in First playthrough (no set bonus tag in the game data)" and "will not count toward the set bonus in First playthrough (no set bonus tag in the game data); only the Grandmaster tier counts." in note, [tip, note])
-    pg.click('#pkside .eqchip[data-id="Lynx Armor 4"]'); tip = E("document.querySelector('#pkside .eqt-set').textContent")
+    pg.click('#pkgrid .pktile[data-id="Lynx Armor 4"]'); tip = E("document.querySelector('#pkside .eqt-set').textContent")
     check("%s: ... the Grandmaster tier says it counts (%s)" % (label, tip), tip == "Feline \u00b7 counts toward the set bonus", tip)
     pg.keyboard.press("Escape")
-    # the Wolven card groups like the others
-    pg.click('#eqbody .eqtile[data-i="%d"]' % CHEST); pg.wait_for_selector("#pkgrid .pktile"); pg.fill("#pkq", "wolven armor"); pg.wait_for_timeout(100)
-    cards = E("[...document.querySelectorAll('#pkgrid .pktile')].map(t=>[t.querySelector('span').textContent,(t.querySelector('.pktr')||{}).textContent||'']).filter(c=>/^(legendary )?wolven armor$/i.test(c[0]))")
-    check("%s: first playthrough: one card 'Wolven armor' with 'Basic \u2013 Grandmaster \u00b7 5 tiers' (%s)" % (label, cards), ["Wolven armor", "Basic \u2013 Grandmaster \u00b7 5 tiers"] in cards and len([c for c in cards if c[0] == "Wolven armor"]) == 1, cards)
-    pg.keyboard.press("Escape"); pg.click('#eqpanel [data-rs="ng_plus"]'); until(pg, "S.rs==='ng_plus'"); pg.click('#eqbody .eqtile[data-i="%d"]' % CHEST); pg.wait_for_selector("#pkgrid .pktile"); pg.fill("#pkq", "wolven armor"); pg.wait_for_timeout(100)
-    cards = E("[...document.querySelectorAll('#pkgrid .pktile')].map(t=>[t.querySelector('span').textContent,(t.querySelector('.pktr')||{}).textContent||'']).filter(c=>/^(legendary )?wolven armor$/i.test(c[0]))")
-    check("%s: New Game Plus: 'Wolven armor' and 'Legendary Wolven armor' are two cards of 5 tiers each (%s)" % (label, cards), sorted(c[0] for c in cards) == ["Legendary Wolven armor", "Wolven armor"] and all(c[1] == "Basic \u2013 Grandmaster \u00b7 5 tiers" for c in cards), cards)
+    # the Wolven cards: one per tier, a family together, Legendary as separate cards
+    WOLF = "[...document.querySelectorAll('#pkgrid .pktile')].map(t=>t.querySelector('span').textContent).filter(c=>/^(enhanced |superior |mastercrafted |grandmaster )?(legendary |legendary )?wolven armor$/i.test(c))"
+    pg.click('#eqbody .eqtile[data-i="%d"]' % CHEST); pg.wait_for_selector("#pkgrid .pktile"); pg.fill("#pkq", "wolven armor"); pg.wait_for_timeout(100); cards = E(WOLF)
+    check("%s: first playthrough: the Wolven armor cards, one per tier, Basic to Grandmaster (%s)" % (label, cards), cards == ["Wolven armor", "Enhanced Wolven armor", "Superior Wolven armor", "Mastercrafted Wolven armor", "Grandmaster Wolven armor"], cards)
+    pg.keyboard.press("Escape"); pg.click('#eqpanel [data-rs="ng_plus"]'); until(pg, "S.rs==='ng_plus'"); pg.click('#eqbody .eqtile[data-i="%d"]' % CHEST); pg.wait_for_selector("#pkgrid .pktile"); pg.fill("#pkq", "wolven armor"); pg.wait_for_timeout(100); cards = E(WOLF)
+    check("%s: New Game Plus: Wolven armor and Legendary Wolven armor are separate cards, each Basic to Grandmaster, each family together (%s)" % (label, cards),
+          cards == ["Wolven armor", "Enhanced Wolven armor", "Superior Wolven armor", "Mastercrafted Wolven armor", "Grandmaster Wolven armor", "Legendary Wolven armor", "Enhanced legendary Wolven armor", "Superior legendary Wolven armor", "Mastercrafted legendary Wolven armor", "Grandmaster legendary Wolven armor"]
+          or cards == ["Legendary Wolven armor", "Enhanced legendary Wolven armor", "Superior legendary Wolven armor", "Mastercrafted legendary Wolven armor", "Grandmaster legendary Wolven armor", "Wolven armor", "Enhanced Wolven armor", "Superior Wolven armor", "Mastercrafted Wolven armor", "Grandmaster Wolven armor"], cards)
     pg.keyboard.press("Escape"); pg.click('#eqpanel [data-rs="ng"]'); until(pg, "S.rs==='ng'")
     # new items round-trip through the link
     NEW = {"steel": "Wolf School steel sword 2", "chest": "Wolf Armor 1", "gloves": "DLC1 Temerian Gloves", "boots": "Nekker Boots", "crossbow": "DLC13 Elven Crossbow"}
@@ -251,7 +262,7 @@ def run(b, base, check, label, quick=False):
     # the chooser for EVERY weapon slot, and Equip
     for slot, i in (("steel", 0), ("silver", 1), ("bolts", 3), ("crossbow", 2)):
         pg.click('#eqbody .eqtile[data-i="%d"]' % i); pg.wait_for_selector("#pkgrid .pktile"); n = E("document.querySelectorAll('#pkgrid .pktile').length"); only = E("[...document.querySelectorAll('#pkgrid .pktile')].every(t=>EQ.rs[S.rs].byId.get(t.dataset.id).slot===EQ.pick.slot)")
-        pg.click("#pkequip"); pg.wait_for_timeout(150)
+        pg.click("#pkgrid .pktile >> nth=0"); pg.click("#pkequip"); pg.wait_for_timeout(150)    # nothing is selected until a card is clicked
         check("%s: the %s chooser lists %d items of that slot only, and Equip puts one in the slot" % (label, slot, n), n > 5 and only and E("S.gear[%d]" % i) > 0 and E("document.getElementById('eqpick').hidden") and E("document.querySelectorAll('#eqbody .eqslot.on')[%d]" % 0) is not None, (n, only))
     E("(()=>{S.gear.fill(0);save();eqRender(true)})()")
     # chooser for the chest slot
@@ -259,12 +270,12 @@ def run(b, base, check, label, quick=False):
     pg.select_option("#pkset", "set:lynx"); sets_n = E("document.querySelectorAll('#pkgrid .pktile').length")
     pg.fill("#pkq", "grandmaster"); search_n = E("document.querySelectorAll('#pkgrid .pktile').length")
     check("%s: set filter and search narrow the list (%d, then %d of %d)" % (label, sets_n, search_n, n_all), 0 < search_n <= sets_n < n_all)
-    tier_names = E("[...document.querySelectorAll('#pkside .eqchip')].map(c=>c.textContent).join()")
-    check("%s: the tooltip has a tier selector from Basic to Grandmaster" % label, tier_names == "Basic,Enhanced,Superior,Mastercrafted,Grandmaster", tier_names)
-    pg.click('#pkside .eqchip:has-text("Basic")'); basic = E("EQ.pick.sel.id"); pg.click('#pkside .eqchip:has-text("Grandmaster")'); top = E("EQ.pick.sel.id")
-    check("%s: the tier chips switch the item" % label, basic != top and E("EQ.pick.sel.tier") == 5, [basic, top])
-    E("document.getElementById('lvl').value=1;pointsChanged()"); pg.click('#pkside .eqchip:has-text("Grandmaster")')
-    check("%s: 'Requires level' is red above the character level and plain at or below it" % label, E("!!document.querySelector('#pkside .eqt-lvl.bad')")); E("document.getElementById('lvl').value=100;pointsChanged()"); pg.click('#pkside .eqchip:has-text("Basic")')
+    tier_names = E("[...document.querySelectorAll('#pktier option')].map(c=>c.textContent).join()")
+    check("%s: the picker has a Tier filter: All tiers, then Basic to Grandmaster" % label, tier_names == "All tiers,Basic,Enhanced,Superior,Mastercrafted,Grandmaster", tier_names)
+    pg.fill("#pkq", ""); pg.click('#pkgrid .pktile[data-id="Lynx Armor"]'); basic = E("EQ.pick.sel.id"); pg.click('#pkgrid .pktile[data-id="Lynx Armor 4"]'); top = E("EQ.pick.sel.id")
+    check("%s: clicking a card selects exactly that item (Basic %s, Grandmaster %s)" % (label, basic, top), basic == "Lynx Armor" and top == "Lynx Armor 4" and E("EQ.pick.sel.tier") == 5, [basic, top])
+    E("document.getElementById('lvl').value=1;pointsChanged()"); pg.click('#pkgrid .pktile[data-id="Lynx Armor 4"]')
+    check("%s: 'Requires level' is red above the character level and plain at or below it" % label, E("!!document.querySelector('#pkside .eqt-lvl.bad')")); E("document.getElementById('lvl').value=100;pointsChanged()"); pg.click('#pkgrid .pktile[data-id="Lynx Armor"]')
     check("%s: ... (plain at level 100)" % label, not E("!!document.querySelector('#pkside .eqt-lvl.bad')"))
     check("%s: stats follow tooltip_settings.csv (a percentage line has 'NN %%', lines in the CSV order)" % label, E("(()=>{const l=[...document.querySelectorAll('#pkside .eqt-line')];return l.length>2&&l.some(x=>/\\d %$/.test(x.lastChild.textContent))})()"))
     pg.click("#pkequip"); pg.wait_for_timeout(200); got = E("S.gear[4]")
