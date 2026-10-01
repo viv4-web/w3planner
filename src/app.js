@@ -346,7 +346,7 @@ function renderInfo(){const el=document.getElementById('info');
  <div class="actions"><button class="btn" id="aAdd" ${L<K.max&&av&&spent()<budget()?'':'disabled'}>Add point</button><button class="btn" id="aRem" ${L&&canRemove(ti,i)?'':'disabled'}>Remove point</button><button class="btn" id="aEq" ${L&&!eq?'':'disabled'}>${eq?'Equipped':'Equip'}</button></div>`;
  document.getElementById('aAdd').onclick=()=>add(ti,i);document.getElementById('aRem').onclick=()=>rem(ti,i);document.getElementById('aEq').onclick=()=>equip(ti,i)}
 
-function render(){document.getElementById('total').textContent=budget();document.getElementById('avail').textContent=budget()-spent();{const v=budget()-spent(),e=document.getElementById('avail2');e.textContent=v;e.style.color=v<0?'#ff6a5a':'';e.title=v<0?'Over budget: raise Level or Bonus points, or remove something':''}renderTabs();renderTree();renderSlots();renderBonus();renderInfo();renderMut();
+function render(){if(typeof eqRender==='function')queueMicrotask(()=>eqRender());document.getElementById('total').textContent=budget();document.getElementById('avail').textContent=budget()-spent();{const v=budget()-spent(),e=document.getElementById('avail2');e.textContent=v;e.style.color=v<0?'#ff6a5a':'';e.title=v<0?'Over budget: raise Level or Bonus points, or remove something':''}renderTabs();renderTree();renderSlots();renderBonus();renderInfo();renderMut();
  document.getElementById('link').value=(CFG.shareBase||location.href.split('#')[0])+'#'+enc()}
 
 S=dec(location.hash.slice(1))||blank();enforceLocks();

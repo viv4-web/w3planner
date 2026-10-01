@@ -16,6 +16,8 @@
 <header>
   <h1>Build Planner</h1><nav class="site" aria-label="Site"><a href="help.html">Help</a><a href="about.html">About</a><a href="privacy.html">Privacy</a><a href="support.html">Support</a></nav>
 </header>
+<div class="page" id="page">
+<div class="area skillsarea"><h2 class="areahead">Skills</h2>
 <main>
   <section>
     <div class="tabs" role="tablist" id="tabs"></div>
@@ -23,7 +25,7 @@
     <div class="pts">POINTS AVAILABLE <b id="avail2">0</b><img src="@@img:img/skill-point@@" alt=""></div><div class="budget" aria-label="Character points">
     <label>Level <input id="lvl" type="number" min="1" max="100" value="1"></label><label title="Places of Power and other sources">Bonus points <input id="bonuspts" type="number" min="0" max="100" value="0"></label><span>Total <b id="total">8</b></span>
     <span hidden>Points available <b id="avail">0</b></span>
-    <button class="btn" id="mutbtn">Mutations</button><button class="btn" id="eqbtn">Equipment</button><button class="btn" id="reset">Reset build</button>
+    <button class="btn" id="mutbtn">Mutations</button><button class="btn" id="eqbtn" title="Jump to the equipment panel">Equipment</button><button class="btn" id="reset">Reset build</button>
   </div><p class="hint" id="treeHint"></p>
   </section>
   <section class="right">
@@ -37,6 +39,14 @@
     <div class="share" id="importRow" hidden><input id="imp" aria-label="Paste a shared build link" placeholder="Paste a shared link to open it"><button class="btn" id="impbtn">Open link</button><span id="impmsg" class="impmsg" role="status"></span></div>
   </section>
 </main>
+</div>
+<div class="vdiv" aria-hidden="true"></div>
+<aside class="area eqarea" id="eqpanel" aria-labelledby="eqtitle">
+ <div class="eqhead"><h2 class="areahead" id="eqtitle">Equipment</h2><span class="eqlvl" title="Character level, set on the left">Level <b id="eqlvl"></b></span></div>
+ <div class="eqrs" role="radiogroup" aria-label="Game mode"><button class="btn" type="button" role="radio" data-rs="ng" aria-checked="true">First playthrough</button><button class="btn" type="button" role="radio" data-rs="ng_plus" aria-checked="false">New Game Plus</button></div>
+ <div class="eqbody" id="eqbody" aria-live="polite"></div>
+</aside>
+</div>
 <footer>This is an unofficial fan work and is not approved/endorsed by CD PROJEKT RED. Game artwork and text © CD PROJEKT S.A. · <a href="help.html" style="color:inherit">Help</a> · <a href="about.html" style="color:inherit">About</a> · <a href="privacy.html" style="color:inherit">Privacy</a> · <a href="support.html" style="color:inherit">Support</a> · <a href="https://github.com/viv4-web/w3planner" style="color:inherit">Source code</a></footer>
 <div class="tip" id="tip" role="tooltip"></div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toastMsg"></span><button class="btn" id="toastGo" type="button" hidden>Go to Level</button></div>
@@ -45,11 +55,6 @@
  <div class="mbody"><div class="mweb"><div class="mtip" id="mtip" hidden role="tooltip"></div><svg id="mweb" viewBox="60 -10 880 480" preserveAspectRatio="xMidYMid meet" aria-label="Mutation tree"></svg></div></div><div class="mfoot"><span id="mhint">Hover a mutation for details · <b>Click</b> to research, then activate · <b>Right-click</b> to undo research</span><button class="btn" id="mundo" disabled>Undo research</button></div>
 </div></div>
 
-<div class="mov" id="eqov" hidden role="dialog" aria-modal="true" aria-labelledby="eqtitle"><div class="mmodal eqmodal">
- <div class="mh"><h2 id="eqtitle">EQUIPMENT</h2><div class="eqrs" role="radiogroup" aria-label="Game mode"><button class="btn" type="button" role="radio" data-rs="ng" aria-checked="true">First playthrough</button><button class="btn" type="button" role="radio" data-rs="ng_plus" aria-checked="false">New Game Plus</button></div>
-  <span class="eqlvl" title="Character level, set on the main page">Level <b id="eqlvl"></b></span><button class="btn" id="eqclose" type="button">Close</button></div>
- <div class="eqbody" id="eqbody" aria-live="polite"></div>
-</div></div>
 <div class="mov eqpk" id="eqpick" hidden role="dialog" aria-modal="true" aria-labelledby="pktitle"></div>
 
 <script>{{js}}</script>
