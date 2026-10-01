@@ -1,0 +1,245 @@
+[
+ {
+  "label": "Archgriffin",
+  "colour": "red",
+  "item": "Mutagen 4",
+  "original": "volcanic_gryphon.png",
+  "file": "volcanic_gryphon.png",
+  "how": "inferred",
+  "img": "@@img:mutagen_potions/volcanic_gryphon@@"
+ },
+ {
+  "label": "Doppler",
+  "colour": "red",
+  "item": "Mutagen 11",
+  "original": "doppler_mutagen.png",
+  "file": "doppler_mutagen.png",
+  "how": "name",
+  "img": "@@img:mutagen_potions/doppler_mutagen@@"
+ },
+ {
+  "label": "Greater Foglet",
+  "colour": "red",
+  "item": "Mutagen 15",
+  "original": "alghoul_mutagen.png",
+  "file": "alghoul_mutagen.png",
+  "how": "inferred",
+  "img": "@@img:mutagen_potions/alghoul_mutagen@@"
+ },
+ {
+  "label": "Katakan",
+  "colour": "red",
+  "item": "Mutagen 1",
+  "original": "katakan_mutagen.png",
+  "file": "katakan_mutagen.png",
+  "how": "name",
+  "img": "@@img:mutagen_potions/katakan_mutagen@@"
+ },
+ {
+  "label": "Nekker Warrior",
+  "colour": "red",
+  "item": "Mutagen 25",
+  "original": "nekker_warrior_mutagen.png",
+  "file": "nekker_warrior_mutagen.png",
+  "how": "name",
+  "img": "@@img:mutagen_potions/nekker_warrior_mutagen@@"
+ },
+ {
+  "label": "Succubus",
+  "colour": "red",
+  "item": "Mutagen 14",
+  "original": "succubus_mutagen.png",
+  "file": "succubus_mutagen.png",
+  "how": "name",
+  "img": "@@img:mutagen_potions/succubus_mutagen@@"
+ },
+ {
+  "label": "Water Hag",
+  "colour": "red",
+  "item": "Mutagen 5",
+  "original": "water_hag_mutagen.png",
+  "file": "water_hag_mutagen.png",
+  "how": "name",
+  "img": "@@img:mutagen_potions/water_hag_mutagen@@"
+ },
+ {
+  "label": "Werewolf",
+  "colour": "red",
+  "item": "Mutagen 24",
+  "original": "werewolf_mutagen.png",
+  "file": "werewolf_mutagen.png",
+  "how": "name",
+  "img": "@@img:mutagen_potions/werewolf_mutagen@@"
+ },
+ {
+  "label": "Wyvern",
+  "colour": "red",
+  "item": "Mutagen 10",
+  "original": "wyvern_mutagen.png",
+  "file": "wyvern_mutagen.png",
+  "how": "name",
+  "img": "@@img:mutagen_potions/wyvern_mutagen@@"
+ },
+ {
+  "label": "Ancient Leshen",
+  "colour": "blue",
+  "item": "Mutagen 22",
+  "original": "ancient_leshy_mutagen.png",
+  "file": "ancient_leshy_mutagen.png",
+  "how": "alias",
+  "img": "@@img:mutagen_potions/ancient_leshy_mutagen@@"
+ },
+ {
+  "label": "Basilisk",
+  "colour": "blue",
+  "item": "Mutagen 23",
+  "original": "basilisk_mutagen.png",
+  "file": "basilisk_mutagen.png",
+  "how": "name",
+  "img": "@@img:mutagen_potions/basilisk_mutagen@@"
+ },
+ {
+  "label": "Chort",
+  "colour": "blue",
+  "item": "Mutagen 8",
+  "original": "czart_mutagen.png",
+  "file": "czart_mutagen.png",
+  "how": "alias",
+  "img": "@@img:mutagen_potions/czart_mutagen@@"
+ },
+ {
+  "label": "Cockatrice",
+  "colour": "blue",
+  "item": "Mutagen 3",
+  "original": "cockatrice_mutagen.png",
+  "file": "cockatrice_mutagen.png",
+  "how": "name",
+  "img": "@@img:mutagen_potions/cockatrice_mutagen@@"
+ },
+ {
+  "label": "Earth Elemental",
+  "colour": "blue",
+  "item": "Mutagen 20",
+  "original": "d'ao_mutagen.png",
+  "file": "dao_mutagen.png",
+  "how": "alias",
+  "img": "@@img:mutagen_potions/dao_mutagen@@"
+ },
+ {
+  "label": "Ekhidna",
+  "colour": "blue",
+  "item": "Mutagen 21",
+  "original": "lamia_ekimma_mutagen.png",
+  "file": "lamia_ekimma_mutagen.png",
+  "how": "inferred",
+  "img": "@@img:mutagen_potions/lamia_ekimma_mutagen@@"
+ },
+ {
+  "label": "Foglet",
+  "colour": "blue",
+  "item": "Mutagen 9",
+  "original": "fogling_mutagen.png",
+  "file": "fogling_mutagen.png",
+  "how": "alias",
+  "img": "@@img:mutagen_potions/fogling_mutagen@@"
+ },
+ {
+  "label": "Forktail",
+  "colour": "blue",
+  "item": "Mutagen 17",
+  "original": "forktail_mutagen.png",
+  "file": "forktail_mutagen.png",
+  "how": "name",
+  "img": "@@img:mutagen_potions/forktail_mutagen@@"
+ },
+ {
+  "label": "Leshen",
+  "colour": "blue",
+  "item": "Mutagen 26",
+  "original": "leshy_mutagen.png",
+  "file": "leshy_mutagen.png",
+  "how": "alias",
+  "img": "@@img:mutagen_potions/leshy_mutagen@@"
+ },
+ {
+  "label": "Arachas",
+  "colour": "green",
+  "item": "Mutagen 2",
+  "original": "arachas_mutagen.png",
+  "file": "arachas_mutagen.png",
+  "how": "name",
+  "img": "@@img:mutagen_potions/arachas_mutagen@@"
+ },
+ {
+  "label": "Ekimmara",
+  "colour": "green",
+  "item": "Mutagen 7",
+  "original": "ekimma_mutagen.png",
+  "file": "ekimma_mutagen.png",
+  "how": "alias",
+  "img": "@@img:mutagen_potions/ekimma_mutagen@@"
+ },
+ {
+  "label": "Fiend",
+  "colour": "green",
+  "item": "Mutagen 16",
+  "original": "fiend_mutagen.png",
+  "file": "fiend_mutagen.png",
+  "how": "name",
+  "img": "@@img:mutagen_potions/fiend_mutagen@@"
+ },
+ {
+  "label": "Grave Hag",
+  "colour": "green",
+  "item": "Mutagen 18",
+  "original": "grave_hag_mutagen.png",
+  "file": "grave_hag_mutagen.png",
+  "how": "name",
+  "img": "@@img:mutagen_potions/grave_hag_mutagen@@"
+ },
+ {
+  "label": "Griffin",
+  "colour": "green",
+  "item": "Mutagen 27",
+  "original": "griphon_mutagen.png",
+  "file": "griphon_mutagen.png",
+  "how": "inferred",
+  "img": "@@img:mutagen_potions/griphon_mutagen@@"
+ },
+ {
+  "label": "Nightwraith",
+  "colour": "green",
+  "item": "Mutagen 6",
+  "original": "nightwraith_mutagen.png",
+  "file": "nightwraith_mutagen.png",
+  "how": "name",
+  "img": "@@img:mutagen_potions/nightwraith_mutagen@@"
+ },
+ {
+  "label": "Noonwraith",
+  "colour": "green",
+  "item": "Mutagen 13",
+  "original": "noonwraith_mutagen.png",
+  "file": "noonwraith_mutagen.png",
+  "how": "name",
+  "img": "@@img:mutagen_potions/noonwraith_mutagen@@"
+ },
+ {
+  "label": "Troll",
+  "colour": "green",
+  "item": "Mutagen 12",
+  "original": "troll_mutagen.png",
+  "file": "troll_mutagen.png",
+  "how": "name",
+  "img": "@@img:mutagen_potions/troll_mutagen@@"
+ },
+ {
+  "label": "Wraith",
+  "colour": "green",
+  "item": "Mutagen 19",
+  "original": "wraith_mutagen.png",
+  "file": "wraith_mutagen.png",
+  "how": "name",
+  "img": "@@img:mutagen_potions/wraith_mutagen@@"
+ }
+]

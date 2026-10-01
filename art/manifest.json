@@ -590,5 +590,140 @@
  "img/skill-point": {
   "game": "png",
   "placeholder": "png"
+ },
+ "mutagen_potions/volcanic_gryphon": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/9"
+ },
+ "mutagen_potions/doppler_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/9"
+ },
+ "mutagen_potions/alghoul_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/9"
+ },
+ "mutagen_potions/katakan_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/9"
+ },
+ "mutagen_potions/nekker_warrior_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/9"
+ },
+ "mutagen_potions/succubus_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/9"
+ },
+ "mutagen_potions/water_hag_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/9"
+ },
+ "mutagen_potions/werewolf_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/9"
+ },
+ "mutagen_potions/wyvern_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/9"
+ },
+ "mutagen_potions/ancient_leshy_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/10"
+ },
+ "mutagen_potions/basilisk_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/10"
+ },
+ "mutagen_potions/czart_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/10"
+ },
+ "mutagen_potions/cockatrice_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/10"
+ },
+ "mutagen_potions/dao_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/10"
+ },
+ "mutagen_potions/lamia_ekimma_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/10"
+ },
+ "mutagen_potions/fogling_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/10"
+ },
+ "mutagen_potions/forktail_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/10"
+ },
+ "mutagen_potions/leshy_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/10"
+ },
+ "mutagen_potions/arachas_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/11"
+ },
+ "mutagen_potions/ekimma_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/11"
+ },
+ "mutagen_potions/fiend_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/11"
+ },
+ "mutagen_potions/grave_hag_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/11"
+ },
+ "mutagen_potions/griphon_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/11"
+ },
+ "mutagen_potions/nightwraith_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/11"
+ },
+ "mutagen_potions/noonwraith_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/11"
+ },
+ "mutagen_potions/troll_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/11"
+ },
+ "mutagen_potions/wraith_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "fallback": "mutagen/11"
  }
 }

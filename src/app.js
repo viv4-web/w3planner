@@ -1,5 +1,5 @@
 
-const APP_VERSION="v24";
+const APP_VERSION="v25";
 const CFG=Object.assign({mode:"online",shareBase:""},window.PLANNER_CONFIG||{});
 const DATA=/*@data:DATA*/;
 
@@ -34,8 +34,8 @@ const TREES=META.map((m,ti)=>{const d=DATA[ti];const t={...m,sk:d.map((r,j)=>({i
  if(ti===3)t.core=t.sk.map((s,i)=>s.req.length?-1:i).filter(i=>i>=0);return t});
 const MAXL=3;const mx=(ti,i)=>TREES[ti].sk[i].max;
 const MUTS=/*@data:MUTS*/.map((m,k)=>({...m,tier:k%3}));
-const SPECIAL_MUT=/*@data:SPECIAL_MUT*/;
-{const base={red:0,blue:3,green:6},ico={red:9,blue:10,green:11};SPECIAL_MUT.forEach(([lb,c])=>MUTS.push({...MUTS[base[c]],name:lb+' mutagen',label:lb,special:true,tier:0,icon:ico[c]}))}
+const SPECIAL_MUT=/*@data:SPECIAL_MUT*/,SPECIAL_IMG=Object.fromEntries(/*@data:SPECIAL_MUT_ICONS*/.map(r=>[r.label,r.img]));
+{const base={red:0,blue:3,green:6},ico={red:9,blue:10,green:11};SPECIAL_MUT.forEach(([lb,c])=>MUTS.push({...MUTS[base[c]],name:lb+' mutagen',label:lb,special:true,tier:0,icon:ico[c],img:SPECIAL_IMG[lb]}))}
 const STATN={"vitality": "Vitality", "attack_power": "Attack power", "spell_power": "Sign intensity"};
 const MUTCOL={red:'#b33b3b',blue:'#3d74d4',green:'#4f9a3e'};
 // parents: connected node above
@@ -158,7 +158,7 @@ function renderTree(){const p=document.getElementById('treePanel');
   g.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();g.onclick()}if(e.key==='Backspace'||e.key==='Delete')rem(ti,i)}});
  document.getElementById('treeHint').textContent=(budget()===0?'You have no skill points yet: raise Level or Bonus points below to start. ':'')+(matchMedia('(pointer:coarse)').matches?'Tap to select, tap again to add a point. To equip, select a skill then tap an open slot. Use Remove point below to take points back.':'Click to select, click again to add a point, right-click to remove. Drag an invested skill onto a slot.')}
 
-function mutIcon(m,cx,cy,r){return`<image href="${MUTIMG[MUTS[m].icon!==undefined?MUTS[m].icon:m]}" x="${cx-r*1.15}" y="${cy-r*1.15}" width="${r*2.3}" height="${r*2.3}"/>`}
+function mutIcon(m,cx,cy,r){return`<image href="${MUTS[m].img||MUTIMG[MUTS[m].icon!==undefined?MUTS[m].icon:m]}" x="${cx-r*1.15}" y="${cy-r*1.15}" width="${r*2.3}" height="${r*2.3}"/>`}
 function renderMutagens(p){let s=`<svg viewBox="0 0 700 910" role="group" aria-label="Mutagen collection">${DEFS()}<rect width="700" height="910" fill="#080706"/><image href="${GA.treebg[4]}" width="700" height="910" preserveAspectRatio="xMidYMid slice"/>`;
  const cell=(k,x,y,sp)=>{const m=MUTS[k],isSel=selMut===k;
   return `<g class="mut" tabindex="0" data-k="${k}" style="cursor:grab" aria-label="${m.name}"><title>${m.name}</title><rect class="frame" x="${x}" y="${y}" width="90" height="92" fill="#16130f" stroke="${isSel?'#fff':sp?'#8a7440':'#6b5a42'}" stroke-width="${isSel?2.5:1.5}"/>${mutIcon(k,x+45,y+(sp?36:46),sp?24:30)}${sp?`<text x="${x+45}" y="${y+84}" text-anchor="middle" fill="#cfc5b3" font-size="${m.label.length>12?10.5:12}">${m.label}</text>`:''}</g>`};
