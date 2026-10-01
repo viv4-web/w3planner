@@ -12,7 +12,7 @@ The gate, in order:
   1. no game art in the repo, the full test suite on the game build (never --quick), build dist/game
   2. preview deployment to the branch "preview" (never production), then tests/smoke.py against the preview URL
      (page loads, no console errors, every link fixture opens, a new link can be created and reopened)
-  3. a short report, and stop. Production needs --promote, after a person has said yes.
+  3. a short report, and stop. Production needs --promote, only after Vivek has reviewed the preview and said yes in a message written after the report (CLAUDE.md rule 11).
 --promote refuses unless dist/game is exactly the build (same git commit, same files) that passed on preview.
 After the production upload it runs the same smoke tests against https://<project>.pages.dev. If they fail it rolls
 production back to the previous production deployment through the Cloudflare API and reports. That rollback is the only
