@@ -51,6 +51,7 @@ def jobs():
     for ci, c in enumerate(("red", "blue", "green")):
         for t in range(3): add("mutagen/%d" % (ci * 3 + t), A.mutagen_img(c, t))
         add("mutagen/%d" % (9 + ci), A.mutagen_unique(c))
+    for slot in A.ITEM_SLOTS: add("items/ph-" + slot, A.item_placeholder(slot))
     add("art/skill_slot_empty", A.slot_empty()); add("art/skill_slot_locked", A.padlock()); add("art/mutagen_slot_empty", A.mut_slot_empty())
     add("lock/sock", A.padlock()); add("lock/slot", A.padlock())
     add("css/body-bg", A.helix_bg()); add("img/skill-point", A.skill_point())
@@ -64,7 +65,7 @@ def main():
     a = ap.parse_args()
     manifest = json.loads((ROOT / "art" / "manifest.json").read_text())
     J = jobs()
-    missing = sorted(set(manifest) ^ set(J))
+    missing = sorted({k for k, v in manifest.items() if "placeholder_as" not in v} ^ set(J))  # slots that borrow another slot's placeholder draw nothing of their own
     if missing: sys.exit("generator and manifest disagree on: %s" % missing[:8])
     same_bytes = same_pixels = 0; bad = []
     for sid, (im, fmt, q) in J.items():

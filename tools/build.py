@@ -9,7 +9,9 @@ Variants
   game         the live-site build: the game's own art, read from --art-dir (the private art repo)
 
 Images are copied to assets/ (game) or art/ (placeholder) under content-hash names, and the page refers to them
-by those names. The output is a plain static folder that can be served or deployed as it is.
+by those names. A source may also say /*@file:NAME*/: data/NAME.json is then written as a script data/NAME.<hash>.js
+(it sets W3DATA.NAME), loaded on demand by a <script> tag (the page's CSP forbids fetch), and the marker becomes the file's URL.
+Big data (the equipment lists) never goes into index.html. The output is a plain static folder that can be served or deployed as it is.
 Standard library only.
 """
 import argparse, hashlib, json, re, shutil, sys
@@ -28,6 +30,7 @@ def main():
     ap.add_argument("--variant", choices=["placeholder", "game"], required=True)
     ap.add_argument("--art-dir", help="folder with the art files (required for the game variant)")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--src", default=str(ROOT / "src"), help="source folder (index.html, app.css, app.js); default src/")
     a = ap.parse_args()
 
     if a.variant == "game":
@@ -55,6 +58,9 @@ def main():
         sid = match.group(1)
         if sid not in manifest:
             sys.exit("unknown art id in the source: %s" % sid)
+        # a slot may say "placeholder_as": the public build then shows that slot's placeholder (the equipment icons share one drawn placeholder per slot)
+        if a.variant == "placeholder" and manifest[sid].get("placeholder_as"):
+            sid = manifest[sid]["placeholder_as"]
         ext = manifest[sid][a.variant]
         src = art_dir / (sid + "." + ext)
         if not src.is_file():
@@ -74,9 +80,17 @@ def main():
                 return tokens(read(p))
         sys.exit("missing data file for %s" % name)
 
-    css = tokens(read(ROOT / "src" / "app.css"))
-    js = tokens(re.sub(r"/\*@data:([A-Z_]+)\*/", data, read(ROOT / "src" / "app.js")))
-    html = tokens(read(ROOT / "src" / "index.html")).replace("{{css}}", css).replace("{{js}}", js)
+    def lazy(match):
+        name = match.group(1); p = ROOT / "data" / ("%s.json" % name)
+        if not p.is_file(): sys.exit("missing data file for @file:%s" % name)
+        blob = ('(window.W3DATA=window.W3DATA||{}).%s=%s;\n' % (name, tokens(read(p)).strip())).encode("utf-8")
+        fname = "data/%s.%s.js" % (name, hashlib.sha1(blob).hexdigest()[:12]); files[fname] = blob
+        return json.dumps(fname)
+
+    src = Path(a.src)
+    css = tokens(read(src / "app.css"))
+    js = re.sub(r"/\*@file:([a-z0-9_]+)\*/", lazy, tokens(re.sub(r"/\*@data:([A-Z_]+)\*/", data, read(src / "app.js"))))
+    html = tokens(read(src / "index.html")).replace("{{css}}", css).replace("{{js}}", js)
     (out / "index.html").write_bytes(html.encode("utf-8"))
     for name, blob in files.items():
         (out / name).parent.mkdir(parents=True, exist_ok=True)

@@ -20,23 +20,28 @@ def decode(path):
     n3=bit6(f);start=f.tell()
     ski=(magic>>8)&0xffff;strs={}
     bad=0
+    utf8=ver>=164  # since the remaster (v164) strings are UTF-8: offset and length count bytes; before, UTF-16: they count 16-bit units
     for h,off,ln in b1:
-        sid=h^magic;p=start+off*2;k=ski;out=bytearray()
-        if p+2*ln>len(data): bad+=1;continue
+        sid=h^magic;w=1 if utf8 else 2;p=start+off*w;k=ski
+        if p+w*ln>len(data): bad+=1;continue
+        out=bytearray()
         for j in range(ln):
-            ck=((ln+1)*k)&0xffff;out+=bytes([data[p+2*j]^(ck&0xff),data[p+2*j+1]^(ck>>8)])
+            ck=((ln+1)*k)&0xffff
+            if utf8: out.append(data[p+j]^(ck&0xff))
+            else: out+=bytes([data[p+2*j]^(ck&0xff),data[p+2*j+1]^(ck>>8)])
             k=((k<<1)|(k>>15))&0xffff
-        strs[sid]=out.decode('utf-16-le',errors='replace')
+        strs[sid]=out.decode('utf-8' if utf8 else 'utf-16-le',errors='replace')
     keys={kh:(sid^magic) for kh,sid in b2}
-    end=start+n3*2
+    end=start+n3*(1 if utf8 else 2)
     print('bad',bad,file=sys.stderr);print('version',ver,'strings',n1,'keys',n2,'string area ends',end,'file size',len(data),'extra bytes',len(data)-2-end,file=sys.stderr)
     return strs,keys
-strs,keys=decode(sys.argv[1])
 def h(key):
     x=0
     for c in key.lower().encode('utf-16-le')[::2]: x=(x*31+c)&0xffffffff
     return x
-import json
-json.dump({'strs':{str(k):v for k,v in strs.items()},'keys':{str(k):v for k,v in keys.items()}},open('strings.json','w'))
-for t in ['skill_rend_name','skill_rend_description','skill_far_reaching_aard_name','panel_character_skill_signs','skill_tree_name_survival']:
-    sid=keys.get(h(t));print(t,'->',repr(strs.get(sid,'??'))[:300])
+if __name__=="__main__":
+    strs,keys=decode(sys.argv[1])
+    import json
+    json.dump({'strs':{str(k):v for k,v in strs.items()},'keys':{str(k):v for k,v in keys.items()}},open('strings.json','w'))
+    for t in ['skill_rend_name','skill_rend_description','skill_far_reaching_aard_name','panel_character_skill_signs','skill_tree_name_survival']:
+        sid=keys.get(h(t));print(t,'->',repr(strs.get(sid,'??'))[:300])

@@ -200,3 +200,36 @@ def mutagen_unique(color, S=128, ss=3):
     sx, sy, sr = c + S * ss * .27, c - S * ss * .29, S * ss * .09
     d.polygon([(sx, sy - sr), (sx + sr * .28, sy - sr * .28), (sx + sr, sy), (sx + sr * .28, sy + sr * .28), (sx, sy + sr), (sx - sr * .28, sy + sr * .28), (sx - sr, sy), (sx - sr * .28, sy - sr * .28)], fill=(240, 214, 140, 255))
     return big.resize((S, S), Image.LANCZOS)
+
+
+# ---------- equipment placeholders: one drawn silhouette per slot (the game's icons are used on the live site only) ----------
+ITEM_SLOTS=['steel','silver','crossbow','bolts','chest','gloves','trousers','boots','mask']
+ITEM_SIZE={'steel':(64,128),'silver':(64,128),'crossbow':(64,128),'bolts':(64,64),'chest':(64,128),'gloves':(64,128),'trousers':(64,128),'boots':(64,128),'mask':(64,64)}
+def item_placeholder(slot,ss=6):
+    W,H=ITEM_SIZE[slot];im=canvas(W,H,ss);d=ImageDraw.Draw(im);k=ss
+    P=lambda pts:[(x*k,y*k) for x,y in pts]
+    base=(34,31,28,255);d.rounded_rectangle([1*k,1*k,(W-1)*k,(H-1)*k],radius=4*k,fill=base,outline=(78,66,48,255),width=int(1.2*k))
+    steel=(176,184,196,235);silver=(222,228,240,245);gold=(196,150,70,235);leather=(150,108,66,235);dark=(20,18,16,255)
+    cx=W/2
+    if slot in('steel','silver'):
+        c=steel if slot=='steel' else silver
+        d.polygon(P([(cx-4,14),(cx+4,14),(cx+3,84),(cx,92),(cx-3,84)]),fill=c);d.line(P([(cx,16),(cx,86)]),fill=(120,128,140,255),width=int(.8*k))
+        d.rectangle(P([(cx-13,92),(cx+13,96)]),fill=gold);d.rectangle(P([(cx-2.5,96),(cx+2.5,112)]),fill=leather);d.ellipse(P([(cx-4,111),(cx+4,119)]),fill=gold)
+        if slot=='silver':d.polygon(P([(cx,24),(cx+1.6,30),(cx,36),(cx-1.6,30)]),fill=(120,150,210,255))
+    elif slot=='crossbow':
+        d.rectangle(P([(cx-3,26),(cx+3,112)]),fill=leather);d.arc(P([(cx-26,18),(cx+26,58)]),200,340,fill=steel,width=int(3*k));d.line(P([(cx-26,38),(cx,30),(cx+26,38)]),fill=(210,200,180,255),width=int(.8*k))
+        d.polygon(P([(cx-3,24),(cx+3,24),(cx,8)]),fill=silver)
+    elif slot=='bolts':
+        d.line(P([(14,50),(48,16)]),fill=leather,width=int(2.4*k));d.polygon(P([(52,12),(44,16),(48,20)]),fill=steel);d.polygon(P([(14,50),(10,42),(18,46)]),fill=(180,60,52,255));d.polygon(P([(14,50),(22,54),(18,46)]),fill=(180,60,52,255))
+    elif slot=='chest':
+        d.polygon(P([(16,22),(24,16),(cx-6,20),(cx,26),(cx+6,20),(W-24,16),(W-16,22),(W-10,48),(W-16,52),(W-20,44),(W-20,104),(20,104),(20,44),(16,52),(10,48)]),fill=leather,outline=gold)
+        d.line(P([(cx,26),(cx,104)]),fill=gold,width=int(.9*k));d.line(P([(22,64),(W-22,64)]),fill=gold,width=int(.9*k))
+    elif slot=='gloves':
+        d.polygon(P([(18,60),(18,30),(24,30),(24,50),(28,24),(34,24),(34,48),(38,22),(44,22),(44,50),(48,30),(54,30),(52,70),(44,84),(26,84)]),fill=leather,outline=gold);d.rectangle(P([(22,84),(48,102)]),fill=steel)
+    elif slot=='trousers':
+        d.polygon(P([(16,20),(W-16,20),(W-14,110),(cx+3,110),(cx,48),(cx-3,110),(14,110)]),fill=leather,outline=gold);d.line(P([(16,28),(W-16,28)]),fill=gold,width=int(1.2*k))
+    elif slot=='boots':
+        d.polygon(P([(20,16),(40,16),(40,84),(54,96),(54,110),(14,110),(14,92),(20,86)]),fill=leather,outline=gold);d.rectangle(P([(14,104),(54,112)]),fill=dark)
+    elif slot=='mask':
+        d.ellipse(P([(14,10),(W-14,H-8)]),fill=(214,200,170,255),outline=gold);d.ellipse(P([(21,24),(29,32)]),fill=dark);d.ellipse(P([(W-29,24),(W-21,32)]),fill=dark);d.arc(P([(24,36),(W-24,52)]),20,160,fill=dark,width=int(1.4*k))
+    return down(im,W,H)

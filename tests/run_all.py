@@ -69,6 +69,27 @@ def main():
     server = serve.make_server(site, 0); port = server.server_address[1]
     threading.Thread(target=server.serve_forever, daemon=True).start(); base = "http://127.0.0.1:%d/" % port
     ref = json.loads((ROOT / "tests/fixtures/tooltips_ref.json").read_text())
+    print("\n== Equipment data (data/items.json, items_ng.json, items_ng_plus.json) ==")
+    items = json.loads((ROOT / "data/items.json").read_text(encoding="utf-8")); manifest = json.loads((ROOT / "art/manifest.json").read_text()); slots = {x["id"] for x in items["slots"]}
+    per = {rs: json.loads((ROOT / ("data/items_%s.json" % rs)).read_text(encoding="utf-8"))["items"] for rs in items["rulesets"]}; recs = [r for v in per.values() for r in v]
+    check("%d + %d items (ng, ng_plus); ids unique within each ruleset; default ruleset ng; every slot, set and name valid" % (len(per["ng"]), len(per["ng_plus"])),
+          all(len({r["id"] for r in v}) == len(v) for v in per.values()) and items["default_ruleset"] == "ng" and all(r["slot"] in slots and (r["set"] is None or r["set"] in items["sets"]) and r["name"] for r in recs)
+          and all(p in {r["id"] for r in per[rs]} for s_ in items["sets"].values() for rs in per for p in s_[rs]["pieces"]))
+    check("the items are not in the small file and not embedded: items.json %d KB, items_ng.json %d KB, items_ng_plus.json %d KB" % tuple(len((ROOT / "data" / n).read_bytes()) // 1024 for n in ("items.json", "items_ng.json", "items_ng_plus.json")),
+          "items" not in items and (ROOT / "data/items.json").stat().st_size < 100_000)
+    sb = [(s_, b) for s_, v in items["sets"].items() for b in v["bonuses"]]
+    check("every set bonus has its thresholds, a filled text and a script and XML source (%d bonuses)" % len(sb), len(sb) == 13 and all(b["pieces"] in (3, 6) and "$S$" not in b["text"] and any(x.startswith("scripts/") for x in b["source"]) for _, b in sb), [s_ for s_, b in sb if "$S$" in b["text"]])
+    lvl = lambda rs, i: next(r["required_level"] for r in per[rs] if r["id"] == i)
+    check("required levels follow the game's formula (a Grandmaster Feline armor needs level 40 in ng, 70 in ng_plus)", lvl("ng", "Lynx Armor 4") == 40 and lvl("ng_plus", "Lynx Armor 4") == 70)
+    check("autogen relics have no level and say it varies", all(r["level_varies"] and r["required_level"] is None for r in recs if r["autogen"]) and any(r["autogen"] for r in recs))
+    shown = [e for r in recs for e in r["base"] + r["bonuses"] if "line" in e]
+    check("stat lines follow tooltip_settings.csv (%d rows; stats sorted by line, percent flags set)" % len(items["stat_display"]), len(items["stat_display"]) > 80 and shown and all(r["base"] == sorted(r["base"], key=lambda e: e.get("line", 9999)) for r in recs)
+          and all(e["percent"] for e in shown if e.get("type") == "mult"))
+    check("every item has its icon (none missing)", all(r["icon"] for r in recs), [r["id"] for r in recs if not r["icon"]][:3])
+    icon_ids = sorted({r["icon"][len("@@img:"):-2] for r in recs if r["icon"]}); item_slots = sorted(k for k in manifest if k.startswith("items/") and "/ph-" not in k)
+    check("every icon token has a manifest slot, and no manifest slot is unused", icon_ids == item_slots, sorted(set(icon_ids) ^ set(item_slots))[:3])
+    check("every equipment icon shows the drawn placeholder of its slot in the public build", all(manifest[i].get("placeholder_as") == "items/ph-" + next(r["slot"] for r in recs if r["icon"] == "@@img:%s@@" % i) and (ROOT / "art/placeholder" / (manifest[i]["placeholder_as"] + ".png")).is_file() for i in icon_ids))
+    if a.variant == "game": check("the private art folder has every equipment icon", all((Path(a.art_dir) / (i + ".png")).is_file() for i in icon_ids), [i for i in icon_ids if not (Path(a.art_dir) / (i + ".png")).is_file()][:3])
     N = 60 if a.quick else 300
     with sync_playwright() as pw:
         b = pw.chromium.launch()
@@ -131,6 +152,10 @@ def main():
         print("\n== Release gate logic (tools/deploy.py, with a fake Cloudflare) ==")
         gt = subprocess.run([sys.executable, str(ROOT / "tests/test_deploy_gate.py")], capture_output=True, text=True)
         check("preview never touches production; promote and automatic rollback behave", gt.returncode == 0, "" if gt.returncode == 0 else gt.stderr.strip()[-300:])
+        for label, script in (("the PC extract tool and its importer (fake game folder, read-only, stdlib only)", "test_pc_tools.py"), ("big data is a separate hashed script file, never embedded in index.html", "test_build_lazy.py")):
+            ru = subprocess.run([sys.executable, str(ROOT / "tests" / script)], capture_output=True, text=True); check(label, ru.returncode == 0, "" if ru.returncode == 0 else ru.stderr.strip()[-300:])
+        bt = subprocess.run([sys.executable, str(ROOT / "tests/test_bundle.py")], capture_output=True, text=True)
+        check("the W3 bundle reader: format, zlib, snappy, lz4 (hand-made data)", bt.returncode == 0, "" if bt.returncode == 0 else bt.stderr.strip()[-300:])
         sw = subprocess.run([sys.executable, str(ROOT / "tests/test_smoke_wait.py")], capture_output=True, text=True)
         check("the smoke test waits for a new deployment on the plain URL, never a cache-busted one", sw.returncode == 0, "" if sw.returncode == 0 else sw.stderr.strip()[-300:])
         if a.variant == "placeholder":
