@@ -22,15 +22,18 @@
   <section class="treecol">
     <div class="tabs" role="tablist" id="tabs"></div>
     <div class="panel" id="treePanel"></div>
+    <p class="hint" id="treeHint"></p>
+  </section>
+  <div class="ptsblock">
     <div class="pts">POINTS AVAILABLE <b id="avail2">0</b><img src="@@img:img/skill-point@@" alt=""></div><div class="budget" aria-label="Character points">
     <label>Level <input id="lvl" type="number" min="1" max="100" value="1"></label><label title="Places of Power and other sources">Bonus points <input id="bonuspts" type="number" min="0" max="100" value="0"></label><span>Total <b id="total">8</b></span>
     <span hidden>Points available <b id="avail">0</b></span>
     <button class="btn" id="mutbtn">Mutations</button><button class="btn" id="eqbtn" title="Jump to the equipment panel">Equipment</button><button class="btn" id="reset">Reset build</button>
-  </div><p class="hint" id="treeHint"></p>
-  </section>
+  </div>
+  </div>
   <div class="mutcol">
     <div class="bonus" id="bonus"></div>
-    <div class="panel plain"><svg id="slots" viewBox="0 0 820 900" aria-label="Equipped skills and mutagens"></svg></div>
+    <div class="panel plain mutpanel"><svg id="slots" viewBox="0 0 820 900" aria-label="Equipped skills and mutagens"></svg></div>
   </div>
   <div class="detailrow">
     <div class="info" id="info"></div>

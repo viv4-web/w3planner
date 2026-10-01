@@ -34,7 +34,7 @@ def layout(b, base, check, label):
                   tree["l"] < 120 and tree["r"] <= mut["l"] and mut["r"] <= g["vd"]["l"] and g["vd"]["r"] <= eq["l"] and abs(g["info"]["l"] - sk["l"]) <= 2 and abs(g["info"]["r"] - sk["r"]) <= 2 and abs(g["link"]["r"] - sk["r"]) <= 2 and g["info"]["t"] >= max(tree["b"], mut["b"]) - 40, g)
             check("%s: the skills area and the equipment panel have the same height (%d, %d); the page uses its width (equipment right edge %d of %d)" % (tag, sk["h"], eq["h"], eq["r"], g["page"]["r"]),
                   abs(sk["h"] - eq["h"]) <= 2 and eq["r"] >= 0.95 * g["page"]["r"] and g["page"]["w"] <= 2400 and abs(eq["w"] - min(560, max(380, 0.28 * w))) <= 3, g)
-            check("%s: the tree is %d px wide and the weapons are one row of 4, the armor %s" % (tag, tree["w"], "one row of 5" if g["arows"] == 1 else "3 + 2"), g["wrows"] == 1 and g["arows"] == (1 if eq["w"] - 30 >= 392 else 2), [g["wrows"], g["arows"], eq["w"]])
+            check("%s: the tree is %d px wide and the weapons are one row of 4, the armor %s" % (tag, tree["w"], "one row of 5" if g["arows"] == 1 else "3 + 2"), g["wrows"] == 1 and g["arows"] == (1 if g["c2"]["w"] >= 392 else 2), [g["wrows"], g["arows"], g["c2"]["w"]])
         elif w >= 1024:
             eq, sk = g["eq"], g["skills"]
             check("%s: the skills (tree beside mutations) on top, the equipment panel below at full width in 3 columns (weapons | armor | sets and stats)" % tag,
@@ -55,6 +55,24 @@ LEVELS = {"ng": {"Lynx Armor": 17, "Lynx Armor 1": 23, "Lynx Armor 2": 29, "Lynx
           "ng_plus": {"Lynx Armor": 47, "Lynx Armor 1": 53, "Lynx Armor 2": 59, "Lynx Armor 3": 64, "Lynx Armor 4": 70, "NGP Lynx Armor 4": 40, "Lynx School Crossbow": 29, "q702_vampire_mask": 1}}
 # hand-calculated from the game's scripts (GetItemLevel, inventoryComponent.ws:305 and gameParams.ws:917; see the report): armor 120/150/180/205/240 -> 17/23/29/34/40 (Grandmaster has the EP1 tag, minus 1),
 # NG+ armor 270/300/330/355/390 -> 47/53/59/64/70, crossbow attack power x2.25 -> 32 - 1 - 2 = 29, masks have no branch (level 0 -> 1), the first test of 'Blunt Bolt Legendary' (5) wins -> 1
+
+
+SCALE = """()=>{const R=s=>{const e=document.querySelector(s);return e?e.getBoundingClientRect():null};
+ const n=R('#treePanel .node .frame'),ts=R('#treePanel svg'),ms=R('#slots'),info=R('#info'),sr=R('#shareRow'),link=sr&&sr.width?sr:R('#importRow');
+ const w=[...document.querySelectorAll('.eqw .eqtile')].map(e=>e.getBoundingClientRect().width),a=[...document.querySelectorAll('.eqarm .eqtile')].map(e=>e.getBoundingClientRect().width);
+ return{vh:innerHeight,y:scrollY,node:n.width,ts:ts.width,ms:ms.width,tt:R('#treePanel').top,mt:ms.top,info:info.bottom,link:link.bottom,w:w,a:a}}"""
+
+
+def scalecheck(b, base, check, label):
+    """One scale drives the tree and the mutation grid (min of width, height and 1.0 = native icon size); the tile size is shared; the detail box and link bar stay in the first screen."""
+    for w, h in ((2560, 1440), (1920, 1080), (1440, 900), (1280, 800)):
+        pg = b.new_page(viewport={"width": w, "height": h}); pg.goto(base); until(pg, READY); pg.wait_for_timeout(300); g = pg.evaluate(SCALE); tag = "%s: at %dx%d" % (label, w, h)
+        st, sm = g["ts"] / 700, g["ms"] / 717.5
+        check("%s: the detail box and the link bar are fully inside the window without scrolling (%d, %d of %d)" % (tag, g["info"], g["link"], h), g["y"] == 0 and g["info"] <= h and g["link"] <= h, g)
+        check("%s: tree icons are not upscaled (tile %.1f px, native 84 at scale 1)" % (tag, g["node"]), g["node"] <= 84 + 1.5, g)
+        check("%s: tree and mutation grid have the same scale (%.3f, %.3f) and start at the same height" % (tag, st, sm), abs(st - sm) <= 0.01 * max(st, sm) and abs(g["tt"] - g["mt"]) <= 6, g)
+        check("%s: weapon and armor tiles are the same size (%s, %s)" % (tag, sorted(set(round(x) for x in g["w"])), sorted(set(round(x) for x in g["a"]))), max(g["w"] + g["a"]) - min(g["w"] + g["a"]) <= 1.5, g)
+        pg.close()
 
 
 def levelcheck(b, base, check, label, pg):
@@ -117,7 +135,7 @@ def run(b, base, check, label, quick=False):
     errs, events = [], []; pg = b.new_page(viewport={"width": 1400, "height": 950}); pg.on("pageerror", lambda e: errs.append(str(e).split("\n")[0][:100])); E = pg.evaluate
     pg.on("load", lambda p: events.append("load")); pg.on("request", lambda r: events.append("data") if "/data/items" in r.url else None)
     pg.goto(base); check("%s: the panel shows right away and the equipment data loads after the page has loaded, only items.js and items_ng.js" % label, until(pg, READY) and E(KEYS) == ["items.js", "items_ng.js"] and events.index("load") < (events.index("data") if "data" in events else 99), [events[:4], E(KEYS)])
-    layout(b, base, check, label)
+    layout(b, base, check, label); scalecheck(b, base, check, label)
     pg.fill("#lvl", "100")      # the planner starts at Level 1 and the game blocks items above the level, so the walk-through below runs at the top level
     check("%s: weapons (steel, silver, crossbow, bolts) then armor (chest, gloves, trousers, boots, mask); one greyed strip \"Consumables & bombs, coming later\"" % label,
           E("[...document.querySelectorAll('#eqbody .eqw .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "steel,silver,crossbow,bolts" and E("[...document.querySelectorAll('#eqbody .eqarm .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "chest,gloves,trousers,boots,mask"
@@ -149,6 +167,8 @@ def run(b, base, check, label, quick=False):
     put(2); two = E("document.querySelectorAll('.eqset li.lit').length"); put(3); three = E("document.querySelectorAll('.eqset li.lit').length"); put(6); six = E("document.querySelectorAll('.eqset li.lit').length")
     check("%s: the 3-piece bonus lights at 3 counted pieces and the 6-piece at 6 (lit: %d, %d, %d)" % (label, two, three, six), (two, three, six) == (0, 1, 2) and E("document.querySelector('.eqset h3').textContent").startswith("Feline"))
     check("%s: each equipped item's stats are listed, not summed" % label, E("document.querySelectorAll('#eqbody .eqitem').length") == 6)
+    fs = E("[parseFloat(getComputedStyle(document.querySelector('#eqbody .eqgrid')).fontSize),parseFloat(getComputedStyle(document.querySelector('#eqbody .eqset li')).fontSize),parseFloat(getComputedStyle(document.querySelector('#info p')).fontSize)]")
+    check("%s: the sets and item stats text is at least the body size of the skill detail box (%s)" % (label, fs), fs[0] >= fs[2] and fs[1] >= fs[2], fs)
     # autogen relic: no Equip set button
     E("(()=>{S.gear.fill(0);save();eqRender(true)})()"); pg.click('#eqbody .eqtile[data-i="0"]'); pg.wait_for_selector("#pkgrid .pktile"); pg.fill("#pkq", "Wolf"); pg.wait_for_timeout(100)
     E("(()=>{EQ.pick.sel=EQ.rs.ng.byId.get('Wolf');eqPickRender()})()"); relic = E("document.getElementById('pkside').innerText")

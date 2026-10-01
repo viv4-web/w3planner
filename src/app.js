@@ -347,7 +347,19 @@ function renderInfo(){const el=document.getElementById('info');
  document.getElementById('aAdd').onclick=()=>add(ti,i);document.getElementById('aRem').onclick=()=>rem(ti,i);document.getElementById('aEq').onclick=()=>equip(ti,i)}
 
 function render(){if(typeof eqRender==='function')queueMicrotask(()=>eqRender());document.getElementById('total').textContent=budget();document.getElementById('avail').textContent=budget()-spent();{const v=budget()-spent(),e=document.getElementById('avail2');e.textContent=v;e.style.color=v<0?'#ff6a5a':'';e.title=v<0?'Over budget: raise Level or Bonus points, or remove something':''}renderTabs();renderTree();renderSlots();renderBonus();renderInfo();renderMut();
- document.getElementById('link').value=(CFG.shareBase||location.href.split('#')[0])+'#'+enc()}
+ document.getElementById('link').value=(CFG.shareBase||location.href.split('#')[0])+'#'+enc();fitSkills()}
+
+// ---- one scale for the tree and the mutation grid (>= 1024 px; below that they stack and fill the width) ----
+// --sc = min(width-based, height-based, 1). At 1 the tree svg (700 units wide, tiles 84, art 64 px) and the mutation svg (820 units, tiles 96 = 0.875 x 820 wide) draw 1 unit as 1 px, the native size: icons are never upscaled.
+// Height-based: the tree, the tab row, the points block, the detail box and the link bar fit in the window below the header, so the link bar is never below the fold. The leftover width becomes the gap between the two.
+function fitSkills(){const sk=document.querySelector('.skills');if(!sk)return;
+ if(innerWidth<1024){if(sk.style.getPropertyValue('--sc'))sk.style.removeProperty('--sc');return}
+ const tp=document.getElementById('treePanel'),mc=sk.querySelector('.mutcol'),bn=document.getElementById('bonus');let sc=+sk.style.getPropertyValue('--sc')||.6;
+ for(let n=0;n<8;n++){
+  const top=sk.getBoundingClientRect().top+scrollY,row=Math.max(tp.offsetHeight,mc.offsetHeight),fixed=sk.offsetHeight-row,room=innerHeight-top-fixed-4,B=bn.offsetHeight+8;
+  const scW=(sk.clientWidth-28)/(700+717.5),scH=Math.min(room/910,(room-B)/787.5),next=Math.max(.3,Math.min(1,scW,scH));
+  if(Math.abs(next-sc)<.002)break;sc=next;sk.style.setProperty('--sc',sc.toFixed(4))}}
+window.addEventListener('resize',fitSkills);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitSkills);
 
 S=dec(location.hash.slice(1))||blank();enforceLocks();
 function pointsChanged(){enforceLocks();save()}
