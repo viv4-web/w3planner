@@ -101,8 +101,10 @@ The other files extracted to `~/incoming/mutagens/` (the 64x64 icons from `textu
 ## Backlog (in rough order)
 1. Equipment overlay (design direction agreed; see the mockup). It should copy the game's inventory screen as closely as possible. Needs screenshots and game files (`items` XML, inventory Flash files, icon textures) from Vivek's PC before any code.
 2. Build guides feature (guides that reference skills and items by stable id).
-3. Confirm the four `how: inferred` special-mutagen icon matches (Greater Foglet, Archgriffin, Griffin, Ekhidna in `data/SPECIAL_MUT_ICONS.json`) against the names in `en.w3strings` (`item_name_mutagen_N` for the item in each row); the colour check and elimination support them but no name in the XML does. Also show the icon in the mutagen description panel if wanted (today only the tab, sockets and drag ghost show icons; tooltips are text).
-4. Add Firefox and WebKit to `tests/run_all.py` (only Chromium is tested today).
-5. Script the game-data extraction (`docs/DATA-PIPELINE.md`).
-6. GitHub Actions workflows in `.github/workflows` have run: CI is green on `main` (since PR #1). `gh api repos/viv4-web/w3planner/actions/permissions` returns 403 by design (the token has no administration rights); that is not a CI problem.
-7. Later: automate deploys, once manual deploys have been smooth for a while.
+3. (a) Confirm the four `how: inferred` special-mutagen icon matches (Greater Foglet, Archgriffin, Griffin, Ekhidna in `data/SPECIAL_MUT_ICONS.json`) against the names in `en.w3strings` (`item_name_mutagen_N` for the item in each row, decoded with `tools/extract/w3dec.py`). The colour check and elimination support them, but no name in the XML does.
+4. (b) Show the mutagen's icon in the description panel (`renderInfo`, `tab===4`). Today only the Mutagens tab tiles, the sockets and the drag ghost show icons; hover tooltips and the panel are text.
+5. Fix the gate's false alarm that rolled v25 back on 2026-10-01 (deployment `8cfdc7f2` was fine and serves v25 directly): `tests/smoke.py` `wait_for_index` fetches with a `?smoke=` cache-buster, so it sees the new `index.html` while the browser, loading the plain URL, still gets the old one from the edge. Wait on the same plain URL the browser loads (and keep the version check), then promote again.
+6. Add Firefox and WebKit to `tests/run_all.py` (only Chromium is tested today).
+7. Script the game-data extraction (`docs/DATA-PIPELINE.md`).
+8. GitHub Actions workflows in `.github/workflows` have run: CI is green on `main` (since PR #1). `gh api repos/viv4-web/w3planner/actions/permissions` returns 403 by design (the token has no administration rights); that is not a CI problem.
+9. Later: automate deploys, once manual deploys have been smooth for a while.
