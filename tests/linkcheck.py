@@ -42,7 +42,7 @@ def open_and_compare(browser, base, fx):
             got, ex = pg.evaluate(LEGACY_STATE), fx["expect"]
             ok = got[:5] == ex[:5] and (ex[5] is None or (got[5] == ex[5] and got[6] == ex[6])); detail = "" if ok else "expected %s, got %s" % (json.dumps(ex)[:80], json.dumps(got)[:80])
         else:
-            if fx["expect"].get("cons") and any(fx["expect"]["cons"]): [pg.wait_for_timeout(100) for _ in range(150) if not pg.evaluate("typeof CN!=='undefined'&&!!CN.data&&typeof EQ!=='undefined'&&!EQ.err")]; pg.wait_for_timeout(150)   # the consumable data loads after the page; the bomb rule below runs when it has
+            if fx["expect"].get("cons") and any(fx["expect"]["cons"]): [pg.wait_for_timeout(100) for _ in range(150) if not pg.evaluate("typeof CN!=='undefined'&&!!CN.data&&typeof EQ!=='undefined'&&!EQ.err&&!!eqData()")]; pg.wait_for_timeout(500)   # the consumable data loads after the page; the bomb rule below runs when it has
             got = pg.evaluate(FULL_STATE); ex = dict(fx["expect"]); bad0 = []
             if fx["version"] < "v31b" and ex.get("cons") and ex["cons"][5]:
                 # v31b: the second bomb slot became the Pocket. A bomb an older link holds there moves to the Bomb slot when that is empty, else it is dropped (the fixture itself is never edited)
