@@ -111,7 +111,7 @@ function glRenderView(tab,e,words){const view=glEl('glView'),pic=glEl('glPic'),t
 
 // a susceptibility chip opens Inventory at that item: a potion or decoction in the Potion 1 panel, a bomb in the Bomb 1 panel (the card is selected), an oil in the Oil row of the sword it fits (highlighted)
 function glGoItem(id){if(!CN.data||!eqData()){notify('The item data is still loading.');return}const it=CN.byId.get(id);if(!it){notify('That item is not in the planner.');return}
- const sword=it.cat==='oil'?((CN.bySlot[CN_SLOTS[6]]||[]).includes(it)?0:1):-1,u=it.cat==='oil'?sword:it.cat==='bomb'?13:9;
+ const sword=it.cat==='oil'?((CN.bySlot[CN_SLOTS[6]]||[]).includes(it)?0:1):-1,u=it.cat==='oil'?sword:it.cat==='bomb'?13:it.cat==='pocket'?14:9;
  scrGo('inv');setTimeout(()=>{eqPick(u);
   if(it.cat==='oil'){const t=document.querySelector('#oilrow .oiltile[data-n="'+it.n+'"]');if(t){t.classList.add('hl');t.scrollIntoView({block:'nearest'});t.focus({preventScroll:true})}notify(it.name+' fits the '+(sword===0?'steel':'silver')+' sword: it is in the Oil row.')}
   else{EQ.pick.sel=it;EQ.pick.scroll=true;eqPickRender()}},0)}

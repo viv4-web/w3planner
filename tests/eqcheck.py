@@ -129,18 +129,20 @@ def conscheck(b, base, check, label):
     """Consumables: the data, what a slot accepts (the slot rule), the c1 and s1 link segments, unknown prefixes, old links re-encoding byte for byte."""
     pg = b.new_page(viewport={"width": 1500, "height": 950}); pg.goto(base); until(pg, READY); E = pg.evaluate
     cats = E("(()=>{const o={};CN.data.items.forEach(i=>o[i.cat]=(o[i.cat]||0)+1);return o})()")
-    check("%s: the consumables: 34 potions, 31 decoctions, 25 bombs, 36 oils (%s); every id has a registry number, no number twice" % (label, cats), cats == {"potion": 34, "decoction": 31, "bomb": 25, "oil": 36} and E("new Set(CN.data.items.map(i=>i.n)).size") == 126, cats)
+    check("%s: the consumables: 34 potions, 31 decoctions, 25 bombs, 36 oils, 111 food and drink, 2 Pocket items (%s); every id has a registry number, no number twice" % (label, cats), cats == {"potion": 34, "decoction": 31, "bomb": 25, "oil": 36, "food": 111, "pocket": 2} and E("new Set(CN.data.items.map(i=>i.n)).size") == 239, cats)
     R = E("""(()=>{const g=id=>CN.byId.get(id),a=(k,id)=>cnAccepts(k,g(id));return{
       potionSlots:[1,2,3,4].every(i=>a('potion'+i,'Swallow 3')&&a('potion'+i,'Mutagen 1')&&a('potion'+i,'White Raffards Decoction 2')),
       potionNoOilBomb:[1,2,3,4].every(i=>!a('potion'+i,'Beast Oil 2')&&!a('potion'+i,'Hanged Man Venom 1')&&!a('potion'+i,'Dancing Star 2')),
-      bombSlots:[1,2].every(i=>a('petard'+i,'Dancing Star 2')&&a('petard'+i,'Snow Ball')&&!a('petard'+i,'Swallow 1')&&!a('petard'+i,'Mutagen 1')&&!a('petard'+i,'Beast Oil 1')),
+      bombSlots:a('petard1','Dancing Star 2')&&a('petard1','Snow Ball')&&!a('petard1','Swallow 1')&&!a('petard1','Mutagen 1')&&!a('petard1','Beast Oil 1')&&!a('petard1','Cows milk')&&!a('petard1','Torch'),
+      foodSlots:[1,2,3,4].every(i=>a('potion'+i,'Cows milk')&&a('potion'+i,'Bottled water')&&a('potion'+i,'Beauclair White')&&!a('potion'+i,'Torch')),
+      pocket:a('pocket','Torch')&&a('pocket','Oil Lamp')&&!a('pocket','Dancing Star 2')&&!a('pocket','Swallow 1')&&!a('pocket','Cows milk')&&!a('pocket','Beast Oil 1')&&CN.bySlot.pocket.length===2,
       steel:a('oil_steel','Beast Oil 2')&&a('oil_steel','Hanged Man Venom 3')&&!a('oil_steel','Cursed Oil 2')&&!a('oil_steel','Necrophage Oil 1')&&!a('oil_steel','Swallow 1'),
       silver:a('oil_silver','Cursed Oil 2')&&a('oil_silver','Beast Oil 1')&&a('oil_silver','Vampire Oil 3')&&!a('oil_silver','Dancing Star 1'),
-      steelN:CN.bySlot.oil_steel.length,silverN:CN.bySlot.oil_silver.length,potionN:CN.bySlot.potion1.length,bombN:CN.bySlot.petard1.length,nothing:!cnAccepts('potion1',null)&&!cnAccepts('chest',CN.byId.get('Swallow 1'))}})()""")
-    check("%s: slot rule: potion slots take potions and decoctions and never an oil or a bomb; bomb slots only bombs; the steel sword takes only SteelOil oils (6), the silver sword every oil (36) (%s)" % (label, R),
-          R["potionSlots"] and R["potionNoOilBomb"] and R["bombSlots"] and R["steel"] and R["silver"] and (R["steelN"], R["silverN"], R["potionN"], R["bombN"]) == (6, 36, 65, 25) and R["nothing"], R)
+      steelN:CN.bySlot.oil_steel.length,silverN:CN.bySlot.oil_silver.length,potionN:CN.bySlot.potion1.length,bombN:CN.bySlot.petard1.length,pocketN:CN.bySlot.pocket.length,nothing:!cnAccepts('potion1',null)&&!cnAccepts('chest',CN.byId.get('Swallow 1'))}})()""")
+    check("%s: slot rule: potion slots take potions, decoctions and food and drink and never an oil or a bomb; the Bomb slot only bombs; the Pocket only Torch and Candle lantern; the steel sword takes only SteelOil oils (6), the silver sword every oil (36) (%s)" % (label, R),
+          R["potionSlots"] and R["potionNoOilBomb"] and R["bombSlots"] and R["foodSlots"] and R["pocket"] and R["steel"] and R["silver"] and (R["steelN"], R["silverN"], R["potionN"], R["bombN"]) == (6, 36, 176, 25) and R["nothing"], R)
     SET = "(ids)=>{const d=CN.byId;S.cons=ids.map(x=>x?d.get(x).n:0);return enc()}"
-    ids = ["Swallow 3", "Mutagen 1", "Cat 2", "White Raffards Decoction 3", "Dancing Star 3", "Samum 1", "Beast Oil 3", "Vampire Oil 2"]
+    ids = ["Swallow 3", "Mutagen 1", "Cat 2", "White Raffards Decoction 3", "Dancing Star 3", "Torch", "Beast Oil 3", "Vampire Oil 2"]
     code = E(SET, ids); seg = [x for x in code.split(".") if x.startswith("c1")]
     back = E("(c=>{const s=dec(c);return s&&s.cons.join()})", code); want = E("(ids=>ids.map(x=>CN.byId.get(x).n).join())", ids)
     check("%s: c1 round trip: one c1 segment of 18 characters (c1 + 8 slots x 2), the same 8 numbers come back (%s)" % (label, seg), len(seg) == 1 and len(seg[0]) == 18 and back == want, [seg, back, want])
@@ -158,6 +160,14 @@ def conscheck(b, base, check, label):
         if r == fx["code"]: same += 1
         else: diff.append((fx["name"][:30], fx["code"][-30:], (r or "")[-30:]))
     check("%s: every link made before v28 re-encodes byte for byte (%d links)" % (label, same), not diff and same > 30, diff[:3])
+    # v31b: a bomb in the old second bomb slot (now the Pocket): moved to the Bomb slot when that is empty, dropped when it holds a bomb; either way said on screen, and the link text is not rewritten on open
+    old = E("(()=>{S.cons=[0,0,0,0,0,CN.byId.get('Samum 1').n,0,0];const a=enc();S.cons=[0,0,0,0,CN.byId.get('Dancing Star 3').n,CN.byId.get('Samum 1').n,0,0];return [a,enc()]})()")
+    res = []
+    for code in old:
+        q = b.new_page(viewport={"width": 1400, "height": 950}); q.goto(base + "#" + code); until(q, READY); until(q, "typeof CN!=='undefined'&&!!CN.data&&document.getElementById('toastMsg').textContent.length>0")
+        res.append(q.evaluate("[S.cons.slice(4,6).map(n=>n?CN.byN.get(n).name:null),location.hash.slice(1),document.getElementById('toastMsg').textContent]")); q.close()
+    check("%s: an old link with a bomb in the second bomb slot: moved to the Bomb slot when it is empty, dropped when not; said on screen; the link text is unchanged (%s)" % (label, [r[0] for r in res]),
+          res[0][0] == ["Samum", None] and "moved to the Bomb slot" in res[0][2] and res[1][0] == ["Superior Dancing Star", None] and "removed" in res[1][2] and res[0][1] == old[0] and res[1][1] == old[1], res)
     pg.close()
 
 
@@ -173,10 +183,10 @@ def invcheck(b, base, check, label):
     # a potion slot
     pg.click('#eqbody .eqtile[data-i="9"]'); pg.wait_for_selector("#pkgrid .pktile")
     title = E("document.getElementById('pktitle').textContent"); n_all = E("document.querySelectorAll('#pkgrid .pktile').length"); stash_hidden = E("document.getElementById('stash').hidden")
-    pg.click('.chip[data-k="potion"]'); n_p = E("document.querySelectorAll('#pkgrid .pktile').length"); pg.click('.chip[data-k="decoction"]'); n_d = E("document.querySelectorAll('#pkgrid .pktile').length"); pg.click('.chip[data-k="all"]')
-    check("%s: clicking a consumable slot replaces the stash with the panel '%s': %d cards, Potions %d, Decoctions %d; no oil or bomb among them; 'Only items in my stash' is disabled" % (label, title, n_all, n_p, n_d),
-          title == "Potion 1 · all items that fit" and stash_hidden and (n_all, n_p, n_d) == (65, 34, 31) and E("[...document.querySelectorAll('#pkgrid .pktile')].every(t=>['potion','decoction'].includes(CN.byId.get(t.dataset.id).cat))") and E("document.getElementById('pkstash').disabled")
-          and E("document.querySelectorAll('#oilrow').length") == 0, [title, n_all, n_p, n_d])
+    pg.click('.chip[data-k="potion"]'); n_p = E("document.querySelectorAll('#pkgrid .pktile').length"); pg.click('.chip[data-k="decoction"]'); n_d = E("document.querySelectorAll('#pkgrid .pktile').length"); pg.click('.chip[data-k="food"]'); n_f = E("document.querySelectorAll('#pkgrid .pktile').length"); pg.click('.chip[data-k="all"]')
+    check("%s: clicking a consumable slot replaces the stash with the panel '%s': %d cards, Potions %d, Decoctions %d, Food & drink %d; no oil or bomb among them; 'Only items in my stash' is disabled" % (label, title, n_all, n_p, n_d, n_f),
+          title == "Potion 1 · all items that fit" and stash_hidden and (n_all, n_p, n_d, n_f) == (176, 34, 31, 111) and E("[...document.querySelectorAll('#pkgrid .pktile')].every(t=>['potion','decoction','food'].includes(CN.byId.get(t.dataset.id).cat))") and E("document.getElementById('pkstash').disabled")
+          and E("document.querySelectorAll('#oilrow').length") == 0, [title, n_all, n_p, n_d, n_f])
     pg.fill("#pkq", "superior swallow"); pg.wait_for_timeout(100); cards = E("[...document.querySelectorAll('#pkgrid .pktile span')].map(s=>s.textContent)")
     pg.click('#pkgrid .pktile[data-id="Swallow 3"]'); tip = E("document.getElementById('pkside').innerText")
     check("%s: search 'superior swallow' leaves one card; its detail shows toxicity, duration, charges and the effect (%s)" % (label, cards), cards == ["Superior Swallow"] and "Toxicity" in tip and "Duration" in tip and "Charges" in tip and "Accelerates Vitality" in tip, [cards, tip[:200]])
@@ -363,11 +373,11 @@ def run(b, base, check, label, quick=False):
     layoutcheck(b, base, check, label); copycheck(b, base, check, label); screencheck(b, base, check, label); conscheck(b, base, check, label); invcheck(b, base, check, label); tiercheck(b, base, check, label); countcheck(b, base, check, label)
     openinv(pg)
     pg.fill("#lvl", "100")      # the planner starts at Level 1 and the game blocks items above the level, so the walk-through below runs at the top level
-    check("%s: the slot boxes: weapons (steel, silver, bolts, crossbow), consumables (4), bombs (2), mask; armor (chest, gloves, trousers, boots); no Pockets slot" % label,
+    check("%s: the slot boxes: weapons (steel, silver, bolts, crossbow), consumables (4), bomb and Pocket, mask; armor (chest, gloves, trousers, boots); the second one is a Pocket" % label,
           E("[...document.querySelectorAll('#eqbody .wbox .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "steel,silver,bolts,crossbow" and E("[...document.querySelectorAll('#eqbody .cbox .eqtile[data-i]')].map(b=>b.dataset.i).join()") == "9,10,11,12"
           and E("[...document.querySelectorAll('#eqbody .bbox .eqtile[data-i]')].map(b=>b.dataset.i).join()") == "13,14" and E("[...document.querySelectorAll('#eqbody .maskbox .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "mask"
-          and E("[...document.querySelectorAll('#eqbody .abox .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "chest,gloves,trousers,boots" and E("document.querySelectorAll('#eqbody .eqtile').length") == 15 and "ocket" not in E("document.getElementById('eqbody').innerText")
-          and E("[...document.querySelectorAll('#eqbody .boxcap')].map(b=>b.textContent).join()") == "Consumables,Bombs")
+          and E("[...document.querySelectorAll('#eqbody .abox .eqtile[data-i]')].map(b=>EQ_SLOTS[b.dataset.i]).join()") == "chest,gloves,trousers,boots" and E("document.querySelectorAll('#eqbody .eqtile').length") == 15 and E("[...document.querySelectorAll('#eqbody .bbox .eqsl b')].map(b=>b.textContent).join()") == "Bomb,Pocket" and "Bomb 2" not in E("document.getElementById('eqbody').innerText")
+          and E("[...document.querySelectorAll('#eqbody .boxcap')].map(b=>b.textContent).join()") == "Consumables,Bomb and pocket")
     # the chooser for EVERY weapon slot, and Equip
     for slot, i in (("steel", 0), ("silver", 1), ("bolts", 3), ("crossbow", 2)):
         pg.click('#eqbody .eqtile[data-i="%d"]' % i); pg.wait_for_selector("#pkgrid .pktile"); n = E("document.querySelectorAll('#pkgrid .pktile').length"); only = E("[...document.querySelectorAll('#pkgrid .pktile')].every(t=>EQ.rs[S.rs].byId.get(t.dataset.id).slot===EQ.pick.slot)")

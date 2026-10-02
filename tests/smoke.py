@@ -94,6 +94,9 @@ def run_smoke(url, expect_version=None, expect_index=None, wait=0, results=None)
         if pg.evaluate("typeof GL_FILES!=='undefined'&&GL_FILES!==null"):
             import glcheck
             glcheck.live(b, url, check)
+        if pg.evaluate("!!document.getElementById('savebtn')&&!document.getElementById('savebtn').hidden"):
+            import importcheck
+            importcheck.live(b, url, check)
         # a new link can be created and reopened
         try:
             E = pg.evaluate; i = E("TREES[1].sk.findIndex(s=>!s.req.length)")

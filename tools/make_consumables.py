@@ -5,8 +5,8 @@
 
 Writes data/consumables.json (loaded on demand by the page, like the equipment lists), data/consumable_ids.json (the APPEND-ONLY registry: id -> number 1..4095, what a share
 link's c1 segment stores; none is ever reused or renumbered), the icon slots `cons/<folder>/<file>` in art/manifest.json (and, with --art-dir, the icons and the four drawn placeholders
-copied to <art-dir>/cons/ plus their SHA-1 fingerprints in tools/game-art-hashes.txt). In scope: every potion, decoction, oil and bomb a player can put in a slot. Out: food and drink,
-quest and special potions (tags Quest/NoShow), NoEquip items (Potion of Restoration), paint balls and other quest bombs, the Training bomb and items that are not Petard bombs
+copied to <art-dir>/cons/ plus their SHA-1 fingerprints in tools/game-art-hashes.txt). In scope: every potion, decoction, oil and bomb a player can put in a slot, since v31b the
+food and drink items (Edibles tag: GetSlotForItem puts them in a potion slot, itemsTypes.ws:371) and the Pocket items. Out: quest and special potions (tags Quest/NoShow), NoEquip items (Potion of Restoration), paint balls and other quest bombs, the Training bomb and items that are not Petard bombs
 (the Pheromone bomb is a quick slot item)."""
 import argparse, hashlib, json, re, shutil, sys
 from pathlib import Path
@@ -15,9 +15,14 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools" / "extract"))
 import w3dec  # noqa: E402
 
-ORDER = ["potion", "decoction", "bomb", "oil"]
+ORDER = ["potion", "decoction", "bomb", "oil", "food", "pocket"]
 TIER_NAMES = {0: "", 1: "Normal", 2: "Enhanced", 3: "Superior"}
-CAT_LABEL = {"potion": "Potion", "decoction": "Decoction", "bomb": "Bomb", "oil": "Oil"}
+CAT_LABEL = {"potion": "Potion", "decoction": "Decoction", "bomb": "Bomb", "oil": "Oil", "food": "Food & drink", "pocket": "Pocket"}
+# v31b: the Pocket slot (EES_Quickslot1, the game's one pocket slot). GetSlotForItem (itemsTypes.ws:364) sends the tag QuickSlot there. Of the items with that tag only these are
+# ordinary items a player carries: the others are quest items (tag Quest), Geralt's masks (equip_slot head, a mask slot item), the Wolf Bandana (a mask) and the quest-only Pheromone bomb.
+# (id, name key, description key, icon file under inventory/, XML file)
+POCKET = [("Torch", "item_name_torch", "item_desc_q203_torch", "quests/torch.png", "def_item_misc.xml"),
+          ("Oil Lamp", "item_name_oil_lamp", "item_desc_oil_lamp", "other/oil_lamp_64x64.png", "def_item_misc.xml")]
 REGISTRY = ROOT / "data" / "consumable_ids.json"
 
 
@@ -28,6 +33,7 @@ def sanitise(s):
 def in_scope(i):
     t = set(i["tags"])
     if i["category"] not in ORDER or t & {"Quest", "NoShow", "NoEquip"}: return False
+    if i["category"] in ("food", "pocket"): return True
     if i["category"] == "bomb": return "Petard" in t and i["id"] != "Tutorial Bomb"
     if i["category"] in ("potion", "decoction"): return "Potion" in t
     return True
@@ -67,9 +73,15 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--research", required=True); ap.add_argument("--game-dir", required=True); ap.add_argument("--art-dir")
     a = ap.parse_args(); game = Path(a.game_dir).expanduser()
-    src = [i for i in json.loads(Path(a.research).expanduser().read_text())["items"] if in_scope(i)]
+    raw = json.loads(Path(a.research).expanduser().read_text())["items"]
+    for i in raw:
+        if i["category"] == "food_drink" and "Quest" not in i["tags"]: i["category"] = "food"
+    src = [i for i in raw if in_scope(i)]
     strs, keys = w3dec.decode(str(game / "en.w3strings")); L = lambda k: strs.get(keys.get(w3dec.h(k))) if k else None
-    src.sort(key=lambda i: (ORDER.index(i["category"]), i["family"], i["tier_number"] or 0, i["id"]))
+    for pid, nk, dk, icon, _ in POCKET:
+        src.append({"id": pid, "name": L(nk), "category": "pocket", "family": pid, "tier_number": 0, "stats": {}, "tags": ["QuickSlot"], "dlc": "base", "description": L(dk),
+                    "icon": {"file": str(game / "inventory" / icon), "path_in_game": "icons/inventory/" + icon}})
+    src.sort(key=lambda i: (ORDER.index(i["category"]), i["family"] or i["name"], i["tier_number"] or 0, i["id"]))
     reg = json.loads(REGISTRY.read_text())["ids"] if REGISTRY.is_file() else {}
     for i in src:
         if i["id"] not in reg: reg[i["id"]] = max(reg.values(), default=0) + 1
@@ -84,6 +96,7 @@ def main():
         ch = next((x[1] for x in parse(st.get("ammo", "")) if x[0] == "add"), None) if "ammo" in st else None
         rec = {"id": i["id"], "n": reg[i["id"]], "name": i["name"], "cat": i["category"], "fam": i["family"], "tier": tier, "tier_name": TIER_NAMES[tier] if tier else None,
                "tox": tox, "dur": dur, "ch": ch, "desc": clean(i["description"]), "stats": stat_lines(i, L, st), "tags": i["tags"], "dlc": i["dlc"]}
+        if i["category"] == "food": rec["dur"] = None; rec["tox"] = None
         if i["category"] == "decoction" and "toxicity_offset" in st: rec["tox_offset"] = next((x[1] for x in parse(st["toxicity_offset"]) if x[0] == "add"), None)
         if i["category"] == "oil": rec["steel"] = "SteelOil" in i["tags"]; rec["silver"] = "SilverOil" in i["tags"]
         if i.get("ng_plus_differs"):

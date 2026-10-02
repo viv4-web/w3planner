@@ -12,16 +12,16 @@ function scrApply(){const inv=S.scr==='inv';
  const on=document.querySelector('#stabs .stab.on');if(on&&innerWidth<600)on.scrollIntoView({block:'nearest',inline:'center'});   // the phone's tab row scrolls sideways
  if(inv&&!stashDrawn)stashRender();if(S.scr==='glo'){if(typeof glOpen==='function')glOpen()}else if(typeof glClose==='function')glClose()}
 // the greyed tabs: a centred panel (title, "In-game feature only.", the reason, and the two live places to go instead)
-const IG_WHY={alchemy:['Alchemy','Crafting happens in the game; plan consumables in Inventory slots.'],map:['World Map','Interactive maps already exist from third parties.'],quests:['Quests','Quest progress lives in the game.'],meditation:['Meditation','Meditation can only be done in the game.'],crafting:['Crafting','Crafting happens in the game; plan consumables in Inventory slots.']};
+const IG_WHY={alchemy:['Alchemy','Crafting happens in the game; plan consumables in Inventory slots.'],map:['World Map','The world map is in-game only. For an interactive map, use witcher3map.com, a free, ad-free fan project (CC BY-NC-SA).'],quests:['Quests','Quest progress lives in the game.'],meditation:['Meditation','Meditation can only be done in the game.'],crafting:['Crafting','Crafting happens in the game; plan consumables in Inventory slots.']};
 let igOpener=null;
 function igOpen(k,opener){const w=IG_WHY[k];if(!w)return;igOpener=opener||document.activeElement;document.getElementById('igtitle').textContent=w[0];document.getElementById('igwhy').textContent=w[1];
- const o=document.getElementById('igov');o.hidden=false;document.getElementById('igInv').focus()}
+ const o=document.getElementById('igov'),ext=document.getElementById('igMap');ext.hidden=k!=='map';o.hidden=false;(k==='map'?ext:document.getElementById('igInv')).focus()}   // World Map only: a plain link to witcher3map.com (another site; nothing of it is loaded or copied)
 function igClose(go){document.getElementById('igov').hidden=true;if(go)scrGo(go);else if(igOpener&&igOpener.focus)igOpener.focus();igOpener=null}
 document.querySelectorAll('[data-ig]').forEach(b=>{b.onclick=()=>igOpen(b.dataset.ig,b)});
 document.getElementById('igInv').onclick=()=>igClose('inv');document.getElementById('igGlo').onclick=()=>igClose('glo');document.getElementById('igclose').onclick=()=>igClose();
 document.getElementById('igov').onclick=e=>{if(e.target.id==='igov')igClose()};
 document.addEventListener('keydown',e=>{const o=document.getElementById('igov');if(o.hidden)return;if(e.key==='Escape'){e.preventDefault();igClose()}
- else if(e.key==='Tab'){const f=[...o.querySelectorAll('button')],i=f.indexOf(document.activeElement);if(e.shiftKey&&i<=0){e.preventDefault();f[f.length-1].focus()}else if(!e.shiftKey&&i===f.length-1){e.preventDefault();f[0].focus()}}});
+ else if(e.key==='Tab'){const f=[...o.querySelectorAll('button,a[href]:not([hidden])')],i=f.indexOf(document.activeElement);if(e.shiftKey&&i<=0){e.preventDefault();f[f.length-1].focus()}else if(!e.shiftKey&&i===f.length-1){e.preventDefault();f[0].focus()}}});
 // Copy link: ONE control, in the top bar, for every screen. It copies the link of the build as it is now (enc(): skills, mutations, mutagens, level, gear, consumables, ruleset, and s1I / s1G when Inventory / Glossary is open).
 let copyT=0;
 function copyLink(){const b=document.getElementById('copy'),url=(CFG.shareBase||location.href.split('#')[0])+'#'+enc();

@@ -68,7 +68,7 @@ function eqSetHtml(x){const cur=b=>b.per_piece?String(Math.round(+b.per_piece*x.
   x.skipped.map(it=>`<p class="dim">${eqEsc(it.name)} is not counted: ${eqEsc(eqWhy(it))}.</p>`).join('')+`</section>`}
 
 // ---- the Inventory screen: slot boxes (middle), armour, sets and item stats (right). Slot numbers u: 0-8 are the gear slots (EQ_SLOTS, the g1 order), 9-14 the consumable slots
-// (CN_SLOTS 0-5: potions 1-4, bombs 1-2). Oils are chosen in a sword's slot panel (S.cons[6], S.cons[7]) and are not slots of their own. ----
+// (CN_SLOTS 0-5: potions 1-4, the Bomb, the Pocket). Oils are chosen in a sword's slot panel (S.cons[6], S.cons[7]) and are not slots of their own. ----
 const invKey=u=>u<9?EQ_SLOTS[u]:CN_SLOTS[u-9];
 const invName=u=>u<9?EQ_NAME[EQ_SLOTS[u]]:CN_NAME[CN_SLOTS[u-9]];
 const invCur=u=>u<9?eqCur(u):cnCur(u-9);
@@ -88,7 +88,7 @@ function eqRender(force){const body=document.getElementById('eqbody');if(!body)r
  const mid=document.getElementById('invMid'),right=document.getElementById('invRight');if(!mid||!right)return;
  const keep=document.activeElement&&body.contains(document.activeElement)?document.activeElement.dataset.i:null,had=!!(document.activeElement&&document.activeElement.classList&&document.activeElement.classList.contains('eqtile'));
  const box=(cls,slots,cap,title)=>`<section class="invbox ${cls}" aria-label="${eqEsc(title||cap||'Equipment')}"><div class="slotgrid">${slots.map(eqSlotHtml).join('')}</div>${cap?`<div class="boxcap">${eqEsc(cap)}</div>`:''}</section>`;
- mid.innerHTML=box('wbox',[0,1,3,2],'','Weapons')+box('cbox',[9,10,11,12],'Consumables')+box('bbox',[13,14],'Bombs')+`<div class="maskbox">${eqSlotHtml(8)}</div>`;
+ mid.innerHTML=box('wbox',[0,1,3,2],'','Weapons')+box('cbox',[9,10,11,12],'Consumables')+box('bbox',[13,14],'Bomb and pocket')+`<div class="maskbox">${eqSlotHtml(8)}</div>`;
  let rest;
  if(EQ.err)rest=`<p class="eqmsg">Could not load the equipment data: ${eqEsc(EQ.err)}. <button class="btn" id="eqretry" type="button">Try again</button></p>`;
  else if(!eqData()||!CN.data)rest='<p class="eqmsg">Loading equipment data…</p>';
@@ -112,7 +112,8 @@ function eqHideTip(){const t=document.getElementById('eqtip');if(t)t.hidden=true
 function eqUnequip(u){const it=invCur(u);if(!it)return;invSet(u,0);save();eqRender(true);notify(it.name+' unequipped.');const b=document.querySelector('#eqbody .eqtile[data-i="'+u+'"]');if(b)b.focus()}
 // load the data right after the page has loaded (never inside index.html, and not before the skill tree is up)
 async function eqStart(){EQ.err=null;eqRender(true);
- try{await Promise.all([eqLoad(S.rs),cnLoad()]);const bad=eqValidate(),badc=cnValidate();if(bad||badc){save();notify((bad+badc)+' item'+(bad+badc>1?'s':'')+' in this build '+(bad+badc>1?'are':'is')+' not available'+(bad?' in '+EQ_RS[S.rs]:'')+' or does not fit its slot, and '+(bad+badc>1?'were':'was')+' removed.')}}catch(e){EQ.err=e.message}
+ try{await Promise.all([eqLoad(S.rs),cnLoad()]);const bad=eqValidate(),badc=cnValidate();if(bad||badc){save();notify((bad+badc)+' item'+(bad+badc>1?'s':'')+' in this build '+(bad+badc>1?'are':'is')+' not available'+(bad?' in '+EQ_RS[S.rs]:'')+' or does not fit its slot, and '+(bad+badc>1?'were':'was')+' removed.')}
+  if(CN.moved&&CN.moved.length)notify(CN.moved.join('. ')+'. The link text is unchanged until you edit the build.')}catch(e){EQ.err=e.message}   // the moved bomb is not saved here: opening an old link must not rewrite it
  eqRender(true)}
 async function eqSwitch(rs){if(rs===S.rs)return;
  try{await eqLoad(rs)}catch(e){notify('Could not load the '+EQ_RS[rs]+' data: '+e.message);return}
@@ -135,7 +136,7 @@ function eqShown(){const p=EQ.pick,w=p.q.trim().toLowerCase().split(/\s+/).filte
 function eqPick(u){const cons=u>=9;if(cons?!CN.data:!eqData()){notify('The item data is still loading.');return}
  EQ.pick={i:u,slot:invKey(u),cons,filter:'all',tier:'all',q:'',sel:invCur(u),opener:document.activeElement,scroll:true};   // the worn item is selected (and scrolled into view); with nothing worn nothing is
  const ov=document.getElementById('eqpick'),oil=u===0||u===1;
- const filt=cons?(u<13?`<div class="chips" role="group" aria-label="Kind"><button type="button" class="btn chip" data-k="all" aria-pressed="true">All</button><button type="button" class="btn chip" data-k="potion" aria-pressed="false">Potions</button><button type="button" class="btn chip" data-k="decoction" aria-pressed="false">Decoctions</button></div>`:'<span class="chipnote">Bombs</span>')
+ const filt=cons?(u<13?`<div class="chips" role="group" aria-label="Kind"><button type="button" class="btn chip" data-k="all" aria-pressed="true">All</button><button type="button" class="btn chip" data-k="potion" aria-pressed="false">Potions</button><button type="button" class="btn chip" data-k="decoction" aria-pressed="false">Decoctions</button><button type="button" class="btn chip" data-k="food" aria-pressed="false">Food &amp; drink</button></div>`:u===13?'<span class="chipnote">Bombs</span>':'<span class="chipnote">Pockets</span>')
   :`<label>Show <select id="pkset"></select></label><label>Tier <select id="pktier"><option value="all">All tiers</option>${EQ_TIERS.map(t=>`<option>${t}</option>`).join('')}</select></label>`;
  ov.innerHTML=`<div class="eqpmodal" role="region" aria-labelledby="pktitle"><div class="mh"><h2 id="pktitle">${eqEsc(invName(u))} · all items that fit</h2><button class="btn" id="pkclose" type="button">Close</button></div>
   <div class="pkfilters">${filt}<input id="pkq" type="search" placeholder="Search by name" aria-label="Search by name" autocomplete="off"><span class="dim" id="pkcount" aria-live="polite"></span><label class="stashonly" title="Available after you import a save"><input type="checkbox" id="pkstash" disabled> Only items in my stash</label></div>

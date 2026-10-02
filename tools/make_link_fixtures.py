@@ -144,6 +144,18 @@ def gear_specs_v29():
     return out
 
 
+def gear_specs_v31b():
+    """v31b: the second bomb slot is the Pocket, and the potion slots take food and drink. Torch and Oil Lamp in the Pocket, food and drink in every potion slot, with a bomb, with oils, on Inventory and Character."""
+    out = []; add = lambda name, **kw: out.append((name, kw))
+    cons = {"potion1": "Cows milk", "potion2": "Bottled water", "potion3": "Swallow 3", "potion4": "Cat 2", "petard1": "Dancing Star 3", "pocket": "Torch", "oil_steel": "Beast Oil 3", "oil_silver": "Vampire Oil 2"}
+    gear = {"steel": "Lynx School steel sword 4", "silver": "Lynx School silver sword 4", "chest": "Lynx Armor 4", "gloves": "Lynx Gloves 5", "trousers": "Lynx Pants 5", "boots": "Lynx Boots 5"}
+    add("Torch in the Pocket and food in two potion slots, Inventory screen", level=100, bonus=0, rs="ng", cons=cons, scr="inv")
+    add("the same on Character, New Game Plus, with gear", level=100, bonus=100, rs="ng_plus", cons=cons, gear=gear)
+    add("Oil Lamp in the Pocket only", level=40, bonus=0, rs="ng", cons={"pocket": "Oil Lamp"}, scr="inv")
+    add("food and drink only, in all four potion slots", level=60, bonus=0, rs="ng", cons={"potion1": "Cows milk", "potion2": "Bottled water", "potion3": "Beauclair White", "potion4": "Kaedwenian Stout"}, scr="inv")
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--version", required=True, help="the app version whose code makes the links, e.g. v24")
@@ -163,7 +175,7 @@ def main():
         info = pg.evaluate("""({ntrees:TREES.length,nmut:MUT.length,nmutagen:MUTS.length,
             special:MUTS.map((m,i)=>m.special?i:-1).filter(i=>i>=0),regular:MUTS.map((m,i)=>m.special?-1:i).filter(i=>i>=0)})""")
         rows, seen = [], set()
-        use = specs(info) if a.version == "v24" else gear_specs() if a.version == "v27" else gear_specs_b() if a.version == "v27b" else gear_specs_v28() if a.version == "v28" else gear_specs_v29() if a.version == "v29" else sys.exit("no fixture recipe for %s: add one to this tool" % a.version)
+        use = specs(info) if a.version == "v24" else gear_specs() if a.version == "v27" else gear_specs_b() if a.version == "v27b" else gear_specs_v28() if a.version == "v28" else gear_specs_v29() if a.version == "v29" else gear_specs_v31b() if a.version == "v31b" else sys.exit("no fixture recipe for %s: add one to this tool" % a.version)
         top = pg.evaluate("async rs=>{await eqLoad(rs);const o={};EQ_SLOTS.forEach(s=>{const l=EQ.rs[rs].bySlot[s]||[];o[s]=l.reduce((a,b)=>a.n>b.n?a:b).id});return o}", "ng_plus") if a.version in ("v27", "v27b") else {}
         for name, spec in use:
             if spec.get("gear") == {"steel": None, "silver": None}: spec = dict(spec, gear=top)

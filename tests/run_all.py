@@ -17,6 +17,7 @@ import serve
 import linkcheck
 import eqcheck
 import glcheck
+import importcheck
 from playwright.sync_api import sync_playwright
 
 RESULTS = []
@@ -103,8 +104,8 @@ def main():
     if a.variant == "game": check("the private art folder has every equipment icon", all((Path(a.art_dir) / (i + ".png")).is_file() for i in icon_ids), [i for i in icon_ids if not (Path(a.art_dir) / (i + ".png")).is_file()][:3])
     print("\n== Consumables data (data/consumables.json, consumable_ids.json) ==")
     cd = json.loads((ROOT / "data/consumables.json").read_text(encoding="utf-8")); citems = cd["items"]; creg = json.loads((ROOT / "data/consumable_ids.json").read_text(encoding="utf-8"))["ids"]
-    check("%d consumables: ids unique, every one has its registry number (data/consumable_ids.json: append-only, 1 to 4095), categories potion, decoction, bomb, oil only" % len(citems),
-          len({i["id"] for i in citems}) == len(citems) and all(creg.get(i["id"]) == i["n"] for i in citems) and len(set(creg.values())) == len(creg) and max(creg.values()) <= 4095 and {i["cat"] for i in citems} == {"potion", "decoction", "bomb", "oil"})
+    check("%d consumables: ids unique, every one has its registry number (data/consumable_ids.json: append-only, 1 to 4095), categories potion, decoction, bomb, oil, food, pocket" % len(citems),
+          len({i["id"] for i in citems}) == len(citems) and all(creg.get(i["id"]) == i["n"] for i in citems) and len(set(creg.values())) == len(creg) and max(creg.values()) <= 4095 and {i["cat"] for i in citems} == {"potion", "decoction", "bomb", "oil", "food", "pocket"})
     check("oils say which sword they fit (SteelOil: 6 of 36, SilverOil: all), no oil, bomb or potion carries a level, every consumable has a name, an icon token and a manifest slot",
           sum(1 for i in citems if i["cat"] == "oil" and i.get("steel")) == 6 and all(i.get("silver") for i in citems if i["cat"] == "oil") and all(i["name"] and i["icon"] and i["icon"][len("@@img:"):-2] in manifest for i in citems))
     if a.variant == "game": check("the private art folder has every consumable icon and the four drawn placeholders", all((Path(a.art_dir) / (i["icon"][len("@@img:"):-2] + ".png")).is_file() for i in citems), [i["id"] for i in citems if not (Path(a.art_dir) / (i["icon"][len("@@img:"):-2] + ".png")).is_file()][:3])
@@ -152,6 +153,10 @@ def main():
         print("\n== Top bar and Glossary ==")
         check("the public build has no glossary files, the live build has the real ones", ((site / "glossary").is_dir()) == (a.variant == "game") and (a.variant == "game" or not any("glossary" in p.name for p in site.rglob("*"))))
         glcheck.run(b, gbase, check, "online", main=base, real=a.variant == "game", quick=a.quick)
+        print("\n== Import save ==")
+        importcheck.run(b, base, check, "online")
+        nd = shutil.which("node"); nr = subprocess.run([nd, str(ROOT / "tests/test_saveread.js")], capture_output=True, text=True) if nd else None
+        check("the save reader without a browser: LZ4, header errors, sidecar, the mutagen table, the reference save when the local fixture is present", (nr is None) or nr.returncode == 0, (nr.stderr or nr.stdout).strip()[-300:] if nr else "node not found: skipped")
         rt = b.new_page(); rt.goto(base); rt.wait_for_timeout(600); r = rt.evaluate(ROUNDTRIP); rt.close(); check("%d random builds survive a link round trip unchanged (%d with special mutagens)" % (r["n"], r["spec"]), r["bad"] == 0, r["bad"])
         h2 = b.new_page(viewport={"width": 1300, "height": 900}); herrs = []; h2.on("pageerror", lambda e: herrs.append(str(e).split("\n")[0][:80])); h2.goto(base); h2.wait_for_timeout(700)
         h2.evaluate("document.getElementById('bonuspts').value=20;pointsChanged();const i=TREES[1].sk.findIndex(s=>!s.req.length);add(1,i);add(1,i);S.slots[0]=[1,i];S.muts[0]=3;save();openMut()")
@@ -198,6 +203,7 @@ def main():
                 linkcheck.check_fixtures(b, off, "offline", check)
                 eqcheck.run(b, off, check, "offline", a.quick)
                 glcheck.publicbuild(b, off, None, glcheck.GLINK, check, "offline")
+                importcheck.offline(b, off, check, "offline")
                 check("the offline package contains no glossary", not any("glossary" in n.lower() for n in zipfile.ZipFile(zp).namelist()))
                 o.fill("#imp", "https://w3planner.pages.dev/#" + code); o.click("#impbtn"); o.wait_for_timeout(300)
                 check("a link from the website opens in the offline copy", OE(FULLSTATE) == link_state)
