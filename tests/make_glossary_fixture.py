@@ -46,7 +46,8 @@ def main():
            {"id": "TutB", "name": "Dodging", "group": "Combat", "img": None, "stages": ["Dodge with the <b>dodge key</b>."], "variants": 2},
            {"id": "TutC", "name": "Motion Patterns", "group": "Console", "img": pic("tutorials/motion", (200, 200, 200), 40), "stages": ["Roll the controller to the right."], "variants": 1},
            {"id": "TutD", "name": "Motion Patterns", "group": "Signs", "img": None, "stages": ["Another one with the same name."], "variants": 1}]
-    dump("tutorial.json", {"tab": "tutorial", "entries": tut})
+    tg = ["Combat", "Console", "Signs"]; tut.sort(key=lambda e: (tg.index(e["group"]), e["name"].lower()))
+    dump("tutorial.json", {"tab": "tutorial", "groups": tg, "entries": tut})
     bk = lambda id, name, kind, color: {"id": id, "name": name, "kind": kind, "group": "Books", "img": pic("books/" + id, color, 16), "thumb": "@@gimg:books/%s@@" % id}
     idx = [bk("bk1", "A Treatise on Wolves", "book", (110, 70, 40)), bk("bk2", "Letter from Ada", "note", (200, 180, 120)), bk("bk3", "Orders of the Day", "quest", (150, 150, 100)),
            {"id": "pt1", "name": "Portrait of a Bard", "kind": "painting", "group": "Paintings & maps", "img": pic("paintings/pt1", (150, 90, 90), 32), "thumb": pic("paintings/t/pt1", (150, 90, 90), 16), "note": "1 of 2"},

@@ -18,7 +18,7 @@ What it does, and the decisions behind it (Vivek):
   * bestiary: every creature with a name and text (138 raw, the 9 stubs have none); grouped by the game's category (a DLC creature joins the base group its
     "virtual group" file links to); every description stage in the game's order (the `children` array); susceptibility = itemsUsedAgainstCreature
   * characters: all 116, grouped by pack (base game, Hearts of Stone, Blood and Wine)
-  * tutorials: those with a name and text, platform variants (_pad, _ps4, ...) folded into the PC text; pictures only for the 10 real ones
+  * tutorials: those with a name and text, grouped by the game's category (HUD, Signs, ... ; "Other" for the 18 with none), platform variants (_pad, _ps4, ...) folded into the PC text; pictures only for the 10 real ones
   * books: readable items (not schematics or recipes) that have a body (key <name>_text, or the item id, or a one-line item_desc) + the paintings, maps and sketches
   * pictures: DDS -> WebP q80 with alpha; a flat-colour picture (the game's orange "TODO" tutorial placeholder) is never used
 """
@@ -266,9 +266,10 @@ def main():
         if stem:
             im = P.find("tutorials", stem + ".png")
             if im is not None and not P.flat(im): img = put("img/tutorials/%s.webp" % stem.lower(), webp(im))
-        grp = J.groups.get(e["parent"], {}).get("name")
+        grp = clean(J.groups.get(e["parent"], {}).get("name")) or "Other"; grp = grp.title() if grp.isupper() and len(grp) > 4 else grp      # the game's tutorial category (HUD, Signs, ...); "CONSOLE FEATURES" is written in capitals in the data
         entries.append({"id": e["id"], "name": clean(e["name"]), "group": grp, "img": img, "stages": [s for _, s in e["stages"] if s], "variants": len(v)})
-    entries.sort(key=sortkey); counts["tutorial"] = len(entries); dump(out, "tutorial.json", {"tab": "tutorial", "entries": entries}, files)
+    tgroups = sorted({x["group"] for x in entries} - {"Other"}, key=norm_key) + (["Other"] if any(x["group"] == "Other" for x in entries) else [])
+    entries.sort(key=lambda x: (tgroups.index(x["group"]), norm_key(x["name"]), x["id"])); note_dups(entries); counts["tutorial"] = len(entries); dump(out, "tutorial.json", {"tab": "tutorial", "groups": tgroups, "entries": entries}, files)
     log("tutorials: %d usable of %d raw, %d after folding variants, %d with a picture; placeholder pictures refused: %d" % (sum(1 for x in ts if usable(x)), len(ts), len(entries), sum(1 for x in entries if x["img"]), len(P.refused)))
 
     # books and paintings

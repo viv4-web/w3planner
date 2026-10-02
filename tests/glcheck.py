@@ -86,9 +86,9 @@ def run(b, fix, check, label, main=None, real=False, quick=False):
         opened(pg, tab); r = E("""(()=>{const rows=[...document.querySelectorAll('#glRows .glrow')];return{n:rows.length,count:document.getElementById('glCount').textContent,groups:[...document.querySelectorAll('#glRows .glgroup')].map(g=>g.textContent),
           thumbs:document.querySelectorAll('#glRows .glth').length,names:[...document.querySelectorAll('#glRows .glrow')].map(r=>r.querySelector('b').textContent)}})()""")
         check("%s: %s lists %d entries (%s)" % (label, tab, want[tab], r["count"]), r["n"] == want[tab] and str(want[tab] if tab != "books" else man["books"]) in r["count"], r)
-        if tab == "tutorial": check("%s: the Tutorial list is plain: no thumbnails, no group headings" % label, r["thumbs"] == 0 and not r["groups"], r)
+        if tab == "tutorial": check("%s: the Tutorial list has no thumbnails and is grouped by the game's categories (%s)" % (label, r["groups"][:4]), r["thumbs"] == 0 and len(r["groups"]) >= 3, r)
         else: check("%s: %s rows have a thumbnail, grouped under headings (%s)" % (label, tab, r["groups"]), r["thumbs"] == r["n"] and len(r["groups"]) >= 2, r)
-        if tab in ("bestiary", "characters", "books"):
+        if tab in ("bestiary", "characters", "books", "tutorial"):
             order = E("""(()=>{const f=s=>s.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();
               return[...document.querySelectorAll('#glRows .glgrp')].every(g=>{const n=[...g.querySelectorAll('.glrow b')].map(b=>b.textContent);return n.every((x,i)=>!i||f(n[i-1])<=f(x))})})()""")
             check("%s: %s is A to Z inside each group" % (label, tab), order)
@@ -169,6 +169,8 @@ def run(b, fix, check, label, main=None, real=False, quick=False):
     p2 = E("[getComputedStyle(document.getElementById('glList')).display!=='none',document.querySelector('#glRows .glrow.on')?1:0]"); check("%s: phone: the back arrow returns to the list at the same entry (%s)" % (label, p2), p2 == [True, 1], p2)
     cp = E("(()=>{const r=document.getElementById('copy').getBoundingClientRect();return r.height>=44&&r.right<=innerWidth&&r.bottom<=innerHeight+2000})()"); check("%s: phone: Copy link is a 44 px target on the Glossary screen" % label, cp)
     check("%s: no script errors on the Glossary screens" % label, not errs, errs[:1]); pg.close()
+    pg, errs, reqs = newpage(b, fix); E = pg.evaluate; opened(pg, "tutorial"); pg.click('#glRows .glgroup.tog'); t1 = E("({heads:[...document.querySelectorAll('#glRows .glgroup.tog')].map(h=>h.getAttribute('aria-expanded')),rows:document.querySelectorAll('#glRows .glgrp:not([hidden]) .glrow').length,fold:document.getElementById('glFold').textContent,hidden:document.getElementById('glFold').hidden})")
+    check("%s: Tutorial categories fold too (%s)" % (label, t1), t1["heads"] == ["false", "true", "true"] and t1["rows"] == 2 and t1["fold"] == "Collapse all" and not t1["hidden"], t1); pg.close()
     publicbuild(b, main, fix, link, check, label, real)
 
 

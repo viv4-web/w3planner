@@ -54,7 +54,7 @@ const glCountText=(tab,n,total)=>{
 function glRow(tab,e,extra){const b=document.createElement('button');b.type='button';b.className='glrow';b.dataset.id=e.id;b.dataset.tab=tab;
  if(tab==='bestiary'||tab==='characters'||tab==='books'){const i=document.createElement('span');i.className='glth';if(e.thumb){const im=document.createElement('img');im.src=e.thumb;im.alt='';im.loading='lazy';im.decoding='async';i.appendChild(im)}b.appendChild(i)}
  const t=document.createElement('span');t.className='glname';const nm=document.createElement('b');nm.textContent=e.name;t.appendChild(nm);
- const note=e.note||(tab==='tutorial'&&e.group);if(note){const g=document.createElement('small');g.textContent=note;t.appendChild(g)}
+ const note=e.note;if(note){const g=document.createElement('small');g.textContent=note;t.appendChild(g)}
  if(extra){const s=document.createElement('small');s.className='glsnip';if(extra.snip)glAddText(s,extra.snip,extra.words);else s.textContent='name match';t.appendChild(s)}
  b.appendChild(t);return b}
 function glRenderList(){const rows=glEl('glRows'),tab=GL.tab;rows.textContent='';
