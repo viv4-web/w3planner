@@ -38,4 +38,10 @@ if(fs.existsSync(ref)){const R=W.readSave(new Uint8Array(fs.readFileSync(ref)));
  ok('refsave: gear ids, quantities, charges',R.equipped.SteelSword.id==='Dol Blathanna longsword'&&R.equipped.Potion1.qty===30&&R.equipped.Potion2.qty===66&&R.equipped.Petard1.extras.ammo_current===2&&R.equipped.Potion3.extras.ammo_current===3&&!R.equipped.Mask);
  console.log('refsave checks passed');}
 else console.log('refsave not present: those checks were skipped');
+const l9b=path.join(os.homedir(),'work/w3planner-art/save-spike/fixtures/stats-l9b/AutoSave_106591_7ea48400_52e9569.sav');
+if(fs.existsSync(l9b)){const R=W.readSave(new Uint8Array(fs.readFileSync(l9b)));
+ ok('stats-l9b: time played 39576.77 s (10 h 59 min)',Math.abs(R.playTimeSec-39576.7659)<0.01,R.playTimeSec);
+ ok('stats-l9b: two active effects, ShrineQuenEffect 1800 s and EnhancedWeaponEffect 3600 s, with the time left',R.effects.length===2&&R.effects[0].ability==='ShrineQuenEffect'&&R.effects[0].duration===1800&&R.effects[1].ability==='EnhancedWeaponEffect'&&R.effects[1].timeLeft>3500&&R.effects[1].timeLeft<3600,R.effects);
+ ok('stats-l9b: the equipped relics list no abilities, the carried random items list theirs (autogen_*, MA_*, quality_*)',R.equipped.SteelSword.abilities.length===0&&R.inventory.some(r=>r.id==='Boots 02'&&r.abilities.includes('MA_BurningResistance')&&r.abilities.includes('quality_masterwork_boots')),R.equipped.SteelSword);
+ console.log('stats-l9b checks passed')}
 console.log(n+' checks passed');

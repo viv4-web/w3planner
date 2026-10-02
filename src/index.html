@@ -34,6 +34,7 @@
     <button type="button" class="arrow" id="scrNext" aria-label="Next screen">▶</button>
   </nav>
   <div class="topright">
+    <button class="btn" id="pstatsbtn" type="button" aria-label="Player stats" aria-keyshortcuts="C" aria-pressed="false" title="Player stats (C)"><svg class="psico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Player stats</span></button>
     <button class="btn" id="savebtn" type="button" aria-haspopup="dialog" aria-label="Import save"><svg class="impico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Import save</span></button>
     <div class="rsg" role="radiogroup" aria-label="Game mode"><button class="btn" type="button" role="radio" data-rs="ng" aria-checked="true" title="First playthrough" aria-label="First playthrough">NG</button><button class="btn" type="button" role="radio" data-rs="ng_plus" aria-checked="false" title="New Game Plus" aria-label="New Game Plus">NG+</button></div>
     <button class="btn" id="copy" type="button" aria-label="Copy build link">Copy link</button>
@@ -66,12 +67,6 @@
     <div class="invcentre" aria-hidden="true"><svg viewBox="0 0 200 420" class="silhouette"><g fill="none" stroke="#5a4a36" stroke-width="2"><ellipse cx="100" cy="46" rx="26" ry="32"/><path d="M74 78 C54 92 40 130 38 190 L52 300 L66 300 L72 200 M126 78 C146 92 160 130 162 190 L148 300 L134 300 L128 200"/><path d="M74 78 L74 250 L66 410 L96 410 L100 280 L104 410 L134 410 L126 250 L126 78 Z"/><path d="M60 118 L140 118 M76 250 L124 250 M40 190 L16 330 M160 190 L184 330"/></g></svg></div>
     <div class="invright" id="invRight"></div>
   </div>
-  <div class="invhint" id="invhint"><button type="button" class="btn pshintbtn" id="pstatsbtn" aria-keyshortcuts="C"><kbd>C</kbd> PLAYER STATS</button></div>
-  <section class="pstats" id="pstats" aria-label="Player Stats" hidden>
-    <div class="psbar"><h2>Player Stats</h2><button type="button" class="btn" id="psclose">Close</button></div>
-    <div class="pswrap" id="pswrap"><div class="psrows" id="psrows" role="tablist" aria-orientation="vertical" aria-label="Statistics"></div><div class="psmid" aria-hidden="true"></div><div class="pspanel" id="pspanel" role="tabpanel" tabindex="0"></div></div>
-    <div class="pstime" id="pstime" hidden></div>
-  </section>
 </div>
 <section id="screenGlo" class="screen gloscreen" role="tabpanel" aria-labelledby="tabGlo" hidden>
   <nav class="glsub" aria-label="Glossary sections">
@@ -119,6 +114,12 @@
     <div class="impbar"><p class="impreplace">Replaces your current build. The link updates; use Copy link to share it.</p><div class="impbtns"><button type="button" class="btn" id="impAnother">CHOOSE ANOTHER FILE</button><button type="button" class="btn impgold impapply" id="impApply">APPLY TO PLANNER</button></div></div>
   </div>
 </div></div>
+<section class="pstats" id="pstats" aria-label="Player Stats" hidden>
+    <div class="psbar"><h2>Player Stats</h2><button type="button" class="btn" id="psclose">Close</button></div>
+    <div class="pswrap" id="pswrap"><div class="psrows" id="psrows" role="tablist" aria-orientation="vertical" aria-label="Statistics"></div><div class="psmid" aria-hidden="true"></div><div class="pspanel" id="pspanel" role="tabpanel" tabindex="0"></div></div>
+    <p class="pseff" id="pseff" hidden></p>
+    <div class="pstime" id="pstime" hidden></div>
+  </section>
 <footer>This is an unofficial fan work and is not approved/endorsed by CD PROJEKT RED. Game artwork and text © CD PROJEKT S.A. · <a href="help.html" style="color:inherit">Help</a> · <a href="about.html" style="color:inherit">About</a> · <a href="privacy.html" style="color:inherit">Privacy</a> · <a href="support.html" style="color:inherit">Support</a> · <a href="https://github.com/viv4-web/w3planner" style="color:inherit">Source code</a></footer>
 <div class="tip" id="tip" role="tooltip"></div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toastMsg"></span><button class="btn" id="toastGo" type="button" hidden>Go to Level</button></div>

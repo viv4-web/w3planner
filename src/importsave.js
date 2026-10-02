@@ -37,8 +37,8 @@ function impPlan(R){
  const muts=[null,null,null,null],mutRows=[],notMut=[];
  R.mutagenSlots.slice(0,4).forEach((m,g)=>{if(!m.item){mutRows.push({slot:g+1,name:null});return}const i=SAVEMUT[m.item];if(i==null){notMut.push(m.item);mutRows.push({slot:g+1,name:null,skip:true})}else{muts[g]=i;mutRows.push({slot:g+1,name:MUTS[i].name})}});
  const GEAR=[['steel','SteelSword'],['silver','SilverSword'],['crossbow','RangedWeapon'],['bolts','Bolt'],['chest','Armor'],['gloves','Gloves'],['trousers','Pants'],['boots','Boots'],['mask','Mask']];
- const gear=Array(9).fill(0),gearRows=[],notGear=[];
- GEAR.forEach(([slot,key],i)=>{const e=R.equipped[key];if(!e){gearRows.push({slot,name:null});return}const it=e.id&&d.byId.get(e.id);if(it&&it.slot===slot){gear[i]=it.n;gearRows.push({slot,name:it.name,set:it.set,item:it})}else{notGear.push(e.id||'?');gearRows.push({slot,name:null,skip:true})}});
+ const gear=Array(9).fill(0),gearRows=[],notGear=[],rolled={};
+ GEAR.forEach(([slot,key],i)=>{const e=R.equipped[key];if(!e){gearRows.push({slot,name:null});return}const it=e.id&&d.byId.get(e.id);if(it&&it.slot===slot){gear[i]=it.n;if(e.abilities&&e.abilities.length)rolled[slot]=it.id;gearRows.push({slot,name:it.name,set:it.set,item:it})}else{notGear.push(e.id||'?');gearRows.push({slot,name:null,skip:true})}});
  const setCount={};gearRows.forEach(r=>{if(r.set&&['steel','silver','chest','gloves','trousers','boots'].includes(r.slot))setCount[r.set]=(setCount[r.set]||0)+1});
  const topSet=Object.keys(setCount).sort((a,b)=>setCount[b]-setCount[a])[0]||null,setInfo=topSet?{name:EQ.meta.sets[topSet].name,n:setCount[topSet],of:EQ.meta.sets[topSet][S.rs].pieces.length}:null;
  const CONS=[['potion1','Potion1'],['potion2','Potion2'],['potion3','Potion3'],['potion4','Potion4'],['petard1','Petard1'],['pocket','Quickslot1']],cons=Array(8).fill(0),consRows=[];
@@ -53,7 +53,7 @@ function impPlan(R){
   if(g){plannable++;(['steel','silver','crossbow','bolts'].includes(g.slot)?stash.weapons:stash.armor).push({id:g.id,qty:r.qty})}
   else if(c){plannable++;(c.cat==='oil'?stash.alchemy.oils:c.cat==='bomb'?stash.alchemy.bombs:stash.alchemy.potions).push({id:c.id,qty:r.qty})}});
  stash.crowns=R.crowns;
- return{play:R.playTimeSec==null?null:R.playTimeSec,level,bonus,total,learned,notSk,slots,slotNames,open,equipped,muts,mutRows,notMut,gear,gearRows,notGear,setInfo,cons,consRows,stash,plannable,records:R.inventory.length}}
+ return{play:R.playTimeSec==null?null:R.playTimeSec,effects:R.effects||[],rolled,level,bonus,total,learned,notSk,slots,slotNames,open,equipped,muts,mutRows,notMut,gear,gearRows,notGear,setInfo,cons,consRows,stash,plannable,records:R.inventory.length}}
 function impDisplay(id){return id?((window.W3DATA&&W3DATA.savenames&&W3DATA.savenames[id])||id):'an unknown item'}
 
 // ---- the review ----
@@ -111,7 +111,7 @@ async function impDoApply(){
  if(sel.equipment)S.gear=P.gear.slice();
  if(sel.consumables){for(let i=0;i<6;i++)S.cons[i]=P.cons[i]}      // the sword oils (positions 6 and 7) are not read: left as they are
  if(sel.stash){try{localStorage.setItem('w3planner.stash',JSON.stringify(P.stash));stashDrawn=false}catch(e){notify('The stash could not be kept: this browser blocks storage for the site.')}}
- if(sel.character&&P.play!=null)PS.play=P.play;enforceLocks();eqValidate();cnValidate();S.scr='char';
+ if(sel.character){PS.play=P.play;PS.imp.effects=P.effects}if(sel.equipment)PS.imp.rolled=P.rolled;enforceLocks();eqValidate();cnValidate();S.scr='char';
  impClose();save();window.scrollTo({top:0});
  notify('Imported from '+f.name+(sel.character?': level '+P.level+', '+P.learned.length+' skills':'')+'. The link now holds this build; use Copy link to share it.')}
 function impBind(){

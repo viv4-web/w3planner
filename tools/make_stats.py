@@ -13,7 +13,7 @@ import argparse, json, re, subprocess, sys, tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-WATCH = re.compile(r"^(vitality|stamina|toxicity|armor|attack_power.*|critical_hit.*|spell_power.*|staminaRegen.*|instant_kill.*|.*resistance.*)$")
+WATCH = re.compile(r"^(vitality.*|stamina.*|toxicity|armor|attack_power.*|critical_hit.*|spell_power.*|instant_kill.*|.*resistance.*|.*[Rr]egen.*)$")
 
 
 # the game's own words (en.w3strings), by the keys CharacterStatsPopup.ws uses
@@ -62,7 +62,8 @@ def main():
         out["lvl"][rs] = rows
         con = st["ConGeralt"]; c = lambda k, t="base": next((v for ty, v in attr(con, k) if ty == t), 0)
         out["con"][rs] = {"vitality": c("vitality"), "stamina": c("stamina"), "toxicity": c("toxicity"), "crit_chance": c("critical_hit_chance"), "crit_damage": c("critical_hit_damage_bonus", "add"),
-                          "poison_resist": c("poison_resistance_perc"), "bleeding_resist": c("bleeding_resistance_perc")}
+                          "poison_resist": c("poison_resistance_perc"), "bleeding_resist": c("bleeding_resistance_perc"),
+                          "vit_regen": c("vitalityRegen", "add"), "vit_combat_regen": c("vitalityCombatRegen", "add"), "stamina_ooc_mult": c("staminaOutOfCombatRegen", "mult")}
         sk = text(Path(tmp) / "gameplay" / d / "geralt_skills.xml"); ab = abilities(sk)
         if rs == "ng":
             out["syn"] = attr(ab["perk_43"], "synergy_bonus")[0][1]
@@ -75,6 +76,25 @@ def main():
             if names and (re.match(r"^(sword|magic|alchemy|perk)_", n) or n.startswith("mutation")): out["touch"].setdefault(n, [])[:] = sorted(set(out["touch"].get(n, [])) | set(names))
     sys.path.insert(0, str(ROOT / "tools" / "extract")); import w3dec
     strs, keys = w3dec.decode(str(Path(a.game_dir) / "en.w3strings")); out["labels"] = {k: strs.get(keys.get(w3dec.h(k))) for k in LABELS}
+    # active effects (the player's effect manager in a save: W3Effect_* with an abilityName): what each ability changes, and the labels the game shows for them
+    out["eff"] = {}; out["eff_names"] = {}
+    for f in ("effects.xml", "effects_potions.xml", "effects_mutagens.xml", "misc.xml", "weather_abl.xml"):
+        pth = Path(tmp) / "gameplay" / "abilities" / f
+        if not pth.is_file():
+            subprocess.run([sys.executable, str(ROOT / "tools/extract/bundle.py"), "extract", a.bundle, "--glob", "gameplay\\abilities\\" + f, "--out", tmp], check=True, capture_output=True)
+        t = text(pth)
+        for n, e in abilities(t).items():
+            names = sorted({tag for tag, _ in e.children if tag != "tags" and WATCH.match(tag)})
+            if names:
+                rec = {"touch": names}
+                for key in ("attack_power", "armor", "vitality"):
+                    mult = sum(v for ty, v in attr(e, key) if ty == "mult"); add = sum(v for ty, v in attr(e, key) if ty == "add")
+                    if mult or add: rec[key] = {"mult": mult, "add": add}
+                out["eff"][n] = rec
+        if f == "effects.xml":
+            for m in re.finditer(r'<effect\s+name_name\s*=\s*"([^"]+)"[^>]*?effectNameLocalisationKey_name\s*=\s*"([^"]+)"', t):
+                lab = strs.get(keys.get(w3dec.h(m.group(2))))
+                if lab: out["eff_names"][m.group(1)] = lab
     assert all(out["labels"].values()), [k for k, v in out["labels"].items() if not v]
     assert out["lvl"]["ng"][:2] == [[100, 4, 0.02], [100, 4, 0.02]], out["lvl"]["ng"][:2]
     (ROOT / "data" / "STATS.json").write_text(json.dumps(out, separators=(",", ":"), sort_keys=True) + "\n", encoding="utf-8")
