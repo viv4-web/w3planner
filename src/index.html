@@ -20,11 +20,17 @@
   <div class="lvlblock" aria-label="Character points">
     <label>Level <input id="lvl" type="number" min="1" max="100" value="1"></label><label title="Places of Power and other sources">Bonus points <input id="bonuspts" type="number" min="0" max="100" value="0"></label><span>Total <b id="total">8</b></span>
   </div>
-  <nav class="scrtabs" role="tablist" aria-label="Screens">
+  <nav class="scrtabs" aria-label="Screens">
     <button type="button" class="arrow" id="scrPrev" aria-label="Previous screen">◀</button>
-    <button type="button" class="stab off" id="tabAlch" disabled aria-disabled="true" title="Coming later">Alchemy<small>coming later</small></button>
-    <button type="button" class="stab" id="tabInv" role="tab" data-s="inv" aria-selected="false" aria-controls="screenInv">Inventory</button>
-    <button type="button" class="stab" id="tabChar" role="tab" data-s="char" aria-selected="true" aria-controls="screenChar">Character</button>
+    <div class="stabs" id="stabs" role="tablist" aria-label="Screens">
+      <button type="button" class="stab" id="tabGlo" role="tab" data-s="glo" aria-selected="false" aria-controls="screenGlo">Glossary</button>
+      <button type="button" class="stab off" id="tabAlch" role="tab" data-ig="alchemy" aria-selected="false" aria-haspopup="dialog" title="In game only">Alchemy<small>in game only</small></button>
+      <button type="button" class="stab" id="tabInv" role="tab" data-s="inv" aria-selected="false" aria-controls="screenInv">Inventory</button>
+      <button type="button" class="stab off" id="tabMap" role="tab" data-ig="map" aria-selected="false" aria-haspopup="dialog" title="In game only">World Map<small>in game only</small></button>
+      <button type="button" class="stab off" id="tabQuests" role="tab" data-ig="quests" aria-selected="false" aria-haspopup="dialog" title="In game only">Quests<small>in game only</small></button>
+      <button type="button" class="stab" id="tabChar" role="tab" data-s="char" aria-selected="true" aria-controls="screenChar">Character</button>
+      <button type="button" class="stab off" id="tabMed" role="tab" data-ig="meditation" aria-selected="false" aria-haspopup="dialog" title="In game only">Meditation<small>in game only</small></button>
+    </div>
     <button type="button" class="arrow" id="scrNext" aria-label="Next screen">▶</button>
   </nav>
   <div class="topright">
@@ -60,7 +66,34 @@
     <div class="invright" id="invRight"></div>
   </div>
 </div>
+<section id="screenGlo" class="screen gloscreen" role="tabpanel" aria-labelledby="tabGlo" hidden>
+  <nav class="glsub" aria-label="Glossary sections">
+    <button type="button" class="arrow" id="glPrev" aria-label="Previous glossary section">◀</button>
+    <div class="glsubs" id="glSubs" role="tablist" aria-label="Glossary sections">
+      <button type="button" class="glst" role="tab" data-t="bestiary" aria-selected="true">Bestiary</button>
+      <button type="button" class="glst" role="tab" data-t="tutorial" aria-selected="false">Tutorial</button>
+      <button type="button" class="glst" role="tab" data-t="characters" aria-selected="false">Characters</button>
+      <button type="button" class="glst" role="tab" data-t="books" aria-selected="false">Books</button>
+      <button type="button" class="glst off" role="tab" data-ig="crafting" aria-selected="false" aria-haspopup="dialog" title="In game only">Crafting<small>in game only</small></button>
+    </div>
+    <button type="button" class="arrow" id="glNext" aria-label="Next glossary section">▶</button>
+  </nav>
+  <p class="glmsg" id="glMsg" role="status" hidden>Glossary content is not included in this build.</p>
+  <div class="glbody" id="glBody">
+    <section class="gllist" id="glList" aria-label="Entries">
+      <div class="glsearch"><input id="glQ" type="search" placeholder="Search this tab" aria-label="Search this tab" autocomplete="off" spellcheck="false"><button type="button" class="btn" id="glAll" aria-pressed="false" title="Search every tab at once">ALL TABS</button></div>
+      <div class="glcount" id="glCount" aria-live="polite"></div>
+      <div class="glrows" id="glRows"></div>
+    </section>
+    <section class="glview" id="glView" aria-label="Entry">
+      <button type="button" class="btn glback" id="glBack" aria-label="Back to the list">◀ Back</button>
+      <div class="glpic" id="glPic"></div>
+      <div class="glside"><h2 class="gltitle" id="glTitle"></h2><div class="gltext" id="glText" tabindex="0"></div><div class="glweak" id="glWeak" hidden></div></div>
+    </section>
+  </div>
+</section>
 </div>
+<div class="igov" id="igov" hidden><div class="igpanel" role="dialog" aria-modal="true" aria-labelledby="igtitle"><button type="button" class="x" id="igclose" aria-label="Close">✕</button><h2 id="igtitle"></h2><p class="igonly">In-game feature only.</p><p id="igwhy"></p><div class="igbtns"><button type="button" class="btn" id="igInv">Open Inventory</button><button type="button" class="btn" id="igGlo">Open Glossary</button></div></div></div>
 <footer>This is an unofficial fan work and is not approved/endorsed by CD PROJEKT RED. Game artwork and text © CD PROJEKT S.A. · <a href="help.html" style="color:inherit">Help</a> · <a href="about.html" style="color:inherit">About</a> · <a href="privacy.html" style="color:inherit">Privacy</a> · <a href="support.html" style="color:inherit">Support</a> · <a href="https://github.com/viv4-web/w3planner" style="color:inherit">Source code</a></footer>
 <div class="tip" id="tip" role="tooltip"></div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toastMsg"></span><button class="btn" id="toastGo" type="button" hidden>Go to Level</button></div>

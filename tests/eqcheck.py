@@ -36,7 +36,7 @@ def openinv(pg):
 
 GEOM = """()=>{const B=s=>{const e=document.querySelector(s);if(!e||!e.getClientRects().length)return null;const r=e.getBoundingClientRect();return{l:Math.round(r.left),t:Math.round(r.top),r:Math.round(r.right),b:Math.round(r.bottom),w:Math.round(r.width),h:Math.round(r.height)}};
  const tiles=[...document.querySelectorAll('#eqbody .eqtile')].map(t=>t.getBoundingClientRect()).filter(r=>r.width>0);
- return{tabs:B('.scrtabs'),lvl:B('.lvlblock'),right:B('.topright'),tInv:B('#tabInv'),tChar:B('#tabChar'),tAlch:B('#tabAlch'),prev:B('#scrPrev'),next:B('#scrNext'),left:B('#invLeft'),mid:B('#invMid'),centre:B('.invcentre'),rt:B('#invRight'),wbox:B('.wbox'),cbox:B('.cbox'),bbox:B('.bbox'),mask:B('.maskbox'),abox:B('.abox'),
+ return{tabs:B('.scrtabs'),lvl:B('.lvlblock'),right:B('.topright'),tInv:B('#tabInv'),tChar:B('#tabChar'),tAlch:B('#tabAlch'),tGlo:B('#tabGlo'),stabs:[document.getElementById('stabs').scrollWidth,document.getElementById('stabs').clientWidth],prev:B('#scrPrev'),next:B('#scrNext'),left:B('#invLeft'),mid:B('#invMid'),centre:B('.invcentre'),rt:B('#invRight'),wbox:B('.wbox'),cbox:B('.cbox'),bbox:B('.bbox'),mask:B('.maskbox'),abox:B('.abox'),
   sets:B('.invright .eqsec'),tree:B('#treePanel'),slots:B('#slots'),info:B('#info'),sw:document.documentElement.scrollWidth,vw:innerWidth,mintile:Math.min(...tiles.map(r=>Math.min(r.width,r.height))),ntiles:tiles.length}}"""
 
 
@@ -74,9 +74,9 @@ def layoutcheck(b, base, check, label):
     for w, h in ((2560, 1259), (1920, 1080), (1440, 900), (1280, 800), (1024, 768), (768, 900), (390, 844)):
         pg = b.new_page(viewport={"width": w, "height": h}, is_mobile=w < 600, has_touch=w < 600); pg.goto(base); until(pg, READY); tag = "%s: at %d px" % (label, w); E = pg.evaluate
         c = E(GEOM)
-        check("%s: Character screen (the default): no sideways scroll, tree and skill slots visible, no equipment boxes, tabs: Alchemy, Inventory, Character" % tag,
-              c["sw"] <= c["vw"] and c["tree"] and c["slots"] and not c["wbox"] and c["tAlch"]["l"] < c["tInv"]["l"] < c["tChar"]["l"] and c["prev"]["r"] <= c["tAlch"]["l"] + 1 and c["tChar"]["r"] <= c["next"]["l"] + 1, c)
-        if w >= 1100:
+        check("%s: Character screen (the default): no sideways scroll, tree and skill slots visible, no equipment boxes, tabs: Glossary, Alchemy, Inventory, Character (seven in the bar, in a row%s)" % (tag, ", scrolling sideways on the phone" if w < 600 else ""),
+              c["sw"] <= c["vw"] and c["tree"] and c["slots"] and not c["wbox"] and c["tGlo"]["l"] < c["tAlch"]["l"] < c["tInv"]["l"] < c["tChar"]["l"] and (c["stabs"][0] > c["stabs"][1] and c["prev"]["w"] >= 34 and c["next"]["w"] >= 34 if w < 600 else c["prev"]["r"] <= c["tGlo"]["l"] + 1 and c["tChar"]["r"] <= c["next"]["l"] + 1), c)
+        if w >= 1500:
             check("%s: top bar: level block left, tabs in the middle, ruleset and Copy link right" % tag, c["lvl"]["r"] <= c["tabs"]["l"] and c["tabs"]["r"] <= c["right"]["l"] and abs((c["tabs"]["l"] + c["tabs"]["r"]) / 2 - w / 2) < 60, c)
         else:
             check("%s: top bar: the tabs and arrows come first, the level block, ruleset and Copy link below" % tag, c["tabs"]["t"] < c["lvl"]["t"] and c["tabs"]["t"] < c["right"]["t"] and c["tabs"]["l"] >= 0 and c["tabs"]["r"] <= w, c)
@@ -99,12 +99,12 @@ def screencheck(b, base, check, label):
     shared = lambda: all(vis(s) for s in ("#lvl", "#bonuspts", '#topbar [data-rs="ng"]', '#topbar [data-rs="ng_plus"]')) and (E("CFG.share===false") or vis("#copy"))     # the offline copy cannot make links, so it has no Copy link
     check("%s: opens on Character: its screen shown, Inventory hidden, no s1 segment in the link, Character tab selected" % label, vis("#screenChar") and not vis("#screenInv") and E("S.scr") == "char" and not E("/\\.s1I/.test(location.hash)") and E("document.getElementById('tabChar').getAttribute('aria-selected')") == "true", E("location.hash"))
     check("%s: Level, Bonus points, NG / NG+ and Copy link are on the Character screen" % label, shared())
-    check("%s: Alchemy is greyed, says 'coming later', is disabled and does nothing" % label, E("(()=>{const a=document.getElementById('tabAlch');return a.disabled&&/coming later/.test(a.textContent)&&a.classList.contains('off')})()") and E("(()=>{document.getElementById('tabAlch').click();return S.scr})()") == "char")
+    check("%s: Alchemy is greyed, says 'in game only' and does not leave Character (it opens the in-game-only panel: tests/glcheck.py)" % label, E("(()=>{const a=document.getElementById('tabAlch');return /in game only/.test(a.textContent)&&a.classList.contains('off')})()") and E("(()=>{document.getElementById('tabAlch').click();return S.scr})()") == "char" and E("(()=>{const o=!document.getElementById('igov').hidden;document.getElementById('igclose').click();return o})()"))
     check("%s: on Character the right arrow is disabled and the left arrow is not" % label, E("document.getElementById('scrNext').disabled") and not E("document.getElementById('scrPrev').disabled"))
     pg.click("#scrPrev"); pg.wait_for_timeout(100)
     check("%s: the left arrow goes to Inventory: its screen shown, s1I in the link, the active tab is the filled gold block (%s)" % (label, E("getComputedStyle(document.getElementById('tabInv')).backgroundColor")),
           vis("#screenInv") and not vis("#screenChar") and E("S.scr") == "inv" and E("/\\.s1I$/.test(location.hash)") and E("getComputedStyle(document.getElementById('tabInv')).backgroundColor") == "rgb(200, 168, 107)" and E("getComputedStyle(document.getElementById('tabChar')).backgroundColor") != "rgb(200, 168, 107)")
-    check("%s: Level, Bonus points, NG / NG+ and Copy link are on the Inventory screen too; on Inventory the left arrow is disabled" % label, shared() and E("document.getElementById('scrPrev').disabled") and not E("document.getElementById('scrNext').disabled"))
+    check("%s: Level, Bonus points, NG / NG+ and Copy link are on the Inventory screen too; on Inventory both arrows work (Glossary is to the left, Character to the right)" % label, shared() and not E("document.getElementById('scrPrev').disabled") and not E("document.getElementById('scrNext').disabled"))
     pg.click("#scrNext"); pg.wait_for_timeout(100)
     check("%s: the right arrow goes back to Character (no s1 segment again)" % label, E("S.scr") == "char" and vis("#screenChar") and not E("/\\.s1I/.test(location.hash)"))
     pg.click("#tabInv"); pg.wait_for_timeout(100); a = E("S.scr"); pg.click("#tabChar"); pg.wait_for_timeout(100)

@@ -1,5 +1,5 @@
 
-const APP_VERSION="v28b";
+const APP_VERSION="v29";
 const CFG=Object.assign({mode:"online",shareBase:""},window.PLANNER_CONFIG||{});
 const DATA=/*@data:DATA*/;
 
@@ -54,7 +54,7 @@ const A='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 // A link without gear, consumables or the Inventory screen has none of them, so every link made before v28 re-encodes byte for byte. The decoder tells segments by prefix, not by position, and ignores a well-formed segment with a prefix it does not know.
 function gearSeg(){if(!S.gear.some(Boolean)&&S.rs!=='ng_plus')return'';return'.g1'+(S.rs==='ng_plus'?'B':'A')+S.gear.map(v=>A[v>>6]+A[v&63]).join('')}
 function consSeg(){return S.cons.some(Boolean)?'.c1'+S.cons.map(v=>A[v>>6]+A[v&63]).join(''):''}   // c1 + 8 slots x 2 characters: Potion 1-4, Bomb 1-2, steel sword oil, silver sword oil (CN_SLOTS)
-function scrSeg(){return S.scr==='inv'?'.s1I':''}                                                      // s1I = the Inventory screen is open; absent = the Character screen
+function scrSeg(){return S.scr==='inv'?'.s1I':S.scr==='glo'?'.s1G':''}                                                      // s1I = the Inventory screen is open, s1G (v29) = the Glossary; absent = the Character screen
 function enc(){const d=S.lv.flat();let o='';for(let i=0;i<d.length;i+=3)o+=A[(d[i]||0)*16+(d[i+1]||0)*4+(d[i+2]||0)];
  o+='.';S.slots.forEach(x=>{const v=x?x[0]*20+x[1]+1:0;o+=A[v>>6]+A[v&63]});
  o+='.';S.muts.forEach(m=>o+=m==null?'-':m.toString(36));o+='.'+lvl()+'.'+bonusPts();o+='.'+parseInt(S.mres.map(x=>x?1:0).reverse().join(''),2).toString(36)+'.'+(S.mact+1);return'v1.'+o+gearSeg()+consSeg()+scrSeg()}
@@ -65,7 +65,7 @@ function dec(h){try{
  const [,l,sl,m,L,B,MR,MA]=P,ALPHA=[...A],inA=s=>[...s].every(c=>ALPHA.includes(c));
  const X={};for(const seg of P.slice(8)){   // optional tagged segments: a known prefix must be well formed and appear once; a well-formed unknown prefix is ignored (a later version's)
   if(!/^[a-z][0-9][A-Za-z0-9_-]*$/.test(seg))return null;const k=seg.slice(0,2);if(X[k]!==undefined)return null;
-  if(k==='g1'&&!/^g1[AB][A-Za-z0-9_-]{18}$/.test(seg))return null;if(k==='c1'&&!/^c1[A-Za-z0-9_-]{16}$/.test(seg))return null;if(k==='s1'&&seg!=='s1I')return null;X[k]=seg}
+  if(k==='g1'&&!/^g1[AB][A-Za-z0-9_-]{18}$/.test(seg))return null;if(k==='c1'&&!/^c1[A-Za-z0-9_-]{16}$/.test(seg))return null;if(k==='s1'&&seg!=='s1I'&&seg!=='s1G')return null;X[k]=seg}
  const G=X.g1,C=X.c1;
  const NSK=TREES.reduce((a,t)=>a+t.sk.length,0);
  if(l.length!==Math.ceil(NSK/3)||!inA(l))return null;
@@ -89,7 +89,7 @@ function dec(h){try{
  if(lv!==null){document.getElementById('lvl').value=lv;document.getElementById('bonuspts').value=bo===null?0:bo}
  if(G!==undefined){s.rs=G[2]==='B'?'ng_plus':'ng';for(let i=0;i<9;i++)s.gear[i]=A.indexOf(G[3+2*i])*64+A.indexOf(G[4+2*i])}
  if(C!==undefined)for(let i=0;i<8;i++)s.cons[i]=A.indexOf(C[2+2*i])*64+A.indexOf(C[3+2*i]);
- if(X.s1)s.scr='inv';
+ if(X.s1)s.scr=X.s1==='s1G'?'glo':'inv';
  return s}catch(e){return null}}
 // ---- rules ----
 const spent=()=>S.lv.flat().reduce((a,b)=>a+b,0)+MUT.reduce((a,m,i)=>a+(S.mres[i]?m.sp:0),0);

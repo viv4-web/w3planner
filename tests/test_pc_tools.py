@@ -146,5 +146,41 @@ class PcToolTests(unittest.TestCase):
         self.assertFalse((Path(self.tmp.name) / "g2").exists())
 
 
+class JournalToolTests(unittest.TestCase):
+    """tools/pc/extract_journal_on_pc.py: copies every journal file of every bundle and lists the texture names; read-only, standard modules only."""
+    def setUp(self):
+        import extract_journal_on_pc as jt
+        self.jt = jt; self.tmp = tempfile.TemporaryDirectory(); t = Path(self.tmp.name); self.game = t / "The Witcher 3"
+        (self.game / "content/content0/bundles").mkdir(parents=True); (self.game / "dlc/bob/content").mkdir(parents=True)
+        j = b"CR2Wfake"; z = zlib.compress(j)
+        test_bundle.make_bundle(self.game / "content/content0/bundles/startup.bundle", [("gameplay\\journal\\bestiary\\beasts.journal", j, 1, z), ("gameplay\\journal\\start.w2je", j, 0, j), ("gameplay\\items\\x.xml", b"<a/>", 0, b"<a/>"), ("gameplay\\journal2\\no.journal", j, 0, j)])
+        test_bundle.make_bundle(self.game / "dlc/bob/content/bob.bundle", [("dlc\\bob\\journal\\characters\\y.journal", j, 0, j)])
+        make_cache(self.game / "content/content0/texture.cache", [("gameplay\\gui_new\\textures\\journal\\bestiary\\a.xbm", 8, 8, 0x07, RED565 * 4)])
+        self.zip = t / "Desktop" / "j.zip"; self.zip.parent.mkdir()
+
+    def tearDown(self): self.tmp.cleanup()
+
+    def test_copies_the_journals_lists_the_textures_and_never_touches_the_game_folder(self):
+        before = tree_state(self.game); out = io.StringIO()
+        with contextlib.redirect_stdout(out): rc = self.jt.main(["--game-dir", str(self.game), "--out", str(self.zip)])
+        self.assertEqual(rc, 0); self.assertEqual(tree_state(self.game), before); z = zipfile.ZipFile(self.zip)
+        self.assertEqual(sorted(z.namelist()), ["journal/content__content0__bundles__startup.bundle/gameplay/journal/bestiary/beasts.journal", "journal/content__content0__bundles__startup.bundle/gameplay/journal/start.w2je",
+                                                 "journal/dlc__bob__content__bob.bundle/dlc/bob/journal/characters/y.journal", "manifest.txt", "report.txt", "texture-index.txt"])
+        self.assertEqual(z.read("journal/dlc__bob__content__bob.bundle/dlc/bob/journal/characters/y.journal"), b"CR2Wfake")
+        self.assertIn("journal\\bestiary\\a.xbm", z.read("texture-index.txt").decode().replace("gameplay\\gui_new\\textures\\", "")); self.assertIn("SHA256", out.getvalue())
+
+    def test_refuses_to_write_inside_the_game_folder(self):
+        with self.assertRaises(SystemExit): self.jt.main(["--game-dir", str(self.game), "--out", str(self.game / "x.zip")])
+
+    def test_only_standard_modules_and_nothing_written_to_the_game_folder(self):
+        tree = ast.parse((ROOT / "tools/pc/extract_journal_on_pc.py").read_text(encoding="utf-8")); mods = set()
+        for n in ast.walk(tree):
+            if isinstance(n, ast.Import): mods |= {a.name.split(".")[0] for a in n.names}
+            elif isinstance(n, ast.ImportFrom): mods.add(n.module.split(".")[0])
+        self.assertEqual(mods, {"argparse", "hashlib", "os", "struct", "sys", "zipfile", "extract_on_pc"})      # extract_on_pc: the readers next to it
+        os_used = {n.attr for n in ast.walk(tree) if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id == "os"}
+        self.assertEqual(os_used - {"path", "walk", "environ", "replace"}, set())
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
