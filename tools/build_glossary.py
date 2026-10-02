@@ -117,6 +117,11 @@ def fold(tag):
     return (tag[:m.start()] if m else tag), (m.group(0).strip("_").lower() if m else "")
 
 
+def clean(t):
+    """A name without the game's markup (one tutorial is called <i>Hearts of Stone</i>), one space between words."""
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]*>", "", t or "")).strip()
+
+
 def usable(e): return bool(e.get("name")) and any(s for _, s in e["stages"])
 
 
@@ -227,7 +232,7 @@ def main():
         if not g: return None
         if g["cls"] == "CJournalCreatureGroup": return g["name"]
         return stem_group.get((g["link"] or "").replace("\\", "/").rsplit("/", 1)[-1][:-8].lower())
-    sortkey = lambda e: (norm_key(e["name"]), e["id"])
+    sortkey = lambda e: (norm_key(clean(e["name"])), e["id"])
 
     # bestiary
     bs, entries = [e for e in J.entries if e["tab"] == "bestiary"], []
@@ -236,7 +241,7 @@ def main():
         if not cat: log("bestiary entry without a category, dropped:", e["id"]); continue
         img, th = picture("bestiary", e["image"], "bestiary") if e["image"] else (None, None)
         weak = [{"k": "item", "id": w, "name": cons[w]["name"]} if w in cons else {"k": "sign" if w in SIGNS else "label", "name": w} for w in e["weak"]]
-        entries.append({"id": e["id"], "name": e["name"], "group": cat, "img": img, "thumb": th, "stages": [s for _, s in e["stages"] if s], "weak": weak})
+        entries.append({"id": e["id"], "name": clean(e["name"]), "group": cat, "img": img, "thumb": th, "stages": [s for _, s in e["stages"] if s], "weak": weak})
     groups = sorted({x["group"] for x in entries}, key=norm_key); counts["bestiary"] = len(entries)
     entries.sort(key=lambda x: (groups.index(x["group"]), norm_key(x["name"]), x["id"])); note_dups(entries, {e["id"]: PACK_NAME[e["pack"]] for e in bs})
     dump(out, "bestiary.json", {"tab": "bestiary", "groups": groups, "entries": entries}, files)
@@ -246,7 +251,7 @@ def main():
     cs = [e for e in J.entries if e["tab"] == "characters"]; entries = []
     for e in sorted((e for e in cs if usable(e)), key=sortkey):
         img, th = picture("characters", e["image"], "characters") if e["image"] else (None, None)
-        entries.append({"id": e["id"], "name": e["name"], "group": PACK_NAME[e["pack"]], "img": img, "thumb": th, "stages": [s for _, s in e["stages"] if s]})
+        entries.append({"id": e["id"], "name": clean(e["name"]), "group": PACK_NAME[e["pack"]], "img": img, "thumb": th, "stages": [s for _, s in e["stages"] if s]})
     cg = ["Base game", "Hearts of Stone", "Blood and Wine"]; entries.sort(key=lambda x: (cg.index(x["group"]), norm_key(x["name"]), x["id"])); note_dups(entries)
     counts["characters"] = len(entries); dump(out, "characters.json", {"tab": "characters", "groups": ["Base game", "Hearts of Stone", "Blood and Wine"], "entries": entries}, files)
 
@@ -262,7 +267,7 @@ def main():
             im = P.find("tutorials", stem + ".png")
             if im is not None and not P.flat(im): img = put("img/tutorials/%s.webp" % stem.lower(), webp(im))
         grp = J.groups.get(e["parent"], {}).get("name")
-        entries.append({"id": e["id"], "name": e["name"], "group": grp, "img": img, "stages": [s for _, s in e["stages"] if s], "variants": len(v)})
+        entries.append({"id": e["id"], "name": clean(e["name"]), "group": grp, "img": img, "stages": [s for _, s in e["stages"] if s], "variants": len(v)})
     entries.sort(key=sortkey); counts["tutorial"] = len(entries); dump(out, "tutorial.json", {"tab": "tutorial", "entries": entries}, files)
     log("tutorials: %d usable of %d raw, %d after folding variants, %d with a picture; placeholder pictures refused: %d" % (sum(1 for x in ts if usable(x)), len(ts), len(entries), sum(1 for x in entries if x["img"]), len(P.refused)))
 
@@ -276,14 +281,14 @@ def main():
         if paint:
             slug = iid; im, _ = P.icon("icons/inventory/paintings/%s.png" % iid)
             if im is None: log("painting without a picture:", iid); continue
-            index.append({"id": iid, "name": name, "kind": "painting", "group": "Paintings & maps", "img": put("img/paintings/%s.webp" % iid.lower(), webp(im)), "thumb": put("img/paintings/t/%s.webp" % iid.lower(), webp(im, True))}); continue
+            index.append({"id": iid, "name": clean(name), "kind": "painting", "group": "Paintings & maps", "img": put("img/paintings/%s.webp" % iid.lower(), webp(im)), "thumb": put("img/paintings/t/%s.webp" % iid.lower(), webp(im, True))}); continue
         body, how = book_body(iid, it, strs, keys)
         if not body: continue                                                                    # title only: dropped (decision)
         kind = "quest" if "Quest" in it["tags"] else "book" if it["cat"] == "book" else "note"
         im, key = P.icon(it["icon"]) if it["icon"] else (None, None)
         if im is None: missing_icon.append(iid)
         ref = put("img/books/%s.webp" % key.replace("/", "__"), webp(im)) if im is not None else None
-        index.append({"id": iid, "name": name, "kind": kind, "group": "Books", "img": ref, "thumb": ref}); bodies[kind][iid] = body
+        index.append({"id": iid, "name": clean(name), "kind": kind, "group": "Books", "img": ref, "thumb": ref}); bodies[kind][iid] = body
     index.sort(key=lambda e: (e["group"] != "Books", norm_key(e["name"]), e["id"])); note_dups(index); counts["books"] = sum(1 for e in index if e["kind"] != "painting"); counts["paintings"] = sum(1 for e in index if e["kind"] == "painting")
     dump(out, "books_index.json", {"tab": "books", "groups": ["Books", "Paintings & maps"], "entries": index}, files)
     for kind, d in bodies.items(): dump(out, "books_%s.json" % kind, {"kind": kind, "text": d}, files)

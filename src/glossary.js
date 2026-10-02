@@ -26,10 +26,12 @@ function glSegs(str,words){if(!words.length)return[{t:str}];let n='',map=[];for(
  hits.sort((a,b)=>a[0]-b[0]);const m=[];hits.forEach(h=>{const l=m[m.length-1];if(l&&h[0]<=l[1])l[1]=Math.max(l[1],h[1]);else m.push(h.slice())});
  const out=[];let p=0;m.forEach(([a,b])=>{if(a>p)out.push({t:str.slice(p,a)});out.push({t:str.slice(a,b),hl:1});p=b});if(p<str.length)out.push({t:str.slice(p)});return out}
 function glAddText(parent,str,words){glSegs(str,words).forEach(s=>{if(s.hl){const m=document.createElement('mark');m.className='glhl';m.textContent=s.t;parent.appendChild(m)}else parent.appendChild(document.createTextNode(s.t))})}
+// the game's <<...>> placeholders: input actions and icons become a small boxed word ([Cast Sign]), colour switches are dropped, an inline picture of a book is a [picture]
+function glKeyLabel(r){if(/^(end_)?color/i.test(r))return null;if(/^[a-z]/.test(r))return'picture';return r.replace(/,.*$/,'').replace(/^(GUI_PC_|GUI_|ICO_|IK_|GI_)/,'').replace(/_mod$/i,'').replace(/_+/g,' ').replace(/([a-z])([A-Z])/g,'$1 $2').trim()}
 function glMarkup(root,text,words){text=String(text).replace(/^(\s*<br\s*\/?>)+/i,'').replace(/(<br\s*\/?>\s*)+$/i,'');let cur=root;   // the game pads its paragraphs with <br>; the first and last are dropped
  const stack=[],re=/<<([^>]*)>>|<(\/?)([a-zA-Z]+)([^>]*)>|([^<]+|<)/g;let m;
  while((m=re.exec(text))){
-  if(m[1]!==undefined){const k=document.createElement('span');k.className='glkey';k.textContent='['+m[1].replace(/^GUI_(PC_)?/,'').replace(/_/g,' ')+']';cur.appendChild(k)}
+  if(m[1]!==undefined){const l=glKeyLabel(m[1]);if(l){const k=document.createElement('span');k.className='glkey';k.textContent='['+l+']';cur.appendChild(k)}}
   else if(m[3]){const tag=m[3].toLowerCase();
    if(tag==='br'){cur.appendChild(document.createElement('br'))}
    else if(['i','b','s','font'].includes(tag)){
@@ -112,7 +114,7 @@ function glRenderSubs(){document.querySelectorAll('#glSubs .glst[data-t]').forEa
  const on=document.querySelector('#glSubs .glst.on');if(on&&innerWidth<600)on.scrollIntoView({block:'nearest',inline:'center'})}
 function glShowTab(tab){GL.tab=tab;GL.err=false;glRenderSubs();glEl('screenGlo').classList.remove('gl-detail');glRenderList();
  glLoadTab(tab).then(()=>{if(GL.tab!==tab||GL.all)return;glRenderList();const es=glFilter(tab,GL.q),e=es.find(x=>x.id===GL.sel[tab])||(glPhone()?null:es[0]);   // the entry you had open, else the first on a desktop (a phone starts at the list)
-  if(e){GL.sel[tab]=e.id;glRenderView(tab,e,glWords(GL.q));glMarkSel()}},()=>{GL.err=true;if(GL.tab===tab)glRenderList()})}
+  if(e){GL.sel[tab]=e.id;glRenderView(tab,e,glWords(GL.q));glMarkSel();glScrollSel()}},()=>{GL.err=true;if(GL.tab===tab)glRenderList()})}
 function glStep(d){const i=GL_TABS.findIndex(t=>t.k===GL.tab)+d;if(i>=0&&i<GL_TABS.length){GL.all=false;glShowTab(GL_TABS[i].k)}}
 function glSearchInput(){GL.q=glEl('glQ').value;clearTimeout(GL.timer);GL.timer=setTimeout(glSearch,120)}
 function glSearch(){
@@ -121,8 +123,9 @@ function glSearch(){
  if(GL.tab==='books'&&glWords(GL.q).length&&!glHaveBodies()){glRenderList();glLoadTab('books',true).then(()=>{if(!GL.all&&GL.tab==='books')glRenderList()},()=>{});return}
  glRenderList()}
 function glToggleAll(){GL.all=!GL.all;GL.allReady=false;glRenderSubs();glSearch()}
+function glScrollSel(){const r=glEl('glRows'),n=r.querySelector('.glrow.on');if(n)r.scrollTop=Math.max(0,n.offsetTop-(r.clientHeight-n.offsetHeight)/2)}   // the list only, never the page
 function glGoResult(tab,id){const words=glWords(GL.q);GL.all=false;glEl('screenGlo').classList.remove('gl-detail');
- const go=()=>{GL.tab=tab;GL.sel[tab]=id;glRenderSubs();glRenderList();glSelect(tab,id,words)};
+ const go=()=>{GL.tab=tab;GL.sel[tab]=id;glRenderSubs();glRenderList();glSelect(tab,id,words);glScrollSel()};
  glLoadTab(tab,tab==='books').then(go,()=>{})}
 function glBind(){
  glEl('glSubs').addEventListener('click',e=>{const b=e.target.closest('.glst');if(!b||!b.dataset.t)return;GL.all=false;glShowTab(b.dataset.t)});

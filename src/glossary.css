@@ -17,7 +17,7 @@
 .glsearch input{flex:1;min-width:0;background:#0d0c0a;border:1px solid var(--line);color:var(--ink);font:inherit;padding:4px 8px}
 .glsearch .btn{font-size:15px;letter-spacing:.8px;padding:2px 10px;white-space:nowrap}.glsearch .btn.on,.glsearch .btn[aria-pressed="true"]{border-color:var(--gold);background:var(--gold);color:#17120a;font-weight:600}
 .glcount{padding:0 12px 6px;color:var(--dim);font-size:16px;border-bottom:1px solid #2a2219}
-.glrows{flex:1;overflow:auto;min-height:0;padding-bottom:6px}
+.glrows{position:relative;flex:1;overflow:auto;min-height:0;padding-bottom:6px}
 .glgroup{position:sticky;top:0;z-index:1;background:#1a150f;color:var(--gold);text-transform:uppercase;letter-spacing:1px;font-size:16px;padding:4px 12px;border-bottom:1px solid #3a3025}
 .glrow{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;text-align:left;background:none;border:0;border-bottom:1px solid #2a2219;padding:4px 10px;color:var(--ink);font:inherit}
 .glrow:hover{background:#17130e}.glrow.on{background:#241c11;box-shadow:inset 3px 0 0 var(--gold)}.glrow:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}

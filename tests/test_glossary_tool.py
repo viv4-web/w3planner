@@ -20,6 +20,7 @@ check("fold: other names stay", G.fold("TutorialCharDevGroups") == ("TutorialCha
 es = [{"id": "a", "name": "Wild Boars", "group": "Beasts"}, {"id": "b", "name": "Wild Boars", "group": "Beasts"}, {"id": "c", "name": "Bears", "group": "Beasts"}]
 G.note_dups(es, {"a": "Base game", "b": "Blood and Wine"}); check("note_dups: pack names for the two boars, none for the bear", es[0]["note"] == "Base game" and es[1]["note"] == "Blood and Wine" and "note" not in es[2])
 es = [{"id": "a", "name": "Portrait", "group": "P"}, {"id": "b", "name": "portrait", "group": "P"}]; G.note_dups(es); check("note_dups: '1 of 2' when nothing else tells them apart", [e["note"] for e in es] == ["1 of 2", "2 of 2"])
+check("clean: markup in a name", G.clean("<i>Hearts of Stone</i>") == "Hearts of Stone" and G.clean("  A  B ") == "A B")
 check("norm_key: accents and case", G.norm_key("Zoltán") == "zoltan" and G.norm_key("ÉCLAIR") == "eclair")
 # the book body: <name key>_text first, then the item id, then a one-line item_desc (only when the item's own key says so); a generic description is never taken
 import w3dec
