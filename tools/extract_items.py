@@ -54,6 +54,8 @@ PACKAGES = [("xml.bundle", "gameplay"), ("ep1.bundle", "dlc\\ep1\\data\\gameplay
 # the game spells a few stat names differently in the XML and in its strings (each target key exists in en.w3strings)
 LABEL_ALIAS = {"staminaregen_armor_mod": "staminaregen", "dismember_chance": "dismember_chance_mult", "instant_kill_chance": "instant_kill_chance_mult",
                "armor_reduction_perc": "armor_reduction", "staggereffect": "stagger"}
+# plain DLC gear (no set, not a relic): Temerian (DLC1), Nilfgaardian (DLC5), Nekker boots (DLC12), the DLC13 crossbows, Skellige (DLC14); with their NGP copies. Horse items, hair and the rest of those files are not gear.
+DLC_GEAR = re.compile(r"^(NGP )?(DLC1 Temerian|DLC5 Nilfgaardian|DLC14 Skellige) (Armor|Boots|Gloves|Pants)$|^(NGP )?Nekker Boots$|^(NGP )?DLC13 (Nilfgaardian|Elven|Skellige) Crossbow$")
 AUTOGEN_NOTE = ("Autogen item: the game scales damage or armour with the item level, so its base numbers are not in the XML (only formula ranges, autogen.abilities) and "
                 "required_level is null. The UI shows the ranges the XML does give (min to max, as rolled) and the text 'Level varies' (decision: Vivek).")
 
@@ -86,6 +88,9 @@ def xml_sources(game_dir, ruleset):
                 for e in b.match("%s\\%s\\*.xml" % (root, folder)):
                     files[(bname, folder.split("_")[0], e.name.rsplit("\\", 1)[-1])] = b.read(e)
             b.close()
+        extra = d / "dlc-xml"                          # item XML found on the PC in dlc0.bundle (dlc1, 5, 10, 12, 13, 14): see dlc-xml/PROVENANCE.txt. Same rule: _plus replaces the base file.
+        for folder in ("items",) + (("items_plus",) if ruleset == "ng_plus" else ()):
+            for f in sorted(extra.glob("*/%s/*.xml" % folder)): files[("dlc-" + f.parent.parent.name, "items", f.name)] = f.read_bytes()
         return files
     for f in sorted((d / "items").glob("*.xml")): files[("items", "items", f.name)] = f.read_bytes()
     return files
@@ -209,8 +214,10 @@ def required_level(category, entries, quality, tags, name):
         for t, v in ((1.01, 2), (1.1, 4), (1.2, 8), (1.3, 11), (1.4, 15), (1.5, 19), (1.6, 22), (1.7, 25), (1.8, 27), (1.9, 32)):
             if m > t: level = v
     elif category == "bolt":
-        level = {"Tracking Bolt": 2, "Bait Bolt": 2, "Blunt Bolt": 2, "Broadhead Bolt": 10, "Target Point Bolt": 5, "Split Bolt": 15, "Explosive Bolt": 20, "Blunt Bolt Legendary": 12,
+        level = {"Tracking Bolt": 2, "Bait Bolt": 2, "Blunt Bolt": 2, "Broadhead Bolt": 10, "Target Point Bolt": 5, "Split Bolt": 15, "Explosive Bolt": 20, "Blunt Bolt Legendary": 5,   # the script tests this name twice (5, then 12): the first test wins
                  "Broadhead Bolt Legendary": 20, "Target Point Bolt Legendary": 15, "Split Bolt Legendary": 24, "Explosive Bolt Legendary": 26}.get(name, 0)
+    elif category == "mask":
+        level = 0                     # no category branch in GetItemLevel: the local stays 0 (WitcherScript zero-initialises), so masks end up at level 1
     else:
         return None
     level -= 1
@@ -239,6 +246,7 @@ def build_ruleset(g, sc):
         if cat not in BY_CATEGORY or g.file_of[name] in NPC_FILES: continue
         tags = tags_of(it); slot = BY_CATEGORY[cat]
         if "NoShow" in tags and cat != "mask": continue
+        if g.ruleset == "ng" and name.startswith("NGP "): report["notes"].append("excluded, a New Game Plus carry-over copy (not in the first playthrough): %s" % name); continue
         entries, abnames, missing = stats_of(g, it)
         q = int(sum(e["min"] for e in entries if e["stat"] == "quality"))
         plain = name[4:] if name.startswith("NGP ") else name
@@ -246,7 +254,8 @@ def build_ruleset(g, sc):
         if len(sets) > 1: sys.exit("%s matches several sets: %s" % (name, sets))
         fname = g.file_of[name]
         if sets: group, sid = ("quest_set" if SET_INFO[sets[0]][1] == "quest" else SET_INFO[sets[0]][1]), sets[0]
-        elif slot == "crossbow" and "crossbow" in fname.lower(): group, sid = "crossbow", None
+        elif slot == "crossbow" and ("crossbow" in fname.lower() or DLC_GEAR.match(name)): group, sid = "crossbow", None
+        elif DLC_GEAR.match(name): group, sid = "dlc_gear", None
         elif slot == "bolts" and "bolt" in fname.lower(): group, sid = "bolt", None
         elif slot == "mask" and "NoShow" not in tags: group, sid = "mask", None
         elif q == 4 and slot not in ("crossbow", "bolts", "mask") and "SecondaryWeapon" not in tags: group, sid = "relic", None
@@ -317,7 +326,7 @@ def build(game_dir):
     for rs in per:
         seen = [r["id"] for r in items if rs in r["rulesets"]]
         if len(seen) != len(set(seen)): sys.exit("two different items called the same in ruleset %s" % rs)
-    items.sort(key=lambda r: (ORDER[r["slot"]], ["school", "quest_set", "dlc", "relic", "crossbow", "bolt", "mask"].index(r["group"]), r["set"] or "", r["tier"] or 0, r["id"], r["rulesets"]))
+    items.sort(key=lambda r: (ORDER[r["slot"]], ["school", "quest_set", "dlc", "dlc_gear", "relic", "crossbow", "bolt", "mask"].index(r["group"]), r["set"] or "", r["tier"] or 0, r["id"], r["rulesets"]))
     sets_out, bonus_all = {}, {}
     for rs, g in games.items(): bonus_all[rs], set_rules = set_bonuses(g, sc)
     for s, name, kind, tag, _ in SETS:
@@ -410,9 +419,12 @@ def rules(g, sc, set_rules):
                            "steel sword": "ceil(1 + (1 + sum(damage_i - 1) - 25) / 8) over slashing, bludgeoning, rending, elemental, fire, silver, piercing",
                            "silver sword": "ceil(1 + (1 + sum(damage_i - 1) - 90) / 10) over silver, bludgeoning, rending, elemental, fire, piercing",
                            "crossbow": "by attack_power multiplier: >1.01 2, >1.1 4, >1.2 8, >1.3 11, >1.4 15, >1.5 19, >1.6 22, >1.7 25, >1.8 27, >1.9 32",
-                           "bolts": "a fixed level per bolt name, minus 14/10/6/4 for quality 5/4/3/2",
+                           "bolts": "a fixed level per bolt name, minus 14/10/6/4 for quality 5/4/3/2 (Blunt Bolt Legendary: the script tests the name twice, the first value 5 wins)",
+                           "masks": "no branch in the script, so the level stays 0 and the result is 1 (no restriction)",
                            "then": "minus 1; at least 1; set gear (quality 5) minus 2, relic (4) minus 1; at least 1; EP1-tagged relic or set gear minus 1; 'OlgierdSabre' minus 3 (capped at the player's maximum level)",
                            "assumption": "an attribute the item does not define counts as 0 (the engine default is not in the scripts); not computed for Autogen items",
+                           "enforcement": {"check": "HasRequiredLevelToEquipItem: GetItemLevel(item) > GetLevel() blocks equipping (r4Player.ws); the Wolf Hour potion lowers every requirement by 2 and is not modelled",
+                                           "ngplus_note": "In New Game Plus the game adds (NG+ start level - 30) steps of autogen_fixed_* damage or armour to every non-autogen weapon and armour piece it picks up (IncreaseNGPItemlevel, one step = one required level); the planner does not know the NG+ start level, so required_level is the value at start level 30"},
                            "source": [sc.ref(IC, r"function GetItemLevel\(item"), sc.ref("game/gameParams.ws", r"function GetItemLevel\(itemCategory"), sc.ref(IC, r"function GetItemLevelColorById")]},
         "primary_stat": {"steel sword": "SlashingDamage, label 'Damage'", "silver sword": "SilverDamage, label 'Damage'", "armor, gloves, boots, trousers": "armor",
                          "crossbow": "'Damage' = the equipped bolt's primary stat (Bodkin Bolt PiercingDamage if none) x the crossbow's attack_power multiplier",
@@ -429,12 +441,29 @@ def rules(g, sc, set_rules):
         "autogen": {"text": AUTOGEN_NOTE}}
 
 
+UI_DROP = ("rulesets", "abilities", "file", "tags", "icon_path")       # provenance: not needed by the page (the extractor still sees it)
+REGISTRY = ROOT / "data" / "item_ids.json"
+
+
+def registry_numbers(ids):
+    """data/item_ids.json: item id -> number (1 to 4095), APPEND-ONLY: the numbers are what a share link stores (CLAUDE.md, gear link). New ids get the next number; none is
+    ever reused or renumbered, ids that left the game files keep theirs."""
+    reg = json.loads(REGISTRY.read_text(encoding="utf-8"))["ids"] if REGISTRY.is_file() else {}
+    for i in ids:
+        if i not in reg: reg[i] = max(reg.values(), default=0) + 1
+    if max(reg.values()) > 4095 or len(set(reg.values())) != len(reg): sys.exit("item id registry out of range or not unique")
+    return reg
+
+
 def split(data):
-    """{file name: text}: data/items.json (sets, rules, slots: small) and one data/items_<ruleset>.json per ruleset (its items, loaded on demand: the UI never embeds them in index.html)."""
-    meta = {k: v for k, v in data.items() if k != "items"}; out = {"items.json": json.dumps(meta, indent=1, ensure_ascii=False) + "\n"}
+    """{file name: text}: data/items.json (sets, rules, slots: small) and one data/items_<ruleset>.json per ruleset (its items, loaded on demand: the UI never embeds them in index.html).
+    The per-ruleset records leave out provenance and null fields, and carry n, the registry number of the id."""
+    reg = registry_numbers(sorted({r["id"] for r in data["items"]}, key=lambda i: next(k for k, r in enumerate(data["items"]) if r["id"] == i)))
+    meta = {k: v for k, v in data.items() if k != "items"}; out = {"items.json": json.dumps(meta, indent=1, ensure_ascii=False) + "\n",
+                                                                  "item_ids.json": json.dumps({"version": 1, "note": "append-only: never reuse or renumber (share links store these numbers)", "ids": dict(sorted(reg.items(), key=lambda kv: kv[1]))}, indent=0, ensure_ascii=False) + "\n"}
     for rs in data["rulesets"]:
-        recs = [{k: v for k, v in r.items() if k != "rulesets"} for r in data["items"] if rs in r["rulesets"]]
-        out["items_%s.json" % rs] = json.dumps({"ruleset": rs, "items": recs}, indent=1, ensure_ascii=False) + "\n"
+        recs = [{k: v for k, v in dict(r, n=reg[r["id"]]).items() if k not in UI_DROP and v is not None} for r in data["items"] if rs in r["rulesets"]]
+        out["items_%s.json" % rs] = json.dumps({"ruleset": rs, "items": recs}, ensure_ascii=False, separators=(",", ":")) + "\n"
     return out
 
 

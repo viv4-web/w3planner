@@ -40,13 +40,17 @@ class GateTests(unittest.TestCase):
         self.gate = self.tmp / "dist/gate-preview.json"
         self.env = mock.patch.dict("os.environ", {"CLOUDFLARE_API_TOKEN": "t", "CLOUDFLARE_ACCOUNT_ID": "a"})
         self.sleeps = []; self.sleep = mock.patch.object(deploy.time, "sleep", lambda s: self.sleeps.append(s))
+        self.live = ["v99"]; self.live_calls = []     # what the live site answers to the version poll: each look takes the next one, the last one repeats
         self.args = Namespace(art_dir="art", project="w3planner", dry_run=False, yes=True)
         self.git_out = {("rev-parse", "HEAD"): "c" * 40, ("rev-parse", "--short", "HEAD"): "ccccccc", ("status", "--porcelain"): ""}
 
     def patched(self, fake):
         return [
             self.env, mock.patch.object(deploy, "ROOT", self.tmp), mock.patch.object(deploy, "GATE_FILE", self.gate), mock.patch.object(deploy, "git", lambda *a: self.git_out.get(a, "")),
-            mock.patch.object(deploy, "build", lambda *a, **k: None), mock.patch.object(deploy, "wrangler_deploy", fake.wrangler), mock.patch.object(deploy, "smoke", fake.smoke), mock.patch.object(deploy, "cf_api", fake.api), self.sleep]
+            mock.patch.object(deploy, "build", lambda *a, **k: None), mock.patch.object(deploy, "wrangler_deploy", fake.wrangler), mock.patch.object(deploy, "smoke", fake.smoke), mock.patch.object(deploy, "cf_api", fake.api), mock.patch.object(deploy, "live_version", self.live_version), self.sleep]
+
+    def live_version(self, url):
+        self.live_calls.append(url); return self.live.pop(0) if len(self.live) > 1 else self.live[0]
 
     def run_with(self, fake, fn):
         out = io.StringIO()
@@ -96,7 +100,7 @@ class GateTests(unittest.TestCase):
 
     def test_edge_lag_that_does_not_clear_rolls_back_after_the_rechecks(self):
         self.passed_gate(); fake = Fake(["lag"] * (deploy.RECHECKS + 1) + [True]); rc, out = self.run_with(fake, deploy.do_promote)
-        self.assertEqual(rc, 3, out); self.assertIn(("POST", ["prev-0000", "rollback"]), fake.calls); self.assertEqual(self.sleeps, [deploy.RECHECK_WAIT] * deploy.RECHECKS)
+        self.assertEqual(rc, 3, out); self.assertIn("EDGE LAG", out); self.assertNotIn("SMOKE TESTS FAILED", out); self.assertIn(("POST", ["prev-0000", "rollback"]), fake.calls); self.assertEqual(self.sleeps, [deploy.RECHECK_WAIT] * deploy.RECHECKS)
 
     def test_a_real_fault_rolls_back_at_once_without_rechecks(self):
         self.passed_gate(); fake = Fake([False, True]); rc, out = self.run_with(fake, deploy.do_promote)
@@ -105,6 +109,28 @@ class GateTests(unittest.TestCase):
     def test_failed_rollback_is_reported_with_the_manual_target(self):
         self.passed_gate(); fake = Fake([False], rollback_error="HTTP 500"); rc, out = self.run_with(fake, deploy.do_promote)
         self.assertEqual(rc, 2); self.assertIn("ROLLBACK FAILED", out); self.assertIn("prev-0000", out)
+
+    def test_waits_for_the_live_version_then_runs_the_smoke_tests(self):
+        self.passed_gate(); self.live = ["v98", "v98", "v99"]; fake = Fake([True]); rc, out = self.run_with(fake, deploy.do_promote)
+        self.assertEqual(rc, 0, out); self.assertEqual(self.sleeps, [deploy.LIVE_POLL] * 2); self.assertEqual(len(self.live_calls), 3)
+        self.assertIn(("smoke", "https://w3planner.pages.dev/", True), fake.calls); self.assertFalse([c for c in fake.calls if c[0] == "POST"])
+        self.assertLess(out.index("serves v99"), out.index("Smoke tests against production"))                  # the smoke tests start only after the live version matched
+
+    def test_a_live_site_that_never_serves_the_version_is_edge_lag_and_rolls_back_without_smoke_tests(self):
+        self.passed_gate(); self.live = ["v98"]; fake = Fake([True]); rc, out = self.run_with(fake, deploy.do_promote)
+        self.assertEqual(rc, 3, out); self.assertIn("EDGE LAG", out); self.assertIn("not a test failure", out); self.assertNotIn("SMOKE TESTS FAILED", out)
+        self.assertIn(("POST", ["prev-0000", "rollback"]), fake.calls); self.assertNotIn(("smoke", "https://w3planner.pages.dev/", True), fake.calls)   # only the re-check after the rollback ran
+        self.assertEqual(len(self.live_calls), int(deploy.LIVE_WAIT // deploy.LIVE_POLL) + 1); self.assertEqual(self.sleeps, [deploy.LIVE_POLL] * int(deploy.LIVE_WAIT // deploy.LIVE_POLL))
+
+    def test_the_poll_asks_with_a_cache_buster_and_no_cache_headers(self):
+        seen = {}
+        class R:
+            def __enter__(s): return s
+            def __exit__(s, *a): return False
+            def read(s): return b'APP_VERSION="v99"'
+        def fake_open(req, timeout=0): seen.update(url=req.full_url, h={k.lower(): v for k, v in req.header_items()}); return R()
+        with mock.patch.object(deploy.urllib.request, "urlopen", fake_open): v = deploy.live_version("https://w3planner.pages.dev/")
+        self.assertEqual(v, "v99"); self.assertRegex(seen["url"], r"^https://w3planner\.pages\.dev/\?cb=\d+$"); self.assertEqual(seen["h"]["cache-control"], "no-cache"); self.assertEqual(seen["h"]["pragma"], "no-cache")
 
     def test_serve_binds_loopback_only(self):
         import serve

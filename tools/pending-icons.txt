@@ -1,0 +1,1 @@
+# item icons the game data refers to that are not in inventory/ yet (path, then the items using it). Empty: all 34 icons came from the PC in w3planner-icons2.zip (SHA-256 6c14d461f8cc2c0b12c8ac24549dfe77ab01ca49136b59a1e17acaf33345ba9c). tests/run_all.py allows exactly the items listed here to lack an icon. Delete a line when its icon is imported.

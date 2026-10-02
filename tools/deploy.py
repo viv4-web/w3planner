@@ -14,7 +14,7 @@ The gate, in order:
      (page loads, no console errors, every link fixture opens, a new link can be created and reopened)
   3. a short report, and stop. Production needs --promote, only after Vivek has reviewed the preview and said yes in a message written after the report (CLAUDE.md rule 11).
 --promote refuses unless dist/game is exactly the build (same git commit, same files) that passed on preview.
-After the production upload it runs the same smoke tests against https://<project>.pages.dev. If they fail it rolls
+After the production upload it first polls https://<project>.pages.dev (cache-busting query, no-cache headers, one look every 5 s for up to 5 minutes) until the page's APP_VERSION is the version being promoted; if it never is, that is edge lag, not a test failure: it rolls back and says so, and no smoke test runs. Once the live version matches it runs the same smoke tests against https://<project>.pages.dev. If they fail it rolls
 production back to the previous production deployment through the Cloudflare API and reports (failures that only edge lag can cause, such as the
 version seen by the browser, get two more looks, 60 s apart, first; see LAG_CHECKS). That rollback is the only
 thing this script does without asking.
@@ -34,6 +34,7 @@ PREVIEW_BRANCH = "preview"
 # any rollback; any other failure (script errors, a link that does not open, ...) is a real fault and rolls back at once.
 LAG_CHECKS = ("serves the build that was deployed", "version is", "Cache-Control")
 RECHECKS, RECHECK_WAIT = 2, 60
+LIVE_WAIT, LIVE_POLL = 300, 5      # before any production smoke test: poll the live site (cache-busting query, no-cache headers) for up to LIVE_WAIT seconds, one look every LIVE_POLL
 GATE_FILE = ROOT / "dist" / "gate-preview.json"  # outside dist/game, so it is never uploaded
 API = os.environ.get("CF_API_BASE", "https://api.cloudflare.com/client/v4")
 
@@ -100,6 +101,24 @@ def smoke(url, expect_version, wait, built=True):
     import smoke as smoke_tests
     ok, res = smoke_tests.run_smoke(url, expect_version=expect_version, expect_index=str(ROOT / "dist/game/index.html") if built else None, wait=wait)
     return ok, [r for r in res if not r[1]]
+
+
+def live_version(url):
+    """APP_VERSION of the page the live site answers right now, asked with a cache-busting query string and no-cache headers; None if there is no answer."""
+    req = urllib.request.Request(url + ("&" if "?" in url else "?") + "cb=%d" % time.time_ns(), headers={"Cache-Control": "no-cache", "Pragma": "no-cache", "User-Agent": "w3planner-deploy"})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r: m = re.search(rb'APP_VERSION="([^"]*)"', r.read()); return m.group(1).decode() if m else None
+    except Exception: return None
+
+
+def wait_live(url, version, seconds=LIVE_WAIT, interval=LIVE_POLL):
+    """Poll the live site until it serves `version`. Counted in looks, not read from the clock, so it is the same in a test. Returns (ok, versions seen)."""
+    seen = []
+    for n in range(int(seconds // interval) + 1):
+        v = live_version(url); seen.append(v)
+        if v == version: return True, seen
+        if n < int(seconds // interval): time.sleep(interval)
+    return False, seen
 
 
 def lag_only(failed):
@@ -171,6 +190,13 @@ def do_promote(a):
     started = time.time(); code, _ = wrangler_deploy(a.project, "main")
     if code: print("\nPRODUCTION UPLOAD FAILED: wrangler exited with %d (the error is above). Production is unchanged unless wrangler says otherwise." % code); return 1
     new = latest_deployment(a.project, "production", started) or {}
+    print("\nWaiting (up to %d s) for %s to serve %s, asked with a cache-busting query and no-cache headers; the smoke tests run only after that." % (LIVE_WAIT, prod, version), flush=True)
+    live, seen = wait_live(prod, version)
+    if not live:
+        print("\n== NOT CONFIRMED, EDGE LAG: %s still answered %s after %d looks over %d s; the deployment %s itself uploaded fine and its own URL %s serves %s ==\nNo smoke test was run (this is not a test failure)." %
+              (prod, sorted({str(v) for v in seen}), len(seen), LIVE_WAIT, new.get("id", "?"), new.get("url", "?"), version))
+        return roll_back(a, previous, new, prod, "edge lag")
+    print("%s serves %s (look %d of at most %d)." % (prod, version, len(seen), int(LIVE_WAIT // LIVE_POLL) + 1), flush=True)
     print("\nSmoke tests against production %s" % prod, flush=True)
     ok, failed = smoke(prod, version, wait=300)  # the plain URL can lag behind the upload for a few minutes
     for n in range(1, RECHECKS + 1):
@@ -179,13 +205,19 @@ def do_promote(a):
         time.sleep(RECHECK_WAIT); ok, failed = smoke(prod, version, wait=60)
     if ok:
         print("\n== PRODUCTION OK ==\nversion %s is live at %s\nnew deployment %s %s\nprevious deployment (rollback target): %s" % (version, prod, new.get("id", "?"), new.get("url", ""), previous["id"] if previous else "none")); return 0
-    print("\n== PRODUCTION SMOKE TESTS FAILED (%d): %s ==" % (len(failed), "; ".join(f[0] + (" (%s)" % f[2] if f[2] != "" else "") for f in failed[:5])))
+    lag = lag_only(failed); what = "; ".join(f[0] + (" (%s)" % f[2] if f[2] != "" else "") for f in failed[:5])
+    print(("\n== NOT CONFIRMED, EDGE LAG (%d check(s) still saw the old build after %d more looks; not a test failure): %s ==" if lag else "\n== PRODUCTION SMOKE TESTS FAILED (%d): %s ==") % ((len(failed), RECHECKS, what) if lag else (len(failed), what)))
+    return roll_back(a, previous, new, prod, "edge lag" if lag else "failed smoke tests")
+
+
+def roll_back(a, previous, new, prod, why):
+    """Roll production back to the previous deployment (the one thing this script does without asking) and report."""
     if not previous: print("No previous production deployment is known, so no automatic rollback. Decide what to do."); return 2
-    print("Rolling production back to the previous deployment %s ..." % previous["id"], flush=True)
+    print("Rolling production back to the previous deployment %s (%s) ..." % (previous["id"], why), flush=True)
     try: rollback(a.project, previous["id"])
     except Exception as e: print("ROLLBACK FAILED: %s\nProduction may still be serving the bad deployment %s. Roll back by hand to %s." % (e, new.get("id", "?"), previous["id"])); return 2
     ok2, failed2 = smoke(prod, None, 0, built=False)
-    print("Rolled back to %s. Smoke tests after the rollback: %s. The bad deployment was %s." % (previous["id"], "passed" if ok2 else "STILL FAILING: " + "; ".join(f[0] for f in failed2[:3]), new.get("id", "?"))); return 3
+    print("Rolled back to %s. Smoke tests after the rollback: %s. The deployment rolled back was %s." % (previous["id"], "passed" if ok2 else "STILL FAILING: " + "; ".join(f[0] for f in failed2[:3]), new.get("id", "?"))); return 3
 
 
 def main():

@@ -63,8 +63,12 @@ GOOD TO KNOW
 """
 
 
+DATA_REF = re.compile(r"data/[a-z0-9_]+\.[0-9a-f]{12}\.js")
+
+
 def normalise(text):
     """Ignore which image files a page uses, and any spacing next to an image reference (used by --compare)."""
+    text = DATA_REF.sub("data/DATA.js", text)      # on-demand data files: their names carry a hash of content that names image files
     text = IMG_REF.sub("IMG", text)
     text = re.sub(r'\s*("IMG")\s*', r'\1', text)
     return re.sub(r'("IMG"),\s+', r'\1,', text)
@@ -123,6 +127,9 @@ def main():
     entries.append(("README-OFFLINE.txt", README_TEXT.format(version=version, url=a.online_url, sharing=(SHARING_FULL if a.allow_share else SHARING_OPEN_ONLY).format(url=a.online_url)).replace("\n", "\r\n").encode("utf-8")))
     for p in fonts + images:
         entries.append((p.relative_to(site).as_posix(), p.read_bytes()))
+    for ref in sorted(set(DATA_REF.findall(idx))):                        # the equipment data, loaded on demand by a script tag (works from a folder)
+        if not (site / ref).is_file(): sys.exit("index.html refers to a data file that is missing: " + ref)
+        entries.append((ref, (site / ref).read_bytes()))
 
     root = "BuildPlanner-offline-" + version
     out = Path(a.out)

@@ -9,3 +9,5 @@
   build it must open as (name, level, bonus points, skill levels, slots, mutagens, researched mutations, active mutation). They cover every
   tree, every mutation, all 27 special mutagens, levels 1 and 100, an empty build and a full build. Made with `tools/make_link_fixtures.py`,
   which never overwrites. Append-only: `tests/linkcheck.py` compares them with `main` and fails if any link or expectation was edited or removed.
+- `links/v27.txt` and `v27.json`: 25 links that carry the gear segment `g1` (every slot alone in both modes, full sets, mixed, the highest item numbers, skills + mutagens + gear, no gear). Their expected state has `gear` (9 registry numbers) and `ruleset`.
+- `links/v28.txt` and `v28.json`: 8 links with the consumables segment `c1` (every slot and both oils in both rulesets, one decoction and one bomb, oils only, the highest numbers) and the Inventory screen `s1I`. Every older fixture must open on Character with no consumables. Their expectations include `cons` and `screen`.

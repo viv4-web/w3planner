@@ -12,10 +12,17 @@ What it does:
      gameplay/globals/*.csv (tooltip_settings.csv and its neighbours);
   c) writes everything into one zip (w3planner-extract.zip) on your Desktop, plus report.txt (what was found and what was not),
      and prints the number of files and the size.
+
+Second mode, --missing: looks in EVERY .bundle under the game folder (content0..content*, dlc\\*, the Next-Gen folders) for the definition XML of every
+item id in wanted-items.txt (the ids the game refers to but our data does not define: gear, consumables, ... made by tools/make_wanted_items.py), or whose
+name key is one of the unused name strings listed there, plus their "<id> _Stats" abilities and the abilities a found item lists. It writes
+w3planner-missing.zip on the Desktop: every XML file with such a definition (items and items_plus, so New Game and New Game Plus), manifest.txt
+(bundle -> file -> what is defined there), not-found.txt, report.txt and SHA256SUMS. --wolf does the same for the Wolf School gear only.
+
 It only READS the game folder (every game file is opened read-only, nothing is written there, and it refuses to write the zip inside
 the game folder). It uses no network: the only modules it imports are argparse, os, struct, sys, zipfile and zlib. Send the zip back.
 """
-import argparse, os, struct, sys, zipfile, zlib
+import argparse, hashlib, os, re, struct, sys, zipfile, zlib
 
 CACHE_MAGIC = 1415070536
 FMT = {0x07: b"DXT1", 0x08: b"DXT5", 0x0D: b"DXT3", 0x0A: "BC7", 0x0E: "BC4", 0x0F: "BC5", 0x00: "RGBA", 0xFD: "RGBA"}   # texture.cache format codes
@@ -163,6 +170,135 @@ def bundle_csvs(path):
     return out
 
 
+# ---------- --missing / --wolf: item definition XML we do not have yet ----------
+WOLF_SLOTS = {"Wolf Armor": 3, "Wolf Gloves": 4, "Wolf Pants": 4, "Wolf Boots": 4, "Wolf School steel sword": 3, "Wolf School silver sword": 3}
+CONTROLS = ["Wolf Armor 4", "Wolf Gloves 5", "Wolf Pants 5", "Wolf Boots 5", "Wolf School steel sword 4", "Wolf School silver sword 4"]   # already defined in the Blood and Wine bundle: the search must find them
+DEF_RE = re.compile(rb'<(item|ability)\b((?:[^>"]|"[^"]*")*?)(/?)>')                                                                        # a definition: <item name=...> or <ability name=...>; item_cond, item_extension etc. do not match
+NAME_RE, KEY_RE, A_RE = re.compile(rb'\bname\s*=\s*"([^"]*)"'), re.compile(rb'\blocalisation_key_name\s*=\s*"([^"]*)"'), re.compile(rb"<a>([^<]+)</a>")
+
+
+def key_hash(key):
+    """the game's hash of a localisation key (lower case, 31 * x + c, 32 bits): the same as tools/extract/w3dec.py h()"""
+    x = 0
+    for c in key.lower().encode("latin1", "replace"): x = (x * 31 + c) & 0xFFFFFFFF
+    return x
+
+
+def wolf_wanted():
+    """[(id, category)]: for every Wolf School slot the base item and its tiers, with and without the NGP prefix."""
+    out = []
+    for base, top in WOLF_SLOTS.items():
+        for pre in ("", "NGP "): out += [(pre + base, "wolf")] + [("%s%s %d" % (pre, base, n), "wolf") for n in range(1, top + 1)]
+    return out
+
+
+def read_wanted(path):
+    """(ids [(id, category)], key hashes {int: text}, ability names we already have) from wanted-items.txt (tab separated; lines starting with #key are name-key hashes; other # lines are comments)."""
+    ids, keys, have = [], {}, set()
+    with open(path, encoding="utf-8-sig") as f:                         # the list file: read only
+        for line in f:
+            line = line.rstrip("\n")
+            if line.startswith("#key\t"):
+                p = line.split("\t", 2)
+                if len(p) == 3 and p[1].isdigit(): keys[int(p[1])] = p[2]
+            elif line.startswith("#have\t"): have.add(line.split("\t", 1)[1])
+            elif line.strip() and not line.startswith("#"):
+                p = line.split("\t"); ids.append((p[0], p[1] if len(p) > 1 else ""))
+    return ids, keys, have
+
+
+def bundle_xml_entries(path):
+    """[dict(name, off, size, zsize, comp)] for every .xml in one bundle (None for a file that is not a bundle)."""
+    f = open_ro(path); out = []
+    try:
+        h = f.read(HEADER)
+        if h[:8] != BUNDLE_MAGIC: return None
+        table = struct.unpack("<3I", h[8:20])[2]; raw = f.read(table)
+        for k in range(table // ENTRY):
+            e = raw[k * ENTRY:(k + 1) * ENTRY]; name = e[:256].split(b"\0")[0].decode("latin1")
+            if name.lower().endswith(".xml"):
+                off, _, size, zsize, crc, comp = struct.unpack("<6I", e[272:296]); out.append({"name": name, "off": off, "size": size, "zsize": zsize, "comp": comp})
+    finally:
+        f.close()
+    return out
+
+
+def read_entry(f, e):
+    f.seek(e["off"]); blob = f.read(e["zsize"]); comp = e["comp"]
+    if comp == 0: return blob
+    if comp == 1: return zlib.decompress(blob)
+    if comp == 2: return snappy(blob)
+    if comp in (4, 5): return lz4(blob, e["size"])
+    raise ValueError("compression %d is not supported here" % comp)
+
+
+def xml_defs(data):
+    """[(kind, name, localisation key hash or None, [ability names the item lists])] for every item and ability definition in one XML file."""
+    out = []
+    if b"<item" not in data and b"<ability" not in data: return out
+    for m in DEF_RE.finditer(data):
+        n = NAME_RE.search(m.group(2))
+        if not n: continue
+        kind = m.group(1).decode(); key = KEY_RE.search(m.group(2)); refs = []
+        if kind == "item" and not m.group(3):
+            end = data.find(b"</item>", m.end()); refs = [x.decode("latin1").strip() for x in A_RE.findall(data[m.end():end if end > 0 else m.end()])]
+        out.append((kind, n.group(1).decode("latin1"), key_hash(key.group(1).decode("latin1")) if key else None, refs))
+    return out
+
+
+def run_missing(game, bundles, z, report, wanted, keys, have=frozenset()):
+    """Search every bundle for the definition of every wanted id (and of its abilities), write the files into z, plus manifest.txt, not-found.txt, report.txt and SHA256SUMS."""
+    ids = {i for i, _ in wanted}; cat = dict(wanted); hits = {}; abil_at = {}; hashes = []; skipped = []; nxml = 0; found = {}; written = {}
+    ctl = [(c, "control") for c in CONTROLS] + [("NGP " + c, "control") for c in CONTROLS]; ids |= {c for c, _ in ctl}; cat.update(dict(ctl))
+
+    def put(arc, data):
+        z.writestr(arc, data); hashes.append("%s  %s" % (hashlib.sha256(data).hexdigest(), arc))
+    for b in bundles:
+        rel = os.path.relpath(b, game).replace("\\", "/")
+        try: entries = bundle_xml_entries(b)
+        except Exception as ex: report.append("skipped bundle %s: %s" % (rel, ex)); continue
+        if entries is None: report.append("skipped %s: not a bundle" % rel); continue
+        f = open_ro(b)
+        try:
+            for e in entries:
+                nxml += 1
+                try: data = read_entry(f, e)
+                except Exception as ex: skipped.append("%s :: %s (%s)" % (rel, e["name"], ex)); continue
+                why = []; internal = e["name"].replace("\\", "/")
+                for kind, name, kh, refs in xml_defs(data):
+                    if kind == "ability": abil_at.setdefault(name, []).append((b, e, rel, internal))
+                    elif name in ids: why.append("item %s" % name); found.setdefault(name, []).append((rel, internal)); hits[(rel, internal)] = refs + hits.get((rel, internal), [])
+                    elif kh is not None and kh in keys: why.append("item %s (its name key is the unused string \"%s\")" % (name, keys[kh])); found.setdefault(name, []).append((rel, internal)); hits[(rel, internal)] = refs + hits.get((rel, internal), [])
+                    if kind == "item" and name in ids: hits.setdefault((rel, internal), [])
+                if why: written[(rel, internal)] = why; put("xml/%s/%s" % (rel, internal), data)
+        finally:
+            f.close()
+    # abilities: "<id> _Stats" (the game's naming) and whatever a found item lists in <base_abilities>
+    want_ab = set()
+    for n in found: want_ab |= {n + " _Stats", n + "_Stats"}
+    for refs in hits.values(): want_ab |= {r for r in refs if r not in have}
+    afound = set(); manifest = []
+    for name in sorted(want_ab):
+        for b, e, rel, internal in abil_at.get(name, []):
+            afound.add(name)
+            if (rel, internal) not in written:
+                f = open_ro(b)
+                try: data = read_entry(f, e)
+                finally: f.close()
+                written[(rel, internal)] = []; put("xml/%s/%s" % (rel, internal), data)
+            written[(rel, internal)].append("ability %s" % name)
+    for (rel, internal), why in sorted(written.items()): manifest.append("%s -> %s\n      %s" % (rel, internal, "; ".join(sorted(set(why)))))
+    nf = ["item %s   [%s]%s" % (i, cat.get(i, ""), "   (control: it is already in the B&W data, so a miss here means the search is wrong)" if cat.get(i) == "control" else "") for i in sorted(ids) if i not in found]
+    nf += ["ability %s   (listed by a found item or named <id> _Stats, but no definition exists)" % a for a in sorted(want_ab) if a not in afound and not a.endswith("_Stats")]
+    nf += ["ability %s _Stats   (of a found item)" % i for i in sorted(found) if i + " _Stats" not in afound and i + "_Stats" not in afound]
+    put("manifest.txt", ("bundle (relative to the game folder) -> file inside it, and what is defined there\n\n" + ("\n".join(manifest) or "(nothing found)") + "\n").encode("utf-8"))
+    put("not-found.txt", ("searched for, no definition found in any bundle:\n" + ("\n".join(nf) or "(everything was found)") + "\n\nXML files that could not be read (they may hide a definition):\n" + ("\n".join(skipped) or "(none)") + "\n").encode("utf-8"))
+    report.append("searched %d bundles, %d xml files; wanted %d ids and %d name keys; %d ids found; %d files written; %d ids not found; %d xml files unreadable" % (len(bundles), nxml, len(wanted), len(keys), len(found), len(manifest), len([x for x in nf if x.startswith("item")]), len(skipped)))
+    put("report.txt", ("\n".join(report) + "\n").encode("utf-8"))
+    z.writestr("SHA256SUMS", "\n".join(hashes) + "\n")
+    return len(manifest), nf
+
+
 # ---------- the run ----------
 def find_files(root):
     caches, bundles = [], []
@@ -198,13 +334,30 @@ def inside(path, folder):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--game-dir"); ap.add_argument("--list", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "missing-icons.txt"))
-    ap.add_argument("--out", help="the zip to write (default: w3planner-extract.zip on the Desktop)")
+    ap.add_argument("--out", help="the zip to write (default: w3planner-extract.zip, or w3planner-wolf.zip with --wolf, on the Desktop)")
+    ap.add_argument("--missing", action="store_true", help="instead of icons and CSV: find the item definition XML of every id in wanted-items.txt in every bundle")
+    ap.add_argument("--wanted", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "wanted-items.txt"), help="the list for --missing")
+    ap.add_argument("--wolf", action="store_true", help="like --missing, for the Wolf School gear only")
     a = ap.parse_args(argv)
     game = a.game_dir or next((d for d in GAME_DIRS if os.path.isdir(d)), None)
     while not game or not os.path.isdir(game):
         game = input("Folder of your Witcher 3 installation (the one that contains 'content'): ").strip().strip('"')
-    out = os.path.abspath(a.out or os.path.join(desktop(), "w3planner-extract.zip"))
+    out = os.path.abspath(a.out or os.path.join(desktop(), "w3planner-missing.zip" if a.missing else "w3planner-wolf.zip" if a.wolf else "w3planner-extract.zip"))
     if inside(out, game): sys.exit("refusing to write the zip inside the game folder: %s" % out)
+    if a.wolf or a.missing:
+        caches, bundles = find_files(game); tmp = out + ".part"
+        if a.missing:
+            if not os.path.isfile(a.wanted): sys.exit("list file not found: %s" % a.wanted)
+            wanted, keys, have = read_wanted(a.wanted)
+        else: wanted, keys, have = wolf_wanted(), {}, frozenset()
+        with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
+            hits, nf = run_missing(game, bundles, z, ["game folder: %s" % game, "mode: %s" % ("--missing " + a.wanted if a.missing else "--wolf"), "bundles: %d" % len(bundles)], wanted, keys, have)
+        os.replace(tmp, out)
+        with zipfile.ZipFile(out) as z: count = len(z.namelist())
+        with open_ro(out) as zf: digest = hashlib.sha256(zf.read()).hexdigest()
+        nmiss = len([x for x in nf if x.startswith("item")])
+        print("%d files (%d xml files with a wanted definition), %d bytes (%.1f MB)\n%s\nSHA256 %s\n%d of %d wanted ids not found (listed in not-found.txt inside the zip)" % (count, hits, os.path.getsize(out), os.path.getsize(out) / 1048576.0, out, digest, nmiss, len(wanted) + 2 * len(CONTROLS)))
+        return 0
     if not os.path.isfile(a.list): sys.exit("list file not found: %s" % a.list)
     wanted = read_list(a.list); caches, bundles = find_files(game)
     report = ["game folder: %s" % game, "list: %s (%d icons)" % (a.list, len(wanted)), "texture.cache files: %d, bundles: %d" % (len(caches), len(bundles))]

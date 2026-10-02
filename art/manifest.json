@@ -627,6 +627,26 @@
   "game": "png",
   "placeholder": "png"
  },
+ "items/armor/nilfgaardian_armor_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armor/nilfgaardian_boots_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
+ "items/armor/nilfgaardian_gloves_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
+ "items/armor/nilfgaardian_legs_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
  "items/armors/bear_armor_1_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -1287,6 +1307,26 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-chest"
  },
+ "items/armors/temerian-jacket-64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/temerian_boots_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
+ "items/armors/temerian_gloves_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/temerian_pants_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
  "items/armors/thief_armor_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -1323,6 +1363,26 @@
   "placeholder_as": "items/ph-gloves"
  },
  "items/armors/toussaint_pants_2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
+ "items/armors/undvik_chest_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/undvik_feet_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
+ "items/armors/undvik_gloves_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/undvik_legs_64x128": {
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-trousers"
@@ -1412,20 +1472,70 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-trousers"
  },
+ "items/armors/wolf_armor_lvl1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/wolf_armor_lvl2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/wolf_armor_lvl3_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/wolf_armor_lvl4_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-chest"
+ },
  "items/armors/wolf_armor_lvl5_64x128": {
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-chest"
+ },
+ "items/armors/wolf_boots_lvl1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
+ },
+ "items/armors/wolf_boots_lvl2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
  },
  "items/armors/wolf_boots_lvl5_64x128": {
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-boots"
  },
+ "items/armors/wolf_gloves_lvl1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/wolf_gloves_lvl2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-gloves"
+ },
  "items/armors/wolf_gloves_lvl5_64x128": {
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-gloves"
+ },
+ "items/armors/wolf_legs_lvl1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
+ },
+ "items/armors/wolf_legs_lvl2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-trousers"
  },
  "items/armors/wolf_pants_lvl5_64x128": {
   "game": "png",
@@ -1493,6 +1603,21 @@
   "placeholder_as": "items/ph-bolts"
  },
  "items/crossbow/crossbow_toussaint_1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-crossbow"
+ },
+ "items/crossbow/elven_crossbow_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-crossbow"
+ },
+ "items/crossbow/nilfgaardian_crossbow_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-crossbow"
+ },
+ "items/crossbow/skellige_crossbow_64x128": {
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-crossbow"
@@ -1566,6 +1691,11 @@
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-mask"
+ },
+ "items/quests/nekker_shoes_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-boots"
  },
  "items/quests/q505_crafted_sword-64x128": {
   "game": "png",
@@ -2192,6 +2322,26 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-silver"
  },
+ "items/weapons/witcher_silver_wolf_sword_lvl1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
+ "items/weapons/witcher_silver_wolf_sword_lvl2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
+ "items/weapons/witcher_silver_wolf_sword_lvl3_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
+ "items/weapons/witcher_silver_wolf_sword_lvl4_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-silver"
+ },
  "items/weapons/witcher_silver_wolf_sword_lvl5_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -2297,6 +2447,26 @@
   "placeholder": "png",
   "placeholder_as": "items/ph-steel"
  },
+ "items/weapons/witcher_steel_wolf_sword_lvl1_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/witcher_steel_wolf_sword_lvl2_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/witcher_steel_wolf_sword_lvl3_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
+ "items/weapons/witcher_steel_wolf_sword_lvl4_64x128": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "items/ph-steel"
+ },
  "items/weapons/witcher_steel_wolf_sword_lvl5_64x128": {
   "game": "png",
   "placeholder": "png",
@@ -2311,5 +2481,451 @@
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "items/ph-steel"
+ },
+ "cons/ph-potion": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "cons/ph-decoction": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "cons/ph-bomb": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "cons/ph-oil": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "cons/bombs/dancing_star_bomb": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-bomb"
+ },
+ "cons/bombs/devils_puffball_bomb": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-bomb"
+ },
+ "cons/bombs/dragons_dream_bomb": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-bomb"
+ },
+ "cons/bombs/dwimeritium_bomb": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-bomb"
+ },
+ "cons/bombs/grapeshot_bomb": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-bomb"
+ },
+ "cons/bombs/petard_snow_ball_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-bomb"
+ },
+ "cons/bombs/samun_bomb": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-bomb"
+ },
+ "cons/bombs/silver_dust_bomb": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-bomb"
+ },
+ "cons/bombs/white_frost_bomb": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-bomb"
+ },
+ "cons/mutagen_potions/alghoul_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/ancient_leshy_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/arachas_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/basilisk_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/cockatrice_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/czart_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/dao_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/doppler_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/ekimma_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/fiend_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/fogling_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/forktail_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/grave_hag_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/griphon_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/katakan_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/lamia_ekimma_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/leshy_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/nekker_warrior_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/nightwraith_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/noonwraith_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/quest_anti_spectre_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/succubus_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/troll_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/volcanic_gryphon": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/water_hag_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/werewolf_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/wraith_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/mutagen_potions/wyvern_mutagen": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/oils/beast_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/beast_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/beast_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/cursed_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/cursed_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/cursed_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/draconide_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/draconide_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/draconide_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/hanged_mans_venom_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/hanged_mans_venom_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/hanged_mans_venom_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/hybrid_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/hybrid_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/hybrid_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/insectoid_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/insectoid_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/insectoid_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/magicals_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/magicals_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/magicals_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/necrophage_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/necrophage_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/necrophage_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/ogre_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/ogre_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/ogre_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/relic_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/relic_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/relic_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/specter_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/specter_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/specter_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/vampire_oil_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/vampire_oil_enhanced_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/oils/vampire_oil_superior_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-oil"
+ },
+ "cons/potions/black-blood-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/blizzard-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/cat-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/full-moon-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/golden-oriole-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/healing-potion-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/maribor-forest-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/petris-philtre-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/tawny-owl-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/thunderbolt-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/tiara-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/white-honey-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-potion"
+ },
+ "cons/potions/white-raffard-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-decoction"
  }
 }

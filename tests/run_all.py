@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 import serve
 import linkcheck
+import eqcheck
 from playwright.sync_api import sync_playwright
 
 RESULTS = []
@@ -25,6 +26,7 @@ INV = """(()=>{const bad=[];
  S.slots.forEach(x=>{if(x&&!(Number.isInteger(x[0])&&x[0]>=0&&x[0]<4&&Number.isInteger(x[1])&&x[1]>=0&&x[1]<20))bad.push('slot points at a skill that does not exist')});
  S.muts.forEach(m=>{if(m!==null&&!(Number.isInteger(m)&&m>=0&&m<MUTS.length))bad.push('mutagen that does not exist')});
  if(!(S.mact>=-1&&S.mact<12))bad.push('bad active mutation');
+ if(!Array.isArray(S.gear)||S.gear.length!==9||!S.gear.every(v=>Number.isInteger(v)&&v>=0&&v<=4095)||!['ng','ng_plus'].includes(S.rs))bad.push('bad gear state');
  const b=+document.getElementById('bonuspts').value,l=+document.getElementById('lvl').value;
  if(!(b>=0&&b<=100))bad.push('bonus points out of range');if(!(l>=1&&l<=100))bad.push('level out of range');
  return [...new Set(bad)]})()"""
@@ -73,23 +75,34 @@ def main():
     items = json.loads((ROOT / "data/items.json").read_text(encoding="utf-8")); manifest = json.loads((ROOT / "art/manifest.json").read_text()); slots = {x["id"] for x in items["slots"]}
     per = {rs: json.loads((ROOT / ("data/items_%s.json" % rs)).read_text(encoding="utf-8"))["items"] for rs in items["rulesets"]}; recs = [r for v in per.values() for r in v]
     check("%d + %d items (ng, ng_plus); ids unique within each ruleset; default ruleset ng; every slot, set and name valid" % (len(per["ng"]), len(per["ng_plus"])),
-          all(len({r["id"] for r in v}) == len(v) for v in per.values()) and items["default_ruleset"] == "ng" and all(r["slot"] in slots and (r["set"] is None or r["set"] in items["sets"]) and r["name"] for r in recs)
+          all(len({r["id"] for r in v}) == len(v) for v in per.values()) and items["default_ruleset"] == "ng" and all(r["slot"] in slots and (r.get("set") is None or r["set"] in items["sets"]) and r["name"] for r in recs)
           and all(p in {r["id"] for r in per[rs]} for s_ in items["sets"].values() for rs in per for p in s_[rs]["pieces"]))
     check("the items are not in the small file and not embedded: items.json %d KB, items_ng.json %d KB, items_ng_plus.json %d KB" % tuple(len((ROOT / "data" / n).read_bytes()) // 1024 for n in ("items.json", "items_ng.json", "items_ng_plus.json")),
           "items" not in items and (ROOT / "data/items.json").stat().st_size < 100_000)
     sb = [(s_, b) for s_, v in items["sets"].items() for b in v["bonuses"]]
     check("every set bonus has its thresholds, a filled text and a script and XML source (%d bonuses)" % len(sb), len(sb) == 13 and all(b["pieces"] in (3, 6) and "$S$" not in b["text"] and any(x.startswith("scripts/") for x in b["source"]) for _, b in sb), [s_ for s_, b in sb if "$S$" in b["text"]])
     lvl = lambda rs, i: next(r["required_level"] for r in per[rs] if r["id"] == i)
+    reg = json.loads((ROOT / "data/item_ids.json").read_text(encoding="utf-8"))["ids"]
+    check("every item has its registry number (data/item_ids.json: append-only, 1 to 4095)", all(reg.get(r["id"]) == r["n"] for r in recs) and len(set(reg.values())) == len(reg) and max(reg.values()) <= 4095)
     check("required levels follow the game's formula (a Grandmaster Feline armor needs level 40 in ng, 70 in ng_plus)", lvl("ng", "Lynx Armor 4") == 40 and lvl("ng_plus", "Lynx Armor 4") == 70)
-    check("autogen relics have no level and say it varies", all(r["level_varies"] and r["required_level"] is None for r in recs if r["autogen"]) and any(r["autogen"] for r in recs))
-    shown = [e for r in recs for e in r["base"] + r["bonuses"] if "line" in e]
-    check("stat lines follow tooltip_settings.csv (%d rows; stats sorted by line, percent flags set)" % len(items["stat_display"]), len(items["stat_display"]) > 80 and shown and all(r["base"] == sorted(r["base"], key=lambda e: e.get("line", 9999)) for r in recs)
+    check("autogen relics have no level and say it varies", all(r.get("level_varies") and r.get("required_level") is None for r in recs if r.get("autogen")) and any(r.get("autogen") for r in recs))
+    shown = [e for r in recs for e in r.get("base", []) + r.get("bonuses", []) if "line" in e]
+    check("stat lines follow tooltip_settings.csv (%d rows; stats sorted by line, percent flags set)" % len(items["stat_display"]), len(items["stat_display"]) > 80 and shown and all(r.get("base", []) == sorted(r.get("base", []), key=lambda e: e.get("line", 9999)) for r in recs)
           and all(e["percent"] for e in shown if e.get("type") == "mult"))
-    check("every item has its icon (none missing)", all(r["icon"] for r in recs), [r["id"] for r in recs if not r["icon"]][:3])
-    icon_ids = sorted({r["icon"][len("@@img:"):-2] for r in recs if r["icon"]}); item_slots = sorted(k for k in manifest if k.startswith("items/") and "/ph-" not in k)
+    pending = {n.strip() for l in (ROOT / "tools" / "pending-icons.txt").read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#") for n in l.split("\t")[1].split(";")}   # items whose icon is not extracted yet
+    nopic = sorted(r["id"] for r in recs if not r.get("icon"))
+    check("every item has its icon, except the ones listed in tools/pending-icons.txt (%d pending), and no pending item has one" % len(pending), all(i in pending for i in nopic) and not [r["id"] for r in recs if r.get("icon") and r["id"] in pending], [i for i in nopic if i not in pending][:3])
+    icon_ids = sorted({r["icon"][len("@@img:"):-2] for r in recs if r.get("icon")}); item_slots = sorted(k for k in manifest if k.startswith("items/") and "/ph-" not in k)
     check("every icon token has a manifest slot, and no manifest slot is unused", icon_ids == item_slots, sorted(set(icon_ids) ^ set(item_slots))[:3])
-    check("every equipment icon shows the drawn placeholder of its slot in the public build", all(manifest[i].get("placeholder_as") == "items/ph-" + next(r["slot"] for r in recs if r["icon"] == "@@img:%s@@" % i) and (ROOT / "art/placeholder" / (manifest[i]["placeholder_as"] + ".png")).is_file() for i in icon_ids))
+    check("every equipment icon shows the drawn placeholder of its slot in the public build", all(manifest[i].get("placeholder_as") == "items/ph-" + next(r["slot"] for r in recs if r.get("icon") == "@@img:%s@@" % i) and (ROOT / "art/placeholder" / (manifest[i]["placeholder_as"] + ".png")).is_file() for i in icon_ids))
     if a.variant == "game": check("the private art folder has every equipment icon", all((Path(a.art_dir) / (i + ".png")).is_file() for i in icon_ids), [i for i in icon_ids if not (Path(a.art_dir) / (i + ".png")).is_file()][:3])
+    print("\n== Consumables data (data/consumables.json, consumable_ids.json) ==")
+    cd = json.loads((ROOT / "data/consumables.json").read_text(encoding="utf-8")); citems = cd["items"]; creg = json.loads((ROOT / "data/consumable_ids.json").read_text(encoding="utf-8"))["ids"]
+    check("%d consumables: ids unique, every one has its registry number (data/consumable_ids.json: append-only, 1 to 4095), categories potion, decoction, bomb, oil only" % len(citems),
+          len({i["id"] for i in citems}) == len(citems) and all(creg.get(i["id"]) == i["n"] for i in citems) and len(set(creg.values())) == len(creg) and max(creg.values()) <= 4095 and {i["cat"] for i in citems} == {"potion", "decoction", "bomb", "oil"})
+    check("oils say which sword they fit (SteelOil: 6 of 36, SilverOil: all), no oil, bomb or potion carries a level, every consumable has a name, an icon token and a manifest slot",
+          sum(1 for i in citems if i["cat"] == "oil" and i.get("steel")) == 6 and all(i.get("silver") for i in citems if i["cat"] == "oil") and all(i["name"] and i["icon"] and i["icon"][len("@@img:"):-2] in manifest for i in citems))
+    if a.variant == "game": check("the private art folder has every consumable icon and the four drawn placeholders", all((Path(a.art_dir) / (i["icon"][len("@@img:"):-2] + ".png")).is_file() for i in citems), [i["id"] for i in citems if not (Path(a.art_dir) / (i["icon"][len("@@img:"):-2] + ".png")).is_file()][:3])
     N = 60 if a.quick else 300
     with sync_playwright() as pw:
         b = pw.chromium.launch()
@@ -129,11 +142,15 @@ def main():
         check("a link with special mutagens reopens identically", q.evaluate(FULLSTATE) == link_state); q.close()
         problems, note = linkcheck.append_only_problems(); check("link fixtures are append-only (%s)" % note, not problems, "; ".join(problems))
         linkcheck.check_fixtures(b, base, "online", check)
+        print("\n== Equipment screen ==")
+        eqcheck.run(b, base, check, "online", a.quick)
         rt = b.new_page(); rt.goto(base); rt.wait_for_timeout(600); r = rt.evaluate(ROUNDTRIP); rt.close(); check("%d random builds survive a link round trip unchanged (%d with special mutagens)" % (r["n"], r["spec"]), r["bad"] == 0, r["bad"])
         h2 = b.new_page(viewport={"width": 1300, "height": 900}); herrs = []; h2.on("pageerror", lambda e: herrs.append(str(e).split("\n")[0][:80])); h2.goto(base); h2.wait_for_timeout(700)
         h2.evaluate("document.getElementById('bonuspts').value=20;pointsChanged();const i=TREES[1].sk.findIndex(s=>!s.req.length);add(1,i);add(1,i);S.slots[0]=[1,i];S.muts[0]=3;save();openMut()")
         valid = h2.evaluate("document.getElementById('link').value.split('#')[1]"); p = valid.split("."); rep = lambda k, v: ".".join(p[:k] + [v] + p[k + 1:])
-        crafted = [rep(2, "//" * 16), rep(3, "xxxx"), rep(3, "9999"), rep(1, "%" * 27), rep(4, "1e9"), "v1.!!!.???", "v1." + "A" * 100000] + [random_code(random.Random(k)) for k in range(N)]
+        gear = ".g1A" + "A" * 18; bad_gear = [valid + x for x in (".g1", ".g1A", ".g1AAA", ".g1C" + "A" * 18, ".g1A" + "A" * 17, ".g1A" + "A" * 19, ".g1A" + "!" * 18, ".x" + "A" * 19, ".g2A" + "A" * 18, gear + gear, ".g1B" + "-" * 18, ".G1A" + "A" * 18)]
+        ok_gear = [valid + gear, valid + ".g1B" + "_" * 18]
+        crafted = bad_gear + ok_gear + [rep(2, "//" * 16), rep(3, "xxxx"), rep(3, "9999"), rep(1, "%" * 27), rep(4, "1e9"), "v1.!!!.???", "v1." + "A" * 100000] + [random_code(random.Random(k)) for k in range(N)]
         problems = []
         for c in crafted:
             herrs.clear(); h2.evaluate("h=>{location.hash=h}", c); h2.wait_for_timeout(20); inv = h2.evaluate(INV)
@@ -171,6 +188,7 @@ def main():
                 check("offline copy cannot create links, only open them", (not vis("#copy")) and vis("#imp"))
                 otips = OE(ALL_TIPS); check("offline tooltips match the reference", all(ref[k] == otips.get(k) for k in ref))
                 linkcheck.check_fixtures(b, off, "offline", check)
+                eqcheck.run(b, off, check, "offline", a.quick)
                 o.fill("#imp", "https://w3planner.pages.dev/#" + code); o.click("#impbtn"); o.wait_for_timeout(300)
                 check("a link from the website opens in the offline copy", OE(FULLSTATE) == link_state)
                 o.fill("#imp", "https://example.com/"); o.click("#impbtn"); check("a link with no build in it is refused and does not navigate", o.url.startswith("file://") and "does not look" in o.inner_text("#impmsg"))

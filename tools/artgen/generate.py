@@ -52,6 +52,7 @@ def jobs():
         for t in range(3): add("mutagen/%d" % (ci * 3 + t), A.mutagen_img(c, t))
         add("mutagen/%d" % (9 + ci), A.mutagen_unique(c))
     for slot in A.ITEM_SLOTS: add("items/ph-" + slot, A.item_placeholder(slot))
+    for kind in A.CONS_KINDS: add("cons/ph-" + kind, A.cons_placeholder(kind))
     add("art/skill_slot_empty", A.slot_empty()); add("art/skill_slot_locked", A.padlock()); add("art/mutagen_slot_empty", A.mut_slot_empty())
     add("lock/sock", A.padlock()); add("lock/slot", A.padlock())
     add("css/body-bg", A.helix_bg()); add("img/skill-point", A.skill_point())

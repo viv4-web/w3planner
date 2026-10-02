@@ -1,5 +1,5 @@
 
-const APP_VERSION="v26";
+const APP_VERSION="v28b";
 const CFG=Object.assign({mode:"online",shareBase:""},window.PLANNER_CONFIG||{});
 const DATA=/*@data:DATA*/;
 
@@ -42,7 +42,7 @@ const MUTCOL={red:'#b33b3b',blue:'#3d74d4',green:'#4f9a3e'};
 TREES.forEach(t=>{t.parents=t.sk.map(s=>s.req);t.children=t.sk.map(()=>[]);t.edges.forEach(([p,c])=>t.children[p].push(c));});
 
 let S; // state
-function blank(){return{lv:TREES.map(t=>t.nodes.map(()=>0)),slots:Array(16).fill(null),muts:Array(4).fill(null),mres:Array(12).fill(0),mact:-1}}
+function blank(){return{lv:TREES.map(t=>t.nodes.map(()=>0)),slots:Array(16).fill(null),muts:Array(4).fill(null),mres:Array(12).fill(0),mact:-1,gear:Array(9).fill(0),rs:'ng',cons:Array(8).fill(0),scr:'char'}}
 function demo(){const s=blank();const T=TREES[1],ix=id=>T.sk.findIndex(k=>k.id===id);
  ['magic_s42','magic_s3','magic_s11','magic_s35','magic_s37','magic_s40'].forEach(id=>s.lv[1][ix(id)]=1);s.lv[1][ix('magic_s11')]=3;
  ['magic_s11','magic_s3','magic_s35','magic_s37','magic_s40'].forEach((id,k)=>s.slots[k]=[1,ix(id)]);s.muts[0]=6;return s}
@@ -50,14 +50,23 @@ let tab=1, sel=null, selMut=null;
 
 // ---- encoding ----
 const A='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+// ---- optional segments after the 8 base fields, each tagged by a 2-character prefix and written in this order (CLAUDE.md, "Link format"): g1 gear (v27), c1 consumables (v28), s1 the open screen (v28).
+// A link without gear, consumables or the Inventory screen has none of them, so every link made before v28 re-encodes byte for byte. The decoder tells segments by prefix, not by position, and ignores a well-formed segment with a prefix it does not know.
+function gearSeg(){if(!S.gear.some(Boolean)&&S.rs!=='ng_plus')return'';return'.g1'+(S.rs==='ng_plus'?'B':'A')+S.gear.map(v=>A[v>>6]+A[v&63]).join('')}
+function consSeg(){return S.cons.some(Boolean)?'.c1'+S.cons.map(v=>A[v>>6]+A[v&63]).join(''):''}   // c1 + 8 slots x 2 characters: Potion 1-4, Bomb 1-2, steel sword oil, silver sword oil (CN_SLOTS)
+function scrSeg(){return S.scr==='inv'?'.s1I':''}                                                      // s1I = the Inventory screen is open; absent = the Character screen
 function enc(){const d=S.lv.flat();let o='';for(let i=0;i<d.length;i+=3)o+=A[(d[i]||0)*16+(d[i+1]||0)*4+(d[i+2]||0)];
  o+='.';S.slots.forEach(x=>{const v=x?x[0]*20+x[1]+1:0;o+=A[v>>6]+A[v&63]});
- o+='.';S.muts.forEach(m=>o+=m==null?'-':m.toString(36));o+='.'+lvl()+'.'+bonusPts();o+='.'+parseInt(S.mres.map(x=>x?1:0).reverse().join(''),2).toString(36)+'.'+(S.mact+1);return'v1.'+o}
+ o+='.';S.muts.forEach(m=>o+=m==null?'-':m.toString(36));o+='.'+lvl()+'.'+bonusPts();o+='.'+parseInt(S.mres.map(x=>x?1:0).reverse().join(''),2).toString(36)+'.'+(S.mact+1);return'v1.'+o+gearSeg()+consSeg()+scrSeg()}
 function dec(h){try{
  // Link data is untrusted: it is only ever read as numbers, and anything malformed is rejected.
  if(typeof h!=='string'||h.length>400)return null;
- const P=h.split('.');if(P[0]!=='v1'||P.length<4||P.length>8)return null;
+ const P=h.split('.');if(P[0]!=='v1'||P.length<4||P.length>16)return null;
  const [,l,sl,m,L,B,MR,MA]=P,ALPHA=[...A],inA=s=>[...s].every(c=>ALPHA.includes(c));
+ const X={};for(const seg of P.slice(8)){   // optional tagged segments: a known prefix must be well formed and appear once; a well-formed unknown prefix is ignored (a later version's)
+  if(!/^[a-z][0-9][A-Za-z0-9_-]*$/.test(seg))return null;const k=seg.slice(0,2);if(X[k]!==undefined)return null;
+  if(k==='g1'&&!/^g1[AB][A-Za-z0-9_-]{18}$/.test(seg))return null;if(k==='c1'&&!/^c1[A-Za-z0-9_-]{16}$/.test(seg))return null;if(k==='s1'&&seg!=='s1I')return null;X[k]=seg}
+ const G=X.g1,C=X.c1;
  const NSK=TREES.reduce((a,t)=>a+t.sk.length,0);
  if(l.length!==Math.ceil(NSK/3)||!inA(l))return null;
  if(!(sl.length===24||sl.length===32)||!inA(sl))return null;
@@ -78,6 +87,9 @@ function dec(h){try{
  if(MR){const bits=parseInt(MR,36)&4095;for(let i=0;i<12;i++)s.mres[i]=(bits>>i)&1}
  if(MA!==undefined){const a=+MA-1;s.mact=(a>=0&&a<12&&s.mres[a])?a:-1}
  if(lv!==null){document.getElementById('lvl').value=lv;document.getElementById('bonuspts').value=bo===null?0:bo}
+ if(G!==undefined){s.rs=G[2]==='B'?'ng_plus':'ng';for(let i=0;i<9;i++)s.gear[i]=A.indexOf(G[3+2*i])*64+A.indexOf(G[4+2*i])}
+ if(C!==undefined)for(let i=0;i<8;i++)s.cons[i]=A.indexOf(C[2+2*i])*64+A.indexOf(C[3+2*i]);
+ if(X.s1)s.scr='inv';
  return s}catch(e){return null}}
 // ---- rules ----
 const spent=()=>S.lv.flat().reduce((a,b)=>a+b,0)+MUT.reduce((a,m,i)=>a+(S.mres[i]?m.sp:0),0);
@@ -342,8 +354,9 @@ function renderInfo(){const el=document.getElementById('info');
  <div class="actions"><button class="btn" id="aAdd" ${L<K.max&&av&&spent()<budget()?'':'disabled'}>Add point</button><button class="btn" id="aRem" ${L&&canRemove(ti,i)?'':'disabled'}>Remove point</button><button class="btn" id="aEq" ${L&&!eq?'':'disabled'}>${eq?'Equipped':'Equip'}</button></div>`;
  document.getElementById('aAdd').onclick=()=>add(ti,i);document.getElementById('aRem').onclick=()=>rem(ti,i);document.getElementById('aEq').onclick=()=>equip(ti,i)}
 
-function render(){document.getElementById('total').textContent=budget();document.getElementById('avail').textContent=budget()-spent();{const v=budget()-spent(),e=document.getElementById('avail2');e.textContent=v;e.style.color=v<0?'#ff6a5a':'';e.title=v<0?'Over budget: raise Level or Bonus points, or remove something':''}renderTabs();renderTree();renderSlots();renderBonus();renderInfo();renderMut();
+function render(){if(typeof eqRender==='function')queueMicrotask(()=>{eqRender();if(typeof scrApply==='function')scrApply()});document.getElementById('total').textContent=budget();document.getElementById('avail').textContent=budget()-spent();{const v=budget()-spent(),e=document.getElementById('avail2');e.textContent=v;e.style.color=v<0?'#ff6a5a':'';e.title=v<0?'Over budget: raise Level or Bonus points, or remove something':''}renderTabs();renderTree();renderSlots();renderBonus();renderInfo();renderMut();
  document.getElementById('link').value=(CFG.shareBase||location.href.split('#')[0])+'#'+enc()}
+
 
 S=dec(location.hash.slice(1))||blank();enforceLocks();
 function pointsChanged(){enforceLocks();save()}
@@ -369,7 +382,7 @@ document.getElementById('mlvl').oninput=e=>{document.getElementById('lvl').value
 document.getElementById('mbonus').oninput=e=>{document.getElementById('bonuspts').value=e.target.value;pointsChanged()};
 document.getElementById('mutbtn').onclick=openMut;document.getElementById('mclose').onclick=closeMut;document.getElementById('mundo').onclick=()=>{if(mLast!==null&&mLast>=0){mHover=mLast;mUndoWhy(mLast)}};document.getElementById('mutov').onclick=e=>{if(e.target.id==='mutov')closeMut()};
 document.getElementById('reset').onclick=()=>{S=blank();sel=null;save()};
-document.getElementById('copy').onclick=async()=>{const b=document.getElementById('copy');try{await navigator.clipboard.writeText(document.getElementById('link').value);b.textContent='Link copied'}catch(e){const l=document.getElementById('link');l.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}b.textContent=ok?'Link copied':'Press Ctrl+C'}setTimeout(()=>b.textContent='Copy link',1500)};
+// Copy link lives in the shared top bar: copyLink() in screens.js
 {const row=document.getElementById('importRow');
  if(CFG.mode==='offline'){row.hidden=false;
   const msg=t=>{document.getElementById('impmsg').textContent=t};
@@ -379,7 +392,7 @@ document.getElementById('copy').onclick=async()=>{const b=document.getElementByI
    S=s;sel=null;selMut=null;enforceLocks();save();el.value='';msg('Build opened.')};
   document.getElementById('impbtn').onclick=open;
   document.getElementById('imp').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();open()}}}}
-{const sr=document.getElementById('shareRow');if(sr&&CFG.share===false)sr.hidden=true}
+{const sr=document.getElementById('shareRow'),cb=document.getElementById('copy');if(CFG.share===false){if(sr)sr.hidden=true;if(cb)cb.hidden=true}}
 {const ft=document.querySelector('footer'),su=CFG.siteUrl||CFG.shareBase;if(ft){const link=(su&&/^https?:\/\//.test(su))?' · <a href="'+encodeURI(su)+'" style="color:inherit">Latest version online</a>':'';ft.insertAdjacentHTML('beforeend',' · '+(CFG.mode==='offline'?'Offline '+APP_VERSION+link:APP_VERSION))}}
-window.onhashchange=()=>{const s=dec(location.hash.slice(1));if(s){S=s;enforceLocks();render()}};
+window.onhashchange=()=>{const s=dec(location.hash.slice(1));if(s){S=s;enforceLocks();render();if(typeof eqRefresh==='function')eqRefresh()}};
 save();
