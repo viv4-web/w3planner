@@ -42,7 +42,13 @@ def open_and_compare(browser, base, fx):
             got, ex = pg.evaluate(LEGACY_STATE), fx["expect"]
             ok = got[:5] == ex[:5] and (ex[5] is None or (got[5] == ex[5] and got[6] == ex[6])); detail = "" if ok else "expected %s, got %s" % (json.dumps(ex)[:80], json.dumps(got)[:80])
         else:
-            got = pg.evaluate(FULL_STATE); bad = [k for k in fx["expect"] if got.get(k) != fx["expect"][k]]
+            if fx["expect"].get("cons") and any(fx["expect"]["cons"]): pg.wait_for_function("typeof CN!=='undefined'&&!!CN.data&&typeof EQ!=='undefined'&&!EQ.err", timeout=15000); pg.wait_for_timeout(150)   # the consumable data loads after the page; the bomb rule below runs when it has
+            got = pg.evaluate(FULL_STATE); ex = dict(fx["expect"]); bad0 = []
+            if fx["version"] < "v31b" and ex.get("cons") and ex["cons"][5]:
+                # v31b: the second bomb slot became the Pocket. A bomb an older link holds there moves to the Bomb slot when that is empty, else it is dropped (the fixture itself is never edited)
+                c = list(ex["cons"]); c[4], c[5] = (c[5] if not c[4] else c[4]), 0; ex["cons"] = c
+                if pg.evaluate("location.hash.slice(1)") != fx["code"]: bad0 = ["the link text was rewritten on open"]
+            bad = [k for k in ex if got.get(k) != ex[k]] + bad0
             if fx["version"] < "v28" and (got["screen"] != "char" or any(got["cons"])): bad.append("screen/cons (a link made before v28 opens on Character with no consumables)")
             ok = not bad; detail = "differs in: " + ", ".join(bad) if bad else ""
         if errs: ok, detail = False, "script error: " + errs[0]

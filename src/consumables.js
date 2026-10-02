@@ -1,15 +1,17 @@
 // ---- Consumables (v28): potions, decoctions, bombs and oils from data/consumables.json, loaded with the equipment lists (a script tag, never inside index.html) ----
-// Slots (the game's EEquipmentSlots, itemsTypes.ws:25-39 and 32-33,48-49): Potion1-4 take potions AND decoctions (GetSlotForItem, itemsTypes.ws:357-374: the 'Potion' tag), Petard1-2 take bombs.
+// Slots (the game's EEquipmentSlots, itemsTypes.ws:25-39 and 32-33,48-49): Potion1-4 take potions, decoctions AND food and drink (GetSlotForItem, itemsTypes.ws:357-374: the 'Potion' tag, and 'Edibles'/'Drinks' -> EES_Potion1),
+// Petard1 takes bombs, the second of the two slots the planner had is the Pocket (EES_Quickslot1: tag 'QuickSlot', itemsTypes.ws:364). Next-Gen has one bomb slot and one Pocket slot.
 // Oils are not slots: one oil per sword (the Fixative skill, which allows several, is not in the new skill tree), an oil only on a sword it fits (SteelOil / SilverOil tag, r4Player.ws:1378-1385).
 const CN_URL=/*@file:consumables*/;
-const CN_SLOTS=['potion1','potion2','potion3','potion4','petard1','petard2','oil_steel','oil_silver'];   // the order of the c1 link segment: never change it, only append
-const CN_NAME={potion1:'Potion 1',potion2:'Potion 2',potion3:'Potion 3',potion4:'Potion 4',petard1:'Bomb 1',petard2:'Bomb 2',oil_steel:'Steel sword oil',oil_silver:'Silver sword oil'};
-const CN_CAT={potion:'Potion',decoction:'Decoction',bomb:'Bomb',oil:'Oil'},CN_COL={potion:'#b8423a',decoction:'#5b9a43',bomb:'#c8892f',oil:'#d9a640'};
+const CN_SLOTS=['potion1','potion2','potion3','potion4','petard1','pocket','oil_steel','oil_silver'];   // the order of the c1 link segment: never change it, only append
+const CN_NAME={potion1:'Potion 1',potion2:'Potion 2',potion3:'Potion 3',potion4:'Potion 4',petard1:'Bomb',pocket:'Pocket',oil_steel:'Steel sword oil',oil_silver:'Silver sword oil'};
+const CN_CAT={potion:'Potion',decoction:'Decoction',bomb:'Bomb',oil:'Oil',food:'Food & drink',pocket:'Pocket'},CN_COL={potion:'#b8423a',decoction:'#5b9a43',bomb:'#c8892f',oil:'#d9a640',food:'#a98b5a',pocket:'#c9a24a'};
 let CN={data:null,byN:new Map(),byId:new Map(),bySlot:{},err:null};
 // the one rule that says what a slot accepts (a unit test calls it directly)
 function cnAccepts(slotKey,it){if(!it)return false;
- if(slotKey.startsWith('potion'))return it.cat==='potion'||it.cat==='decoction';
- if(slotKey.startsWith('petard'))return it.cat==='bomb';
+ if(slotKey.startsWith('potion'))return it.cat==='potion'||it.cat==='decoction'||it.cat==='food';
+ if(slotKey==='petard1')return it.cat==='bomb';
+ if(slotKey==='pocket')return it.cat==='pocket';
  if(slotKey==='oil_steel')return it.cat==='oil'&&!!it.steel;
  if(slotKey==='oil_silver')return it.cat==='oil'&&!!it.silver;
  return false}
@@ -19,7 +21,11 @@ async function cnLoad(){if(CN.data)return CN;
  CN.bySlot={};CN_SLOTS.forEach(k=>{CN.bySlot[k]=d.items.filter(it=>cnAccepts(k,it))});return CN}
 const cnCur=k=>CN.data&&S.cons[k]?CN.byN.get(S.cons[k])||null:null;   // k = position in the c1 segment (0-7)
 // numbers that are not a valid item for their slot (a hand-made link) are dropped, like gear that does not exist in the ruleset
-function cnValidate(){let bad=0;CN_SLOTS.forEach((k,i)=>{const n=S.cons[i];if(!n)return;if(!cnAccepts(k,CN.byN.get(n))){S.cons[i]=0;bad++}});return bad}
+// An old link (v28 to v31) can hold a bomb in the second bomb slot, which is now the Pocket: the bomb moves to the Bomb slot when that is empty, otherwise it is dropped; CN.moved says which (shown by the caller).
+// The link text is not rewritten until the build changes; the numbers decode as before.
+function cnValidate(){let bad=0;CN.moved=[];CN_SLOTS.forEach((k,i)=>{const n=S.cons[i];if(!n)return;const it=CN.byN.get(n);if(!cnAccepts(k,it)){
+  if(k==='pocket'&&it&&it.cat==='bomb'){if(!S.cons[4]){S.cons[4]=n;CN.moved.push(it.name+' moved to the Bomb slot (the second bomb slot is now the Pocket)')}else{CN.moved.push(it.name+' was in the second bomb slot, which is now the Pocket; the Bomb slot already holds a bomb, so it was removed')}S.cons[i]=0;return}
+  S.cons[i]=0;bad++}});return bad}
 // the NG+ bomb numbers differ (the data says which): the item as the current ruleset shows it
 function cnView(it){const g=S.rs==='ng_plus'&&it.ngp?it.ngp:null;return{stats:(g&&g.stats)||it.stats||[],dur:g&&g.dur!=null?g.dur:it.dur,ch:g&&g.ch!=null?g.ch:it.ch}}
 

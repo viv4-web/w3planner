@@ -41,11 +41,12 @@ function impPlan(R){
  GEAR.forEach(([slot,key],i)=>{const e=R.equipped[key];if(!e){gearRows.push({slot,name:null});return}const it=e.id&&d.byId.get(e.id);if(it&&it.slot===slot){gear[i]=it.n;gearRows.push({slot,name:it.name,set:it.set,item:it})}else{notGear.push(e.id||'?');gearRows.push({slot,name:null,skip:true})}});
  const setCount={};gearRows.forEach(r=>{if(r.set&&['steel','silver','chest','gloves','trousers','boots'].includes(r.slot))setCount[r.set]=(setCount[r.set]||0)+1});
  const topSet=Object.keys(setCount).sort((a,b)=>setCount[b]-setCount[a])[0]||null,setInfo=topSet?{name:EQ.meta.sets[topSet].name,n:setCount[topSet],of:EQ.meta.sets[topSet][S.rs].pieces.length}:null;
- const CONS=[['potion1','Potion1'],['potion2','Potion2'],['potion3','Potion3'],['potion4','Potion4'],['petard1','Petard1'],['petard2','Petard2']],cons=Array(8).fill(0),consRows=[];
+ const CONS=[['potion1','Potion1'],['potion2','Potion2'],['potion3','Potion3'],['potion4','Potion4'],['petard1','Petard1'],['pocket','Quickslot1']],cons=Array(8).fill(0),consRows=[];
  CONS.forEach(([slot,key],i)=>{const e=R.equipped[key];if(!e)return;const it=e.id&&CN.byId.get(e.id);
-  if(it&&cnAccepts(slot,it)){cons[i]=it.n;consRows.push({slot,name:it.name,charges:e.extras&&e.extras.ammo_current!=null?e.extras.ammo_current:null})}
-  else consRows.push({slot,food:true,name:impDisplay(e.id),qty:e.qty,known:!!(e.id&&W3DATA.savenames[e.id])})});
- ['Quickslot1','Quickslot2'].forEach((key,i)=>{const e=R.equipped[key];if(e)consRows.push({slot:'quick'+(i+1),other:true,name:impDisplay(e.id),qty:e.qty})});
+  if(it&&cnAccepts(slot,it)){cons[i]=it.n;consRows.push({slot,name:it.name,charges:it.cat==='food'?e.qty:e.extras&&e.extras.ammo_current!=null?e.extras.ammo_current:null})}
+  else consRows.push({slot,other:true,name:impDisplay(e.id),qty:e.qty})});
+ // the game has one bomb slot and one Pocket: anything the save holds in the second bomb or Pocket slot is named and left out, never dropped silently
+ [['Petard2','Bomb 2'],['Quickslot2','Pocket 2']].forEach(([key,label])=>{const e=R.equipped[key];if(e)consRows.push({slot:key,label,other:true,name:impDisplay(e.id),qty:e.qty})});
  // the stash: what the save's inventory holds that the planner knows (gear and consumables); the rest is counted
  const stash={weapons:[],armor:[],alchemy:{oils:[],potions:[],bombs:[]}};let plannable=0;
  R.inventory.forEach(r=>{const g=d.byId.get(r.id),c=CN.byId.get(r.id);
@@ -89,11 +90,10 @@ function impReview(){
  if(P.setInfo)impLine(b,'Set: '+P.setInfo.name+' '+P.setInfo.n+'/'+P.setInfo.of,'gold');if(P.notGear.length)impLine(b,'Not imported: '+P.notGear.join(', ')+' (not in the '+EQ_RS[S.rs]+' list)','warn');
  // Consumables
  [s,b]=impSec('consumables','Consumables','Goes into the build link');colB.append(s);
- P.consRows.forEach(r=>{const nm=CN_NAME[r.slot]||(r.slot==='quick1'?'Quick slot 1':'Quick slot 2');
-  if(r.food)impLine(b,nm+': '+r.name+(r.qty>1?' ×'+r.qty:'')+' (food, not in planner) — slot left empty','dim');
-  else if(r.other)impLine(b,nm+': '+r.name+' (not in planner)','dim');
+ P.consRows.forEach(r=>{const nm=r.label||CN_NAME[r.slot];
+  if(r.other)impLine(b,nm+': '+r.name+(r.qty>1?' ×'+r.qty:'')+' (not in planner) — slot left empty','dim');
   else impLine(b,nm+': '+r.name+(r.charges!=null?' ×'+r.charges:''))});
- if(!P.consRows.length)impLine(b,'Nothing in the potion or bomb slots','dim');
+ if(!P.consRows.length)impLine(b,'Nothing in the potion, bomb or pocket slots','dim');
  // Stash
  [s,b]=impSec('stash','Stash','Stays on this computer',true);colB.append(s);
  impLine(b,impNum(P.records)+' items read · '+impNum(P.plannable)+' plannable');impLine(b,'Crowns: '+impNum(P.stash.crowns));impLine(b,'Kept in this browser only, never in the link.','gold');

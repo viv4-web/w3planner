@@ -13,12 +13,12 @@ Fills the planner from a Witcher 3 **Next-Gen (4.0+) PC** `.sav`. The file is re
 Each section has a tick box; Apply writes only the ticked ones, through the planner's own state (`enforceLocks`, `save()`), and lands on Character. The link format is unchanged (no new field; old links byte-identical).
 
 ## Not read in this version (the dialog says so)
-Active mutation and researched mutations (the reader sees them but only the "none researched" case was ever tested), oils on swords (not located in the save), NG vs NG+ (no marker found; the planner's ruleset stays), and any food or other item the planner does not plan.
+Active mutation and researched mutations (the reader sees them but only the "none researched" case was ever tested), oils on swords (not located in the save), NG vs NG+ (no marker found; the planner's ruleset stays), and any item the planner does not plan (a quest item in the Pocket, a second bomb or Pocket slot).
 
 ## Matching rules (decisions)
 - **By id only.** Save item and skill names are the game's internal ids = our item and skill ids. Never by display name, never by icon. Display names collide ("Bolts" is `Bodkin Bolt` and `Harpoon Bolt`).
-- **Our localised names only.** The dialog shows `items_*.json` / `consumables.json` / skill names. Items the planner does not plan are named from `data/savenames.json` (food, drink, torch: "Cow's milk", "Water").
-- **Food is never dropped silently.** A quick-slot item that is not in the planner is listed "(food, not in planner) - slot left empty" (a Torch: "(not in planner)"); the planner slot stays empty.
+- **Our localised names only.** The dialog shows `items_*.json` / `consumables.json` / skill names. Items the planner does not plan are named from `data/savenames.json` (food and drink that is not in a slot, quest items).
+- **Food and the Pocket are consumables.** The four potion slots take potions, decoctions, food and drink (the game's `GetSlotForItem`: tags `Potion`, `Edibles`, `Drinks`), the Pocket takes the save's `Quickslot1` item (a Torch, an Oil Lamp). They are matched by id like any consumable (`Cows milk` ×30, `Bottled water` ×66 fill their slots). What the planner cannot hold (an unknown id, a quest item, a second bomb or Pocket slot) is listed "(not in planner) - slot left empty", never dropped silently.
 - **Unknown or mod ids** are listed "not imported", never fuzzy-matched.
 - **Skill mutagens**: `tools/make_save_data.py` builds `SAVEMUT.json` once from the game's item XML + `en.w3strings` (e.g. `Gryphon mutagen` -> our Griffin, `Fogling 1 mutagen` -> Foglet, `Czart mutagen` -> Chort); 36 ids, one per planner mutagen.
 

@@ -2498,6 +2498,24 @@
   "game": "png",
   "placeholder": "png"
  },
+ "cons/ph-food": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "cons/ph-pocket": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "cons/alchemy/alcohol_vodka_pepper_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/alchemy/paste_dog_tallow_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
  "cons/bombs/dancing_star_bomb": {
   "game": "png",
   "placeholder": "png",
@@ -2542,6 +2560,316 @@
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "cons/ph-bomb"
+ },
+ "cons/food/alcohol_beauclair_white_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/alcohol_dijkstra_dry_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/alcohol_erveluce_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/alcohol_est_est_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/alcohol_kaedwenian_stout_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/alcohol_mettina_rose_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/alcohol_redanian_lager_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/alcohol_rivian_kriek_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/alcohol_viziman_champion_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_apple_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_apple_baked_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_apple_juice_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_banana_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_bell_pepper_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_blueberries_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_bread_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_bread_burned_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_bun_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_bun_burned_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_candy_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_cheese_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_chicken_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_chicken_leg_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_chicken_leg_roasted_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_chicken_roasted_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_chicken_sandwich_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_chicken_sandwich_grilled_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_cucumber_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_dried_fruit_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_dried_fruit_and_nuts_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_dumpling_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_egg_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_fish_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_fish_fried_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_fish_gutted_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_fondue_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_grapes_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_ham_sandwich_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_honey_pure_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_honeycomb_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_meat_fried_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_meat_raw_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_milk_cow_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_milk_goat_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_mushroom_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_mutton_curry_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_olive_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_onion_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_pear_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_pepper_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_plum_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_pork_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_pork_grilled_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_potato_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_potato_baked_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_potato_chip_wedges_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_raspberries_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_raspberry_juice_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_strawberries_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_toffee_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/food/food_vinegar_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
+ "cons/junk/glass_jug_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
  },
  "cons/mutagen_potions/alghoul_mutagen": {
   "game": "png",
@@ -2863,6 +3191,11 @@
   "placeholder": "png",
   "placeholder_as": "cons/ph-oil"
  },
+ "cons/other/oil_lamp_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-pocket"
+ },
  "cons/potions/black-blood-64x64": {
   "game": "png",
   "placeholder": "png",
@@ -2918,6 +3251,11 @@
   "placeholder": "png",
   "placeholder_as": "cons/ph-potion"
  },
+ "cons/potions/tir_na_lia_potion-64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-food"
+ },
  "cons/potions/white-honey-64x64": {
   "game": "png",
   "placeholder": "png",
@@ -2927,5 +3265,10 @@
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "cons/ph-decoction"
+ },
+ "cons/quests/torch": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "cons/ph-pocket"
  }
 }
