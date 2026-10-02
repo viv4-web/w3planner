@@ -20,8 +20,9 @@ body.scr-inv .topbar{max-width:2400px;padding-left:clamp(12px,1.5vw,32px);paddin
 .topright{display:flex;gap:8px;justify-self:end;align-items:center}
 .rsg{display:flex;gap:0}.rsg .btn{padding:4px 16px;font-size:19px;min-width:56px}.rsg .btn+.btn{border-left-width:0}.rsg .btn[aria-checked="true"]{border-color:var(--gold);background:#1d1710;color:#fff}.rsg .btn[aria-checked="true"]+.btn{border-left-width:1px}
 .topright .btn#copy{font-size:19px;padding:4px 16px;text-transform:uppercase;letter-spacing:.8px}
+@media (min-width:600px){.topbar{position:sticky;top:0;z-index:40;background:#0b0a08f5}.slotpanel,.stash{scroll-margin-top:120px}}
 @media (max-width:1100px){.topbar{grid-template-columns:1fr auto;grid-template-areas:"tabs tabs" "lvl right"}.scrtabs{grid-area:tabs;justify-self:stretch}.scrtabs .stab{flex:1 1 0;min-width:0}.lvlblock{grid-area:lvl}.topright{grid-area:right}}
-@media (max-width:640px){.topbar{padding:2px 12px 10px}.stab{padding:5px 6px;font-size:17px;letter-spacing:.6px}.stab small{display:none}.arrow{width:38px}.lvlblock{gap:4px 10px;font-size:16px}.lvlblock input{width:52px}.topright .btn,.rsg .btn{min-height:40px}}
+@media (max-width:640px){.topbar{padding:2px 12px 10px}.stab{padding:5px 6px;font-size:17px;letter-spacing:.6px}.stab small{display:none}.arrow{width:38px}.lvlblock{gap:4px 10px;font-size:16px}.lvlblock input{width:52px}.topright .btn,.rsg .btn{min-height:44px}.arrow,.stab{min-height:44px}}
 
 /* ---- Inventory screen ---- */
 .invscreen{max-width:2400px;margin:0 auto;padding:4px clamp(12px,1.5vw,32px) 24px}
@@ -104,7 +105,8 @@ body.scr-inv .topbar{max-width:2400px;padding-left:clamp(12px,1.5vw,32px);paddin
 }
 @media (max-width:599px){
  .slotgrid{gap:8px}.eqx{width:30px;height:30px;min-height:0}.eqx::before{inset:-8px}.pktile,.eqpmodal .btn,.oiltile,.chip,.sttab{min-height:44px}.eqpmodal select,.eqpmodal input[type=search]{min-height:40px}
- .invleft.panelopen .slotpanel{position:fixed;inset:0;z-index:50;background:#070605;overflow:auto;border:0;box-shadow:none}
+ body.sheet-open header{margin-bottom:var(--tbh,0)}body.sheet-open .topbar{position:fixed;top:0;left:0;right:0;z-index:55;background:#070605;box-sizing:border-box;border-bottom:1px solid #3a3025}
+ .invleft.panelopen .slotpanel{position:fixed;inset:var(--tbh,0px) 0 0 0;z-index:50;background:#070605;overflow:auto;border:0;box-shadow:none}
  .invleft.panelopen .eqpmodal{min-height:100%}
  .pkgrid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
  .stcols.c3,.stcols.c2{grid-template-columns:1fr}.stash{min-height:260px}

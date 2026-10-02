@@ -1,5 +1,5 @@
 
-const APP_VERSION="v28";
+const APP_VERSION="v28b";
 const CFG=Object.assign({mode:"online",shareBase:""},window.PLANNER_CONFIG||{});
 const DATA=/*@data:DATA*/;
 
@@ -382,7 +382,7 @@ document.getElementById('mlvl').oninput=e=>{document.getElementById('lvl').value
 document.getElementById('mbonus').oninput=e=>{document.getElementById('bonuspts').value=e.target.value;pointsChanged()};
 document.getElementById('mutbtn').onclick=openMut;document.getElementById('mclose').onclick=closeMut;document.getElementById('mundo').onclick=()=>{if(mLast!==null&&mLast>=0){mHover=mLast;mUndoWhy(mLast)}};document.getElementById('mutov').onclick=e=>{if(e.target.id==='mutov')closeMut()};
 document.getElementById('reset').onclick=()=>{S=blank();sel=null;save()};
-document.getElementById('copy').onclick=async()=>{const b=document.getElementById('copy');try{await navigator.clipboard.writeText(document.getElementById('link').value);b.textContent='Link copied'}catch(e){const l=document.getElementById('link');l.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}b.textContent=ok?'Link copied':'Press Ctrl+C'}setTimeout(()=>b.textContent='Copy link',1500)};
+// Copy link lives in the shared top bar: copyLink() in screens.js
 {const row=document.getElementById('importRow');
  if(CFG.mode==='offline'){row.hidden=false;
   const msg=t=>{document.getElementById('impmsg').textContent=t};

@@ -40,6 +40,35 @@ GEOM = """()=>{const B=s=>{const e=document.querySelector(s);if(!e||!e.getClient
   sets:B('.invright .eqsec'),tree:B('#treePanel'),slots:B('#slots'),info:B('#info'),sw:document.documentElement.scrollWidth,vw:innerWidth,mintile:Math.min(...tiles.map(r=>Math.min(r.width,r.height))),ntiles:tiles.length}}"""
 
 
+def copycheck(b, base, check, label):
+    """v28b: ONE Copy link control in the top bar, reachable on both screens at every width, also with the slot panel or the phone's slot sheet open; the copied link is the whole current build."""
+    if label == "offline": return           # the offline copy can open links but not create them (CFG.share false: no button)
+    CLIP = ["clipboard-read", "clipboard-write"]
+    def reach(pg, E, tag):
+        r = E("""(()=>{const e=document.getElementById('copy'),r=e.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,t=document.elementFromPoint(x,y);
+          return{vis:r.width>0&&r.height>0&&getComputedStyle(e).visibility!=='hidden',inview:r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight,top:!!t&&(t===e||e.contains(t)),h:Math.round(r.height),n:document.querySelectorAll('#copy,[aria-label="Copy build link"]').length,al:e.getAttribute('aria-label')}})()""")
+        pg.evaluate("navigator.clipboard.writeText('x')"); pg.click("#copy"); ok = until(pg, "navigator.clipboard.readText().then(t=>window.__cp=t)&&!!window.__cp&&window.__cp.indexOf('#v1.')>0") and E("document.getElementById('toastMsg').textContent") == "Link copied" and E("document.getElementById('copy').textContent") == "Link copied"
+        check("%s: Copy link is visible, not covered, one element, aria-label 'Copy build link', and clicking says 'Link copied' (%s)" % (tag, r), r["vis"] and r["inview"] and r["top"] and r["n"] == 1 and r["al"] == "Copy build link" and ok, r)
+        return r
+    for w, h in ((1920, 1080), (1440, 900), (1100, 800), (1024, 768), (390, 844)):
+        cx = b.new_context(viewport={"width": w, "height": h}, is_mobile=w < 600, has_touch=w < 600, permissions=CLIP); pg = cx.new_page(); pg.goto(base); until(pg, READY); E = pg.evaluate; tag = "%s: at %d px" % (label, w)
+        reach(pg, E, tag + " Character")
+        openinv(pg); reach(pg, E, tag + " Inventory (stash)")
+        E("document.activeElement&&document.activeElement.blur()"); pg.keyboard.press("Tab")
+        pg.click('#eqbody .eqtile[data-i="0"]'); pg.wait_for_selector("#pkgrid .pktile"); r = reach(pg, E, tag + " Inventory (slot %s open)" % ("sheet" if w < 600 else "panel"))
+        if w < 600: check("%s: the Copy link tap target is 44 px high on the phone" % tag, r["h"] >= 44, r)
+        pg.focus("#copy"); pg.evaluate("window.__cp=''"); pg.keyboard.press("Enter"); check("%s: Copy link works from the keyboard" % tag, until(pg, "navigator.clipboard.readText().then(t=>window.__cp=t)&&!!window.__cp&&window.__cp.indexOf('#v1.')>0"))
+        cx.close()
+    for scr in ("inv", "char"):
+        cx = b.new_context(viewport={"width": 1920, "height": 1080}, permissions=CLIP); pg = cx.new_page(); pg.goto(base); until(pg, READY); E = pg.evaluate
+        pg.fill("#lvl", "100"); E("(()=>{const d=eqData();S.gear[0]=d.byId.get('Bear School steel sword 4').n;S.gear[4]=d.byId.get('Bear Armor 4').n;S.cons[0]=CN.byId.get('Mutagen 1').n;S.cons[7]=CN.byId.get('Beast Oil 2').n;S.lv[0][0]=1;S.slots[0]=[0,0];save();eqRender(true)})()")
+        E("S.muts[0]=3;S.mres[0]=1;S.mact=0;save()"); E("scrGo('%s')" % scr); until(pg, "S.scr==='%s'" % scr); pg.click("#copy"); until(pg, "navigator.clipboard.readText().then(t=>window.__cp=t)&&!!window.__cp")
+        link = E("window.__cp"); want = E("[S.scr,S.cons.join(),S.gear.join(),S.rs,S.lv.flat().join(),S.slots.join('|'),S.muts.join(),S.mres.join(),S.mact,lvl()].join(';')")
+        q = cx.new_page(); q.goto(link); until(q, READY); got = q.evaluate("[S.scr,S.cons.join(),S.gear.join(),S.rs,S.lv.flat().join(),S.slots.join('|'),S.muts.join(),S.mres.join(),S.mact,lvl()].join(';')")
+        check("%s: copy on %s (level, skills, mutations, gear, consumables, silver oil), open in a new tab: the same build on the same screen (%s)" % (label, scr, link[-60:]), got == want and link.endswith(".s1I") == (scr == "inv") and E("S.cons[7]") > 0 and E("S.gear[0]") > 0, [got, want])
+        cx.close()
+
+
 def layoutcheck(b, base, check, label):
     """The two screens at seven widths: the top bar, the Character screen (the v26 layout, no equipment), the Inventory screen (stash | slot boxes | silhouette | armour, sets, stats) and how it folds."""
     for w, h in ((2560, 1259), (1920, 1080), (1440, 900), (1280, 800), (1024, 768), (768, 900), (390, 844)):
@@ -190,9 +219,9 @@ def invcheck(b, base, check, label):
     check("%s: the Item stats heading says base values, not added up" % label, "base values" in E("document.querySelector('#invRight .eqsec:last-child h3').innerText"))
     pg.close()
     m = b.new_page(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True); m.goto(base); until(m, READY); m.evaluate("scrGo('inv')"); until(m, "!document.getElementById('screenInv').hidden")
-    m.tap('#eqbody .eqtile[data-i="10"]'); m.wait_for_selector("#pkgrid .pktile"); r = m.evaluate("(()=>{const r=document.querySelector('.eqpmodal').getBoundingClientRect(),p=document.getElementById('eqpick').getBoundingClientRect();return[Math.round(r.width),Math.round(p.height),innerWidth,innerHeight,getComputedStyle(document.getElementById('eqpick')).position]})()")
+    m.tap('#eqbody .eqtile[data-i="10"]'); m.wait_for_selector("#pkgrid .pktile"); r = m.evaluate("(()=>{const r=document.querySelector('.eqpmodal').getBoundingClientRect(),p=document.getElementById('eqpick').getBoundingClientRect(),tb=document.getElementById('topbar').getBoundingClientRect();return[Math.round(r.width),Math.round(p.height+tb.bottom),innerWidth,innerHeight,getComputedStyle(document.getElementById('eqpick')).position]})()")
     ok_tiles = m.evaluate("[...document.querySelectorAll('.pktile,.chip,#pkclose')].every(t=>t.getBoundingClientRect().height>=40)")
-    check("%s: 390 px: tapping a slot opens the panel as a full-screen sheet (%s), its cards and buttons are tap sized" % (label, r), r[0] >= r[2] - 2 and r[1] >= r[3] - 2 and r[4] == "fixed" and ok_tiles, r)
+    check("%s: 390 px: tapping a slot opens the panel as a full-screen sheet below the top bar (%s), its cards and buttons are tap sized" % (label, r), r[0] >= r[2] - 2 and r[1] >= r[3] - 2 and r[4] == "fixed" and ok_tiles, r)
     m.tap("#pkgrid .pktile >> nth=2"); m.tap("#pkequip"); m.wait_for_timeout(200)
     check("%s: 390 px: tapping a card and Equip equips it, the sheet closes, nothing scrolls sideways" % label, m.evaluate("S.cons[1]")>0 and m.evaluate("document.getElementById('eqpick').hidden") and m.evaluate("document.documentElement.scrollWidth-innerWidth") <= 0, m.evaluate("S.cons.join()")); m.close()
 
@@ -331,7 +360,7 @@ def run(b, base, check, label, quick=False):
     errs, events = [], []; pg = b.new_page(viewport={"width": 1400, "height": 950}); pg.on("pageerror", lambda e: errs.append(str(e).split("\n")[0][:100])); E = pg.evaluate
     pg.on("load", lambda p: events.append("load")); pg.on("request", lambda r: events.append("data") if ("/data/items" in r.url or "/data/consumables" in r.url) else None)
     pg.goto(base); check("%s: the equipment and consumables data load after the page has loaded, only items.js, items_ng.js and consumables.js" % label, until(pg, READY) and sorted(E(KEYS)) == ["consumables.js", "items.js", "items_ng.js"] and events.index("load") < (events.index("data") if "data" in events else 99), [events[:4], E(KEYS)])
-    layoutcheck(b, base, check, label); screencheck(b, base, check, label); conscheck(b, base, check, label); invcheck(b, base, check, label); tiercheck(b, base, check, label); countcheck(b, base, check, label)
+    layoutcheck(b, base, check, label); copycheck(b, base, check, label); screencheck(b, base, check, label); conscheck(b, base, check, label); invcheck(b, base, check, label); tiercheck(b, base, check, label); countcheck(b, base, check, label)
     openinv(pg)
     pg.fill("#lvl", "100")      # the planner starts at Level 1 and the game blocks items above the level, so the walk-through below runs at the top level
     check("%s: the slot boxes: weapons (steel, silver, bolts, crossbow), consumables (4), bombs (2), mask; armor (chest, gloves, trousers, boots); no Pockets slot" % label,

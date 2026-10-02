@@ -9,6 +9,17 @@ function scrApply(){const inv=S.scr==='inv';
  const i=SCR_ORDER.indexOf(S.scr),pv=document.getElementById('scrPrev'),nx=document.getElementById('scrNext');pv.disabled=i<=0;nx.disabled=i>=SCR_ORDER.length-1;
  pv.setAttribute('aria-disabled',String(pv.disabled));nx.setAttribute('aria-disabled',String(nx.disabled));
  if(inv&&!stashDrawn)stashRender()}
+// Copy link: ONE control, in the top bar, for every screen. It copies the link of the build as it is now (enc(): skills, mutations, mutagens, level, gear, consumables, ruleset, and s1I when Inventory is open).
+let copyT=0;
+function copyLink(){const b=document.getElementById('copy'),url=(CFG.shareBase||location.href.split('#')[0])+'#'+enc();
+ const done=ok=>{b.textContent=ok?'Link copied':'Copy failed';notify(ok?'Link copied':'Could not copy: your browser blocked it. The full link is in the address bar.');clearTimeout(copyT);copyT=setTimeout(()=>{b.textContent='Copy link'},1500)};
+ const old=()=>{const t=document.createElement('textarea');t.value=url;t.setAttribute('readonly','');t.style.cssText='position:fixed;left:-9999px;top:0';document.body.appendChild(t);t.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}t.remove();return ok};
+ (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(url).then(()=>true,old):Promise.resolve(old())).then(done)}
+document.getElementById('copy').onclick=copyLink;
+// phone: the full-screen slot sheet starts below the top bar, which stays on top of it (so Copy link, the tabs and Level stay reachable)
+{const mq=matchMedia('(max-width:599px)'),il=document.getElementById('invLeft'),tb=document.getElementById('topbar');
+ const sync=()=>{const open=mq.matches&&il.classList.contains('panelopen');if(open){window.scrollTo({top:0});document.documentElement.style.setProperty('--tbh',tb.offsetHeight+'px')}document.body.classList.toggle('sheet-open',open)};
+ new MutationObserver(sync).observe(il,{attributes:true,attributeFilter:['class']});addEventListener('resize',sync)}
 document.getElementById('tabInv').onclick=()=>scrGo('inv');document.getElementById('tabChar').onclick=()=>scrGo('char');
 document.getElementById('scrPrev').onclick=()=>scrStep(-1);document.getElementById('scrNext').onclick=()=>scrStep(1);
 document.querySelectorAll('#topbar .rsg [data-rs]').forEach(b=>{b.onclick=()=>eqSwitch(b.dataset.rs);b.onkeydown=e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();const o=b.dataset.rs==='ng'?'ng_plus':'ng';eqSwitch(o);const n=document.querySelector('#topbar .rsg [data-rs="'+o+'"]');if(n)n.focus()}}});
