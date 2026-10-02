@@ -191,7 +191,8 @@ function synergyLv(){const t=TREES[3],i=t.sk.findIndex(s=>s.id==='perk_43');retu
 function slotMatch(k){const m=S.muts[Math.floor(k/3)],v=S.slots[k];return m!=null&&v&&TREES[v[0]].id===MUTTREE[MUTS[m].c]}
 function mutBonus(g){const m=S.muts[g];if(m==null)return null;const M=MUTS[m];let n=0;for(let k=g*3;k<g*3+3;k++)if(slotMatch(k))n++;
  return {stat:M.stat,pct:M.pct,v:M.v*(n+1)*(1+SYN_STEP*synergyLv()),n}}
-const fmtStat=(pct,v)=>pct?'+'+Math.round(v*1000)/10+'%':'+'+Math.round(v);
+// whole numbers, like the game's panel (RoundMath)
+const fmtStat=(pct,v)=>pct?'+'+Math.round(v*100)+'%':'+'+Math.round(v);
 function renderSlots(){const svg=document.getElementById('slots');
  let s=DEFS()+`<g stroke="#5a4a36" stroke-width="1.2"><line x1="399" y1="10" x2="399" y2="400"/><line x1="399" y1="502" x2="399" y2="890"/><line x1="20" y1="451" x2="150" y2="451"/><line x1="648" y1="451" x2="800" y2="451"/></g>
  <g class="mcentre" tabindex="0" role="button" aria-label="Open mutations${S.mact>=0?': active '+MUT[S.mact].name:''}" style="cursor:pointer"><title>Mutations</title>
