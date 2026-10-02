@@ -99,15 +99,18 @@ L9 = Path.home() / "work/w3planner-art/save-spike/fixtures/save-l9"
 
 
 def save_l9(b, base, check, label):
-    """The second save: level 9, 490/1000 XP. In-game panels: top-left blue +34%, top-right green +60, bottom-left green +60, bottom-right locked. Skips when the fixture is absent."""
+    """The second save (ManualSave_4dced_..., level 9, 665/1000 XP, 2,891 crowns, Synergy level 2). In-game panels: top-left blue (Greater) +48%, top-right blue (normal) +34%, bottom-left green (Greater) +180,
+    bottom-right locked. Skips when the fixture is absent."""
     sav = sorted(L9.glob("*.sav")) if L9.is_dir() else []
     if not sav: print("  SKIP  %s: second-save (level 9) import (fixture not present)" % label); return
     js = sav[0].with_suffix(".json"); files = [str(sav[0])] + ([str(js)] if js.is_file() else [])
     pg, errs, reqs = page(b, base); E = pg.evaluate; pg.click("#savebtn"); pg.set_input_files("#impfile", files); until(pg, "!document.getElementById('impStep2').hidden")
+    ch = E("document.getElementById('impReviewBody').innerText")
+    check("%s: level-9 save review: level 9 · 665 / 1,000 XP, mutagens Greater blue, Blue, Greater green, Crowns 2,891 (%s)" % (label, ch[:80].replace("\n", " ")), "Level 9 · 665 / 1,000 XP" in ch and "Slot 1: Greater blue mutagen" in ch and "Slot 2: Blue mutagen" in ch and "Slot 3: Greater green mutagen" in ch and "Crowns: 2,891" in ch)
     pg.click("#impApply"); until(pg, "document.getElementById('impov').hidden"); pg.wait_for_timeout(500)
     rows = bonus_rows(pg)
-    check("%s: level-9 save: Character shows +34%% Sign intensity and +60, +60 Vitality, one line per mutagen (%s)" % (label, rows),
-          len(rows) == 3 and "Sign intensity +34%" in rows[0] and "Vitality +60" in rows[1] and "Vitality +60" in rows[2] and E("+document.getElementById('lvl').value") == 9, rows)
+    check("%s: level-9 save: Character shows Sign intensity +48%%, Sign intensity +34%%, Vitality +180, one line per mutagen (%s)" % (label, rows),
+          len(rows) == 3 and "Sign intensity +48%" in rows[0] and "Sign intensity +34%" in rows[1] and "Vitality +180" in rows[2] and E("+document.getElementById('lvl').value") == 9 and E("synergyLv()") == 2, rows)
     check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
 
 
