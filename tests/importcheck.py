@@ -46,7 +46,7 @@ def run(b, base, check, label, ref=True):
     d = E("""(()=>{const o=document.getElementById('impov'),l=document.querySelector('label[for=impfile]'),i=document.getElementById('impfile');return{open:!o.hidden,title:document.getElementById('imptitle').textContent,intro:document.querySelector('.impintro').textContent,drop:document.querySelector('.impdroptxt').textContent,sub:document.querySelector('.impdrop small').textContent,
       label:!!l&&l.textContent.trim(),input:i.type+'/'+i.getAttribute('accept'),help:document.querySelector('.imphelp').textContent,foot:document.querySelector('.impfoot').textContent,modal:document.querySelector('.imppanel').getAttribute('aria-modal')}})()""")
     check("%s: the dialog reads 'Import save', says the file stays in the browser, has the drop zone, a real CHOOSE FILE label for a .sav input, the help box and the footnote (%s)" % (label, d["input"]),
-          d["open"] and d["title"] == "Import save" and d["intro"] == "Fill the planner from a Witcher 3 save. The file is read in this browser and never leaves your computer." and d["drop"] == "Drop a .sav file here, or choose one" and d["sub"] == "Next-Gen (4.0+) PC saves · one file at a time"
+          d["open"] and d["title"] == "Import save" and d["intro"] == "Fill the planner from a Witcher 3 save. The file is read in this browser and never leaves your computer." and d["drop"] == "Drop a .sav file here, or choose one" and d["sub"] == "Next-Gen (4.0+) PC saves · the .sav, and its .json too if you have it"
           and d["label"] == "CHOOSE FILE" and d["input"] == "file/.sav" and "Documents\\The Witcher 3\\gamesaves\\ManualSave_" in d["help"] and "Manual saves are easiest to pick out. The .png next to it shows the same picture as the game's Load Game list." in d["help"]
           and d["foot"] == "You'll see what was found before anything changes. Your current build is replaced only when you press Apply.", d)
     until(pg, "!!window.W3SAVE&&!!(window.W3DATA&&W3DATA.savenames)")
@@ -71,8 +71,44 @@ def run(b, base, check, label, ref=True):
     check("%s: the plan keeps only what matched: level 5 + bonus points make 4 points, 1 skill, Wraith in socket 1 (%s)" % (label, (pl["level"], pl["bonus"], len(pl["learned"]), pl["muts"][:2])), pl["level"] == 5 and pl["bonus"] == 0 and len(pl["learned"]) == 1 and pl["muts"][0] == E("SAVEMUT['Wraith mutagen']") and pl["muts"][1] is None and pl["plannable"] == 3 and pl["records"] == 3)
     check("%s: no script errors" % label, not errs, errs[:1])
     other = [u for u in reqs if not u.startswith(("http://127.0.0.1", "http://localhost", "data:", "blob:"))]; check("%s: no request to any other site" % label, not other, other[:2]); pg.close()
-    if ref: refsave(b, base, check, label)
+    mutagen_rule(b, base, check, label)
+    if ref: refsave(b, base, check, label); save_l9(b, base, check, label)
     phone(b, base, check, label)
+
+
+def bonus_rows(pg):
+    return pg.evaluate("[...document.querySelectorAll('#bonus div')].map(d=>d.textContent.replace(/\\s+/g,' ').trim())")
+
+
+def mutagen_rule(b, base, check, label):
+    """The Character screen's own numbers (characterMenu.ws GetGroupBonusDescription): the mutagen's number x (1 + matching-colour skills in its group), then x (1 + 0.1 x Synergy level), per group.
+    Built from the second save's in-game panels: blue (normal) with 3 blue skills + Synergy 2 = 34%; green (lesser) with no matching skill + Synergy 2 = 60, twice."""
+    pg, errs, reqs = page(b, base); E = pg.evaluate
+    r = E("""(()=>{const sg=TREES[1].sk.map((s,i)=>i).slice(0,3),ge=[0,1],pi=TREES[3].sk.findIndex(s=>s.id==='perk_43'),m=n=>MUTS.findIndex(x=>x.name===n),out={};
+      S.slots.fill(null);S.muts=[null,null,null,null];S.lv[3][pi]=2;
+      sg.forEach((i,k)=>S.slots[k]=[1,i]);S.slots[3]=[1,sg[0]];S.slots[4]=[1,sg[1]];S.slots[5]=[1,sg[2]];ge.forEach((i,k)=>S.slots[6+k]=[3,i]);
+      S.muts=[m('Blue mutagen'),m('Lesser green mutagen'),m('Lesser green mutagen'),null];out.l2=[0,1,2].map(g=>mutBonus(g).v);
+      S.lv[3][pi]=0;out.l0=[0,1,2].map(g=>mutBonus(g).v);S.lv[3][pi]=1;out.l1=mutBonus(0).v;S.lv[3][pi]=0;S.muts=[m('Lesser red mutagen'),null,null,null];out.red=mutBonus(0).v;return out})()""")
+    near = lambda a, b: abs(a - b) < 1e-9
+    check("%s: mutagen bonus as the game's Character screen: blue 3 matching + Synergy 2 = +34%%, green with no match +60, +60; no Synergy 7%%x4 = 28%% and 50, 50; Synergy 1 = 30.8%%; red lesser with no match = 5%% (%s)" % (label, r),
+          near(r["l2"][0], 0.07 * 4 * 1.2) and near(r["l2"][1], 60) and near(r["l2"][2], 60) and near(r["l0"][0], 0.28) and near(r["l0"][1], 50) and near(r["l1"], 0.07 * 4 * 1.1) and near(r["red"], 0.05), r)
+    check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
+
+
+L9 = Path.home() / "work/w3planner-art/save-spike/fixtures/save-l9"
+
+
+def save_l9(b, base, check, label):
+    """The second save: level 9, 490/1000 XP. In-game panels: top-left blue +34%, top-right green +60, bottom-left green +60, bottom-right locked. Skips when the fixture is absent."""
+    sav = sorted(L9.glob("*.sav")) if L9.is_dir() else []
+    if not sav: print("  SKIP  %s: second-save (level 9) import (fixture not present)" % label); return
+    js = sav[0].with_suffix(".json"); files = [str(sav[0])] + ([str(js)] if js.is_file() else [])
+    pg, errs, reqs = page(b, base); E = pg.evaluate; pg.click("#savebtn"); pg.set_input_files("#impfile", files); until(pg, "!document.getElementById('impStep2').hidden")
+    pg.click("#impApply"); until(pg, "document.getElementById('impov').hidden"); pg.wait_for_timeout(500)
+    rows = bonus_rows(pg)
+    check("%s: level-9 save: Character shows +34%% Sign intensity and +60, +60 Vitality, one line per mutagen (%s)" % (label, rows),
+          len(rows) == 3 and "Sign intensity +34%" in rows[0] and "Vitality +60" in rows[1] and "Vitality +60" in rows[2] and E("+document.getElementById('lvl').value") == 9, rows)
+    check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
 
 
 def refsave(b, base, check, label):
@@ -106,6 +142,7 @@ def refsave(b, base, check, label):
       stash:JSON.parse(localStorage.getItem('w3planner.stash')||'null'),link:enc(),toast:document.getElementById('toastMsg').textContent}})()""")
     check("%s: Apply lands on Character with level 8, 8 bonus points (15 points in all), Signs 7 / General 2 learned, 15 spent (%s)" % (label, (a["lvl"], a["bonus"], a["per"], a["spent"])), a["scr"] == "char" and not a["hidden"] and a["lvl"] == 8 and a["bonus"] == 8 and a["per"] == [0, 7, 0, 2] and a["spent"] == 15)
     check("%s: the 8 equipped skills are in slots 1 to 8 and nothing else" % label, a["slots"] == SK, a["slots"])
+    check("%s: reference save Character: one line per mutagen, Vitality +50 and +50, no Sign intensity (%s)" % (label, bonus_rows(pg)), len(bonus_rows(pg)) == 2 and all("Vitality +50" in x for x in bonus_rows(pg)))
     check("%s: the planner holds Wraith and Griffin mutagens, the six Thousand Flowers pieces, crossbow, bolts, empty mask (%s)" % (label, a["gear"]), a["muts"] == ["Wraith mutagen", "Griffin mutagen", None, None] and a["gear"] == ["Sword of a Thousand Flowers", "White Widow of the Valley of Flowers", "Crossbow", "Bolts", "Armor of a Thousand Flowers", "Gauntlets of a Thousand Flowers", "Trousers of a Thousand Flowers", "Boots of a Thousand Flowers", None], a)
     check("%s: consumables: Cow's milk, Water, Swallow, Tawny Owl, Grapeshot Bomb, Torch in the Pocket; the oils are untouched (%s)" % (label, a["cons"]), a["cons"] == ["Cow's milk", "Water", "Swallow", "Tawny Owl", "Grapeshot", "Torch"] and a["oils"] == [0, 0], a["cons"])
     check("%s: the stash went to this browser only (crowns 2,890, plannable items) and is not in the link" % label, a["stash"] and a["stash"]["crowns"] == 2890 and len(a["stash"]["weapons"]) + len(a["stash"]["armor"]) > 5 and "2890" not in a["link"] and a["link"].count(".") <= 10, a["link"][-40:])
