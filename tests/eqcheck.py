@@ -164,7 +164,7 @@ def conscheck(b, base, check, label):
     old = E("(()=>{S.cons=[0,0,0,0,0,CN.byId.get('Samum 1').n,0,0];const a=enc();S.cons=[0,0,0,0,CN.byId.get('Dancing Star 3').n,CN.byId.get('Samum 1').n,0,0];return [a,enc()]})()")
     res = []
     for code in old:
-        q = b.new_page(viewport={"width": 1400, "height": 950}); q.goto(base + "#" + code); until(q, READY); q.wait_for_function("typeof CN!=='undefined'&&!!CN.data&&document.getElementById('toastMsg').textContent.length>0", timeout=15000)
+        q = b.new_page(viewport={"width": 1400, "height": 950}); q.goto(base + "#" + code); until(q, READY); until(q, "typeof CN!=='undefined'&&!!CN.data&&document.getElementById('toastMsg').textContent.length>0")
         res.append(q.evaluate("[S.cons.slice(4,6).map(n=>n?CN.byN.get(n).name:null),location.hash.slice(1),document.getElementById('toastMsg').textContent]")); q.close()
     check("%s: an old link with a bomb in the second bomb slot: moved to the Bomb slot when it is empty, dropped when not; said on screen; the link text is unchanged (%s)" % (label, [r[0] for r in res]),
           res[0][0] == ["Samum", None] and "moved to the Bomb slot" in res[0][2] and res[1][0] == ["Superior Dancing Star", None] and "removed" in res[1][2] and res[0][1] == old[0] and res[1][1] == old[1], res)
