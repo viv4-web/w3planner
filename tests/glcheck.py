@@ -89,10 +89,22 @@ def run(b, fix, check, label, main=None, real=False, quick=False):
         if tab == "tutorial": check("%s: the Tutorial list is plain: no thumbnails, no group headings" % label, r["thumbs"] == 0 and not r["groups"], r)
         else: check("%s: %s rows have a thumbnail, grouped under headings (%s)" % (label, tab, r["groups"]), r["thumbs"] == r["n"] and len(r["groups"]) >= 2, r)
         if tab in ("bestiary", "characters", "books"):
-            order = E("""(()=>{const out=[];let cur=null;document.querySelectorAll('#glRows > *').forEach(n=>{if(n.classList.contains('glgroup')){cur=[];out.push(cur)}else if(cur)cur.push(n.querySelector('b').textContent)});
-              const f=s=>s.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();return out.every(g=>g.every((x,i)=>!i||f(g[i-1])<=f(x)))})()""")
+            order = E("""(()=>{const f=s=>s.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();
+              return[...document.querySelectorAll('#glRows .glgrp')].every(g=>{const n=[...g.querySelectorAll('.glrow b')].map(b=>b.textContent);return n.every((x,i)=>!i||f(n[i-1])<=f(x))})})()""")
             check("%s: %s is A to Z inside each group" % (label, tab), order)
     opened(pg, "bestiary")
+    # groups fold and unfold
+    vis = "(()=>({heads:[...document.querySelectorAll('#glRows .glgroup.tog')].map(h=>h.getAttribute('aria-expanded')),rows:document.querySelectorAll('#glRows .glgrp:not([hidden]) .glrow').length,all:document.querySelectorAll('#glRows .glrow').length,count:document.getElementById('glCount').textContent,fold:document.getElementById('glFold').textContent}))()"
+    f0 = E(vis); pg.click('#glRows .glgroup.tog'); f1 = E(vis); pg.click('#glRows .glgroup.tog'); f2 = E(vis)
+    check("%s: Bestiary groups fold: clicking Beasts hides its rows and says so, clicking again shows them; the count does not change (%s -> %s -> %s)" % (label, f0["rows"], f1["rows"], f2["rows"]),
+          f0["heads"] == ["true", "true"] and f1["heads"] == ["false", "true"] and f1["rows"] == f0["rows"] - 4 and f1["all"] == f0["all"] and f2["rows"] == f0["rows"] and f1["count"] == f0["count"], [f0, f1, f2])
+    pg.click('#glFold'); g1 = E(vis); pg.click('#glFold'); g2 = E(vis)
+    check("%s: 'Collapse all' folds every group and becomes 'Expand all', which unfolds them (%s, %s)" % (label, g1["fold"], g2["fold"]), g1["rows"] == 0 and g1["fold"] == "Expand all" and g2["rows"] == f0["rows"] and g2["fold"] == "Collapse all", [g1, g2])
+    pg.click('#glFold'); pg.fill("#glQ", "griffin"); pg.wait_for_timeout(450); h1 = E(vis + "")
+    d1 = E("document.querySelector('#glRows .glgroup.tog').getAttribute('aria-disabled')"); pg.fill("#glQ", ""); pg.wait_for_timeout(450); h2 = E(vis)
+    check("%s: a search opens the groups that have results; clearing it brings the folds back (%s then %s)" % (label, h1["heads"], h2["heads"]), h1["rows"] >= 1 and "true" in h1["heads"] and d1 == "true" and h2["heads"] == ["false", "false"], [h1, h2, d1])
+    E("glSelect('bestiary','alpha_wolf')"); h3 = E(vis); check("%s: opening an entry of a folded group unfolds that group (%s)" % (label, h3["heads"]), h3["heads"][0] == "true", h3)
+    E("(()=>{const c=GL.col.bestiary;Object.keys(c).forEach(k=>c[k]=false);glRenderList()})()")
     # entry view: every stage labelled in order, the game's markup becomes elements, nothing is injected
     pg.click('.glrow[data-id="alpha_wolf"]'); until(pg, "document.getElementById('glTitle').textContent==='Alpha Wolf'")
     v = E("""(()=>{const t=document.getElementById('glText');return{labels:[...t.querySelectorAll('.glstlabel')].map(x=>x.textContent),i:!!t.querySelector('i'),b:!!t.querySelector('b'),color:!!t.querySelector('span[style*="color"]'),key:[...t.querySelectorAll('.glkey')].map(x=>x.textContent),

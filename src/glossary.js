@@ -5,7 +5,7 @@
 const GL_FILES=/*@glossary*/null;
 const GL_TABS=[{k:'bestiary',n:['creature','creatures']},{k:'tutorial',n:['tutorial','tutorials']},{k:'characters',n:['character','characters']},{k:'books',n:['entry','entries']}];
 const GL_NAME={bestiary:'Bestiary',tutorial:'Tutorial',characters:'Characters',books:'Books'};
-const GL={tab:'bestiary',q:'',all:false,sel:{},data:{},p:{},init:false,allCap:{},timer:0};
+const GL={tab:'bestiary',q:'',all:false,sel:{},data:{},p:{},init:false,allCap:{},timer:0,col:{}};   // col[tab][group]=true: that group is folded (not in the link, kept while the page is open)
 const glN=s=>String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();   // case- and accent-insensitive
 const glWords=q=>glN(q).split(/\s+/).filter(Boolean);
 const glEl=id=>document.getElementById(id);
@@ -64,9 +64,17 @@ function glRenderList(){const rows=glEl('glRows'),tab=GL.tab;rows.textContent=''
  glEl('glCount').textContent=GL.q.trim()?glCountText(tab,entries.length,glEntries(tab).length):glCountText(tab,entries.length);
  if(!entries.length){const p=document.createElement('p');p.className='glhint';p.textContent='Nothing matches '+GL.q.trim()+'.';rows.appendChild(p);return}
  const frag=document.createDocumentFragment(),groups=glGroups(tab);
- if(groups)groups.forEach(g=>{const es=entries.filter(e=>e.group===g);if(!es.length)return;const h=document.createElement('div');h.className='glgroup';h.textContent=g+' ('+es.length+')';frag.appendChild(h);es.forEach(e=>frag.appendChild(glRow(tab,e)))});
+ const q=GL.q.trim(),col=GL.col[tab]||(GL.col[tab]={});   // groups fold and unfold; while searching every group with a result stays open
+ if(groups)groups.forEach(g=>{const es=entries.filter(e=>e.group===g);if(!es.length)return;const open=!!q||!col[g];
+  const h=document.createElement('button');h.type='button';h.className='glgroup tog';h.dataset.g=g;h.setAttribute('aria-expanded',String(open));if(q)h.setAttribute('aria-disabled','true');
+  const ch=document.createElement('span');ch.className='glchev';ch.setAttribute('aria-hidden','true');ch.textContent=open?'▾':'▸';const t=document.createElement('span');t.textContent=g+' ('+es.length+')';h.append(ch,t);frag.appendChild(h);
+  const box=document.createElement('div');box.className='glgrp';box.hidden=!open;es.forEach(e=>box.appendChild(glRow(tab,e)));frag.appendChild(box)});
  else entries.forEach(e=>frag.appendChild(glRow(tab,e)));
- rows.appendChild(frag);glSyncView(entries)}
+ rows.appendChild(frag);glFoldBtn(tab,entries);glSyncView(entries)}
+function glFoldBtn(tab,entries){const b=glEl('glFold'),groups=glGroups(tab),q=GL.q.trim();b.hidden=!groups||!!q||GL.all;if(b.hidden)return;
+ const any=groups.some(g=>!(GL.col[tab]||{})[g]);b.textContent=any?'Collapse all':'Expand all';b.dataset.act=any?'collapse':'expand'}
+function glToggleGroup(g){if(GL.q.trim())return;const col=GL.col[GL.tab]||(GL.col[GL.tab]={}),keep=glEl('glRows').scrollTop;col[g]=!col[g];glRenderList();glEl('glRows').scrollTop=keep;const h=glEl('glRows').querySelector('.glgroup.tog[data-g="'+CSS.escape(g)+'"]');if(h)h.focus({preventScroll:true})}
+function glFoldAll(){const tab=GL.tab,col=GL.col[tab]||(GL.col[tab]={}),collapse=glEl('glFold').dataset.act==='collapse';(glGroups(tab)||[]).forEach(g=>{col[g]=collapse});glRenderList();glEl('glRows').scrollTop=0}
 // the entry on the right follows the list: a search that hides it moves to the first result (desktop; a phone keeps its list or entry view), and the search words are highlighted
 function glSyncView(es){if(GL.all||glPhone())return;const tab=GL.tab,cur=es.find(x=>x.id===GL.sel[tab])||es[0];if(!cur)return;GL.sel[tab]=cur.id;glMarkSel();glRenderView(tab,cur,glWords(GL.q))}
 function glMarkSel(){const id=GL.sel[GL.tab];glEl('glRows').querySelectorAll('.glrow').forEach(r=>{const on=!GL.all&&r.dataset.id===id;r.classList.toggle('on',on);if(on)r.setAttribute('aria-current','true');else r.removeAttribute('aria-current')})}
@@ -83,7 +91,8 @@ function glRenderAll(){const rows=glEl('glRows'),words=glWords(GL.q);rows.textCo
  rows.appendChild(frag)}
 
 // ---- entry view ----
-function glSelect(tab,id,words){const e=glEntries(tab).find(x=>x.id===id);if(!e)return;GL.sel[tab]=id;glMarkSel();glRenderView(tab,e,words||[]);
+function glSelect(tab,id,words){const e=glEntries(tab).find(x=>x.id===id);if(!e)return;GL.sel[tab]=id;if(GL.col[tab]&&GL.col[tab][e.group]){GL.col[tab][e.group]=false;glRenderList()}glMarkSel();   // an entry opened from a search result or a link unfolds its group
+ glRenderView(tab,e,words||[]);
  if(glPhone()){glEl('screenGlo').classList.add('gl-detail');window.scrollTo({top:0})}}
 function glRenderView(tab,e,words){const view=glEl('glView'),pic=glEl('glPic'),title=glEl('glTitle'),text=glEl('glText'),weak=glEl('glWeak');
  title.textContent=e.name;pic.textContent='';view.classList.toggle('nopic',tab==='tutorial'&&!e.img);view.dataset.tab=tab;
@@ -132,9 +141,10 @@ function glBind(){
  glEl('glSubs').addEventListener('keydown',e=>{if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;e.preventDefault();glStep(e.key==='ArrowRight'?1:-1);const b=document.querySelector('#glSubs .glst.on');if(b)b.focus()});
  glEl('glPrev').onclick=()=>glStep(-1);glEl('glNext').onclick=()=>glStep(1);glEl('glQ').addEventListener('input',glSearchInput);glEl('glAll').onclick=glToggleAll;
  glEl('glBack').onclick=()=>{glEl('screenGlo').classList.remove('gl-detail');const r=glEl('glRows').querySelector('.glrow.on');if(r)r.scrollIntoView({block:'center'})};
- glEl('glRows').addEventListener('click',e=>{const r=e.target.closest('.glrow');if(!r)return;if(r.dataset.all)glGoResult(r.dataset.tab,r.dataset.id);else glSelect(GL.tab,r.dataset.id,glWords(GL.q))});
- glEl('glRows').addEventListener('keydown',e=>{if(e.key!=='ArrowDown'&&e.key!=='ArrowUp')return;const rs=[...glEl('glRows').querySelectorAll('.glrow')],i=rs.indexOf(document.activeElement);if(i<0)return;const n=rs[i+(e.key==='ArrowDown'?1:-1)];if(!n)return;e.preventDefault();n.focus();if(!glPhone()&&!GL.all)n.click()});
- glEl('glQ').addEventListener('keydown',e=>{if(e.key==='ArrowDown'){const r=glEl('glRows').querySelector('.glrow');if(r){e.preventDefault();r.focus()}}})}
+ glEl('glFold').onclick=glFoldAll;
+ glEl('glRows').addEventListener('click',e=>{const h=e.target.closest('.glgroup.tog');if(h){glToggleGroup(h.dataset.g);return}const r=e.target.closest('.glrow');if(!r)return;if(r.dataset.all)glGoResult(r.dataset.tab,r.dataset.id);else glSelect(GL.tab,r.dataset.id,glWords(GL.q))});
+ glEl('glRows').addEventListener('keydown',e=>{if(e.key!=='ArrowDown'&&e.key!=='ArrowUp')return;const rs=[...glEl('glRows').querySelectorAll('.glrow')].filter(r=>!r.closest('[hidden]')),i=rs.indexOf(document.activeElement);if(i<0)return;const n=rs[i+(e.key==='ArrowDown'?1:-1)];if(!n)return;e.preventDefault();n.focus();if(!glPhone()&&!GL.all)n.click()});
+ glEl('glQ').addEventListener('keydown',e=>{if(e.key==='ArrowDown'){const r=[...glEl('glRows').querySelectorAll('.glrow')].find(x=>!x.closest('[hidden]'));if(r){e.preventDefault();r.focus()}}})}
 function glClose(){GL.shown=false}
 function glOpen(){if(GL.shown)return;GL.shown=true;if(!GL.init){GL.init=true;glBind()}   // scrApply runs after every change of the build; the screen is set up once per visit
  const has=!!GL_FILES;glEl('glMsg').hidden=has;glEl('glBody').hidden=!has;document.querySelector('#screenGlo .glsub').hidden=!has;if(!has)return;
