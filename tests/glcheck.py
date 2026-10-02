@@ -35,13 +35,27 @@ def newpage(b, url, w=1440, h=900, mobile=False):
     return pg, errs, reqs
 
 
+def maplink(b, url, check, label):
+    """The World Map panel: a plain link to witcher3map.com first, then Open Inventory and Open Glossary; no other tab's panel has the link."""
+    pg, errs, reqs = newpage(b, url); E = pg.evaluate; pg.click("#tabMap")
+    r = E("""(()=>{const o=document.getElementById('igov'),a=document.getElementById('igMap'),kids=[...o.querySelectorAll('.igbtns > *')].filter(x=>!x.hidden);return{open:!o.hidden,order:kids.map(x=>x.textContent.trim()),tag:a.tagName,href:a.getAttribute('href'),target:a.getAttribute('target'),rel:a.getAttribute('rel'),vis:a.getClientRects().length>0,
+      h:Math.round(a.getBoundingClientRect().height),cls:a.className,aria:a.getAttribute('aria-label'),focus:document.activeElement.id}})()""")
+    check("%s: the World Map panel has the link first: 'Open witcher3map.com ↗' to https://witcher3map.com, target _blank, rel noopener noreferrer, then Open Inventory and Open Glossary (%s)" % (label, r),
+          r["open"] and r["order"] == ["Open witcher3map.com ↗", "Open Inventory", "Open Glossary"] and r["tag"] == "A" and r["href"] == "https://witcher3map.com" and r["target"] == "_blank" and r["rel"] == "noopener noreferrer" and r["vis"] and r["h"] >= 44 and "btn" in r["cls"] and r["focus"] == "igMap", r)
+    pg.keyboard.press("Escape"); others = []
+    for tid in ("tabAlch", "tabQuests", "tabMed"):
+        pg.click("#" + tid); others.append(E("document.getElementById('igMap').getClientRects().length")); pg.keyboard.press("Escape")
+    s = E("[S.scr,location.hash.indexOf('s1')<0]"); check("%s: no other tab's panel shows the link (%s), the map tab stays greyed, and opening the panel leaves the screen and the link alone" % (label, others), others == [0, 0, 0] and s == ["char", True] and E("document.getElementById('tabMap').classList.contains('off')"), [others, s])
+    check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
+
+
 def barcheck(b, fix, check, label):
     pg, errs, reqs = newpage(b, fix); E = pg.evaluate
     tabs = E("[...document.querySelectorAll('#stabs .stab')].map(b=>b.childNodes[0].textContent.trim())")
     check("%s: the top bar reads Glossary, Alchemy, Inventory, World Map, Quests, Character, Meditation (%s)" % (label, tabs), tabs == ["Glossary", "Alchemy", "Inventory", "World Map", "Quests", "Character", "Meditation"], tabs)
     live = E("[...document.querySelectorAll('#stabs .stab:not(.off)')].map(b=>b.id)"); off = E("[...document.querySelectorAll('#stabs .stab.off')].map(b=>[b.id,b.querySelector('small').textContent])")
     check("%s: Glossary, Inventory and Character are live; the other four are greyed with an 'in game only' line" % label, live == ["tabGlo", "tabInv", "tabChar"] and [x[0] for x in off] == ["tabAlch", "tabMap", "tabQuests", "tabMed"] and all(x[1] == "in game only" for x in off), [live, off])
-    why = {"tabAlch": ("Alchemy", "Crafting happens in the game; plan consumables in Inventory slots."), "tabMap": ("World Map", "Interactive maps already exist from third parties."),
+    why = {"tabAlch": ("Alchemy", "Crafting happens in the game; plan consumables in Inventory slots."), "tabMap": ("World Map", "The world map is in-game only. For an interactive map, use witcher3map.com, a free, ad-free fan project (CC BY-NC-SA)."),
            "tabQuests": ("Quests", "Quest progress lives in the game."), "tabMed": ("Meditation", "Meditation can only be done in the game.")}
     for tid, (title, reason) in why.items():
         pg.click("#" + tid); r = E("(()=>{const o=document.getElementById('igov');return{open:!o.hidden,title:document.getElementById('igtitle').textContent,only:o.querySelector('.igonly').textContent,why:document.getElementById('igwhy').textContent,btns:[...o.querySelectorAll('.igbtns button')].map(b=>b.textContent),focus:document.activeElement.id,screen:S.scr}})()")
@@ -70,7 +84,7 @@ def barcheck(b, fix, check, label):
 
 
 def run(b, fix, check, label, main=None, real=False, quick=False):
-    barcheck(b, fix, check, label)
+    barcheck(b, fix, check, label); maplink(b, fix, check, label)
     man = json.loads((FIX / "manifest.json").read_text())["counts"]; want = {"bestiary": man["bestiary"], "characters": man["characters"], "tutorial": man["tutorial"], "books": man["books"] + man["paintings"]}
     # nothing loads before Glossary opens, then only what the tab needs
     pg, errs, reqs = newpage(b, fix); E = pg.evaluate; gl = lambda: [u.rsplit("/", 1)[-1] for u in reqs if "/glossary/" in u]
@@ -175,6 +189,7 @@ def run(b, fix, check, label, main=None, real=False, quick=False):
 
 
 def publicbuild(b, main, fix, link, check, label, real=False):
+    if main: maplink(b, main, check, label)
     """The site the suite builds for the rest of its checks: the public (and offline) build says the glossary is not included; the live build has the real one."""
     if not main: return
     pg, errs, reqs = newpage(b, main); E = pg.evaluate; gl = lambda: [u for u in reqs if "/glossary/" in u]

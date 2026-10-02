@@ -75,7 +75,7 @@ def append_only_problems():
     ls = subprocess.run(["git", "ls-tree", "-r", "--name-only", ref, "tests/fixtures", "data/item_ids.json"], cwd=ROOT, capture_output=True, text=True).stdout.split()   # item_ids.json: the numbers a gear link stores
     problems = []
     for path in ls:
-        if path.endswith("tooltips_ref.json") or path.endswith("README.md"): continue
+        if path.endswith("tooltips_ref.json") or path.endswith("README.md") or path.startswith("tests/fixtures/glossary/"): continue   # the fake Glossary content (binary pictures too) is rewritten by tests/make_glossary_fixture.py: not a link fixture
         old, cur = _git_show(ref, path), (ROOT / path).read_text() if (ROOT / path).is_file() else None
         if cur is None: problems.append("%s was deleted" % path); continue
         if path.endswith(".txt"):
