@@ -18,6 +18,7 @@ import linkcheck
 import eqcheck
 import glcheck
 import importcheck
+import statscheck
 from playwright.sync_api import sync_playwright
 
 RESULTS = []
@@ -155,6 +156,8 @@ def main():
         glcheck.run(b, gbase, check, "online", main=base, real=a.variant == "game", quick=a.quick)
         print("\n== Import save ==")
         importcheck.run(b, base, check, "online")
+        print("\n== Player Stats ==")
+        statscheck.run(b, base, check, "online"); statscheck.fixture(b, base, check, "online")
         nd = shutil.which("node"); nr = subprocess.run([nd, str(ROOT / "tests/test_saveread.js")], capture_output=True, text=True) if nd else None
         check("the save reader without a browser: LZ4, header errors, sidecar, the mutagen table, the reference save when the local fixture is present", (nr is None) or nr.returncode == 0, (nr.stderr or nr.stdout).strip()[-300:] if nr else "node not found: skipped")
         rt = b.new_page(); rt.goto(base); rt.wait_for_timeout(600); r = rt.evaluate(ROUNDTRIP); rt.close(); check("%d random builds survive a link round trip unchanged (%d with special mutagens)" % (r["n"], r["spec"]), r["bad"] == 0, r["bad"])
@@ -203,7 +206,7 @@ def main():
                 linkcheck.check_fixtures(b, off, "offline", check)
                 eqcheck.run(b, off, check, "offline", a.quick)
                 glcheck.publicbuild(b, off, None, glcheck.GLINK, check, "offline")
-                importcheck.offline(b, off, check, "offline")
+                importcheck.offline(b, off, check, "offline"); statscheck.run(b, off, check, "offline")
                 check("the offline package contains no glossary", not any("glossary" in n.lower() for n in zipfile.ZipFile(zp).namelist()))
                 o.fill("#imp", "https://w3planner.pages.dev/#" + code); o.click("#impbtn"); o.wait_for_timeout(300)
                 check("a link from the website opens in the offline copy", OE(FULLSTATE) == link_state)

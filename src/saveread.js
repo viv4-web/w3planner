@@ -120,7 +120,11 @@ function readSave(bytes){
  const equipped={};slots.forEach((s,i)=>{const v=s&&s.value;if(v&&SLOT_NAMES[i]){const r=byRef.get(v);equipped[SLOT_NAMES[i]]=r?{id:r.id,qty:r.qty,extras:r.extras}:{id:null,ref:v}}});
  const mutagenSlots=(am.mutagenSlots||[]).map(m=>{const v=m.item&&m.item.value;const r=v?byRef.get(v):null;return{slot:m.equipmentSlot,unlockedAt:m.unlockedAtLevel,item:r?r.id:null}});
  const crowns=(invr.items.find(r=>r.id==='Crowns')||{}).qty||0;
- return{codes:tb.codes,character,skills,skillSlots,mutagenSlots,equipped,inventory:invr.items,inventoryHeader:invr.count,crowns}}
+ return{codes:tb.codes,character,skills,skillSlots,mutagenSlots,equipped,inventory:invr.items,inventoryHeader:invr.count,crowns,playTimeSec:playTime(d,N)}}
+// Time played: the one property "GameTime" of type Double in the save (seconds, e.g. 37522.0632893 = 10 h 25 min; read from two saves of one run, it grows by the minutes played). null when not found.
+function playTime(d,N){const g=N.indexOf('GameTime')+1,t=N.indexOf('Double')+1;if(g<1||t<1)return null;const dv=new DataView(d.buffer,d.byteOffset,d.length);
+ for(let i=0;i+12<=d.length;i++)if(d[i]===(g&255)&&d[i+1]===(g>>8)&&d[i+2]===(t&255)&&d[i+3]===(t>>8)){const x=dv.getFloat64(i+4,true);if(x>=0&&x<1e8)return x}
+ return null}
 
 // the JSON next to a save: {saveMetadata:{initial buildID, current buildID, gameVersion, saveVersion, platform, modsMetadata:{numMods, modsList:{mod...}}}}
 function parseSidecar(text){

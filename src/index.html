@@ -66,6 +66,12 @@
     <div class="invcentre" aria-hidden="true"><svg viewBox="0 0 200 420" class="silhouette"><g fill="none" stroke="#5a4a36" stroke-width="2"><ellipse cx="100" cy="46" rx="26" ry="32"/><path d="M74 78 C54 92 40 130 38 190 L52 300 L66 300 L72 200 M126 78 C146 92 160 130 162 190 L148 300 L134 300 L128 200"/><path d="M74 78 L74 250 L66 410 L96 410 L100 280 L104 410 L134 410 L126 250 L126 78 Z"/><path d="M60 118 L140 118 M76 250 L124 250 M40 190 L16 330 M160 190 L184 330"/></g></svg></div>
     <div class="invright" id="invRight"></div>
   </div>
+  <div class="invhint" id="invhint"><button type="button" class="btn pshintbtn" id="pstatsbtn" aria-keyshortcuts="C"><kbd>C</kbd> PLAYER STATS</button></div>
+  <section class="pstats" id="pstats" aria-label="Player Stats" hidden>
+    <div class="psbar"><h2>Player Stats</h2><button type="button" class="btn" id="psclose">Close</button></div>
+    <div class="pswrap" id="pswrap"><div class="psrows" id="psrows" role="tablist" aria-orientation="vertical" aria-label="Statistics"></div><div class="psmid" aria-hidden="true"></div><div class="pspanel" id="pspanel" role="tabpanel" tabindex="0"></div></div>
+    <div class="pstime" id="pstime" hidden></div>
+  </section>
 </div>
 <section id="screenGlo" class="screen gloscreen" role="tabpanel" aria-labelledby="tabGlo" hidden>
   <nav class="glsub" aria-label="Glossary sections">

@@ -113,3 +113,23 @@ body.scr-inv .topbar{max-width:2400px;padding-left:clamp(12px,1.5vw,32px);paddin
  .pkgrid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
  .stcols.c3,.stcols.c2{grid-template-columns:1fr}.stash{min-height:260px}
 }
+
+/* ---- Player Stats (v32): the game's Statistics screen; the centre stays empty for the paper doll of a later version ---- */
+.invhint{display:flex;justify-content:center;margin:18px 0 6px}.pshintbtn{min-height:44px;padding:8px 22px;letter-spacing:.12em;display:inline-flex;align-items:center;gap:10px}.pshintbtn kbd{font:inherit;border:1px solid var(--gold,#c9a86a);padding:0 7px;border-radius:3px;color:var(--gold,#c9a86a)}
+.pstats{max-width:1500px;margin:0 auto;padding:6px 0 24px}
+.psbar{display:flex;justify-content:space-between;align-items:center;margin:0 0 12px}.psbar h2{margin:0;font-size:1.3rem;letter-spacing:.12em;text-transform:uppercase}.psbar .btn{min-height:44px;min-width:88px}
+.pswrap{display:grid;grid-template-columns:minmax(300px,420px) minmax(0,1fr) minmax(320px,520px);gap:24px;align-items:start}
+.psrows{display:flex;flex-direction:column;gap:6px}.psmid{min-height:200px}
+.psrow{--c:#8a2a24;display:grid;grid-template-columns:34px 1fr;grid-template-areas:"i n" "i l";column-gap:12px;align-items:center;text-align:left;width:100%;min-height:62px;padding:8px 14px;background:rgba(14,12,10,.92);color:#e6dcc8;border:1px solid transparent;border-left:6px solid var(--c);cursor:pointer;font:inherit}
+.psrow.red{--c:#b0302a}.psrow.green{--c:#4f9a3a}.psrow.blue{--c:#3a78c8}.psrow.orange{--c:#c8892f}
+.psrow:hover{background:rgba(30,26,20,.95)}.psrow.sel{border-color:#e6dcc8;background:rgba(36,31,24,.97)}.psrow:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.psicon{grid-area:i;width:30px;height:30px;fill:none;stroke:var(--c);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.psnum{grid-area:n;display:flex;align-items:baseline;gap:10px;font-size:1.7rem;line-height:1.1;min-height:1.9rem}.psnum b{font-weight:600}.psnum small{font-size:.8rem;color:#a99d85}.psname{grid-area:l;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:#a99d85}
+.psu{color:#8a7f6a;cursor:help}
+.pspanel{--c:#b0302a;background:rgba(14,12,10,.92);padding:0 0 14px;min-height:120px}.pspanel.red{--c:#b0302a}.pspanel.green{--c:#4f9a3a}.pspanel.blue{--c:#3a78c8}.pspanel.orange{--c:#c8892f}
+.pshead{margin:0 0 12px;padding:10px 16px;background:var(--c);color:#fff;font-size:1rem;letter-spacing:.14em;text-transform:uppercase}
+.psblock{padding:0 16px;margin:0 0 18px}.psline{display:flex;gap:16px;align-items:baseline;padding:3px 0}.psline b{min-width:64px;text-align:right;font-weight:600}.psline span{color:#d9cfb8}
+.pstime{display:flex;justify-content:flex-end;gap:10px;align-items:baseline;margin-top:18px;color:#d9cfb8}.pstime span{letter-spacing:.14em;margin-right:12px;color:#a99d85}.pstime b{font-size:1.4rem;color:#e6dcc8}
+@media (max-width:1100px){.pswrap{grid-template-columns:minmax(280px,400px) minmax(0,1fr)}.psmid{display:none}}
+@media (max-width:760px){.pswrap{display:block}.psrows{max-width:560px;margin:0 auto}.pspanel{margin:0 0 8px;border-left:6px solid var(--c)}.psrow{min-height:64px}.pstime{justify-content:center}.invhint{margin-top:14px}}
+.invhint[hidden],.pstats[hidden],.pstime[hidden]{display:none}
