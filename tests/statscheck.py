@@ -39,6 +39,7 @@ def run(b, base, check, label):
           and E("document.getElementById('eqbody').hidden&&document.getElementById('invhint').hidden"))
     check("%s: roles: tablist, nine tabs (one selected, one in the tab order), a tabpanel labelled by the selected tab" % label,
           E("(()=>{const l=document.getElementById('psrows'),t=[...l.querySelectorAll('[role=tab]')],p=document.getElementById('pspanel');return l.getAttribute('role')==='tablist'&&t.length===9&&t.filter(x=>x.getAttribute('aria-selected')==='true').length===1&&t.filter(x=>x.tabIndex===0).length===1&&p.getAttribute('role')==='tabpanel'&&p.getAttribute('aria-labelledby')==='pstab0'})()"))
+    check("%s: while the stats are open the Inventory slots are really gone from the page (not only marked hidden)" % label, E("document.getElementById('eqbody').offsetParent===null&&document.getElementById('invhint').offsetParent===null&&document.getElementById('pstats').offsetParent!==null"))
     r = E(ROWS)
     check("%s: a level-1 build with nothing equipped shows only base numbers: Vitality 3500, Stamina 100, Toxicity 0 / 100, no weapons and armour 0, Sign intensity —  (%s)" % (label, [x["v"] for x in r]),
           [x["v"] for x in r][:8] == ["0", "0", "0", "0", "3500|3500", "0|100", "—", "100|100"] or [x["v"] for x in r][:4] == ["0", "0", "0", "0"] and [x["v"] for x in r][4:6] == ["3500|3500", "0|100"] and r[7]["v"] == "100|100", r)
