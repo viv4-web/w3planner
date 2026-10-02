@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parent.parent
 class LazyTests(unittest.TestCase):
     def test_marker_becomes_a_url_and_the_data_a_separate_file(self):
         with tempfile.TemporaryDirectory() as d:
-            d = Path(d); src = d / "src"; shutil.copytree(ROOT / "src", src); [(src / n).unlink() for n in ("equipment.js", "consumables.js", "screens.js", "screens.css")]      # without the equipment source nothing refers to the data
+            d = Path(d); src = d / "src"; shutil.copytree(ROOT / "src", src); [(src / n).unlink() for n in ("equipment.js", "consumables.js", "screens.js", "screens.css", "importsave.js", "importsave.css")]      # without the equipment source nothing refers to the data
             for name, extra in (("plain", ""), ("lazy", "\nconst ITEMS_NG_URL=/*@file:items_ng*/;\n")):
                 out = d / name
                 if extra: (src / "app.js").write_text((ROOT / "src/app.js").read_text(encoding="utf-8") + extra, encoding="utf-8")
@@ -28,7 +28,7 @@ class LazyTests(unittest.TestCase):
             self.assertFalse(list((d / "plain").glob("data")), "no marker, no data folder")
         # and the real page: the equipment data is on demand, so index.html carries only three URLs
         real = d / "real"; r = subprocess.run([sys.executable, str(ROOT / "tools/build.py"), "--variant", "placeholder", "--out", str(real)], capture_output=True, text=True); self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertEqual(len(list((real / "data").glob("items*.js"))), 3); self.assertLess(len((real / "index.html").read_bytes()), 300_000)      # 283 KB: the skills, tooltips and the code of every screen (the Glossary code adds 31 KB); no item or glossary data
+        self.assertEqual(len(list((real / "data").glob("items*.js"))), 3); self.assertLess(len((real / "index.html").read_bytes()), 340_000)      # 309 KB: the skills, tooltips and the code of every screen (Glossary +31 KB, the importer UI +22 KB); no item, glossary or save-reader data (the reader is its own lazy script)
 
 
 if __name__ == "__main__":

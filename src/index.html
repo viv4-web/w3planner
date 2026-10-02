@@ -34,6 +34,7 @@
     <button type="button" class="arrow" id="scrNext" aria-label="Next screen">▶</button>
   </nav>
   <div class="topright">
+    <button class="btn" id="savebtn" type="button" aria-haspopup="dialog" aria-label="Import save"><svg class="impico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Import save</span></button>
     <div class="rsg" role="radiogroup" aria-label="Game mode"><button class="btn" type="button" role="radio" data-rs="ng" aria-checked="true" title="First playthrough" aria-label="First playthrough">NG</button><button class="btn" type="button" role="radio" data-rs="ng_plus" aria-checked="false" title="New Game Plus" aria-label="New Game Plus">NG+</button></div>
     <button class="btn" id="copy" type="button" aria-label="Copy build link">Copy link</button>
   </div>
@@ -94,6 +95,24 @@
 </section>
 </div>
 <div class="igov" id="igov" hidden><div class="igpanel" role="dialog" aria-modal="true" aria-labelledby="igtitle"><button type="button" class="x" id="igclose" aria-label="Close">✕</button><h2 id="igtitle"></h2><p class="igonly">In-game feature only.</p><p id="igwhy"></p><div class="igbtns"><a class="btn igext" id="igMap" href="https://witcher3map.com" target="_blank" rel="noopener noreferrer" aria-label="Open witcher3map.com (opens in a new tab)" hidden>Open witcher3map.com ↗</a><button type="button" class="btn" id="igInv">Open Inventory</button><button type="button" class="btn" id="igGlo">Open Glossary</button></div></div></div>
+<div class="impov" id="impov" hidden><div class="imppanel" role="dialog" aria-modal="true" aria-labelledby="imptitle">
+  <button type="button" class="x" id="impx" aria-label="Close">✕</button>
+  <div id="impStep1">
+    <h2 id="imptitle">Import save</h2>
+    <p class="impintro">Fill the planner from a Witcher 3 save. The file is read in this browser and never leaves your computer.</p>
+    <div class="impdrop" id="impdrop"><p class="impdroptxt"><b>Drop a .sav file here, or choose one</b></p><small>Next-Gen (4.0+) PC saves · one file at a time</small>
+      <label class="btn impgold impchoose" for="impfile">CHOOSE FILE</label><input class="vh" id="impfile" type="file" accept=".sav" multiple aria-label="Choose a Witcher 3 save file"></div>
+    <p class="imperr" id="imperr" role="alert" hidden></p>
+    <div class="imphelp"><h3>Where to find it</h3><p><code>Documents\The Witcher 3\gamesaves\ManualSave_….sav</code></p><p>Manual saves are easiest to pick out. The .png next to it shows the same picture as the game's Load Game list.</p></div>
+    <p class="impfoot">You'll see what was found before anything changes. Your current build is replaced only when you press Apply.</p>
+  </div>
+  <div id="impStep2" hidden>
+    <div class="imptop"><button type="button" class="btn impbackbtn" id="impback" aria-label="Back to choosing a file">◀</button><h2 id="imptitle2">Save found — check before applying</h2></div>
+    <p class="impmeta" id="impmeta"></p><div class="impnotes" id="impnotes" hidden></div>
+    <div id="impReviewBody"></div>
+    <div class="impbar"><p class="impreplace">Replaces your current build. The link updates; use Copy link to share it.</p><div class="impbtns"><button type="button" class="btn" id="impAnother">CHOOSE ANOTHER FILE</button><button type="button" class="btn impgold impapply" id="impApply">APPLY TO PLANNER</button></div></div>
+  </div>
+</div></div>
 <footer>This is an unofficial fan work and is not approved/endorsed by CD PROJEKT RED. Game artwork and text © CD PROJEKT S.A. · <a href="help.html" style="color:inherit">Help</a> · <a href="about.html" style="color:inherit">About</a> · <a href="privacy.html" style="color:inherit">Privacy</a> · <a href="support.html" style="color:inherit">Support</a> · <a href="https://github.com/viv4-web/w3planner" style="color:inherit">Source code</a></footer>
 <div class="tip" id="tip" role="tooltip"></div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toastMsg"></span><button class="btn" id="toastGo" type="button" hidden>Go to Level</button></div>
