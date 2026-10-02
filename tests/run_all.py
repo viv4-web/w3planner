@@ -16,6 +16,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 import serve
 import linkcheck
 import eqcheck
+import glcheck
 from playwright.sync_api import sync_playwright
 
 RESULTS = []
@@ -70,6 +71,10 @@ def main():
     if subprocess.run(cmd).returncode: sys.exit("build failed")
     server = serve.make_server(site, 0); port = server.server_address[1]
     threading.Thread(target=server.serve_forever, daemon=True).start(); base = "http://127.0.0.1:%d/" % port
+    # the Glossary tests build the site once more, with the tiny FAKE glossary (tests/fixtures/glossary); the build under test (public or live) is checked on its own
+    gsite = tmp / "gsite"
+    if subprocess.run([sys.executable, str(ROOT / "tools" / "build.py"), "--variant", "placeholder", "--glossary-dir", str(ROOT / "tests/fixtures/glossary"), "--out", str(gsite)], stdout=subprocess.DEVNULL).returncode: sys.exit("fixture build failed")
+    gserver = serve.make_server(gsite, 0); threading.Thread(target=gserver.serve_forever, daemon=True).start(); gbase = "http://127.0.0.1:%d/" % gserver.server_address[1]
     ref = json.loads((ROOT / "tests/fixtures/tooltips_ref.json").read_text())
     print("\n== Equipment data (data/items.json, items_ng.json, items_ng_plus.json) ==")
     items = json.loads((ROOT / "data/items.json").read_text(encoding="utf-8")); manifest = json.loads((ROOT / "art/manifest.json").read_text()); slots = {x["id"] for x in items["slots"]}
@@ -144,6 +149,9 @@ def main():
         linkcheck.check_fixtures(b, base, "online", check)
         print("\n== Equipment screen ==")
         eqcheck.run(b, base, check, "online", a.quick)
+        print("\n== Top bar and Glossary ==")
+        check("the public build has no glossary files, the live build has the real ones", ((site / "glossary").is_dir()) == (a.variant == "game") and (a.variant == "game" or not any("glossary" in p.name for p in site.rglob("*"))))
+        glcheck.run(b, gbase, check, "online", main=base, real=a.variant == "game", quick=a.quick)
         rt = b.new_page(); rt.goto(base); rt.wait_for_timeout(600); r = rt.evaluate(ROUNDTRIP); rt.close(); check("%d random builds survive a link round trip unchanged (%d with special mutagens)" % (r["n"], r["spec"]), r["bad"] == 0, r["bad"])
         h2 = b.new_page(viewport={"width": 1300, "height": 900}); herrs = []; h2.on("pageerror", lambda e: herrs.append(str(e).split("\n")[0][:80])); h2.goto(base); h2.wait_for_timeout(700)
         h2.evaluate("document.getElementById('bonuspts').value=20;pointsChanged();const i=TREES[1].sk.findIndex(s=>!s.req.length);add(1,i);add(1,i);S.slots[0]=[1,i];S.muts[0]=3;save();openMut()")
@@ -169,7 +177,7 @@ def main():
         print("\n== Release gate logic (tools/deploy.py, with a fake Cloudflare) ==")
         gt = subprocess.run([sys.executable, str(ROOT / "tests/test_deploy_gate.py")], capture_output=True, text=True)
         check("preview never touches production; promote and automatic rollback behave", gt.returncode == 0, "" if gt.returncode == 0 else gt.stderr.strip()[-300:])
-        for label, script in (("the PC extract tool and its importer (fake game folder, read-only, stdlib only)", "test_pc_tools.py"), ("big data is a separate hashed script file, never embedded in index.html", "test_build_lazy.py")):
+        for label, script in (("the PC extract tool and its importer (fake game folder, read-only, stdlib only)", "test_pc_tools.py"), ("big data is a separate hashed script file, never embedded in index.html", "test_build_lazy.py"), ("the Glossary tool: tutorial platform folding, duplicate-name notes, book bodies, placeholder pictures", "test_glossary_tool.py")):
             ru = subprocess.run([sys.executable, str(ROOT / "tests" / script)], capture_output=True, text=True); check(label, ru.returncode == 0, "" if ru.returncode == 0 else ru.stderr.strip()[-300:])
         bt = subprocess.run([sys.executable, str(ROOT / "tests/test_bundle.py")], capture_output=True, text=True)
         check("the W3 bundle reader: format, zlib, snappy, lz4 (hand-made data)", bt.returncode == 0, "" if bt.returncode == 0 else bt.stderr.strip()[-300:])
@@ -189,13 +197,15 @@ def main():
                 otips = OE(ALL_TIPS); check("offline tooltips match the reference", all(ref[k] == otips.get(k) for k in ref))
                 linkcheck.check_fixtures(b, off, "offline", check)
                 eqcheck.run(b, off, check, "offline", a.quick)
+                glcheck.publicbuild(b, off, None, glcheck.GLINK, check, "offline")
+                check("the offline package contains no glossary", not any("glossary" in n.lower() for n in zipfile.ZipFile(zp).namelist()))
                 o.fill("#imp", "https://w3planner.pages.dev/#" + code); o.click("#impbtn"); o.wait_for_timeout(300)
                 check("a link from the website opens in the offline copy", OE(FULLSTATE) == link_state)
                 o.fill("#imp", "https://example.com/"); o.click("#impbtn"); check("a link with no build in it is refused and does not navigate", o.url.startswith("file://") and "does not look" in o.inner_text("#impmsg"))
         else:
             print("\n(offline package checks skipped: the offline package never contains game art)")
         b.close()
-    server.shutdown()
+    server.shutdown(); gserver.shutdown()
     if not a.keep: shutil.rmtree(tmp, ignore_errors=True)
     failed = [r for r in RESULTS if not r[1]]
     print("\n%d checks: %d passed, %d failed" % (len(RESULTS), len(RESULTS) - len(failed), len(failed)))

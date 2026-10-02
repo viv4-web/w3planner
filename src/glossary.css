@@ -1,0 +1,84 @@
+/* ---- v29: the Glossary screen (list | picture | text), the in-game-only panel ---- */
+.gloscreen{max-width:1500px;margin:0 auto;padding:4px 32px 24px}
+.glsub{display:flex;align-items:stretch;gap:6px;margin:0 0 12px;min-width:0}
+.glsub[hidden],.glmsg[hidden],.glbody[hidden]{display:none}
+.glsubs{display:flex;gap:6px;flex:1 1 auto;min-width:0;justify-content:center}
+.glst{font:inherit;cursor:pointer;background:#0d0c0a;border:1px solid #4a3d2c;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;font-size:20px;padding:5px 22px;min-width:120px;line-height:1.1;display:flex;flex-direction:column;align-items:center;justify-content:center;white-space:nowrap}
+.glst small{font-size:11px;letter-spacing:.6px;text-transform:none;opacity:.8}
+.glst:not(.on):not(.off):hover{border-color:var(--gold);color:var(--ink)}
+.glst.on{background:var(--gold);border-color:var(--gold);color:#17120a;font-weight:600}
+.glst.off{opacity:.5;border-style:dashed}.glst.off:hover{opacity:.8;border-color:var(--gold)}
+.glst:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.glmsg{margin:40px auto;max-width:560px;padding:28px;border:1px solid #4a3d2c;background:#0d0b09;text-align:center;font-size:22px;color:var(--dim)}
+
+.glbody{display:grid;grid-template-columns:minmax(290px,350px) minmax(0,1fr);gap:16px;height:min(calc(100vh - 230px),860px);min-height:520px}
+.gllist{display:flex;flex-direction:column;min-height:0;border:1px solid #4a3d2c;background:linear-gradient(180deg,#171310,#0d0b09);box-shadow:inset 0 0 0 1px #0a0806}
+.glsearch{display:flex;gap:6px;padding:10px 10px 6px}
+.glsearch input{flex:1;min-width:0;background:#0d0c0a;border:1px solid var(--line);color:var(--ink);font:inherit;padding:4px 8px}
+.glsearch .btn{font-size:15px;letter-spacing:.8px;padding:2px 10px;white-space:nowrap}.glsearch .btn.on,.glsearch .btn[aria-pressed="true"]{border-color:var(--gold);background:var(--gold);color:#17120a;font-weight:600}
+.glcount{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:0 12px 6px;color:var(--dim);font-size:16px;border-bottom:1px solid #2a2219}
+.glfold{font:inherit;font-size:15px;background:none;border:0;color:var(--gold);text-decoration:underline;padding:2px 0;cursor:pointer;white-space:nowrap}.glfold:hover{color:#fff}.glfold:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.glrows{position:relative;flex:1;overflow:auto;min-height:0;padding-bottom:6px}
+.glgroup{position:sticky;top:0;z-index:1;background:#1a150f;color:var(--gold);text-transform:uppercase;letter-spacing:1px;font-size:16px;padding:4px 12px;border-bottom:1px solid #3a3025}
+button.glgroup{display:flex;gap:8px;align-items:center;width:100%;min-height:36px;text-align:left;border:0;border-bottom:1px solid #3a3025;font:inherit;font-size:16px;cursor:pointer}button.glgroup:hover{background:#241c11;color:#fff}button.glgroup:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}button.glgroup[aria-disabled="true"]{cursor:default}.glchev{width:14px;display:inline-block;text-align:center}.glgrp[hidden]{display:none}
+.glrow{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;text-align:left;background:none;border:0;border-bottom:1px solid #2a2219;padding:4px 10px;color:var(--ink);font:inherit}
+.glrow:hover{background:#17130e}.glrow.on{background:#241c11;box-shadow:inset 3px 0 0 var(--gold)}.glrow:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.glth{flex:0 0 64px;width:64px;height:64px;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,#2c241a,#0a0908 80%);border:1px solid #3a3025}
+.glth img{width:64px;height:64px;object-fit:contain}
+.glname{display:flex;flex-direction:column;min-width:0;line-height:1.15}.glname b{font-weight:500;font-size:19px;overflow-wrap:anywhere}.glname small{color:var(--dim);font-size:14px;overflow-wrap:anywhere}
+.glsnip{font-size:14px}
+.glhint{margin:0;padding:18px 14px;color:var(--dim);font-size:17px}
+.glmore{margin:8px 12px;font-size:16px}
+mark.glhl{background:#c8a86b;color:#17120a;padding:0 1px}
+
+.glview{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,450px);gap:16px;min-height:0;min-width:0}
+.glview.nopic{grid-template-columns:minmax(0,1fr)}.glview.nopic .glpic{display:none}.glback{display:none}
+.glpic{position:relative;min-height:0;display:grid;place-items:center;overflow:hidden;border:1px solid #3a3025;
+ background:radial-gradient(ellipse at 50% 42%,#3a3127 0%,#1d1812 45%,#0a0908 85%),#0a0908;box-shadow:inset 0 0 60px #000a}
+.glpic img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}.glpic img.glicon{position:static;width:min(192px,60%);height:auto;filter:drop-shadow(0 6px 14px #000)}
+.glnopic{color:#5a4a36;font-size:20px;letter-spacing:1px;text-transform:uppercase}
+.glside{display:flex;flex-direction:column;min-height:0;min-width:0}
+.gltitle{margin:0;padding:8px 14px;font-weight:500;font-size:28px;line-height:1.1;color:#fff;border:1px solid #6b5a42;background:linear-gradient(180deg,#241c11,#17120a);overflow-wrap:anywhere}
+.gltext{flex:1;overflow:auto;min-height:0;border:1px solid #3a3025;border-top:0;background:#0d0b09;padding:12px 16px 16px;font-size:19px;line-height:1.35;color:#d6ccb8}
+.gltext:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.glstlabel{color:var(--gold);letter-spacing:1px;text-transform:uppercase;font-size:15px;margin:14px 0 2px;border-bottom:1px solid #2a2219}.glstlabel:first-child{margin-top:0}
+.glstage{overflow-wrap:anywhere}.glstage i{color:#c9bda4}.glstage s{opacity:.7}
+.glkey{display:inline-block;padding:0 6px;border:1px solid #6b5a42;border-radius:3px;font-size:.85em;color:#fff;background:#1d1710;white-space:nowrap}
+.glweak{border:1px solid #3a3025;border-top:0;background:#0f0c09;padding:8px 14px 12px}
+.glweak h3{margin:0 0 6px;font-weight:500;font-size:17px;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}
+.glchips{display:flex;flex-wrap:wrap;gap:6px}
+.glchip{font:inherit;font-size:17px;padding:3px 10px;border:1px solid #6b5a42;background:#17130e;color:var(--ink);line-height:1.2}
+button.glchip{cursor:pointer}button.glchip:hover{border-color:var(--gold);color:#fff}button.glchip:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.glchip.plain{border-style:dashed;color:var(--dim)}
+.oiltile.hl{outline:2px solid var(--gold);outline-offset:1px;background:#1d1710;box-shadow:0 0 14px #c8a86bcc}
+
+/* ---- in-game-only panel ---- */
+.igov{position:fixed;inset:0;z-index:80;background:#000c;display:grid;place-items:center;padding:16px}.igov[hidden]{display:none}
+.igpanel{position:relative;width:min(440px,100%);padding:26px 28px 24px;border:1px solid #8a6a36;background:linear-gradient(180deg,#1b150e,#0d0b09);box-shadow:0 14px 50px #000;text-align:center}
+.igpanel h2{margin:0 0 6px;font-weight:500;font-size:32px;color:#fff;letter-spacing:1px;text-transform:uppercase}
+.igpanel p{margin:0 0 10px;font-size:19px;line-height:1.3;color:var(--ink)}.igpanel .igonly{color:var(--gold);letter-spacing:.8px;text-transform:uppercase;font-size:17px}
+.igbtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}.igbtns .btn{font-size:19px;padding:6px 18px;min-height:44px}
+.igpanel .x{position:absolute;right:8px;top:8px;width:36px;height:36px;border:1px solid #4a3d2c;background:#0d0c0a;color:var(--ink);padding:0;font-size:18px}.igpanel .x:hover{border-color:var(--gold)}
+
+/* ---- narrower screens ---- */
+@media (max-width:1099px){
+ .gloscreen{padding:4px 16px 24px}
+ .glbody{grid-template-columns:minmax(260px,320px) minmax(0,1fr);height:min(calc(100vh - 250px),900px)}
+ .glview{grid-template-columns:minmax(150px,36%) minmax(0,1fr)}.glview.nopic{grid-template-columns:minmax(0,1fr)}
+ .glst{min-width:0;font-size:17px;padding:5px 10px;letter-spacing:.6px}
+}
+@media (max-width:760px){
+ .glbody{grid-template-columns:minmax(0,1fr);height:auto;min-height:0}
+ .glrows{max-height:none;overflow:visible}.gllist{display:block}
+ .glview{display:none}
+ .gloscreen.gl-detail .gllist{display:none}.gloscreen.gl-detail .glview{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(200px,38vh) auto;min-height:0}.gloscreen.gl-detail .glview.nopic{grid-template-rows:auto auto}
+ .glback{display:inline-flex;align-items:center;min-height:44px;width:max-content;grid-row:1;font-size:19px}
+ .gloscreen.gl-detail .glside{min-height:0}.gloscreen.gl-detail .gltext{overflow:visible}
+ .glsub{margin-bottom:10px}
+}
+@media (max-width:599px){
+ .gloscreen{padding:4px 12px 20px}
+ .glsubs{overflow-x:auto;justify-content:flex-start;scroll-snap-type:x proximity;scrollbar-width:none}.glsubs::-webkit-scrollbar{display:none}
+ .glst{flex:0 0 auto;min-width:110px;min-height:44px;scroll-snap-align:center}.glsub .arrow{width:40px;min-height:44px}
+ .glsearch input{min-height:44px;font-size:18px}button.glgroup{min-height:44px}.glfold{min-height:44px;padding:0 6px}.glsearch .btn{min-height:44px}.glchip{min-height:44px;display:inline-flex;align-items:center}
+}

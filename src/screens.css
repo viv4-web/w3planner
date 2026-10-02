@@ -3,27 +3,28 @@
 .dim{color:var(--dim)}.bad{color:#e0604c}
 
 /* ---- top bar: level block | tabs | ruleset and Copy link. Shared by both screens ---- */
-.topbar{display:grid;grid-template-columns:1fr auto 1fr;gap:10px 18px;align-items:center;max-width:1500px;margin:0 auto;padding:2px 32px 12px}
+.topbar{display:grid;grid-template-columns:1fr auto;grid-template-areas:"tabs tabs" "lvl right";gap:10px 18px;align-items:center;max-width:1500px;margin:0 auto;padding:2px 32px 12px}
 body.scr-inv header,body.scr-inv footer{max-width:2400px;padding-left:clamp(12px,1.5vw,32px);padding-right:clamp(12px,1.5vw,32px)}
 body.scr-inv .topbar{max-width:2400px;padding-left:clamp(12px,1.5vw,32px);padding-right:clamp(12px,1.5vw,32px)}
 .lvlblock{display:flex;align-items:center;gap:6px 16px;flex-wrap:wrap;color:var(--dim)}
 .lvlblock input{width:62px;background:#0d0c0a;border:1px solid var(--line);color:var(--ink);font:inherit;padding:2px 6px}.lvlblock label{display:flex;gap:6px;align-items:center}.lvlblock b{color:var(--ink);font-weight:500}
-.scrtabs{display:flex;align-items:stretch;gap:6px;justify-self:center}
+.scrtabs{grid-area:tabs;display:flex;align-items:stretch;gap:6px;min-width:0}.stabs{display:flex;gap:6px;flex:1 1 auto;min-width:0}
 .stab,.arrow{font:inherit;cursor:pointer;background:#0d0c0a;border:1px solid #4a3d2c;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px}
-.stab{padding:5px 24px;font-size:22px;line-height:1.1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:132px}
+.stab{flex:1 1 0;min-width:0;padding:5px 6px;font-size:18px;letter-spacing:.7px;line-height:1.1;display:flex;flex-direction:column;align-items:center;justify-content:center;white-space:nowrap}
 .stab small{font-size:11px;letter-spacing:.6px;text-transform:none;opacity:.8}
 .stab.on{background:var(--gold);border-color:var(--gold);color:#17120a;font-weight:600}
 .stab:not(.on):not(.off):hover,.arrow:not(:disabled):hover{border-color:var(--gold);color:var(--ink)}
-.stab.off{opacity:.42;cursor:default;border-style:dashed}
-.arrow{width:42px;font-size:16px;padding:0}.arrow:disabled{opacity:.3;cursor:default}
+.stab.off{opacity:.5;border-style:dashed}.stab.off:hover{opacity:.8;border-color:var(--gold)}
+.arrow{flex:0 0 auto;width:42px;font-size:16px;padding:0}.arrow:disabled{opacity:.3;cursor:default}
 .stab:focus-visible,.arrow:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-.topright{display:flex;gap:8px;justify-self:end;align-items:center}
+.topright{grid-area:right;display:flex;gap:8px;justify-self:end;align-items:center}.lvlblock{grid-area:lvl}
 .rsg{display:flex;gap:0}.rsg .btn{padding:4px 16px;font-size:19px;min-width:56px}.rsg .btn+.btn{border-left-width:0}.rsg .btn[aria-checked="true"]{border-color:var(--gold);background:#1d1710;color:#fff}.rsg .btn[aria-checked="true"]+.btn{border-left-width:1px}
 .topright .btn#copy{font-size:19px;padding:4px 16px;text-transform:uppercase;letter-spacing:.8px;border-color:var(--gold);color:#fff;background:#1d1710;box-shadow:0 0 0 1px #c8a86b66,0 0 10px #c8a86b88,0 0 22px #c8a86b44;transition:box-shadow .15s}
 .topright .btn#copy:hover,.topright .btn#copy:focus-visible{box-shadow:0 0 0 1px var(--gold),0 0 14px #c8a86bcc,0 0 30px #c8a86b77}.topright .btn#copy:focus-visible{outline:2px solid #fff;outline-offset:2px}
 @media (min-width:600px){.topbar{position:sticky;top:0;z-index:40;background:#0b0a08f5}.slotpanel,.stash{scroll-margin-top:120px}}
-@media (max-width:1100px){.topbar{grid-template-columns:1fr auto;grid-template-areas:"tabs tabs" "lvl right"}.scrtabs{grid-area:tabs;justify-self:stretch}.scrtabs .stab{flex:1 1 0;min-width:0}.lvlblock{grid-area:lvl}.topright{grid-area:right}}
-@media (max-width:640px){.topbar{padding:2px 12px 10px}.stab{padding:5px 6px;font-size:17px;letter-spacing:.6px}.stab small{display:none}.arrow{width:38px}.lvlblock{gap:4px 10px;font-size:16px}.lvlblock input{width:52px}.topright .btn,.rsg .btn{min-height:44px}.arrow,.stab{min-height:44px}}
+@media (min-width:1500px){.topbar{grid-template-columns:1fr auto 1fr;grid-template-areas:"lvl tabs right"}.scrtabs{justify-self:center}.stab{flex:0 0 auto;min-width:104px;padding:5px 14px;font-size:19px}}
+@media (max-width:640px){.topbar{padding:2px 12px 10px}.lvlblock{gap:4px 10px;font-size:16px}.lvlblock input{width:52px}.topright .btn,.rsg .btn{min-height:44px}}
+@media (max-width:599px){.stabs{overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none}.stabs::-webkit-scrollbar{display:none}.stab{flex:0 0 auto;min-width:98px;min-height:44px;scroll-snap-align:center}.stab small{font-size:10px}.arrow{width:40px;min-height:44px}}
 
 /* ---- Inventory screen ---- */
 .invscreen{max-width:2400px;margin:0 auto;padding:4px clamp(12px,1.5vw,32px) 24px}

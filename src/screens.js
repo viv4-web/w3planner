@@ -1,15 +1,28 @@
-// ---- Screens (v28): Character | Inventory, switched like the game's top bar; the stash (empty until a save is imported); swipe on a phone ----
-// The open screen is S.scr ('char' or 'inv') and lives in the link as the s1I segment (absent = Character). The level block, the ruleset switch and Copy link belong to both screens.
-const SCR_ORDER=['inv','char'];   // the bar, left to right (Alchemy before them is "coming later" and not a screen yet)
+// ---- Screens (v28, v29): Glossary | Inventory | Character are live; Alchemy, World Map, Quests and Meditation are greyed ("in game only") and open a panel; swipe on a phone ----
+// The open screen is S.scr ('char', 'inv' or 'glo') and lives in the link as the s1I / s1G segment (absent = Character). The level block, the ruleset switch and Copy link belong to every screen.
+const SCR_ORDER=['glo','inv','char'];   // the live screens, left to right as in the bar: the arrows step through these and skip the greyed tabs
+const SCR_IDS={glo:'screenGlo',inv:'screenInv',char:'screenChar'},SCR_TABS={glo:'tabGlo',inv:'tabInv',char:'tabChar'};
 function scrGo(s){if(s===S.scr||!SCR_ORDER.includes(s))return;if(EQ.pick)eqClosePick(true);S.scr=s;save();window.scrollTo({top:0})}
 function scrStep(d){const i=SCR_ORDER.indexOf(S.scr)+d;if(i>=0&&i<SCR_ORDER.length)scrGo(SCR_ORDER[i])}
 function scrApply(){const inv=S.scr==='inv';
- document.getElementById('screenChar').hidden=inv;document.getElementById('screenInv').hidden=!inv;document.body.classList.toggle('scr-inv',inv);
- [['tabInv','inv'],['tabChar','char']].forEach(([id,k])=>{const b=document.getElementById(id);b.setAttribute('aria-selected',String(S.scr===k));b.classList.toggle('on',S.scr===k)});
+ Object.keys(SCR_IDS).forEach(k=>{document.getElementById(SCR_IDS[k]).hidden=S.scr!==k;document.body.classList.toggle('scr-'+k,S.scr===k)});
+ Object.keys(SCR_TABS).forEach(k=>{const b=document.getElementById(SCR_TABS[k]);b.setAttribute('aria-selected',String(S.scr===k));b.classList.toggle('on',S.scr===k)});
  const i=SCR_ORDER.indexOf(S.scr),pv=document.getElementById('scrPrev'),nx=document.getElementById('scrNext');pv.disabled=i<=0;nx.disabled=i>=SCR_ORDER.length-1;
  pv.setAttribute('aria-disabled',String(pv.disabled));nx.setAttribute('aria-disabled',String(nx.disabled));
- if(inv&&!stashDrawn)stashRender()}
-// Copy link: ONE control, in the top bar, for every screen. It copies the link of the build as it is now (enc(): skills, mutations, mutagens, level, gear, consumables, ruleset, and s1I when Inventory is open).
+ const on=document.querySelector('#stabs .stab.on');if(on&&innerWidth<600)on.scrollIntoView({block:'nearest',inline:'center'});   // the phone's tab row scrolls sideways
+ if(inv&&!stashDrawn)stashRender();if(S.scr==='glo'){if(typeof glOpen==='function')glOpen()}else if(typeof glClose==='function')glClose()}
+// the greyed tabs: a centred panel (title, "In-game feature only.", the reason, and the two live places to go instead)
+const IG_WHY={alchemy:['Alchemy','Crafting happens in the game; plan consumables in Inventory slots.'],map:['World Map','Interactive maps already exist from third parties.'],quests:['Quests','Quest progress lives in the game.'],meditation:['Meditation','Meditation can only be done in the game.'],crafting:['Crafting','Crafting happens in the game; plan consumables in Inventory slots.']};
+let igOpener=null;
+function igOpen(k,opener){const w=IG_WHY[k];if(!w)return;igOpener=opener||document.activeElement;document.getElementById('igtitle').textContent=w[0];document.getElementById('igwhy').textContent=w[1];
+ const o=document.getElementById('igov');o.hidden=false;document.getElementById('igInv').focus()}
+function igClose(go){document.getElementById('igov').hidden=true;if(go)scrGo(go);else if(igOpener&&igOpener.focus)igOpener.focus();igOpener=null}
+document.querySelectorAll('[data-ig]').forEach(b=>{b.onclick=()=>igOpen(b.dataset.ig,b)});
+document.getElementById('igInv').onclick=()=>igClose('inv');document.getElementById('igGlo').onclick=()=>igClose('glo');document.getElementById('igclose').onclick=()=>igClose();
+document.getElementById('igov').onclick=e=>{if(e.target.id==='igov')igClose()};
+document.addEventListener('keydown',e=>{const o=document.getElementById('igov');if(o.hidden)return;if(e.key==='Escape'){e.preventDefault();igClose()}
+ else if(e.key==='Tab'){const f=[...o.querySelectorAll('button')],i=f.indexOf(document.activeElement);if(e.shiftKey&&i<=0){e.preventDefault();f[f.length-1].focus()}else if(!e.shiftKey&&i===f.length-1){e.preventDefault();f[0].focus()}}});
+// Copy link: ONE control, in the top bar, for every screen. It copies the link of the build as it is now (enc(): skills, mutations, mutagens, level, gear, consumables, ruleset, and s1I / s1G when Inventory / Glossary is open).
 let copyT=0;
 function copyLink(){const b=document.getElementById('copy'),url=(CFG.shareBase||location.href.split('#')[0])+'#'+enc();
  const done=ok=>{b.textContent=ok?'Link copied':'Copy failed';notify(ok?'Link copied':'Could not copy: your browser blocked it. The full link is in the address bar.');clearTimeout(copyT);copyT=setTimeout(()=>{b.textContent='Copy link'},1500)};
@@ -20,12 +33,12 @@ document.getElementById('copy').onclick=copyLink;
 {const mq=matchMedia('(max-width:599px)'),il=document.getElementById('invLeft'),tb=document.getElementById('topbar');
  const sync=()=>{const open=mq.matches&&il.classList.contains('panelopen');if(open){window.scrollTo({top:0});document.documentElement.style.setProperty('--tbh',tb.offsetHeight+'px')}document.body.classList.toggle('sheet-open',open)};
  new MutationObserver(sync).observe(il,{attributes:true,attributeFilter:['class']});addEventListener('resize',sync)}
-document.getElementById('tabInv').onclick=()=>scrGo('inv');document.getElementById('tabChar').onclick=()=>scrGo('char');
+document.getElementById('tabGlo').onclick=()=>scrGo('glo');document.getElementById('tabInv').onclick=()=>scrGo('inv');document.getElementById('tabChar').onclick=()=>scrGo('char');
 document.getElementById('scrPrev').onclick=()=>scrStep(-1);document.getElementById('scrNext').onclick=()=>scrStep(1);
 document.querySelectorAll('#topbar .rsg [data-rs]').forEach(b=>{b.onclick=()=>eqSwitch(b.dataset.rs);b.onkeydown=e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();const o=b.dataset.rs==='ng'?'ng_plus':'ng';eqSwitch(o);const n=document.querySelector('#topbar .rsg [data-rs="'+o+'"]');if(n)n.focus()}}});
 // swipe: on a narrow screen a horizontal swipe left goes to the next screen, right to the previous one. Not on the skill tree or mutation grid (they drag), not in fields and not inside the item grids.
 {let x0=0,y0=0,t0=0,ok=false;const root=document.getElementById('screens');
- root.addEventListener('touchstart',e=>{const t=e.target;ok=innerWidth<1024&&e.touches.length===1&&!(t.closest&&t.closest('svg,input,select,textarea,.pkgrid,.oilgrid,#mutov'));if(ok){x0=e.touches[0].clientX;y0=e.touches[0].clientY;t0=Date.now()}},{passive:true});
+ root.addEventListener('touchstart',e=>{const t=e.target;ok=innerWidth<1024&&e.touches.length===1&&!(t.closest&&t.closest('svg,input,select,textarea,.pkgrid,.oilgrid,#mutov,.glsubs,.glrows,.gltext,.stabs'));if(ok){x0=e.touches[0].clientX;y0=e.touches[0].clientY;t0=Date.now()}},{passive:true});
  root.addEventListener('touchend',e=>{if(!ok||!e.changedTouches.length)return;ok=false;const dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;
   if(Date.now()-t0<800&&Math.abs(dx)>=70&&Math.abs(dy)<Math.abs(dx)*.6)scrStep(dx<0?1:-1)},{passive:true})}
 

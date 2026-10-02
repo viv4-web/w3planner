@@ -28,7 +28,7 @@ class LazyTests(unittest.TestCase):
             self.assertFalse(list((d / "plain").glob("data")), "no marker, no data folder")
         # and the real page: the equipment data is on demand, so index.html carries only three URLs
         real = d / "real"; r = subprocess.run([sys.executable, str(ROOT / "tools/build.py"), "--variant", "placeholder", "--out", str(real)], capture_output=True, text=True); self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertEqual(len(list((real / "data").glob("items*.js"))), 3); self.assertLess(len((real / "index.html").read_bytes()), 260_000)
+        self.assertEqual(len(list((real / "data").glob("items*.js"))), 3); self.assertLess(len((real / "index.html").read_bytes()), 300_000)      # 283 KB: the skills, tooltips and the code of every screen (the Glossary code adds 31 KB); no item or glossary data
 
 
 if __name__ == "__main__":
