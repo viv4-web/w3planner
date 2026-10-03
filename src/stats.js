@@ -3,6 +3,8 @@
 // armour GetTotalArmor (playerWitcher.ws 5842), mutagen abilities PlayerAbilityManager.ws 851-1020, the regeneration lines AddCharacterStat (CharacterStatsPopup.ws 290-330) and the Lvl / ConGeralt / survival_vitality abilities (data/STATS.json, tools/make_stats.py).
 // Weapons only count while held (nothing is held on this screen). A stat an item gives within a range is shown as "min–max" (never a midpoint). What an imported save adds that the link cannot hold (active effects such as a whetstone or a Place of Power,
 // items with rolled abilities, play time) is kept in memory in PS.imp (never in the link).
+// STATS.<k> is NG; STATS.<k>p holds the NG+ record of each name whose NG+ values differ (null = not in NG+): tools/make_stats.py
+const psPick=(k,id)=>{const p=S.rs==='ng_plus'&&STATS[k+'p'];return p&&id in p?p[id]:STATS[k][id]};
 const STATS=/*@data:STATS*/;
 const PS={open:false,sel:0,play:null,imp:{effects:[],rolled:{}},opener:null};
 const PS_ROWS=[['silver','red','DPS - Silver sword'],['steel','red','DPS - Steel sword'],['armor','red','Armor'],['crossbow','red','Crossbow'],['vitality','green','Vitality'],['toxicity','green','Toxicity'],['sign','blue','Sign intensity'],['stamina','blue','Stamina'],['additional','orange','Additional']];
@@ -25,8 +27,8 @@ function psPass(hi){const d=eqData();if(!d||!EQ.meta||!CN.data)return null;
  const rolled=s=>!!(g[s]&&PS.imp.rolled[s]===g[s].id);   // an imported item with rolled abilities in the save: their values are not read, so what it gives is unknown
  const worn=['chest','gloves','trousers','boots','mask'].map(s=>g[s]).filter(Boolean),low=EQ_SLOTS.some(s=>g[s]&&eqLow(g[s]));
  const eq=[];S.slots.forEach(v=>{if(v){const t=TREES[v[0]],s=t.sk[v[1]],l=S.lv[v[0]][v[1]];if(l>0)eq.push({id:s.id,l})}});
- const touch=(re,skip)=>eq.some(e=>e.id!==skip&&(STATS.touch[e.id]||[]).some(a=>re.test(a)));
- const effs=(PS.imp.effects||[]).map(e=>({e,x:STATS.eff[e.ability]})).filter(o=>o.x);
+ const touch=(re,skip)=>eq.some(e=>e.id!==skip&&(psPick('touch',e.id)||[]).some(a=>re.test(a)));
+ const effs=(PS.imp.effects||[]).map(e=>({e,x:psPick('eff',e.ability)})).filter(o=>o.x);
  const effTouch=re=>effs.some(o=>o.x.touch.some(a=>re.test(a))),effNum=(k,t)=>effs.reduce((a,o)=>a+(o.x[k]?o.x[k][t]:0),0);
  const mutOn=S.mact>=0&&!!S.mres[S.mact];
  const setTxt=eqSets().flatMap(x=>x.st.bonuses.filter(b=>x.counted>=b.pieces).map(b=>b.text)).join(' ').toLowerCase(),setHit=re=>re.test(setTxt);
@@ -90,10 +92,10 @@ function psCalc(){const a=psPass(false);if(!a)return null;const b=psPass(true),o
 const psEl=id=>document.getElementById(id);
 const psEsc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const psVal=v=>v==null?`<b class="psu" title="not computed yet" aria-label="not computed yet">—</b>`:`<b>${psEsc(String(v))}</b>`;
-function psEffects(){const e=(PS.imp.effects||[]).filter(x=>x.ability&&STATS.eff_names[x.ability]);if(!e.length)return'';
- return'Active effects in the imported save: '+e.map(x=>{const mod=STATS.eff[x.ability],bits=[];if(x.timeLeft>0)bits.push(Math.max(1,psRound(x.timeLeft/60))+' min left');
+function psEffects(){const e=(PS.imp.effects||[]).filter(x=>x.ability&&psPick('eff_names',x.ability));if(!e.length)return'';
+ return'Active effects in the imported save: '+e.map(x=>{const mod=psPick('eff',x.ability),bits=[];if(x.timeLeft>0)bits.push(Math.max(1,psRound(x.timeLeft/60))+' min left');
   if(mod&&mod.attack_power&&mod.attack_power.mult)bits.push('+'+psRound(mod.attack_power.mult*100)+'% attack power, included');else if(mod&&mod.touch.some(a=>/^spell_power/.test(a)))bits.push('Sign intensity, not computed');
-  return psEsc(STATS.eff_names[x.ability])+(bits.length?' ('+bits.join(', ')+')':'')}).join('; ')+'.'}
+  return psEsc(psPick('eff_names',x.ability))+(bits.length?' ('+bits.join(', ')+')':'')}).join('; ')+'.'}
 function psRender(){const R=psCalc(),list=psEl('psrows'),panel=psEl('pspanel');if(!list)return;
  if(panel.parentNode===list)psEl('pswrap').appendChild(panel);   // the phone layout keeps the detail inside the list: take it out before the rows are drawn again
  list.innerHTML=PS_ROWS.map(([id,col,name],i)=>{const r=R?R.rows[id]:{v:null},sel=i===PS.sel,big=id==='sign'?psVal(r.v):id==='additional'?'':psVal(r.v),

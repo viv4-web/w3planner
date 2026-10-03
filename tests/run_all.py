@@ -164,7 +164,7 @@ def main():
         print("\n== Import save ==")
         importcheck.run(b, base, check, "online")
         print("\n== Player Stats ==")
-        statscheck.run(b, base, check, "online"); statscheck.fixture(b, base, check, "online")
+        statscheck.run(b, base, check, "online"); statscheck.fixture(b, base, check, "online"); statscheck.rulesets(b, base, check, "online")
         rulesetcheck.run(b, base, check, "online")
         nd = shutil.which("node"); nr = subprocess.run([nd, str(ROOT / "tests/test_saveread.js")], capture_output=True, text=True) if nd else None
         check("the save reader without a browser: LZ4, header errors, sidecar, the mutagen table, the reference save when the local fixture is present", (nr is None) or nr.returncode == 0, (nr.stderr or nr.stdout).strip()[-300:] if nr else "node not found: skipped")

@@ -117,3 +117,16 @@ def fixture(b, base, check, label):
 
 def live(b, url, check):
     run(b, url, check, "stats")
+
+
+def rulesets(b, base, check, label):
+    """v31e: the active-effect numbers follow the NG / NG+ switch (gameplay/abilities_effects_potions.xml vs the _plus file)"""
+    pg = b.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e))); pg.goto(base); pg.wait_for_function("typeof psPick==='function'&&typeof S!=='undefined'&&S")
+    get = lambda rs, k, n: pg.evaluate("([rs,k,n])=>{S.rs=rs;return psPick(k,n)||null}", [rs, k, n])
+    fm = {rs: [get(rs, "eff", "FullMoonEffect_Level%d" % L)["vitality"]["add"] for L in (1, 2, 3)] for rs in ("ng", "ng_plus")}
+    wr = {rs: [get(rs, "eff", "WhiteRaffardDecoctionEffect_Level%d" % L)["vitality"]["mult"] for L in (1, 2)] for rs in ("ng", "ng_plus")}
+    check("%s: Full Moon +300, 650, 1000 Vitality in NG and +600, 1100, 1500 in NG+" % label, fm == {"ng": [300, 650, 1000], "ng_plus": [600, 1100, 1500]}, fm)
+    check("%s: White Raffard's Decoction +35%%, 60%% in NG and +60%%, 80%% in NG+" % label, wr == {"ng": [0.35, 0.6], "ng_plus": [0.6, 0.8]}, wr)
+    check("%s: Swallow level 1 and the Mutagen 08 and 09 effects are read as the XML says (a self-closing ability tag does not swallow the next one)" % label,
+          get("ng", "eff", "SwallowEffect_Level1") is not None and get("ng", "eff", "Mutagen08Effect") is None and get("ng", "eff", "Mutagen09Effect")["touch"] == ["spell_power"])
+    check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
