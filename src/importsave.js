@@ -53,7 +53,7 @@ function impPlan(R){
   if(g){plannable++;(['steel','silver','crossbow','bolts'].includes(g.slot)?stash.weapons:stash.armor).push({id:g.id,qty:r.qty})}
   else if(c){plannable++;(c.cat==='oil'?stash.alchemy.oils:c.cat==='bomb'?stash.alchemy.bombs:stash.alchemy.potions).push({id:c.id,qty:r.qty})}});
  stash.crowns=R.crowns;
- return{play:R.playTimeSec==null?null:R.playTimeSec,effects:R.effects||[],rolled,level,bonus,total,learned,notSk,slots,slotNames,open,equipped,muts,mutRows,notMut,gear,gearRows,notGear,setInfo,cons,consRows,stash,plannable,records:R.inventory.length}}
+ return{play:R.playTimeSec==null?null:R.playTimeSec,effects:R.effects||[],stored:R.abilities||null,rolled,level,bonus,total,learned,notSk,slots,slotNames,open,equipped,muts,mutRows,notMut,gear,gearRows,notGear,setInfo,cons,consRows,stash,plannable,records:R.inventory.length}}
 function impDisplay(id){return id?((window.W3DATA&&W3DATA.savenames&&W3DATA.savenames[id])||id):'an unknown item'}
 
 // ---- the review ----
@@ -112,6 +112,7 @@ async function impDoApply(){
  if(sel.consumables){for(let i=0;i<6;i++)S.cons[i]=P.cons[i]}      // the sword oils (positions 6 and 7) are not read: left as they are
  if(sel.stash){try{localStorage.setItem('w3planner.stash',JSON.stringify(P.stash));stashDrawn=false}catch(e){notify('The stash could not be kept: this browser blocks storage for the site.')}}
  if(sel.character){PS.play=P.play;PS.imp.effects=P.effects}if(sel.equipment)PS.imp.rolled=P.rolled;enforceLocks();eqValidate();cnValidate();S.scr='char';
+ PS.imp.stored=sel.character?P.stored:null;PS.imp.link=enc();   // the save's own ability list, used (and checked) by Player Stats only while the build is still this one
  impClose();save();window.scrollTo({top:0});
  notify('Imported from '+f.name+(sel.character?': level '+P.level+', '+P.learned.length+' skills':'')+'. The link now holds this build; use Copy link to share it.')}
 function impBind(){

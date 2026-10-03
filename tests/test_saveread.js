@@ -43,5 +43,7 @@ if(fs.existsSync(l9b)){const R=W.readSave(new Uint8Array(fs.readFileSync(l9b)));
  ok('stats-l9b: time played 39576.77 s (10 h 59 min)',Math.abs(R.playTimeSec-39576.7659)<0.01,R.playTimeSec);
  ok('stats-l9b: two active effects, ShrineQuenEffect 1800 s and EnhancedWeaponEffect 3600 s, with the time left',R.effects.length===2&&R.effects[0].ability==='ShrineQuenEffect'&&R.effects[0].duration===1800&&R.effects[1].ability==='EnhancedWeaponEffect'&&R.effects[1].timeLeft>3500&&R.effects[1].timeLeft<3600,R.effects);
  ok('stats-l9b: the equipped relics list no abilities, the carried random items list theirs (autogen_*, MA_*, quality_*)',R.equipped.SteelSword.abilities.length===0&&R.inventory.some(r=>r.id==='Boots 02'&&r.abilities.includes('MA_BurningResistance')&&r.abilities.includes('quality_masterwork_boots')),R.equipped.SteelSword);
+ ok('stats-l9b: the player\'s ability list: 200 entries, perk_24 x 12 (4 medium pieces x level 3), magic_staminaregen x 12, synergy bonus x 30, <mutagen>_x x 7, Lvl2 to Lvl9, the two effects',
+   (A=>A&&Object.values(A).reduce((a,b)=>a+b,0)===200&&A.perk_24===12&&A.magic_staminaregen===12&&A.greater_mutagen_color_blue_synergy_bonus===30&&A.greater_mutagen_color_blue_x===7&&A.Lvl2===1&&A.Lvl9===1&&!A.Lvl10&&A.ShrineQuenEffect===1&&A.EnhancedWeaponEffect===1&&A.all_PC_ability===1)(R.abilities),R.abilities);
  console.log('stats-l9b checks passed')}
 console.log(n+' checks passed');

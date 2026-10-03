@@ -59,6 +59,7 @@ def skill_ids():
     data = json.loads((ROOT / "data/DATA.json").read_text()); fn = (ROOT / "data/TIPFN.js").read_text()
     ids = [s[0] for tree in data for s in tree]
     ids += sorted({m.group(1) for m in re.finditer(r'AA\("(\w+)",', fn)})
+    ids += ["magic_1", "magic_2", "magic_3", "magic_4", "magic_5"]       # the five Signs' own abilities (Player Stats, v32c: Yrden trap_duration, Axii duration, Quen shield_health, ...)
     return ids
 
 

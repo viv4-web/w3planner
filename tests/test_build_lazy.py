@@ -28,7 +28,7 @@ class LazyTests(unittest.TestCase):
             self.assertFalse(list((d / "plain").glob("data")), "no marker, no data folder")
         # and the real page: the equipment data is on demand, so index.html carries only three URLs
         real = d / "real"; r = subprocess.run([sys.executable, str(ROOT / "tools/build.py"), "--variant", "placeholder", "--out", str(real)], capture_output=True, text=True); self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertEqual(len(list((real / "data").glob("items*.js"))), 3); self.assertLess(len((real / "index.html").read_bytes()), 365_000)      # 309 KB: the skills, tooltips and the code of every screen (Glossary +31 KB, the importer UI +22 KB); no item, glossary or save-reader data (the reader is its own lazy script)
+        self.assertEqual(len(list((real / "data").glob("items*.js"))), 3); self.assertLess(len((real / "index.html").read_bytes()), 400_000)      # 387 KB in v32c (Player Stats: STATS.json 38 KB with the armour types, the per-ability Sign and stamina numbers, the code) of 309 KB in v31: the skills, tooltips and the code of every screen (Glossary +31 KB, the importer UI +22 KB); no item, glossary or save-reader data (the reader is its own lazy script)
 
 
 if __name__ == "__main__":
