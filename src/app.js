@@ -1,5 +1,5 @@
 
-const APP_VERSION="v31d";
+const APP_VERSION="v31e";
 const CFG=Object.assign({mode:"online",shareBase:""},window.PLANNER_CONFIG||{});
 const DATA=/*@data:DATA*/;
 
@@ -7,6 +7,9 @@ const DATA=/*@data:DATA*/;
 const TIPDATA=/*@data:TIPDATA*/;
 // Skill tooltip formulas, ported from the game scripts and compiled ahead of time (no eval at runtime).
 const TIPFN=/*@data:TIPFN*/;
+// GetAlchemyS03Threshold (in the helper table below): an attribute the data lacks counts 0, as in the game; NG+ has only `toxicity_threshold`, which no script reads
+// ability values of the chosen ruleset: `ab` is NG, `abp` holds the whole record of each ability whose NG+ values differ (tools/audit_rulesets.py); it follows the NG / NG+ switch at once
+const abv=n=>(S.rs==='ng_plus'&&TIPDATA.abp&&TIPDATA.abp[n])||TIPDATA.ab[n]||{};
 function tipText(ti,i,L){const id=TREES[ti].sk[i].id,D=TIPDATA.desc[id]||[];L=Math.max(1,Math.min(3,L));
  const base=D[L-1]||D[0]||TREES[ti].sk[i].desc||'';if(!TIPFN[id])return base;
  try{  const V=o=>({b:o?o.b:0,a:o?o.a:0,m:o?o.m:0});
@@ -14,9 +17,9 @@ function tipText(ti,i,L){const id=TREES[ti].sk[i].id,D=TIPDATA.desc[id]||[];L=Ma
   const NTZ=x=>String(+(+x).toFixed(2));
   const fill=(s,a,f,t)=>{let i=0,j=0,k=0;return (s||'').replace(/\$I\$/g,()=>{const v=a&&a[i++];return v===undefined||isNaN(v)?'?':v}).replace(/\$F\$/g,()=>{const v=f&&f[j++];return v===undefined||isNaN(v)?'?':NTZ(v)}).replace(/\$S\$/g,()=>t&&t[k]!==undefined?t[k++]:'?')};
   const txt=k=>k==='__desc__'?base:(TIPDATA.locs[k]||'');
-  const H={SA:(e,a)=>V((TIPDATA.ab[enumId(e)]||{})[a]),AA:(n,a)=>V((TIPDATA.ab[n]||{})[a]),MUL:(v,k)=>({b:v.b*k,a:v.a*k,m:v.m*k}),CALC:v=>v.b*(1+v.m)+v.a,
+  const H={SA:(e,a)=>V(abv(enumId(e))[a]),AA:(n,a)=>V(abv(n)[a]),MUL:(v,k)=>({b:v.b*k,a:v.a*k,m:v.m*k}),CALC:v=>v.b*(1+v.m)+v.a,
    NTZ,FTS:NTZ,FTSP:(x,p)=>(+x).toFixed(p),LOC:txt,LOCP:(k,a,f,t)=>fill(txt(k),a,f,t),
-   GetWitcherPlayer:()=>({GetStatMax:()=>100,GetAlchemyS03Threshold:l=>{const o=(TIPDATA.ab.alchemy_s3||{})['toxicity_threshold_lvl'+(l>=3?3:l===2?2:1)];return o?o.a:NaN}}),theGame:{GetDefinitionsManager:()=>({GetAbilityAttributeValue:()=>{}})},
+   GetWitcherPlayer:()=>({GetStatMax:()=>100,GetAlchemyS03Threshold:l=>{const o=abv('alchemy_s3')['toxicity_threshold_lvl'+(l>=3?3:l===2?2:1)];return o?o.a:0}}),theGame:{GetDefinitionsManager:()=>({GetAbilityAttributeValue:()=>{}})},
    EffectTypeToName:()=>'',StatEnumToName:()=>'',BCS_Stamina:0,BCS_Vitality:0,EET_IgnorePain:0};
   const r=TIPFN[id](H,L,id);return (r||base).replace(/<br\s*\/?>/g,'\n').replace(/<[^>]+>/g,'')}catch(e){return base.replace(/\$[IFS]\$/g,"?")}}
 const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');

@@ -1,0 +1,25 @@
+id	name	ruleset	planner	xml	status
+mutation1	Conductors of Magic	ng	{"r": 2, "b": 3, "g": 0, "sp": 5}	{"r": 2, "b": 3, "g": 0, "sp": 5}	ok
+mutation2	Magic Sensibilities	ng	{"r": 0, "b": 2, "g": 0, "sp": 2}	{"r": 0, "b": 2, "g": 0, "sp": 2}	ok
+mutation3	Bloodbath	ng	{"r": 3, "b": 0, "g": 0, "sp": 3}	{"r": 3, "b": 0, "g": 0, "sp": 3}	ok
+mutation4	Toxic Blood	ng	{"r": 0, "b": 0, "g": 2, "sp": 2}	{"r": 0, "b": 0, "g": 2, "sp": 2}	ok
+mutation5	Mutated Skin	ng	{"r": 2, "b": 0, "g": 3, "sp": 5}	{"r": 2, "b": 0, "g": 3, "sp": 5}	ok
+mutation6	Piercing Cold	ng	{"r": 0, "b": 3, "g": 0, "sp": 3}	{"r": 0, "b": 3, "g": 0, "sp": 3}	ok
+mutation7	Adrenaline Rush	ng	{"r": 2, "b": 3, "g": 0, "sp": 5}	{"r": 2, "b": 3, "g": 0, "sp": 5}	ok
+mutation8	Deadly Counter	ng	{"r": 2, "b": 0, "g": 0, "sp": 2}	{"r": 2, "b": 0, "g": 0, "sp": 2}	ok
+mutation9	Cat Eyes	ng	{"r": 2, "b": 0, "g": 3, "sp": 5}	{"r": 2, "b": 0, "g": 3, "sp": 5}	ok
+mutation10	Euphoria	ng	{"r": 0, "b": 0, "g": 3, "sp": 3}	{"r": 0, "b": 0, "g": 3, "sp": 3}	ok
+mutation11	Second Life	ng	{"r": 3, "b": 2, "g": 2, "sp": 7}	{"r": 3, "b": 2, "g": 2, "sp": 7}	ok
+mutation12	Metamorphosis	ng	{"r": 2, "b": 2, "g": 3, "sp": 7}	{"r": 2, "b": 2, "g": 3, "sp": 7}	ok
+mutation1	Conductors of Magic	ng_plus	{"r": 2, "b": 3, "g": 0, "sp": 5}	{"r": 2, "b": 3, "g": 0, "sp": 5}	ok
+mutation2	Magic Sensibilities	ng_plus	{"r": 0, "b": 2, "g": 0, "sp": 2}	{"r": 0, "b": 2, "g": 0, "sp": 2}	ok
+mutation3	Bloodbath	ng_plus	{"r": 3, "b": 0, "g": 0, "sp": 3}	{"r": 3, "b": 0, "g": 0, "sp": 3}	ok
+mutation4	Toxic Blood	ng_plus	{"r": 0, "b": 0, "g": 2, "sp": 2}	{"r": 0, "b": 0, "g": 2, "sp": 2}	ok
+mutation5	Mutated Skin	ng_plus	{"r": 2, "b": 0, "g": 3, "sp": 5}	{"r": 2, "b": 0, "g": 3, "sp": 5}	ok
+mutation6	Piercing Cold	ng_plus	{"r": 0, "b": 3, "g": 0, "sp": 3}	{"r": 0, "b": 3, "g": 0, "sp": 3}	ok
+mutation7	Adrenaline Rush	ng_plus	{"r": 2, "b": 3, "g": 0, "sp": 5}	{"r": 2, "b": 3, "g": 0, "sp": 5}	ok
+mutation8	Deadly Counter	ng_plus	{"r": 2, "b": 0, "g": 0, "sp": 2}	{"r": 2, "b": 0, "g": 0, "sp": 2}	ok
+mutation9	Cat Eyes	ng_plus	{"r": 2, "b": 0, "g": 3, "sp": 5}	{"r": 2, "b": 0, "g": 3, "sp": 5}	ok
+mutation10	Euphoria	ng_plus	{"r": 0, "b": 0, "g": 3, "sp": 3}	{"r": 0, "b": 0, "g": 3, "sp": 3}	ok
+mutation11	Second Life	ng_plus	{"r": 3, "b": 2, "g": 2, "sp": 7}	{"r": 3, "b": 2, "g": 2, "sp": 7}	ok
+mutation12	Metamorphosis	ng_plus	{"r": 2, "b": 2, "g": 3, "sp": 7}	{"r": 2, "b": 2, "g": 3, "sp": 7}	ok
