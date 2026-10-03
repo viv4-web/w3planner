@@ -19,7 +19,7 @@ The planner's numbers, names and descriptions come from the game's own files, no
 |---|---|---|
 | `DATA.json` | 80 skills in 4 trees: `[id, name, gridRow, gridCol, maxLevel, points, prerequisites[], alternative, reward, ability]` | `geralt_skills.xml` (the `abilities_plus` copy wins over `abilities`) |
 | `EXTRA.json` | per skill: display name, description, icon slot | strings (`en.w3strings`) plus icon paths in the skill XML |
-| `TIPDATA.json` | `ab` (ability attribute values), `locs` (attribute names), `desc` (per-level descriptions with placeholders) | ability XML files, strings |
+| `TIPDATA.json` | `ab` (ability attribute values), `locs` (attribute names), `desc` (per-level descriptions with placeholders) | ability XML files, strings. `ab` is the **Next-Gen** set (`gameplay/abilities/geralt_skills.xml`), not `abilities_plus` (New Game Plus doubles Pyrotechnics and Cluster Bombs and has no per-level `toxicity_threshold_lvl1-3`); fixed in v31d, it had been taken from `abilities_plus` |
 | `TIPFN.js` | 79 compiled tooltip functions | translated from the game's menu scripts by `tr.py` |
 | `MUT.json`, `MASTER.json` | the 12 mutations and the master mutation: costs, prerequisites, colours, descriptions | `bob_abilities/abilities_plus/geralt_mutations.xml`; description numbers from `effects_ep2.xml` and `playerWitcher.ws` |
 | `MUTS.json` | the 9 regular mutagens (red, blue, green; lesser, regular, greater) and their bonuses | ability definitions and items in `def_item_ingredients.xml` |

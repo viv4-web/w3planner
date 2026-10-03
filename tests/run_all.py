@@ -123,6 +123,12 @@ def main():
         check("security headers are sent", all(h.get(k) for k in ("content-security-policy", "x-content-type-options", "x-frame-options")))
         tips = E(ALL_TIPS); bad = [k for k in ref if ref[k] != tips.get(k)]
         check("all %d skill tooltips match the reference" % len(ref), not bad, bad[:3])
+        # v31d: Next-Gen values (gameplay/abilities/geralt_skills.xml: alchemy_s10 PhysicalDamage 50 per level, times the level as in characterMenu.ws),
+        # not the New Game Plus ones (100 per level) that the tooltip data used to carry; Delayed Recovery's threshold per level (toxicity_threshold_lvl1-3)
+        pyro = [E("(()=>{const ti=2,i=TREES[ti].sk.findIndex(s=>s.id==='alchemy_s10');return tipText(ti,i,%d)})()" % L) for L in (1, 2, 3)]
+        check("Pyrotechnics deals 50, 100, 150 damage at 1/3, 2/3, 3/3 (Next-Gen)", [("now deal %d damage" % v) in t for v, t in zip((50, 100, 150), pyro)], pyro)
+        delayed = [E("(()=>{const ti=2,i=TREES[ti].sk.findIndex(s=>s.id==='alchemy_s3');return tipText(ti,i,%d)})()" % L) for L in (1, 2, 3)]
+        check("Delayed Recovery: Toxicity above 70%, 65%, 55% at levels 1 to 3", [("above %d%%," % v) in t for v, t in zip((70, 65, 55), delayed)], delayed)
         print("\n== Behaviour ==")
         check("starts at level 1 with one open slot", E("lvl()") == 1 and E("[0,1,2,3,4,5,6,7,8,9,10,11].filter(slotOpen).length") == 1)
         pg.locator('#slots g.node[data-k="1"]').click(); pg.wait_for_timeout(100)

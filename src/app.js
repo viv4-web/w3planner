@@ -1,5 +1,5 @@
 
-const APP_VERSION="v31";
+const APP_VERSION="v31d";
 const CFG=Object.assign({mode:"online",shareBase:""},window.PLANNER_CONFIG||{});
 const DATA=/*@data:DATA*/;
 
@@ -16,7 +16,7 @@ function tipText(ti,i,L){const id=TREES[ti].sk[i].id,D=TIPDATA.desc[id]||[];L=Ma
   const txt=k=>k==='__desc__'?base:(TIPDATA.locs[k]||'');
   const H={SA:(e,a)=>V((TIPDATA.ab[enumId(e)]||{})[a]),AA:(n,a)=>V((TIPDATA.ab[n]||{})[a]),MUL:(v,k)=>({b:v.b*k,a:v.a*k,m:v.m*k}),CALC:v=>v.b*(1+v.m)+v.a,
    NTZ,FTS:NTZ,FTSP:(x,p)=>(+x).toFixed(p),LOC:txt,LOCP:(k,a,f,t)=>fill(txt(k),a,f,t),
-   GetWitcherPlayer:()=>({GetStatMax:()=>100,GetAlchemyS03Threshold:()=>NaN}),theGame:{GetDefinitionsManager:()=>({GetAbilityAttributeValue:()=>{}})},
+   GetWitcherPlayer:()=>({GetStatMax:()=>100,GetAlchemyS03Threshold:l=>{const o=(TIPDATA.ab.alchemy_s3||{})['toxicity_threshold_lvl'+(l>=3?3:l===2?2:1)];return o?o.a:NaN}}),theGame:{GetDefinitionsManager:()=>({GetAbilityAttributeValue:()=>{}})},
    EffectTypeToName:()=>'',StatEnumToName:()=>'',BCS_Stamina:0,BCS_Vitality:0,EET_IgnorePain:0};
   const r=TIPFN[id](H,L,id);return (r||base).replace(/<br\s*\/?>/g,'\n').replace(/<[^>]+>/g,'')}catch(e){return base.replace(/\$[IFS]\$/g,"?")}}
 const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
