@@ -1,6 +1,6 @@
 // ---- Consumables (v28): potions, decoctions, bombs and oils from data/consumables.json, loaded with the equipment lists (a script tag, never inside index.html) ----
 // Slots (the game's EEquipmentSlots, itemsTypes.ws:25-39 and 32-33,48-49): Potion1-4 take potions, decoctions AND food and drink (GetSlotForItem, itemsTypes.ws:357-374: the 'Potion' tag, and 'Edibles'/'Drinks' -> EES_Potion1),
-// Petard1 takes bombs, the second of the two slots the planner had is the Pocket (EES_Quickslot1: tag 'QuickSlot', itemsTypes.ws:364). Next-Gen has one bomb slot and one Pocket slot.
+// Petard1 takes bombs, the second of the two slots the planner had is the Pocket (EES_Quickslot1: tag 'QuickSlot', itemsTypes.ws:364). The remaster has one bomb slot and one Pocket slot.
 // Oils are not slots: one oil per sword (the Fixative skill, which allows several, is not in the new skill tree), an oil only on a sword it fits (SteelOil / SilverOil tag, r4Player.ws:1378-1385).
 const CN_URL=/*@file:consumables*/;
 const CN_SLOTS=['potion1','potion2','potion3','potion4','petard1','pocket','oil_steel','oil_silver'];   // the order of the c1 link segment: never change it, only append

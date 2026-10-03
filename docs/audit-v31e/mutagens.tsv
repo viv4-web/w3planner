@@ -1,0 +1,19 @@
+ability	name	ruleset	planner	xml	status
+lesser_mutagen_color_red	Lesser red mutagen	ng	0.05	0.05	ok
+mutagen_color_red	Red mutagen	ng	0.07	0.07	ok
+greater_mutagen_color_red	Greater red mutagen	ng	0.1	0.1	ok
+lesser_mutagen_color_blue	Lesser blue mutagen	ng	0.05	0.05	ok
+mutagen_color_blue	Blue mutagen	ng	0.07	0.07	ok
+greater_mutagen_color_blue	Greater blue mutagen	ng	0.1	0.1	ok
+lesser_mutagen_color_green	Lesser green mutagen	ng	50.0	50.0	ok
+mutagen_color_green	Green mutagen	ng	100.0	100.0	ok
+greater_mutagen_color_green	Greater green mutagen	ng	150.0	150.0	ok
+lesser_mutagen_color_red	Lesser red mutagen	ng_plus	0.05	0.05	ok
+mutagen_color_red	Red mutagen	ng_plus	0.07	0.07	ok
+greater_mutagen_color_red	Greater red mutagen	ng_plus	0.1	0.1	ok
+lesser_mutagen_color_blue	Lesser blue mutagen	ng_plus	0.05	0.05	ok
+mutagen_color_blue	Blue mutagen	ng_plus	0.07	0.07	ok
+greater_mutagen_color_blue	Greater blue mutagen	ng_plus	0.1	0.1	ok
+lesser_mutagen_color_green	Lesser green mutagen	ng_plus	50.0	50.0	ok
+mutagen_color_green	Green mutagen	ng_plus	100.0	100.0	ok
+greater_mutagen_color_green	Greater green mutagen	ng_plus	150.0	150.0	ok

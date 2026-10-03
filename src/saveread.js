@@ -1,4 +1,4 @@
-// ---- Witcher 3 Next-Gen save reader (v31). Own code, MIT. Runs in the browser (a File's bytes, no network) and in Node (tests/test_saveread.js).
+// ---- Witcher 3 remaster save reader (v31). Own code, MIT. Runs in the browser (a File's bytes, no network) and in Node (tests/test_saveread.js).
 // Format notes: docs/IMPORT.md. Loaded on demand when the Import dialog opens (a separate hashed script, never inside index.html): window.W3SAVE = {readSave, parseSidecar, lz4Block, decompress, TESTED}.
 (function(root){'use strict';
 const TESTED={save:66,game:29,code3:164};   // the save version, game version and third header code of the saves this reader was checked with
