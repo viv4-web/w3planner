@@ -1,4 +1,4 @@
-// ---- Import save (v31): fill the planner from a Witcher 3 Next-Gen .sav. The file is read in this browser (File API) and never sent anywhere (connect-src 'none'). Notes: docs/IMPORT.md ----
+// ---- Import save (v31): fill the planner from a Witcher 3 remaster .sav. The file is read in this browser (File API) and never sent anywhere (connect-src 'none'). Notes: docs/IMPORT.md ----
 // The reader (src/saveread.js) is a separate hashed script loaded when the dialog first opens. It matches by SAVE ID = OUR ITEM/SKILL ID (never by name or icon) and the dialog shows our localised names.
 const SAVEMUT=/*@data:SAVEMUT*/;   // save item id of a skill mutagen -> index in MUTS (tools/make_save_data.py)
 const SAVEREAD_URL=/*@lazyjs:saveread*/, SAVENAMES_URL=/*@file:savenames*/;

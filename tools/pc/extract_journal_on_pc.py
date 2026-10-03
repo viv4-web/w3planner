@@ -4,7 +4,7 @@
     python extract_journal_on_pc.py --game-dir "D:\\SteamLibrary\\steamapps\\common\\The Witcher 3"
 
 Keep it in the same folder as extract_on_pc.py (it reuses that file's bundle and texture.cache readers).
-It looks in EVERY .bundle under the game folder (content\\content0.., dlc\\*, Next-Gen folders) and copies, unchanged, every file whose path
+It looks in EVERY .bundle under the game folder (content\\content0.., dlc\\*, remaster folders) and copies, unchanged, every file whose path
 has a "journal" folder and ends in .journal or .w2je (the bestiary, characters, glossary, tutorials, books and quest journals, base game and DLC),
 and it lists every name in every texture.cache (name, width, height, format) so the journal pictures can be found afterwards.
 Output: ONE zip on your Desktop, w3planner-journal.zip: journal/<bundle>/<path inside the bundle>, manifest.txt (bundle, path, size, sha256 of each file),

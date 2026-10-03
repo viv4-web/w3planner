@@ -13,7 +13,7 @@ What it does:
   c) writes everything into one zip (w3planner-extract.zip) on your Desktop, plus report.txt (what was found and what was not),
      and prints the number of files and the size.
 
-Second mode, --missing: looks in EVERY .bundle under the game folder (content0..content*, dlc\\*, the Next-Gen folders) for the definition XML of every
+Second mode, --missing: looks in EVERY .bundle under the game folder (content0..content*, dlc\\*, the remaster folders) for the definition XML of every
 item id in wanted-items.txt (the ids the game refers to but our data does not define: gear, consumables, ... made by tools/make_wanted_items.py), or whose
 name key is one of the unused name strings listed there, plus their "<id> _Stats" abilities and the abilities a found item lists. It writes
 w3planner-missing.zip on the Desktop: every XML file with such a definition (items and items_plus, so New Game and New Game Plus), manifest.txt

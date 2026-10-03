@@ -1,0 +1,253 @@
+id	name	ruleset	planner	xml	status
+Black Blood 1	Black Blood	ng	{"tox": 25, "dur": 30, "ch": 3, "stats": []}	{"tox": 25, "dur": 30, "ch": 3, "stats": []}	ok
+Black Blood 2	Enhanced Black Blood	ng	{"tox": 25, "dur": 45, "ch": 4, "stats": []}	{"tox": 25, "dur": 45, "ch": 4, "stats": []}	ok
+Black Blood 3	Superior Black Blood	ng	{"tox": 25, "dur": 60, "ch": 5, "stats": []}	{"tox": 25, "dur": 60, "ch": 5, "stats": []}	ok
+Blizzard 1	Blizzard	ng	{"tox": 20, "dur": 8, "ch": 2, "stats": []}	{"tox": 20, "dur": 8, "ch": 2, "stats": []}	ok
+Blizzard 2	Enhanced Blizzard	ng	{"tox": 20, "dur": 10, "ch": 3, "stats": []}	{"tox": 20, "dur": 10, "ch": 3, "stats": []}	ok
+Blizzard 3	Superior Blizzard	ng	{"tox": 20, "dur": 12, "ch": 4, "stats": []}	{"tox": 20, "dur": 12, "ch": 4, "stats": []}	ok
+Cat 1	Cat	ng	{"tox": 15, "dur": 60, "ch": 3, "stats": []}	{"tox": 15, "dur": 60, "ch": 3, "stats": []}	ok
+Cat 2	Enhanced Cat	ng	{"tox": 15, "dur": 120, "ch": 4, "stats": []}	{"tox": 15, "dur": 120, "ch": 4, "stats": []}	ok
+Cat 3	Superior Cat	ng	{"tox": 15, "dur": 180, "ch": 5, "stats": []}	{"tox": 15, "dur": 180, "ch": 5, "stats": []}	ok
+Full Moon 1	Full Moon	ng	{"tox": 25, "dur": 60, "ch": 3, "stats": []}	{"tox": 25, "dur": 60, "ch": 3, "stats": []}	ok
+Full Moon 2	Enhanced Full Moon	ng	{"tox": 25, "dur": 90, "ch": 4, "stats": []}	{"tox": 25, "dur": 90, "ch": 4, "stats": []}	ok
+Full Moon 3	Superior Full Moon	ng	{"tox": 25, "dur": 180, "ch": 5, "stats": []}	{"tox": 25, "dur": 180, "ch": 5, "stats": []}	ok
+Golden Oriole 1	Golden Oriole	ng	{"tox": 25, "dur": 60, "ch": 3, "stats": []}	{"tox": 25, "dur": 60, "ch": 3, "stats": []}	ok
+Golden Oriole 2	Enhanced Golden Oriole	ng	{"tox": 25, "dur": 120, "ch": 4, "stats": []}	{"tox": 25, "dur": 120, "ch": 4, "stats": []}	ok
+Golden Oriole 3	Superior Golden Oriole	ng	{"tox": 25, "dur": 180, "ch": 5, "stats": []}	{"tox": 25, "dur": 180, "ch": 5, "stats": []}	ok
+Killer Whale 1	Killer Whale	ng	{"tox": 15, "dur": null, "ch": 3, "stats": []}	{"tox": 15, "dur": null, "ch": 3, "stats": []}	ok
+Maribor Forest 1	Maribor Forest	ng	{"tox": 20, "dur": 30, "ch": 3, "stats": []}	{"tox": 20, "dur": 30, "ch": 3, "stats": []}	ok
+Maribor Forest 2	Enhanced Maribor Forest	ng	{"tox": 20, "dur": 60, "ch": 4, "stats": []}	{"tox": 20, "dur": 60, "ch": 4, "stats": []}	ok
+Maribor Forest 3	Superior Maribor Forest	ng	{"tox": 20, "dur": 90, "ch": 5, "stats": []}	{"tox": 20, "dur": 90, "ch": 5, "stats": []}	ok
+Petri Philtre 1	Petri's Philter	ng	{"tox": 25, "dur": 30, "ch": 3, "stats": []}	{"tox": 25, "dur": 30, "ch": 3, "stats": []}	ok
+Petri Philtre 2	Enhanced Petri's Philter	ng	{"tox": 25, "dur": 60, "ch": 4, "stats": []}	{"tox": 25, "dur": 60, "ch": 4, "stats": []}	ok
+Petri Philtre 3	Superior Petri's Philter	ng	{"tox": 25, "dur": 90, "ch": 5, "stats": []}	{"tox": 25, "dur": 90, "ch": 5, "stats": []}	ok
+Swallow 1	Swallow	ng	{"tox": 20, "dur": 20, "ch": 3, "stats": []}	{"tox": 20, "dur": 20, "ch": 3, "stats": []}	ok
+Swallow 2	Enhanced Swallow	ng	{"tox": 20, "dur": 20, "ch": 4, "stats": []}	{"tox": 20, "dur": 20, "ch": 4, "stats": []}	ok
+Swallow 3	Superior Swallow	ng	{"tox": 20, "dur": 20, "ch": 5, "stats": []}	{"tox": 20, "dur": 20, "ch": 5, "stats": []}	ok
+Tawny Owl 1	Tawny Owl	ng	{"tox": 20, "dur": 30, "ch": 3, "stats": []}	{"tox": 20, "dur": 30, "ch": 3, "stats": []}	ok
+Tawny Owl 2	Enhanced Tawny Owl	ng	{"tox": 20, "dur": 45, "ch": 4, "stats": []}	{"tox": 20, "dur": 45, "ch": 4, "stats": []}	ok
+Tawny Owl 3	Superior Tawny Owl	ng	{"tox": 20, "dur": 60, "ch": 5, "stats": []}	{"tox": 20, "dur": 60, "ch": 5, "stats": []}	ok
+Thunderbolt 1	Thunderbolt	ng	{"tox": 25, "dur": 30, "ch": 3, "stats": []}	{"tox": 25, "dur": 30, "ch": 3, "stats": []}	ok
+Thunderbolt 2	Enhanced Thunderbolt	ng	{"tox": 25, "dur": 60, "ch": 4, "stats": []}	{"tox": 25, "dur": 60, "ch": 4, "stats": []}	ok
+Thunderbolt 3	Superior Thunderbolt	ng	{"tox": 25, "dur": 90, "ch": 5, "stats": []}	{"tox": 25, "dur": 90, "ch": 5, "stats": []}	ok
+White Honey 1	White Honey	ng	{"tox": null, "dur": null, "ch": 1, "stats": []}	{"tox": null, "dur": null, "ch": 1, "stats": []}	ok
+White Honey 2	Enhanced White Honey	ng	{"tox": null, "dur": null, "ch": 2, "stats": []}	{"tox": null, "dur": null, "ch": 2, "stats": []}	ok
+White Honey 3	Superior White Honey	ng	{"tox": null, "dur": null, "ch": 5, "stats": []}	{"tox": null, "dur": null, "ch": 5, "stats": []}	ok
+Mutagen 1	Katakan decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 2	Arachas decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 3	Cockatrice decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 4	Archgriffin decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 5	Water hag decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 6	Nightwraith decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 7	Ekimmara decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 8	Chort decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 9	Foglet decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 10	Wyvern decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 11	Doppler decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 12	Troll decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 13	Noonwraith decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 14	Succubus decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 15	Alghoul decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 16	Fiend decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 17	Forktail decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 18	Grave hag decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 19	Wraith decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 20	Earth elemental decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 21	Ekhidna decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 22	Ancient leshen decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 23	Basilisk decoction	ng	{"tox": null, "dur": 3960, "ch": 1, "stats": []}	{"tox": null, "dur": 3960, "ch": 1, "stats": []}	ok
+Mutagen 24	Werewolf decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 25	Nekker warrior decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 26	Leshen decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 27	Griffin decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 28	Reliever's decoction	ng	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+White Raffards Decoction 1	White Raffard's Decoction	ng	{"tox": 25, "dur": null, "ch": 2, "stats": []}	{"tox": 25, "dur": null, "ch": 2, "stats": []}	ok
+White Raffards Decoction 2	Enhanced White Raffard's Decoction	ng	{"tox": 25, "dur": null, "ch": 2, "stats": []}	{"tox": 25, "dur": null, "ch": 2, "stats": []}	ok
+White Raffards Decoction 3	Superior White Raffard's Decoction	ng	{"tox": 25, "dur": null, "ch": 3, "stats": []}	{"tox": 25, "dur": null, "ch": 3, "stats": []}	ok
+Dancing Star 1	Dancing Star	ng	{"tox": null, "dur": 4, "ch": 2, "stats": [["Fire damage", 100]]}	{"tox": null, "dur": 4, "ch": 2, "stats": [["Fire damage", 100]]}	ok
+Dancing Star 2	Enhanced Dancing Star	ng	{"tox": null, "dur": 7, "ch": 3, "stats": [["Fire damage", 100]]}	{"tox": null, "dur": 7, "ch": 3, "stats": [["Fire damage", 100]]}	ok
+Dancing Star 3	Superior Dancing Star	ng	{"tox": null, "dur": 10, "ch": 4, "stats": [["Fire damage", 100]]}	{"tox": null, "dur": 10, "ch": 4, "stats": [["Fire damage", 100]]}	ok
+Devils Puffball 1	Devil's Puffball	ng	{"tox": null, "dur": 10, "ch": 2, "stats": [["Poison damage", 100]]}	{"tox": null, "dur": 10, "ch": 2, "stats": [["Poison damage", 100]]}	ok
+Devils Puffball 2	Enhanced Devil's Puffball	ng	{"tox": null, "dur": 30, "ch": 3, "stats": [["Poison damage", 100]]}	{"tox": null, "dur": 30, "ch": 3, "stats": [["Poison damage", 100]]}	ok
+Devils Puffball 3	Superior Devil's Puffball	ng	{"tox": null, "dur": 30, "ch": 4, "stats": [["Poison damage", 100]]}	{"tox": null, "dur": 30, "ch": 4, "stats": [["Poison damage", 100]]}	ok
+Dragons Dream 1	Dragon's Dream	ng	{"tox": null, "dur": 15, "ch": 2, "stats": [["Fire damage", 250]]}	{"tox": null, "dur": 15, "ch": 2, "stats": [["Fire damage", 250]]}	ok
+Dragons Dream 2	Enhanced Dragon's Dream	ng	{"tox": null, "dur": 30, "ch": 3, "stats": [["Burning chance", 0.5], ["Fire damage", 300]]}	{"tox": null, "dur": 30, "ch": 3, "stats": [["Burning chance", 0.5], ["Fire damage", 300]]}	ok
+Dragons Dream 3	Superior Dragon's Dream	ng	{"tox": null, "dur": 30, "ch": 4, "stats": [["Burning chance", 0.5], ["Explosion fire damage", 15], ["Fire damage", 300]]}	{"tox": null, "dur": 30, "ch": 4, "stats": [["Burning chance", 0.5], ["Explosion fire damage", 15], ["Fire damage", 300]]}	ok
+Dwimeritium Bomb 1	Dimeritium bomb	ng	{"tox": null, "dur": 15, "ch": 2, "stats": []}	{"tox": null, "dur": 15, "ch": 2, "stats": []}	ok
+Dwimeritium Bomb 2	Enhanced Dimeritium bomb	ng	{"tox": null, "dur": 30, "ch": 3, "stats": []}	{"tox": null, "dur": 30, "ch": 3, "stats": []}	ok
+Dwimeritium Bomb 3	Superior Dimeritium bomb	ng	{"tox": null, "dur": 30, "ch": 4, "stats": [["Effect duration outside the cloud", 5]]}	{"tox": null, "dur": 30, "ch": 4, "stats": [["Effect duration outside the cloud", 5]]}	ok
+Grapeshot 1	Grapeshot	ng	{"tox": null, "dur": null, "ch": 2, "stats": [["Fire damage", 5], ["Physical damage", 250], ["Silver damage", 250]]}	{"tox": null, "dur": null, "ch": 2, "stats": [["Fire damage", 5], ["Physical damage", 250], ["Silver damage", 250]]}	ok
+Grapeshot 2	Enhanced Grapeshot	ng	{"tox": null, "dur": null, "ch": 3, "stats": [["Fire damage", 10], ["Physical damage", 450], ["Silver damage", 450]]}	{"tox": null, "dur": null, "ch": 3, "stats": [["Fire damage", 10], ["Physical damage", 450], ["Silver damage", 450]]}	ok
+Grapeshot 3	Superior Grapeshot	ng	{"tox": null, "dur": null, "ch": 4, "stats": [["Fire damage", 10], ["Physical damage", 450], ["Silver damage", 450]]}	{"tox": null, "dur": null, "ch": 4, "stats": [["Fire damage", 10], ["Physical damage", 450], ["Silver damage", 450]]}	ok
+Samum 1	Samum	ng	{"tox": null, "dur": null, "ch": 2, "stats": []}	{"tox": null, "dur": null, "ch": 2, "stats": []}	ok
+Samum 2	Enhanced Samum	ng	{"tox": null, "dur": null, "ch": 3, "stats": []}	{"tox": null, "dur": null, "ch": 3, "stats": []}	ok
+Samum 3	Superior Samum	ng	{"tox": null, "dur": null, "ch": 4, "stats": [["Critical hit chance", 1]]}	{"tox": null, "dur": null, "ch": 4, "stats": [["Critical hit chance", 1]]}	ok
+Silver Dust Bomb 1	Moon Dust	ng	{"tox": null, "dur": null, "ch": 2, "stats": []}	{"tox": null, "dur": null, "ch": 2, "stats": []}	ok
+Silver Dust Bomb 2	Enhanced Moon Dust	ng	{"tox": null, "dur": null, "ch": 3, "stats": []}	{"tox": null, "dur": null, "ch": 3, "stats": []}	ok
+Silver Dust Bomb 3	Superior Moon Dust	ng	{"tox": null, "dur": null, "ch": 4, "stats": []}	{"tox": null, "dur": null, "ch": 4, "stats": []}	ok
+Snow Ball	Snowball	ng	{"tox": null, "dur": null, "ch": 3, "stats": []}	{"tox": null, "dur": null, "ch": 3, "stats": []}	ok
+White Frost 1	Northern Wind	ng	{"tox": null, "dur": 4, "ch": 2, "stats": []}	{"tox": null, "dur": 4, "ch": 2, "stats": []}	ok
+White Frost 2	Enhanced Northern Wind	ng	{"tox": null, "dur": 4, "ch": 3, "stats": []}	{"tox": null, "dur": 4, "ch": 3, "stats": []}	ok
+White Frost 3	Superior Northern Wind	ng	{"tox": null, "dur": 4, "ch": 4, "stats": []}	{"tox": null, "dur": 4, "ch": 4, "stats": []}	ok
+Beast Oil 1	Beast oil	ng	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Beasts", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Beasts", 0.1]]}	ok
+Beast Oil 2	Enhanced beast oil	ng	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Beasts", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Beasts", 0.25]]}	ok
+Beast Oil 3	Superior beast oil	ng	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Beasts", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Beasts", 0.5]]}	ok
+Cursed Oil 1	Cursed oil	ng	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Cursed Ones", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Cursed Ones", 0.1]]}	ok
+Cursed Oil 2	Enhanced cursed oil	ng	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Cursed Ones", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Cursed Ones", 0.25]]}	ok
+Cursed Oil 3	Superior cursed oil	ng	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Cursed Ones", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Cursed Ones", 0.5]]}	ok
+Draconide Oil 1	Draconid oil	ng	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Draconids", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Draconids", 0.1]]}	ok
+Draconide Oil 2	Enhanced draconid oil	ng	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Draconids", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Draconids", 0.25]]}	ok
+Draconide Oil 3	Superior draconid oil	ng	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Draconids", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Draconids", 0.5]]}	ok
+Hanged Man Venom 1	Hanged Man's Venom	ng	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus humans and nonhumans", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus humans and nonhumans", 0.1]]}	ok
+Hanged Man Venom 2	Enhanced Hanged Man's Venom	ng	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus humans and nonhumans", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus humans and nonhumans", 0.25]]}	ok
+Hanged Man Venom 3	Superior Hanged Man's Venom	ng	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus humans and nonhumans", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus humans and nonhumans", 0.5]]}	ok
+Hybrid Oil 1	Hybrid oil	ng	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Hybrids", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Hybrids", 0.1]]}	ok
+Hybrid Oil 2	Enhanced hybrid oil	ng	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Hybrids", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Hybrids", 0.25]]}	ok
+Hybrid Oil 3	Superior hybrid oil	ng	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Hybrids", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Hybrids", 0.5]]}	ok
+Insectoid Oil 1	Insectoid oil	ng	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Insectoids", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Insectoids", 0.1]]}	ok
+Insectoid Oil 2	Enhanced insectoid oil	ng	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Insectoids", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Insectoids", 0.25]]}	ok
+Insectoid Oil 3	Superior insectoid oil	ng	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Insectoids", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Insectoids", 0.5]]}	ok
+Magicals Oil 1	Elementa oil	ng	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Elementa", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Elementa", 0.1]]}	ok
+Magicals Oil 2	Enhanced elementa oil	ng	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Elementa", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Elementa", 0.25]]}	ok
+Magicals Oil 3	Superior elementa oil	ng	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Elementa", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Elementa", 0.5]]}	ok
+Necrophage Oil 1	Necrophage oil	ng	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Necrophages", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Necrophages", 0.1]]}	ok
+Necrophage Oil 2	Enhanced necrophage oil	ng	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Necrophages", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Necrophages", 0.25]]}	ok
+Necrophage Oil 3	Superior necrophage oil	ng	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Necrophages", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Necrophages", 0.5]]}	ok
+Ogre Oil 1	Ogroid oil	ng	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Ogroids", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Ogroids", 0.1]]}	ok
+Ogre Oil 2	Enhanced ogroid oil	ng	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Ogroids", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Ogroids", 0.25]]}	ok
+Ogre Oil 3	Superior ogroid oil	ng	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Ogroids", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Ogroids", 0.5]]}	ok
+Relic Oil 1	Relict oil	ng	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Relicts", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Relicts", 0.1]]}	ok
+Relic Oil 2	Enhanced relict oil	ng	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Relicts", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Relicts", 0.25]]}	ok
+Relic Oil 3	Superior relict oil	ng	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Relicts", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Relicts", 0.5]]}	ok
+Specter Oil 1	Specter oil	ng	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Specters", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Specters", 0.1]]}	ok
+Specter Oil 2	Enhanced specter oil	ng	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Specters", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Specters", 0.25]]}	ok
+Specter Oil 3	Superior specter oil	ng	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Specters", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Specters", 0.5]]}	ok
+Vampire Oil 1	Vampire oil	ng	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Vampires", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Vampires", 0.1]]}	ok
+Vampire Oil 2	Enhanced vampire oil	ng	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Vampires", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Vampires", 0.25]]}	ok
+Vampire Oil 3	Superior vampire oil	ng	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Vampires", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Vampires", 0.5]]}	ok
+Black Blood 1	Black Blood	ng_plus	{"tox": 25, "dur": 30, "ch": 3, "stats": []}	{"tox": 25, "dur": 30, "ch": 3, "stats": []}	ok
+Black Blood 2	Enhanced Black Blood	ng_plus	{"tox": 25, "dur": 45, "ch": 4, "stats": []}	{"tox": 25, "dur": 45, "ch": 4, "stats": []}	ok
+Black Blood 3	Superior Black Blood	ng_plus	{"tox": 25, "dur": 60, "ch": 5, "stats": []}	{"tox": 25, "dur": 60, "ch": 5, "stats": []}	ok
+Blizzard 1	Blizzard	ng_plus	{"tox": 20, "dur": 8, "ch": 2, "stats": []}	{"tox": 20, "dur": 8, "ch": 2, "stats": []}	ok
+Blizzard 2	Enhanced Blizzard	ng_plus	{"tox": 20, "dur": 10, "ch": 3, "stats": []}	{"tox": 20, "dur": 10, "ch": 3, "stats": []}	ok
+Blizzard 3	Superior Blizzard	ng_plus	{"tox": 20, "dur": 12, "ch": 4, "stats": []}	{"tox": 20, "dur": 12, "ch": 4, "stats": []}	ok
+Cat 1	Cat	ng_plus	{"tox": 15, "dur": 60, "ch": 3, "stats": []}	{"tox": 15, "dur": 60, "ch": 3, "stats": []}	ok
+Cat 2	Enhanced Cat	ng_plus	{"tox": 15, "dur": 120, "ch": 4, "stats": []}	{"tox": 15, "dur": 120, "ch": 4, "stats": []}	ok
+Cat 3	Superior Cat	ng_plus	{"tox": 15, "dur": 180, "ch": 5, "stats": []}	{"tox": 15, "dur": 180, "ch": 5, "stats": []}	ok
+Full Moon 1	Full Moon	ng_plus	{"tox": 25, "dur": 60, "ch": 3, "stats": []}	{"tox": 25, "dur": 60, "ch": 3, "stats": []}	ok
+Full Moon 2	Enhanced Full Moon	ng_plus	{"tox": 25, "dur": 90, "ch": 4, "stats": []}	{"tox": 25, "dur": 90, "ch": 4, "stats": []}	ok
+Full Moon 3	Superior Full Moon	ng_plus	{"tox": 25, "dur": 180, "ch": 5, "stats": []}	{"tox": 25, "dur": 180, "ch": 5, "stats": []}	ok
+Golden Oriole 1	Golden Oriole	ng_plus	{"tox": 25, "dur": 60, "ch": 3, "stats": []}	{"tox": 25, "dur": 60, "ch": 3, "stats": []}	ok
+Golden Oriole 2	Enhanced Golden Oriole	ng_plus	{"tox": 25, "dur": 120, "ch": 4, "stats": []}	{"tox": 25, "dur": 120, "ch": 4, "stats": []}	ok
+Golden Oriole 3	Superior Golden Oriole	ng_plus	{"tox": 25, "dur": 180, "ch": 5, "stats": []}	{"tox": 25, "dur": 180, "ch": 5, "stats": []}	ok
+Killer Whale 1	Killer Whale	ng_plus	{"tox": 15, "dur": null, "ch": 3, "stats": []}	{"tox": 15, "dur": null, "ch": 3, "stats": []}	ok
+Maribor Forest 1	Maribor Forest	ng_plus	{"tox": 20, "dur": 30, "ch": 3, "stats": []}	{"tox": 20, "dur": 30, "ch": 3, "stats": []}	ok
+Maribor Forest 2	Enhanced Maribor Forest	ng_plus	{"tox": 20, "dur": 60, "ch": 4, "stats": []}	{"tox": 20, "dur": 60, "ch": 4, "stats": []}	ok
+Maribor Forest 3	Superior Maribor Forest	ng_plus	{"tox": 20, "dur": 90, "ch": 5, "stats": []}	{"tox": 20, "dur": 90, "ch": 5, "stats": []}	ok
+Petri Philtre 1	Petri's Philter	ng_plus	{"tox": 25, "dur": 30, "ch": 3, "stats": []}	{"tox": 25, "dur": 30, "ch": 3, "stats": []}	ok
+Petri Philtre 2	Enhanced Petri's Philter	ng_plus	{"tox": 25, "dur": 60, "ch": 4, "stats": []}	{"tox": 25, "dur": 60, "ch": 4, "stats": []}	ok
+Petri Philtre 3	Superior Petri's Philter	ng_plus	{"tox": 25, "dur": 90, "ch": 5, "stats": []}	{"tox": 25, "dur": 90, "ch": 5, "stats": []}	ok
+Swallow 1	Swallow	ng_plus	{"tox": 20, "dur": 20, "ch": 3, "stats": []}	{"tox": 20, "dur": 20, "ch": 3, "stats": []}	ok
+Swallow 2	Enhanced Swallow	ng_plus	{"tox": 20, "dur": 20, "ch": 4, "stats": []}	{"tox": 20, "dur": 20, "ch": 4, "stats": []}	ok
+Swallow 3	Superior Swallow	ng_plus	{"tox": 20, "dur": 20, "ch": 5, "stats": []}	{"tox": 20, "dur": 20, "ch": 5, "stats": []}	ok
+Tawny Owl 1	Tawny Owl	ng_plus	{"tox": 20, "dur": 30, "ch": 3, "stats": []}	{"tox": 20, "dur": 30, "ch": 3, "stats": []}	ok
+Tawny Owl 2	Enhanced Tawny Owl	ng_plus	{"tox": 20, "dur": 45, "ch": 4, "stats": []}	{"tox": 20, "dur": 45, "ch": 4, "stats": []}	ok
+Tawny Owl 3	Superior Tawny Owl	ng_plus	{"tox": 20, "dur": 60, "ch": 5, "stats": []}	{"tox": 20, "dur": 60, "ch": 5, "stats": []}	ok
+Thunderbolt 1	Thunderbolt	ng_plus	{"tox": 25, "dur": 30, "ch": 3, "stats": []}	{"tox": 25, "dur": 30, "ch": 3, "stats": []}	ok
+Thunderbolt 2	Enhanced Thunderbolt	ng_plus	{"tox": 25, "dur": 60, "ch": 4, "stats": []}	{"tox": 25, "dur": 60, "ch": 4, "stats": []}	ok
+Thunderbolt 3	Superior Thunderbolt	ng_plus	{"tox": 25, "dur": 90, "ch": 5, "stats": []}	{"tox": 25, "dur": 90, "ch": 5, "stats": []}	ok
+White Honey 1	White Honey	ng_plus	{"tox": null, "dur": null, "ch": 1, "stats": []}	{"tox": null, "dur": null, "ch": 1, "stats": []}	ok
+White Honey 2	Enhanced White Honey	ng_plus	{"tox": null, "dur": null, "ch": 2, "stats": []}	{"tox": null, "dur": null, "ch": 2, "stats": []}	ok
+White Honey 3	Superior White Honey	ng_plus	{"tox": null, "dur": null, "ch": 5, "stats": []}	{"tox": null, "dur": null, "ch": 5, "stats": []}	ok
+Mutagen 1	Katakan decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 2	Arachas decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 3	Cockatrice decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 4	Archgriffin decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 5	Water hag decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 6	Nightwraith decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 7	Ekimmara decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 8	Chort decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 9	Foglet decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 10	Wyvern decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 11	Doppler decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 12	Troll decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 13	Noonwraith decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 14	Succubus decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 15	Alghoul decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 16	Fiend decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 17	Forktail decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 18	Grave hag decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 19	Wraith decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 20	Earth elemental decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 21	Ekhidna decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 22	Ancient leshen decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 23	Basilisk decoction	ng_plus	{"tox": null, "dur": 3960, "ch": 1, "stats": []}	{"tox": null, "dur": 3960, "ch": 1, "stats": []}	ok
+Mutagen 24	Werewolf decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 25	Nekker warrior decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 26	Leshen decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 27	Griffin decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+Mutagen 28	Reliever's decoction	ng_plus	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	{"tox": null, "dur": 1800, "ch": 1, "stats": []}	ok
+White Raffards Decoction 1	White Raffard's Decoction	ng_plus	{"tox": 25, "dur": null, "ch": 2, "stats": []}	{"tox": 25, "dur": null, "ch": 2, "stats": []}	ok
+White Raffards Decoction 2	Enhanced White Raffard's Decoction	ng_plus	{"tox": 25, "dur": null, "ch": 2, "stats": []}	{"tox": 25, "dur": null, "ch": 2, "stats": []}	ok
+White Raffards Decoction 3	Superior White Raffard's Decoction	ng_plus	{"tox": 25, "dur": null, "ch": 3, "stats": []}	{"tox": 25, "dur": null, "ch": 3, "stats": []}	ok
+Dancing Star 1	Dancing Star	ng_plus	{"tox": null, "dur": 4, "ch": 2, "stats": [["Fire damage", 100]]}	{"tox": null, "dur": 4, "ch": 2, "stats": [["Fire damage", 100]]}	ok
+Dancing Star 2	Enhanced Dancing Star	ng_plus	{"tox": null, "dur": 7, "ch": 3, "stats": [["Fire damage", 150]]}	{"tox": null, "dur": 7, "ch": 3, "stats": [["Fire damage", 150]]}	ok
+Dancing Star 3	Superior Dancing Star	ng_plus	{"tox": null, "dur": 10, "ch": 4, "stats": [["Fire damage", 250]]}	{"tox": null, "dur": 10, "ch": 4, "stats": [["Fire damage", 250]]}	ok
+Devils Puffball 1	Devil's Puffball	ng_plus	{"tox": null, "dur": 10, "ch": 2, "stats": [["Poison damage", 100]]}	{"tox": null, "dur": 10, "ch": 2, "stats": [["Poison damage", 100]]}	ok
+Devils Puffball 2	Enhanced Devil's Puffball	ng_plus	{"tox": null, "dur": 30, "ch": 3, "stats": [["Poison damage", 150]]}	{"tox": null, "dur": 30, "ch": 3, "stats": [["Poison damage", 150]]}	ok
+Devils Puffball 3	Superior Devil's Puffball	ng_plus	{"tox": null, "dur": 30, "ch": 4, "stats": [["Poison damage", 250]]}	{"tox": null, "dur": 30, "ch": 4, "stats": [["Poison damage", 250]]}	ok
+Dragons Dream 1	Dragon's Dream	ng_plus	{"tox": null, "dur": 15, "ch": 2, "stats": [["Fire damage", [250, 350]]]}	{"tox": null, "dur": 15, "ch": 2, "stats": [["Fire damage", [250, 350]]]}	ok
+Dragons Dream 2	Enhanced Dragon's Dream	ng_plus	{"tox": null, "dur": 30, "ch": 3, "stats": [["Burning chance", 0.5], ["Fire damage", [350, 450]]]}	{"tox": null, "dur": 30, "ch": 3, "stats": [["Burning chance", 0.5], ["Fire damage", [350, 450]]]}	ok
+Dragons Dream 3	Superior Dragon's Dream	ng_plus	{"tox": null, "dur": 30, "ch": 4, "stats": [["Burning chance", 0.5], ["Explosion fire damage", 20], ["Fire damage", [450, 600]]]}	{"tox": null, "dur": 30, "ch": 4, "stats": [["Burning chance", 0.5], ["Explosion fire damage", 20], ["Fire damage", [450, 600]]]}	ok
+Dwimeritium Bomb 1	Dimeritium bomb	ng_plus	{"tox": null, "dur": 15, "ch": 2, "stats": []}	{"tox": null, "dur": 15, "ch": 2, "stats": []}	ok
+Dwimeritium Bomb 2	Enhanced Dimeritium bomb	ng_plus	{"tox": null, "dur": 30, "ch": 3, "stats": []}	{"tox": null, "dur": 30, "ch": 3, "stats": []}	ok
+Dwimeritium Bomb 3	Superior Dimeritium bomb	ng_plus	{"tox": null, "dur": 30, "ch": 4, "stats": [["Effect duration outside the cloud", 5]]}	{"tox": null, "dur": 30, "ch": 4, "stats": [["Effect duration outside the cloud", 5]]}	ok
+Grapeshot 1	Grapeshot	ng_plus	{"tox": null, "dur": null, "ch": 2, "stats": [["Fire damage", 10], ["Physical damage", 450], ["Silver damage", 450]]}	{"tox": null, "dur": null, "ch": 2, "stats": [["Fire damage", 10], ["Physical damage", 450], ["Silver damage", 450]]}	ok
+Grapeshot 2	Enhanced Grapeshot	ng_plus	{"tox": null, "dur": null, "ch": 3, "stats": [["Fire damage", 15], ["Physical damage", 750], ["Silver damage", 750]]}	{"tox": null, "dur": null, "ch": 3, "stats": [["Fire damage", 15], ["Physical damage", 750], ["Silver damage", 750]]}	ok
+Grapeshot 3	Superior Grapeshot	ng_plus	{"tox": null, "dur": null, "ch": 4, "stats": [["Fire damage", 20], ["Physical damage", 900], ["Silver damage", 900]]}	{"tox": null, "dur": null, "ch": 4, "stats": [["Fire damage", 20], ["Physical damage", 900], ["Silver damage", 900]]}	ok
+Samum 1	Samum	ng_plus	{"tox": null, "dur": null, "ch": 2, "stats": []}	{"tox": null, "dur": null, "ch": 2, "stats": []}	ok
+Samum 2	Enhanced Samum	ng_plus	{"tox": null, "dur": null, "ch": 3, "stats": []}	{"tox": null, "dur": null, "ch": 3, "stats": []}	ok
+Samum 3	Superior Samum	ng_plus	{"tox": null, "dur": null, "ch": 4, "stats": [["Critical hit chance", 1]]}	{"tox": null, "dur": null, "ch": 4, "stats": [["Critical hit chance", 1]]}	ok
+Silver Dust Bomb 1	Moon Dust	ng_plus	{"tox": null, "dur": null, "ch": 2, "stats": []}	{"tox": null, "dur": null, "ch": 2, "stats": []}	ok
+Silver Dust Bomb 2	Enhanced Moon Dust	ng_plus	{"tox": null, "dur": null, "ch": 3, "stats": []}	{"tox": null, "dur": null, "ch": 3, "stats": []}	ok
+Silver Dust Bomb 3	Superior Moon Dust	ng_plus	{"tox": null, "dur": null, "ch": 4, "stats": []}	{"tox": null, "dur": null, "ch": 4, "stats": []}	ok
+Snow Ball	Snowball	ng_plus	{"tox": null, "dur": null, "ch": 3, "stats": []}	{"tox": null, "dur": null, "ch": 3, "stats": []}	ok
+White Frost 1	Northern Wind	ng_plus	{"tox": null, "dur": 4, "ch": 2, "stats": []}	{"tox": null, "dur": 4, "ch": 2, "stats": []}	ok
+White Frost 2	Enhanced Northern Wind	ng_plus	{"tox": null, "dur": 4, "ch": 3, "stats": []}	{"tox": null, "dur": 4, "ch": 3, "stats": []}	ok
+White Frost 3	Superior Northern Wind	ng_plus	{"tox": null, "dur": 4, "ch": 4, "stats": []}	{"tox": null, "dur": 4, "ch": 4, "stats": []}	ok
+Beast Oil 1	Beast oil	ng_plus	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Beasts", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Beasts", 0.1]]}	ok
+Beast Oil 2	Enhanced beast oil	ng_plus	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Beasts", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Beasts", 0.25]]}	ok
+Beast Oil 3	Superior beast oil	ng_plus	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Beasts", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Beasts", 0.5]]}	ok
+Cursed Oil 1	Cursed oil	ng_plus	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Cursed Ones", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Cursed Ones", 0.1]]}	ok
+Cursed Oil 2	Enhanced cursed oil	ng_plus	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Cursed Ones", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Cursed Ones", 0.25]]}	ok
+Cursed Oil 3	Superior cursed oil	ng_plus	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Cursed Ones", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Cursed Ones", 0.5]]}	ok
+Draconide Oil 1	Draconid oil	ng_plus	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Draconids", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Draconids", 0.1]]}	ok
+Draconide Oil 2	Enhanced draconid oil	ng_plus	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Draconids", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Draconids", 0.25]]}	ok
+Draconide Oil 3	Superior draconid oil	ng_plus	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Draconids", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Draconids", 0.5]]}	ok
+Hanged Man Venom 1	Hanged Man's Venom	ng_plus	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus humans and nonhumans", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus humans and nonhumans", 0.1]]}	ok
+Hanged Man Venom 2	Enhanced Hanged Man's Venom	ng_plus	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus humans and nonhumans", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus humans and nonhumans", 0.25]]}	ok
+Hanged Man Venom 3	Superior Hanged Man's Venom	ng_plus	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus humans and nonhumans", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus humans and nonhumans", 0.5]]}	ok
+Hybrid Oil 1	Hybrid oil	ng_plus	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Hybrids", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Hybrids", 0.1]]}	ok
+Hybrid Oil 2	Enhanced hybrid oil	ng_plus	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Hybrids", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Hybrids", 0.25]]}	ok
+Hybrid Oil 3	Superior hybrid oil	ng_plus	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Hybrids", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Hybrids", 0.5]]}	ok
+Insectoid Oil 1	Insectoid oil	ng_plus	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Insectoids", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Insectoids", 0.1]]}	ok
+Insectoid Oil 2	Enhanced insectoid oil	ng_plus	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Insectoids", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Insectoids", 0.25]]}	ok
+Insectoid Oil 3	Superior insectoid oil	ng_plus	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Insectoids", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Insectoids", 0.5]]}	ok
+Magicals Oil 1	Elementa oil	ng_plus	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Elementa", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Elementa", 0.1]]}	ok
+Magicals Oil 2	Enhanced elementa oil	ng_plus	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Elementa", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Elementa", 0.25]]}	ok
+Magicals Oil 3	Superior elementa oil	ng_plus	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Elementa", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Elementa", 0.5]]}	ok
+Necrophage Oil 1	Necrophage oil	ng_plus	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Necrophages", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Necrophages", 0.1]]}	ok
+Necrophage Oil 2	Enhanced necrophage oil	ng_plus	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Necrophages", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Necrophages", 0.25]]}	ok
+Necrophage Oil 3	Superior necrophage oil	ng_plus	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Necrophages", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Necrophages", 0.5]]}	ok
+Ogre Oil 1	Ogroid oil	ng_plus	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Ogroids", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Ogroids", 0.1]]}	ok
+Ogre Oil 2	Enhanced ogroid oil	ng_plus	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Ogroids", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Ogroids", 0.25]]}	ok
+Ogre Oil 3	Superior ogroid oil	ng_plus	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Ogroids", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Ogroids", 0.5]]}	ok
+Relic Oil 1	Relict oil	ng_plus	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Relicts", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Relicts", 0.1]]}	ok
+Relic Oil 2	Enhanced relict oil	ng_plus	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Relicts", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Relicts", 0.25]]}	ok
+Relic Oil 3	Superior relict oil	ng_plus	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Relicts", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Relicts", 0.5]]}	ok
+Specter Oil 1	Specter oil	ng_plus	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Specters", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Specters", 0.1]]}	ok
+Specter Oil 2	Enhanced specter oil	ng_plus	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Specters", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Specters", 0.25]]}	ok
+Specter Oil 3	Superior specter oil	ng_plus	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Specters", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Specters", 0.5]]}	ok
+Vampire Oil 1	Vampire oil	ng_plus	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Vampires", 0.1]]}	{"tox": null, "dur": null, "ch": 20, "stats": [["Attack power versus Vampires", 0.1]]}	ok
+Vampire Oil 2	Enhanced vampire oil	ng_plus	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Vampires", 0.25]]}	{"tox": null, "dur": null, "ch": 40, "stats": [["Attack power versus Vampires", 0.25]]}	ok
+Vampire Oil 3	Superior vampire oil	ng_plus	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Vampires", 0.5]]}	{"tox": null, "dur": null, "ch": 60, "stats": [["Attack power versus Vampires", 0.5]]}	ok

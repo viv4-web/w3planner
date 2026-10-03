@@ -1,6 +1,6 @@
 # Import save (v31)
 
-Fills the planner from a Witcher 3 **Next-Gen (4.0+) PC** `.sav`. The file is read **in the browser** (File API); it is never uploaded: the page has `connect-src 'none'`, no code path sends bytes anywhere, and the tests fail on any request to another host. Nothing of the importer loads until the dialog opens (the reader is its own hashed script, `src/saveread.js`, plus `data/savenames.json`).
+Fills the planner from a Witcher 3 **remaster (4.0+) PC** `.sav`. The file is read **in the browser** (File API); it is never uploaded: the page has `connect-src 'none'`, no code path sends bytes anywhere, and the tests fail on any request to another host. Nothing of the importer loads until the dialog opens (the reader is its own hashed script, `src/saveread.js`, plus `data/savenames.json`).
 
 ## What it reads (v1 scope) and what it does with it
 | Section | From the save | Goes into |
