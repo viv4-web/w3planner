@@ -72,10 +72,10 @@ function playerBlob(d,tb){
  for(let i=0;i<tb.ents.length;i++){const o=tb.ents[i][0];if(d[o]!==0x53||d[o+1]!==0x53)continue;
   const ts=(i+1<tb.ents.length?tb.ents[i+1][0]:o+tb.ents[i][1])-o;if(find(d,pat,o,o+ts)<0)continue;
   // top-level tokens of the blob
-  let p=o+6;const end=o+ts;let entity=null;
+  let p=o+6;const end=o+ts;let entity=null,stats=null;
   while(p<end){const m=str(d,p,4);
    if(m==='SXAP')p+=16;
-   else if(m==='BLCK'){const nm=N[u16(d,p+4)-1],sz=u32(d,p+6),st=p+10;if(nm==='Entity')entity=[st,st+sz];p=st+sz}
+   else if(m==='BLCK'){const nm=N[u16(d,p+4)-1],sz=u32(d,p+6),st=p+10;if(nm==='Entity')entity=[st,st+sz];else if(nm==='stats')stats=[st,st+sz];p=st+sz}
    else if(m==='PORP'||m==='AVAL')p+=12+u32(d,p+8);
    else if(m==='SBDF')p+=8+u32(d,p+4);
    else break}
@@ -85,7 +85,7 @@ function playerBlob(d,tb){
    if(m==='PORP'||m==='AVAL'){const nm=N[u16(d,q+4)-1],ty=N[u16(d,q+6)-1],sz=u32(d,q+8);if(m==='PORP')P[nm]={type:ty,val:d.subarray(q+12,q+12+sz)};q+=12+sz}
    else if(m==='BLCK')q+=10+u32(d,q+6);
    else break}
-  return{P,inv:p<end?d.subarray(p,end):null}}
+  return{P,inv:p<end?d.subarray(p,end):null,stats}}
  throw new SaveError('PARSE','the player data was not found')}
 
 // ---- the inventory (CInventoryComponent) binary: u16 item count at byte 11, then variable records. Records are found by their fixed middle:
@@ -95,19 +95,23 @@ function inventory(raw,N){
  for(let i=13;i<raw.length-6;i++){
   if(raw[i]===0x43&&raw[i+1]===0&&raw[i+2]===0x44&&raw[i+3]===0&&raw[i+4]===1&&raw[i+5]===0)starts.add(i-13);
   if(raw[i]===0&&raw[i+1]===0&&raw[i+2]===0x80&&raw[i+3]===0xbf)starts.add(i-19)}
- const items=[];
- for(const st of Array.from(starts).sort((a,b)=>a-b)){
-  if(st<13||st+30>raw.length)continue;const name=u16(raw,st);if(name<1||name>N.length)continue;const ne=raw[st+23];if(ne>6)continue;
+ const items=[],sorted=Array.from(starts).sort((a,b)=>a-b);
+ sorted.forEach((st,k)=>{
+  if(st<13||st+30>raw.length)return;const name=u16(raw,st);if(name<1||name>N.length)return;const ne=raw[st+23];if(ne>6)return;
   let o=st+24;const ex={};let ok=true;
-  for(let k=0;k<ne;k++){if(o+7>raw.length){ok=false;break}const en=u16(raw,o);ex[N[en-1]||'?']=u32(raw,o+2);o+=7}
-  if(!ok||o+4>raw.length)continue;
-  items.push({id:N[name-1],qty:u16(raw,st+17),ref:u16(raw,o),extras:ex})}
+  for(let j=0;j<ne;j++){if(o+7>raw.length){ok=false;break}const en=u16(raw,o);ex[N[en-1]||'?']=u32(raw,o+2);o+=7}
+  if(!ok||o+4>raw.length)return;
+  // after the extras: [u16 id][u16 count x 256][count x u16 ability name]...; items made by the game's random generator (autogen_*, MA_* magic abilities, quality_*) list their rolled abilities there,
+  // the fixed relics and set pieces list none (docs/IMPORT.md, "Rolled values and sockets")
+  const end=k+1<sorted.length?sorted[k+1]:raw.length,cnt=Math.min(raw[o+3],Math.max(0,Math.floor((end-(o+4))/2))),abilities=[];
+  for(let j=0;j<cnt;j++){const an=u16(raw,o+4+2*j);if(an>=1&&an<=N.length)abilities.push(N[an-1])}
+  items.push({id:N[name-1],qty:u16(raw,st+17),ref:u16(raw,o),extras:ex,abilities})});
  return{count:header,items}}
 
 const SLOT_NAMES=['invalid','SilverSword','SteelSword','Armor','Boots','Pants','Gloves','Petard1','Petard2','RangedWeapon','Quickslot1','Quickslot2','Unused','Hair','Potion1','Potion2','Mask','Bolt','PotMut1','PotMut2','PotMut3','PotMut4','SkillMut1','SkillMut2','SkillMut3','SkillMut4','HorseBlinders','HorseSaddle','HorseBag','HorseTrophy','Potion3','Potion4'];
 // bytes of a save (Uint8Array) -> what the importer needs. Throws SaveError('NOT_SAVE' | 'PARSE', message).
 function readSave(bytes){
- const d=decompress(bytes),hs=i32(bytes,12),tb=readTables(d,hs),N=tb.names,{P,inv}=playerBlob(d,tb);
+ const d=decompress(bytes),hs=i32(bytes,12),tb=readTables(d,hs),N=tb.names,{P,inv,stats}=playerBlob(d,tb);
  const get=k=>{if(!P[k])throw new SaveError('PARSE','"'+k+'" was not found in the player data');return value(P[k].type,P[k].val,N)};
  const lm=get('levelManager'),am=get('abilityManager'),slots=get('itemSlots');
  const pts=lm.points||[],sp=pts[0]||{},xp=pts[1]||{},total=(xp.used||0)+(xp.free||0),defs=lm.levelDefinitions||[];
@@ -117,10 +121,34 @@ function readSave(bytes){
  const skills=(am.skills||[]).filter(x=>x.abilityName).map(x=>({id:x.abilityName,level:x.level||0,max:x.maxLevel||0,core:!!x.isCoreSkill}));
  const skillSlots=(am.skillSlots||[]).map(s=>({id:s.id,skill:s.socketedSkill?((am.skills||[]).find(x=>x.skillType===s.socketedSkill)||{}).abilityName||null:null,unlocked:!!s.unlocked}));
  const invr=inventory(inv,N),byRef=new Map();invr.items.forEach(r=>{if(!byRef.has(r.ref))byRef.set(r.ref,r)});
- const equipped={};slots.forEach((s,i)=>{const v=s&&s.value;if(v&&SLOT_NAMES[i]){const r=byRef.get(v);equipped[SLOT_NAMES[i]]=r?{id:r.id,qty:r.qty,extras:r.extras}:{id:null,ref:v}}});
+ const equipped={};slots.forEach((s,i)=>{const v=s&&s.value;if(v&&SLOT_NAMES[i]){const r=byRef.get(v);equipped[SLOT_NAMES[i]]=r?{id:r.id,qty:r.qty,extras:r.extras,abilities:r.abilities}:{id:null,ref:v}}});
  const mutagenSlots=(am.mutagenSlots||[]).map(m=>{const v=m.item&&m.item.value;const r=v?byRef.get(v):null;return{slot:m.equipmentSlot,unlockedAt:m.unlockedAtLevel,item:r?r.id:null}});
  const crowns=(invr.items.find(r=>r.id==='Crowns')||{}).qty||0;
- return{codes:tb.codes,character,skills,skillSlots,mutagenSlots,equipped,inventory:invr.items,inventoryHeader:invr.count,crowns}}
+ return{codes:tb.codes,character,skills,skillSlots,mutagenSlots,equipped,inventory:invr.items,inventoryHeader:invr.count,crowns,playTimeSec:playTime(d,N),effects:effects(P.effectManager,N),abilities:abilityList(d,N,stats)}}
+// The player's own ability list (v32c): the block "stats" > "characterStats" of the player's blob holds `count` and `value`, an array of CNames in which an ability that was added n times appears n times
+// (the abilities the game's ability manager and the Character screen add: Lvl2.., all_PC_ability, perk_24 x medium armour pieces x level, <mutagen>_x, <mutagen>_synergy_bonus, active effects ...). -> {name: count} or null.
+function abilityList(d,N,range){if(!range)return null;
+ let p=range[0];const end=range[1];
+ const tok=(from,to)=>{const out=[];let q=from;while(q<to){const m=str(d,q,4);
+   if(m==='AVAL'||m==='PORP'){const nm=N[u16(d,q+4)-1],ty=N[u16(d,q+6)-1],sz=u32(d,q+8);out.push({nm,ty,val:d.subarray(q+12,q+12+sz)});q+=12+sz}
+   else if(m==='BLCK'){const nm=N[u16(d,q+4)-1],sz=u32(d,q+6);out.push({nm,blck:[q+10,q+10+sz]});q+=10+sz}
+   else break}return out};
+ const cs=tok(p,end).find(t=>t.nm==='characterStats'&&t.blck);if(!cs)return null;
+ const v=tok(cs.blck[0],cs.blck[1]).find(t=>t.nm==='value'&&t.val);if(!v||v.ty!=='array:2,0,CName')return null;
+ const n=u32(v.val,0);if(4+2*n>v.val.length||n>5000)return null;
+ const out={};for(let i=0;i<n;i++){const k=u16(v.val,4+2*i);if(k>=1&&k<=N.length){const nm=N[k-1];out[nm]=(out[nm]||0)+1}}
+ return out}
+// The player's active effects (potions, whetstones, Places of Power ...): the effectManager property lists W3Effect_* objects, each a property list with abilityName, duration and timeLeft (seconds).
+function effects(pr,N){const out=[];if(!pr)return out;const v=pr.val;
+ for(let i=0;i+1<v.length;i++){const n=u16(v,i);if(n>=1&&n<=N.length&&N[n-1].indexOf('W3Effect_')===0){
+  try{const L=propsPos(v,i+2,v.length,N).list,o={cls:N[n-1]};
+   L.forEach(([a,t,x])=>{if(a==='abilityName'&&t==='CName'){const k=u16(x,0);o.ability=k>0&&k<=N.length?N[k-1]:null}else if((a==='timeLeft'||a==='duration')&&t==='Float')o[a]=dv(x).getFloat32(0,true)});
+   out.push(o)}catch(e){}}}
+ return out}
+// Time played: the one property "GameTime" of type Double in the save (seconds, e.g. 37522.0632893 = 10 h 25 min; read from two saves of one run, it grows by the minutes played). null when not found.
+function playTime(d,N){const g=N.indexOf('GameTime')+1,t=N.indexOf('Double')+1;if(g<1||t<1)return null;const dv=new DataView(d.buffer,d.byteOffset,d.length);
+ for(let i=0;i+12<=d.length;i++)if(d[i]===(g&255)&&d[i+1]===(g>>8)&&d[i+2]===(t&255)&&d[i+3]===(t>>8)){const x=dv.getFloat64(i+4,true);if(x>=0&&x<1e8)return x}
+ return null}
 
 // the JSON next to a save: {saveMetadata:{initial buildID, current buildID, gameVersion, saveVersion, platform, modsMetadata:{numMods, modsList:{mod...}}}}
 function parseSidecar(text){

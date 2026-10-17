@@ -114,7 +114,7 @@ def main():
     src = Path(a.src)
     extra = lambda *names: "".join(("\n" + read(src / n)) for n in names if (src / n).is_file())   # screens.css, equipment.js, consumables.js, screens.js: more source of the same page (one scope), in this order
     css = tokens(read(src / "app.css") + extra("screens.css", "glossary.css", "importsave.css"))
-    js = re.sub(r"/\*@lazyjs:([a-z0-9_]+)\*/", lazyjs, re.sub(r"/\*@file:([a-z0-9_]+)\*/", lazy, tokens(re.sub(r"/\*@data:([A-Z_]+)\*/", data, read(src / "app.js") + extra("equipment.js", "consumables.js", "screens.js", "glossary.js", "importsave.js")))))
+    js = re.sub(r"/\*@lazyjs:([a-z0-9_]+)\*/", lazyjs, re.sub(r"/\*@file:([a-z0-9_]+)\*/", lazy, tokens(re.sub(r"/\*@data:([A-Z_]+)\*/", data, read(src / "app.js") + extra("equipment.js", "consumables.js", "screens.js", "glossary.js", "importsave.js", "stats.js")))))
     if gloss: js = js.replace("/*@glossary*/null", json.dumps(gloss, separators=(",", ":")))
     html = tokens(read(src / "index.html")).replace("{{css}}", css).replace("{{js}}", js)
     (out / "index.html").write_bytes(html.encode("utf-8"))

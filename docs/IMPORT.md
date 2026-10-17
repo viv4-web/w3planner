@@ -30,3 +30,57 @@ Container `SNFH` `FZLC`: i32 chunk count, i32 header size, per chunk (compressed
 
 ## Tests
 `tests/test_saveread.js` (node: LZ4 vectors, header and truncation errors, sidecar incl. repeated `mod` keys, the mutagen table, savenames, and the reference save if present), `tests/importcheck.py` (browser: button on every tab, dialog texts, lazy load, Escape, bad-file errors, food/unknown/mod rules on a synthetic result, the phone flow, offline has no button; and with the local reference save in `~/work/w3planner-art/save-spike/fixtures/refsave/` the whole acceptance list, Apply and the link round trip). The save, its .png/.json and the ground truth are **never committed**.
+
+## Rolled values, sockets and active effects (v32b)
+Read from three saves that are kept locally and never committed.
+- **Item records** (the player's inventory blob, found by the dye pair `43 00 44 00` / the float `-1.0`): `[name u16] ... [qty u16][durability float][u8 n][n x (u16 name, u32 value, u8)][u16 ref][u16 count x 256][count x u16 ability name][...]`. The extras name only flags and charges (`ammo_current`, `is_initialized`, `ItemDurabilityModified`, `ItemQualityModified`).
+- **Rolled values live in the ability list after the extras.** Items made by the game's random generator carry their rolled abilities there as name indices: `autogen_steel_base`, `autogen_steel_dmg` repeated once per damage step, `MA_*` magic abilities (`MA_Armor`, `MA_BurningResistance`, `MA_Vitality`, ...), `quality_masterwork_*` / `quality_magical_*`. The value of each is the ability's number in the game's XML, times the repeat count. The fixed relics and set pieces (Thousand Flowers) list **none**: their numbers are the XML numbers (steel sword 91, silver sword 171 exactly; the tooltip's 82-100 and 154-188 are the game's display range of one hit, the Player Stats screen uses the base). The importer reads the list (`abilities`); an equipped item that has one makes every stat it can change show "-" (its numbers are not decoded: no equipped random item was available to check against the game).
+- **Sockets (runestones, glyphs):** the carried `Rune ...` and `Glyph ...` are ordinary inventory records (quantities). No equipped item in these saves has one socketed, so what a socketed item's record looks like was not seen; an item with entries after its extras (the same ability list) is treated like a rolled item, so a socketed rune or glyph can not silently change a number. To learn the layout, a save with one rune in a sword and one glyph in an armour is needed.
+- **Active effects:** the player's `effectManager` property holds `W3Effect_*` objects, each a property list: `abilityName` (CName), `duration`, `timeLeft` (seconds, Float). Seen: `ShrineQuenEffect` (Place of Power, +20% Quen Sign intensity, 1800 s), `EnhancedWeaponEffect` (whetstone, +20% attack power, 3600 s), `W3Effect_AutoAirRegen` (no ability). These change Player Stats numbers, and the link cannot hold them: the importer keeps them in memory for the stats screen (`PS.imp.effects`). EnhancedWeaponEffect explained the silver sword's 233 = 171 x 1.2 + 28 (not a roll).
+- **Time played:** the one `GameTime` property of type Double (seconds).
+
+## The player's ability list (v32c)
+The save holds the player's whole ability list (`stats` > `characterStats` > `value`, an array of CNames; an ability added k times appears k times). It holds no computed Sign power or stamina regeneration, but the numbers are the sum over this list plus the worn items. `src/saveread.js` `abilityList` returns it as `{name: count}`; `src/stats.js` sums it with `STATS.spl` and compares with its own model for an imported build that has not been edited since; a difference shows "—". Details and the abilities the planner does not model: `~/work/w3planner-art/save-spike/FORMAT-NOTES.md` ("The player's ability list and stored stats").
+
+### stats-l9b contributors (v32c)
+`AutoSave_106591_7ea48400_52e9569.sav`, NG, level 9, Dol Blathanna set (Armor, Gloves, Pants, Boots), three Greater blue mutagens. Every number below is the game's.
+
+**Sign power of one Sign** (`GetTotalSignSpellPower`, a sum; the Sign intensity total is the mean of the five minus 1):
+
+| Contributor | Source | Amount |
+|---|---|---|
+| `all_PC_ability` | the player | 1.00 |
+| `Lvl2` to `Lvl9` | 3 x 0.02 + 5 x 0.01 | 0.11 |
+| `perk_24` x12 | 0.02 x (4 medium pieces x skill level 3); `SetPerkArmorBonus` | 0.24 |
+| `greater_mutagen_color_blue_x` x7 | 0.1 each | 0.70 |
+| `greater_mutagen_color_blue_synergy_bonus` x30 | 0.016667 each | 0.50 |
+| the three Greater blue mutagens' own ability | 0.1 each (modelled, not in the ability list) | 0.30 |
+| **Common** | | **2.85** |
+| Dol Blathanna Gloves `spell_power_aard` / `spell_power_igni` | items/def_item_armor_dol_blathanna.xml, "Dol Blathanna Gloves _Stats", mult 0.05 (NG+ 0.10) | +0.05 Aard, +0.05 Igni |
+| `ShrineQuenEffect` | the save's ability list | +0.20 Quen |
+
+| Sign | Power | Line (game = planner) |
+|---|---|---|
+| Aard | 2.90 | Stagger 2.90 / 2 - 4 x 0.016 = 139%; Telekinetic damage 0 |
+| Igni | 2.90 | Fire damage 100 x 2.90 = 290; Burning (1 + ln 2.90) / 2 - 0.064 = 97% plus the equipped Igni burn-chance skills (`magic_s8`, `magic_s9`), capped at 100% |
+| Quen | 3.05 | Physical damage reduction 200 x 3.05 = 610 |
+| Yrden | 2.85 | Slowdown 35%; Shock damage 120 x 2.85 = 342; Duration 33.50s |
+| Axii | 2.85 | Duration 5 x 2.85 = 14.25s |
+| **Total** | (2.90 + 2.90 + 3.05 + 2.85 + 2.85) / 5 = 2.91 | **+191%** |
+
+`stats-l9` (+144%) is the same sum with `perk_24` x12, 2 Greater blue mutagens (`_x` x6, synergy x16) and no Shrine: common 2.4167, Aard and Igni 2.4667, Quen 2.4167.
+
+**Stamina regeneration in combat** (CharacterStatsPopup.ws 322-330): `(add + mult x max Stamina) x (1 + CalculatedArmorStaminaRegenBonus())`, max Stamina 100.
+
+| Contributor | Amount |
+|---|---|
+| `ConGeralt` | 0.100 |
+| `magic_staminaregen` x12 (0.005 each) | 0.060 |
+| `perk_24` x12 (0.002 each) | 0.024 |
+| mult sum | 0.184, x 100 = 18.4/s |
+| `staminaRegen_armor_mod` of the worn pieces: Dol Blathanna Armor 0.10, Gloves, Pants and Boots none | 0.10 |
+| 18.4 x (1 + 0.10) | 20.24 |
+| shown with `RoundMath` (fraction below .5 rounds down) | **20/s** |
+
+No Glyphword 2, 3 or 4 is in the save's list (they would change the armour bonus, playerWitcher.ws 8685-8725).
+

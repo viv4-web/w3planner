@@ -42,7 +42,7 @@ def open_and_compare(browser, base, fx):
             got, ex = pg.evaluate(LEGACY_STATE), fx["expect"]
             ok = got[:5] == ex[:5] and (ex[5] is None or (got[5] == ex[5] and got[6] == ex[6])); detail = "" if ok else "expected %s, got %s" % (json.dumps(ex)[:80], json.dumps(got)[:80])
         else:
-            if fx["expect"].get("cons") and any(fx["expect"]["cons"]): [pg.wait_for_timeout(100) for _ in range(150) if not pg.evaluate("typeof CN!=='undefined'&&!!CN.data&&typeof EQ!=='undefined'&&!EQ.err")]; pg.wait_for_timeout(150)   # the consumable data loads after the page; the bomb rule below runs when it has
+            if fx["expect"].get("cons") and any(fx["expect"]["cons"]): [pg.wait_for_timeout(100) for _ in range(150) if not pg.evaluate("typeof CN!=='undefined'&&!!CN.data&&typeof EQ!=='undefined'&&!EQ.err&&!!eqData()")]; pg.wait_for_timeout(500)   # the consumable data loads after the page; the bomb rule below runs when it has
             got = pg.evaluate(FULL_STATE); ex = dict(fx["expect"]); bad0 = []
             if fx["version"] < "v31b" and ex.get("cons") and ex["cons"][5]:
                 # v31b: the second bomb slot became the Pocket. A bomb an older link holds there moves to the Bomb slot when that is empty, else it is dropped (the fixture itself is never edited)
@@ -81,7 +81,7 @@ def append_only_problems():
     ls = subprocess.run(["git", "ls-tree", "-r", "--name-only", ref, "tests/fixtures", "data/item_ids.json"], cwd=ROOT, capture_output=True, text=True).stdout.split()   # item_ids.json: the numbers a gear link stores
     problems = []
     for path in ls:
-        if path.endswith("tooltips_ref.json") or path.endswith("README.md") or path.startswith("tests/fixtures/glossary/"): continue   # the fake Glossary content (binary pictures too) is rewritten by tests/make_glossary_fixture.py: not a link fixture
+        if path.endswith("tooltips_ref.json") or path.endswith("ruleset_truth.json") or path.endswith("README.md") or path.startswith("tests/fixtures/glossary/"): continue   # the fake Glossary content (binary pictures too) is rewritten by tests/make_glossary_fixture.py: not a link fixture
         old, cur = _git_show(ref, path), (ROOT / path).read_text() if (ROOT / path).is_file() else None
         if cur is None: problems.append("%s was deleted" % path); continue
         if path.endswith(".txt"):

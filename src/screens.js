@@ -2,7 +2,7 @@
 // The open screen is S.scr ('char', 'inv' or 'glo') and lives in the link as the s1I / s1G segment (absent = Character). The level block, the ruleset switch and Copy link belong to every screen.
 const SCR_ORDER=['glo','inv','char'];   // the live screens, left to right as in the bar: the arrows step through these and skip the greyed tabs
 const SCR_IDS={glo:'screenGlo',inv:'screenInv',char:'screenChar'},SCR_TABS={glo:'tabGlo',inv:'tabInv',char:'tabChar'};
-function scrGo(s){if(s===S.scr||!SCR_ORDER.includes(s))return;if(EQ.pick)eqClosePick(true);S.scr=s;save();window.scrollTo({top:0})}
+function scrGo(s){if(s===S.scr||!SCR_ORDER.includes(s))return;if(EQ.pick)eqClosePick(true);if(typeof psClose==='function')psClose(true);S.scr=s;save();window.scrollTo({top:0})}
 function scrStep(d){const i=SCR_ORDER.indexOf(S.scr)+d;if(i>=0&&i<SCR_ORDER.length)scrGo(SCR_ORDER[i])}
 function scrApply(){const inv=S.scr==='inv';
  Object.keys(SCR_IDS).forEach(k=>{document.getElementById(SCR_IDS[k]).hidden=S.scr!==k;document.body.classList.toggle('scr-'+k,S.scr===k)});
@@ -10,7 +10,7 @@ function scrApply(){const inv=S.scr==='inv';
  const i=SCR_ORDER.indexOf(S.scr),pv=document.getElementById('scrPrev'),nx=document.getElementById('scrNext');pv.disabled=i<=0;nx.disabled=i>=SCR_ORDER.length-1;
  pv.setAttribute('aria-disabled',String(pv.disabled));nx.setAttribute('aria-disabled',String(nx.disabled));
  const on=document.querySelector('#stabs .stab.on');if(on&&innerWidth<600)on.scrollIntoView({block:'nearest',inline:'center'});   // the phone's tab row scrolls sideways
- if(inv&&!stashDrawn)stashRender();if(S.scr==='glo'){if(typeof glOpen==='function')glOpen()}else if(typeof glClose==='function')glClose()}
+ if(inv&&!stashDrawn)stashRender();if(S.scr==='glo'){if(typeof glOpen==='function')glOpen()}else if(typeof glClose==='function')glClose();if(typeof psSync==='function')psSync()}
 // the greyed tabs: a centred panel (title, "In-game feature only.", the reason, and the two live places to go instead)
 const IG_WHY={alchemy:['Alchemy','Crafting happens in the game; plan consumables in Inventory slots.'],map:['World Map','The world map is in-game only. For an interactive map, use witcher3map.com, a free, ad-free fan project (CC BY-NC-SA).'],quests:['Quests','Quest progress lives in the game.'],meditation:['Meditation','Meditation can only be done in the game.'],crafting:['Crafting','Crafting happens in the game; plan consumables in Inventory slots.']};
 let igOpener=null;
