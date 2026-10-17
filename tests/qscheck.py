@@ -283,3 +283,71 @@ def live(b, url, check):
     pg.click("#qsVList"); pg.fill("#qsQ", "Dairy"); pg.click(".qsrow >> nth=0"); until(pg, "!document.querySelector('#qsDesc').textContent.includes('Loading')"); t = E("document.getElementById('qsDesc').textContent")
     check("quests: the journal text %s (%d characters)" % ("loads" if real else "is reported as not included", len(t)), (len(t) > 80 and "not included" not in t) if real else "not included" in t, t[:80])
     check("quests: no script errors", not errs, errs[:1]); pg.close()
+
+
+TOK = {"main": "#d8b45a", "side": "#9fb7d9", "contract": "#e0707a", "treasure": "#6fc29a", "gwent": "#b79be6", "race": "#5ccfd0", "fist": "#d2955f"}
+KNAME = {"main": "Main", "side": "Secondary", "contract": "Contracts", "treasure": "Treasure hunts", "gwent": "Gwent", "race": "Races", "fist": "Fistfights"}
+SHAPE = {"main": ("polygon", 4), "side": ("circle", 0), "contract": ("polygon", 3), "treasure": ("rect", 0), "gwent": ("polygon", 6), "race": ("polygon", 10), "fist": ("polygon", 12)}
+
+
+def rgb(h): return tuple(int(h[i:i + 2], 16) for i in (1, 3, 5))
+
+
+def lum(c):
+    f = lambda v: (v / 255 / 12.92) if v / 255 <= .03928 else ((v / 255 + .055) / 1.055) ** 2.4
+    r, g, b = (f(v) for v in c); return .2126 * r + .7152 * g + .0722 * b
+
+
+def contrast(a, b): x, y = sorted((lum(a), lum(b)), reverse=True); return (x + .05) / (y + .05)
+
+
+def viewmemory(b, base, check, label):
+    """v33c: the Level band / List choice is remembered (localStorage w3p.quests.view) and wins on load, with the tab in the URL and with NO quest progress stored (v33b skipped the view when nothing else was stored)."""
+    pg, errs, _ = newpage(b, base); E = pg.evaluate; opened(pg)
+    first = E("[QS.view,localStorage.getItem('w3p.quests.v1'),localStorage.getItem('w3p.quests.view')]")
+    pg.click("#qsVBand"); pg.reload(); until(pg, READY); ok1 = opened(pg); a = E("[QS.view,location.hash.endsWith('.s1Q'),!!document.getElementById('qsBand'),localStorage.getItem('w3p.quests.v1')]")
+    check("%s: Level band chosen with no progress stored, then a reload with s1Q in the URL: it opens in the Level band (%s)" % (label, a), first == ["list", None, None] and ok1 and a == ["band", True, True, None], [first, a])
+    pg.click("#qsVList"); pg.reload(); until(pg, READY); opened(pg); c = E("[QS.view,!!document.getElementById('qsRows')]")
+    q2, _, _ = newpage(b, base, hash=E("location.hash")); opened(q2); d = q2.evaluate("QS.view")
+    check("%s: and back to the List: it stays in the List after a reload (%s); a new tab of the same browser profile would read the same key" % (label, c), c == ["list", True] and d == "list", [c, d]); q2.close()
+    pg.evaluate("localStorage.setItem('w3p.quests.view','bogus')"); pg.reload(); until(pg, READY); opened(pg)
+    check("%s: an unknown stored view is ignored (List)" % label, E("QS.view") == "list"); check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
+
+
+def colours(b, base, check, label):
+    """v33c: colour and shape by quest type, defined once as CSS tokens; status stays in the icon shape and fill; the type is also named in text."""
+    pg, errs, _ = newpage(b, base); E = pg.evaluate; opened(pg)
+    tk = E("(()=>{const s=getComputedStyle(document.documentElement);return Object.fromEntries(['main','side','contract','treasure','gwent','race','fist'].map(k=>[k,s.getPropertyValue('--t-'+k).trim().toLowerCase()]))})()")
+    check("%s: the seven type colours are CSS tokens (Main #d8b45a, Secondary #9fb7d9, Contracts #e0707a, Treasure hunts #6fc29a, Gwent #b79be6, Races #5ccfd0, Fistfights #d2955f) (%s)" % (label, tk), tk == TOK, tk)
+    low = min(contrast(rgb(v), rgb("#171310")) for v in TOK.values())
+    check("%s: every type colour reads on the panel background with a contrast of at least 4.5:1 (lowest %.1f)" % (label, low), low >= 4.5, low)
+    pg.click('.qsreg[data-r="ve"]'); got = {}
+    for k in TOK:
+        if E("document.querySelector('.qschip[data-k=\"%s\"]').disabled" % k): continue
+        pg.click('.qschip[data-k="%s"]' % k); got[k] = E("(()=>{const r=document.querySelector('#qsRows .qsrow b'),c=document.querySelector('.qschip.on[data-k=\"%s\"]'),cs=x=>getComputedStyle(x);return[cs(r).color,cs(c).backgroundColor,cs(c).color]})()" % k)
+    css = lambda h: "rgb(%d, %d, %d)" % rgb(h)
+    check("%s: in the List the name text takes the colour of its type and the selected type chip is filled with it (%d types in Velen: %s)" % (label, len(got), sorted(got)), len(got) >= 5 and all(v[0] == css(TOK[k]) and v[1] == css(TOK[k]) for k, v in got.items()), got)
+    pg.click('.qschip[data-k="all"]'); g = E("document.querySelector('#qsRows .qsrow').dataset.g"); k0 = E("QS.byG.get('%s').t" % g)
+    pg.click('#qsRows .qsrow >> nth=0'); pg.click('.qsmark[data-s="done"]'); pg.click('.qschip[data-k="all"]')
+    d = E("(()=>{const r=document.querySelector('#qsRows .qsrow[data-g=\"%s\"]'),n=[...document.querySelectorAll('#qsRows .qsrow.st-none b')][0];return[getComputedStyle(r.querySelector('b')).opacity,r.querySelector('svg').getAttribute('class'),n?getComputedStyle(n).opacity:null,getComputedStyle(document.querySelector('.qstitle')).color]})()" % g)
+    check("%s: a done row has its name at 60%% opacity and a check in its type colour; not-started names stay at full opacity; the drawer/detail title takes the type colour (%s)" % (label, d), d[0] == "0.6" and "qs-done" in d[1] and ("t-" + k0) in d[1] and d[2] == "1" and d[3] == css(TOK[k0]), d)
+    check("%s: the separate green for done is gone (no element is coloured #6cbc4a)" % label, E("[...document.querySelectorAll('.qsic,.qsrow b,.qslv')].every(e=>getComputedStyle(e).color!=='rgb(108, 188, 74)')"))
+    cd = E("(()=>{const c=document.querySelector('#qsNext .qscard b');return c?[getComputedStyle(c).color,QS.byG.get(document.querySelector('#qsNext .qscard').dataset.g).t]:null})()")
+    check("%s: the Next up card title takes the colour of its type (%s)" % (label, cd), cd and cd[0] == css(TOK[cd[1]]), cd)
+    # band: shapes by type, legend
+    pg.click("#qsVBand"); pg.click('.qsreg[data-r="ve"]'); pg.wait_for_timeout(250)
+    lg = E("[...document.querySelectorAll('.qslegend li')].map(li=>({t:li.textContent.trim(),c:getComputedStyle(li).color,tag:li.querySelector('svg').firstElementChild.tagName.toLowerCase(),pts:(li.querySelector('svg').firstElementChild.getAttribute('points')||'').trim().split(/\\s+/).filter(Boolean).length,fill:getComputedStyle(li.querySelector('svg')).fill}))")
+    check("%s: the legend under the band names the seven types, each with its own shape (diamond, circle, triangle, square, hexagon, star, plus) in its colour (%s)" % (label, [x["t"] for x in lg]),
+          [x["t"] for x in lg] == list(KNAME.values()) and all(x["c"] == css(TOK[k]) and (x["tag"], x["pts"] if x["tag"] == "polygon" else 0) == SHAPE[k] for x, k in zip(lg, TOK)), lg)
+    # a failed quest drawn outlined with an x; active filled; not started outline only
+    pick = lambda k, n=0: E("document.querySelectorAll('.qsdot.t-%s')[%d].dataset.g" % (k, n)); g1, g2, g3 = pick("side"), pick("treasure"), pick("contract")
+    E("qsMark('%s','failed');qsMark('%s','active')" % (g1, g2)); pg.wait_for_timeout(200)
+    ds = """(g=>{const d=document.querySelector('.qsdot[data-g="'+g+'"]'),s=d.querySelector('svg'),c=getComputedStyle(d);return{k:d.className,color:c.color,fill:getComputedStyle(s).fill,x:!!s.querySelector('.x'),tag:s.firstElementChild.tagName.toLowerCase(),w:d.offsetWidth,h:d.offsetHeight,btn:d.tagName}})"""
+    f1, f2, f3 = pg.evaluate(ds, g1), pg.evaluate(ds, g2), pg.evaluate(ds, g3)
+    check("%s: band dots take the shape and colour of their type: not started = outline only, active = filled, failed = outline with a small × (%s %s %s)" % (label, f1["fill"], f2["fill"], f3["fill"]),
+          f1["btn"] == "BUTTON" and (f1["tag"], f1["color"], f1["fill"], f1["x"]) == ("circle", css(TOK["side"]), "none", True) and (f2["tag"], f2["color"], f2["x"]) == ("rect", css(TOK["treasure"]), False) and f2["fill"] == css(TOK["treasure"])
+          and (f3["tag"], f3["fill"], f3["x"]) == ("polygon", "none", False) and f3["w"] == 14 == f3["h"], [f1, f2, f3])
+    pg.hover('.qsdot[data-g="%s"]' % g2); tip = E("document.getElementById('qsTip').textContent"); pg.mouse.move(5, 5)
+    pg.click('.qsdot[data-g="%s"]' % g2); pg.wait_for_timeout(300); dm = E("document.querySelector('#qsDetail .qsmeta').textContent")
+    check("%s: the tooltip and the drawer still name the type and the status in text, so colour is never the only cue (%s | %s)" % (label, tip[:70], dm), "Treasure hunts" in tip and "Active" in tip and "Treasure hunts" in dm, [tip, dm])
+    check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
