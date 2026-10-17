@@ -103,3 +103,29 @@
  .qsprog .qsmark{flex:1 1 calc(50% - 6px);justify-content:center}.qscards{grid-template-columns:minmax(0,1fr)}.qscard{min-height:64px}.qsreg{min-height:44px}.qsv,.qschip,.qsmark{min-height:44px}.qsrow{min-height:44px}.qschip.hide{margin-left:0}.qssearch{flex:1 1 100%}
  .qsmenu{position:fixed;left:12px;right:12px;top:auto;bottom:12px;width:auto;z-index:70}
 }
+
+/* ---- v34: the Timeline, the Missable panel, "fails at" ---- */
+:root{--fail:#f08a24}
+.qsscreen.qs-time .qsregnav{display:none}
+.qstlhead .qsbplot.head{height:116px}
+.qscol{position:absolute;top:0;bottom:0;width:0;border-left:1px solid #2a2219;pointer-events:none}
+.qstc{position:absolute;top:4px;font-weight:500;font-size:17px;letter-spacing:.8px;text-transform:uppercase;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}.qstc.on{color:#fff}
+.qsgate{position:absolute;top:0;bottom:0;width:0;border-left:2px solid var(--fail);pointer-events:none;z-index:1}.qsgate.passed{border-left:2px dashed #5a4a36}
+.qsgl{position:absolute;margin-left:4px;padding:0 4px;font-weight:500;font-size:14px;color:var(--fail);background:#0d0b09d9;white-space:nowrap;z-index:3;line-height:16px}.qsgl.passed{color:#8f8575}.qsgl.flip{transform:translateX(-100%);margin-left:-4px;text-align:right}
+.qstlhead .qsml{z-index:4}
+.qsring{position:absolute;left:-4px;top:-4px;width:20px;height:20px;border:2px solid var(--fail);border-radius:50%;pointer-events:none;box-sizing:border-box}
+.qsdot .qsring{left:-5px;top:-5px}
+.qsl-ring{display:flex;align-items:center;gap:7px;color:var(--fail);font-size:17px}.qsl-ring .qsring{position:static;width:16px;height:16px}
+.qslane .qsbplot{min-height:96px}
+.qsunk{margin:10px 0 0;border:1px solid #3a3025;background:#0d0b09}.qsunk summary{cursor:pointer;padding:8px 12px;font-size:18px;color:var(--gold);min-height:44px;display:flex;align-items:center}.qsunk summary:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.qsunk .qsbnote{margin:0 12px 8px}.qsunkl{max-height:360px;overflow:auto;border-top:1px solid #2a2219}
+.qsmiss{margin:0 0 14px;border:1px solid var(--fail);background:linear-gradient(180deg,#1c140b,#0d0b09);padding:8px 12px 10px}
+.qsmiss h3{margin:0 0 6px;font-weight:500;font-size:17px;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}.qsmiss h3 b{color:var(--fail);font-weight:500}.qsmn{display:inline-block;min-width:24px;text-align:center;margin-left:6px;padding:0 6px;border-radius:12px;background:var(--fail);color:#17120a;font-weight:600}
+.qsmis{display:flex;flex-wrap:wrap;gap:6px}
+.qsmi{font:inherit;display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:3px 10px;min-height:38px;background:#17130e;border:1px solid #4a3d2c;color:var(--tc);cursor:pointer}.qsmi b{font-weight:500;font-size:17px}.qsmi small{color:var(--dim);font-size:14px}.qsmi:hover,.qsmi.on{border-color:var(--fail)}.qsmi:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.qsmobj{margin-top:8px}.qsmobj summary{cursor:pointer;color:#cdbf9e;font-size:16px;min-height:32px;display:flex;align-items:center}.qsmobj summary:focus-visible{outline:2px solid var(--gold)}
+.qsmfoot{display:block;margin-top:8px;color:var(--dim);font-size:14px}
+.qscard.fails{border-color:var(--fail)}.qsfail{color:var(--fail)!important;font-weight:500}.qstip .qsfail{color:var(--fail)}
+.qsrules{margin:8px 0 0}.qsrule{margin:3px 0;font-size:17px;color:#cdbf9e;line-height:1.25}.qsrule b{color:#fff;font-weight:500}.qsfailsat,.qsloses{color:#f3b878}.qsfailsat b,.qsloses b{color:var(--fail)}.qsnomiss{color:var(--dim)}
+.qslink{font:inherit;font-size:17px;background:none;border:0;border-bottom:1px dotted var(--tc,var(--gold));color:var(--tc,var(--gold));padding:2px 0;cursor:pointer;min-height:32px}.qslink:hover{color:#fff}.qslink:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media (max-width:600px){.qsmi,.qslink{min-height:44px}.qsunk summary{min-height:44px}}

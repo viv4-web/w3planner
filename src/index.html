@@ -100,8 +100,9 @@
   <p class="glmsg" id="qsLoadMsg" role="status" hidden></p>
   <div class="qsbody" id="qsBody" hidden>
     <section class="qscentre" aria-label="Quests">
+      <div class="qsmiss" id="qsMiss" hidden></div>
       <div class="qsnext" id="qsNext"></div>
-      <div class="qsviews" role="group" aria-label="View"><button type="button" class="qsv off" id="qsVTime" disabled aria-disabled="true" title="Needs base-game quest data · coming next">Timeline<small>Needs base-game quest data · coming next</small></button><button type="button" class="qsv" id="qsVBand" aria-pressed="false">Level band</button><button type="button" class="qsv on" id="qsVList" aria-pressed="true">List</button></div>
+      <div class="qsviews" role="group" aria-label="View"><button type="button" class="qsv" id="qsVTime" aria-pressed="false">Timeline</button><button type="button" class="qsv" id="qsVBand" aria-pressed="false">Level band</button><button type="button" class="qsv on" id="qsVList" aria-pressed="true">List</button></div>
       <div class="qsview" id="qsView"></div>
       <p class="qscredit">For a hand-curated order with tips, see the <a href="https://docs.google.com/spreadsheets/d/1p2R7Mz8FJMkhnKuloh2gpebW_3jMk3vc2EsFslf4mNc" target="_blank" rel="noopener noreferrer">Witcher 3 Optimal Quest Order Guide by ChrisRi</a> ↗</p>
     </section>
