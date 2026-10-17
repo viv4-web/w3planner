@@ -278,7 +278,8 @@ def phone(b, base, check, label):
 def live(b, url, check):
     """Smoke test of a deployed site (preview or production): the Quests tab opens with the nine regions and the quest list; the journal text loads when the build has it (the live build) or says it is not included."""
     pg, errs, reqs = newpage(b, url); E = pg.evaluate; ok = opened(pg); n = E("QS.data.quests.length"); real = E("QS_DESC!==null")
-    check("quests: the Quests tab opens with the nine regions and %d quests, and the level band draws dots" % n, ok and n > 300 and E("document.querySelectorAll('.qsdot').length") > 0, [ok, n])
+    lst = E("document.querySelectorAll('#qsRows .qsrow').length"); pg.click("#qsVBand"); pg.wait_for_timeout(300)
+    check("quests: the Quests tab opens in the List with the nine regions and %d quests (%d rows), and the level band draws dots" % (n, lst), ok and n > 300 and lst > 0 and E("document.querySelectorAll('.qsdot').length") > 0, [ok, n, lst])
     pg.click("#qsVList"); pg.fill("#qsQ", "Dairy"); pg.click(".qsrow >> nth=0"); until(pg, "!document.querySelector('#qsDesc').textContent.includes('Loading')"); t = E("document.getElementById('qsDesc').textContent")
     check("quests: the journal text %s (%d characters)" % ("loads" if real else "is reported as not included", len(t)), (len(t) > 80 and "not included" not in t) if real else "not included" in t, t[:80])
     check("quests: no script errors", not errs, errs[:1]); pg.close()
