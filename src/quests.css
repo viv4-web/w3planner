@@ -57,6 +57,8 @@
 .qsdot:hover,.qsdot.on,.qsdot:focus-visible{z-index:3}.qsdot:hover svg,.qsdot.on svg{transform:scale(1.3)}.qsdot.on svg,.qsdot:focus-visible svg{filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 1px #fff)}.qsdot:focus-visible{outline:2px solid #fff;outline-offset:2px;border-radius:2px}
 .qslegend{list-style:none;display:flex;flex-wrap:wrap;gap:6px 20px;margin:10px 2px 0;padding:0}.qslegend li{display:flex;align-items:center;gap:7px;color:var(--tc);font-size:17px}.qslegend .qsshape{width:14px;height:14px}
 .qsmore{position:absolute;height:14px;min-width:14px;padding:0 3px;border:1px solid #8a6a3a;border-radius:7px;background:#1d1710;color:#e0c48a;font:inherit;font-size:12px;line-height:12px;cursor:pointer;z-index:1}.qsmore:hover,.qsmore:focus-visible{border-color:#fff;color:#fff}
+.qsbtools{display:flex;justify-content:flex-end;margin:0 0 8px}
+.qsshape.qs-done>:not(.ck){fill:currentColor;fill-opacity:.35;stroke-opacity:.35}.qsshape .ck{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .qsbnote{margin:8px 2px 0;color:var(--dim);font-size:15px;line-height:1.3}
 .qstip{position:fixed;z-index:90;max-width:300px;background:#0f0c09;border:1px solid var(--gold);box-shadow:0 6px 20px #000c;padding:6px 10px;pointer-events:none;display:flex;flex-direction:column;gap:1px;font-size:16px;line-height:1.2}.qstip[hidden]{display:none}.qstip b{font-weight:500;color:var(--tc,#fff);font-size:18px}.qstip span{color:#cdbf9e}
 .qsscreen.qs-band .qsbody{grid-template-columns:minmax(0,1fr)}

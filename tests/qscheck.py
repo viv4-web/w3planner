@@ -115,7 +115,7 @@ def run(b, base, check, label):
     check("%s: after a reload the mark is still there" % label, E("qsState('%s')" % g) == "done")
     # level band (v33b: full width, range = the quests shown, 24 px per level at least, 14 px dots side by side, a drawer for the detail)
     pg.fill("#lvl", "30"); pg.evaluate("pointsChanged()"); pg.click("#qsVBand"); pg.click('.qsreg[data-r="ve"]'); pg.wait_for_timeout(250)
-    rng = E("(()=>{const v=QS.data.quests.filter(q=>q.r==='ve'&&q.lv!=null&&qsState(q.g)!=='done');return[Math.min(...v.map(q=>q.lv)),Math.max(...v.map(q=>q.lv)),v.length]})()")
+    rng = E("(()=>{const v=QS.data.quests.filter(q=>q.r==='ve'&&q.lv!=null&&qsState(q.g)!=='done');return[Math.min(qsMy(),...v.map(q=>q.lv)),Math.max(qsMy(),...v.map(q=>q.lv)),v.length]})()")
     BAND = """(()=>{const R=e=>e.getBoundingClientRect(),pl=document.querySelector('.qsbplot.head'),ax=[...document.querySelectorAll('.qsbplot.axis span')],xs=ax.map(e=>R(e).left+R(e).width/2),z=document.querySelector('.qsbplot.head .qsz5'),
       me=document.querySelector('.qsbplot.head .qsme'),ml=document.querySelector('.qsml'),zl=[...document.querySelectorAll('.qszl')],dots=[...document.querySelectorAll('.qsdot')],rows=[...document.querySelectorAll('.qsbrow')],ov=(a,b)=>!(a.right<=b.left||b.right<=a.left||a.bottom<=b.top||b.bottom<=a.top);
       return{axis:ax.map(e=>+e.textContent),step:xs.length>1?Math.min(...xs.slice(1).map((x,i)=>x-xs[i])):99,pw:R(pl).width,z:z?R(z).width:0,zl:zl.map(e=>e.textContent),line:R(me).left-R(pl).left,ml:ml.textContent,overlap:zl.some(e=>ov(R(e),R(ml))),
@@ -350,4 +350,35 @@ def colours(b, base, check, label):
     pg.hover('.qsdot[data-g="%s"]' % g2); tip = E("document.getElementById('qsTip').textContent"); pg.mouse.move(5, 5)
     pg.click('.qsdot[data-g="%s"]' % g2); pg.wait_for_timeout(300); dm = E("document.querySelector('#qsDetail .qsmeta').textContent")
     check("%s: the tooltip and the drawer still name the type and the status in text, so colour is never the only cue (%s | %s)" % (label, tip[:70], dm), "Treasure hunts" in tip and "Active" in tip and "Treasure hunts" in dm, [tip, dm])
+    check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
+
+
+def banddone(b, base, check, label):
+    """v33d: the Level band's own 'Show done' toggle (off by default, remembered in this browser, not in the link, separate from the List's Hide done), done dots, and the axis always holding the player's level."""
+    pg, errs, _ = newpage(b, base); E = pg.evaluate; opened(pg); pg.click("#qsVBand"); pg.click('.qsreg[data-r="wo"]'); pg.fill("#lvl", "9"); pg.evaluate("pointsChanged()"); pg.wait_for_timeout(250)
+    wo = E("QS.data.quests.filter(q=>q.r==='wo'&&q.lv!=null).map(q=>q.lv)"); lo_q, hi_q = min(wo), max(wo)
+    E("QS.data.quests.filter(q=>q.r==='wo'&&q.lv!=null).slice(0,3).forEach(q=>qsMark(q.g,'done'))"); pg.wait_for_timeout(200)
+    nd = E("QS.data.quests.filter(q=>q.r==='wo'&&q.lv!=null&&qsState(q.g)==='done').length"); notd = [lv for lv in wo]
+    off = E("[document.getElementById('qsShowDone').getAttribute('aria-pressed'),document.querySelectorAll('.qsdot.done').length,document.querySelector('.qsbnote').textContent.slice(0,40),localStorage.getItem('w3p.quests.banddone')]")
+    check("%s: the Level band has its own 'Show done' toggle above the band, off by default: no done dots, the footnote says they are hidden (%s)" % (label, off), off[0] == "false" and off[1] == 0 and "hidden" in off[2], off)
+    AX = """(()=>{const R=e=>e.getBoundingClientRect(),ax=[...document.querySelectorAll('.qsbplot.axis span')],c=t=>{const e=ax.find(x=>x.textContent===String(t));return e?R(e).left+R(e).width/2:null},pl=document.querySelector('.qsbplot.head'),me=document.querySelector('.qsbplot.head .qsme');
+      return{axis:ax.map(e=>+e.textContent),line:R(me).left,c6:c(%d),c9:c(9),pw:R(pl).width,ml:document.querySelector('.qsml').textContent,z:document.querySelector('.qsbplot.head .qsz5')?R(document.querySelector('.qsbplot.head .qsz5')).width:0,slot:R(pl).width/ax.length}})()"""
+    a = E(AX % hi_q)
+    check("%s: White Orchard (quests %d to %d) at level 9: the axis runs to 9 and 'You · 9' sits right of the level-%d slot, on the 9 (%s)" % (label, lo_q, hi_q, hi_q, {k: a[k] for k in ("c6", "c9", "line")}),
+          a["axis"][-1] == 9 and a["axis"][0] == min(lo_q, 9) and a["axis"] == list(range(a["axis"][0], 10)) and a["c6"] is not None and a["line"] > a["c6"] + a["slot"] * (9 - hi_q - 1) and abs(a["line"] - a["c9"]) < 1.5 and a["ml"] == "You · 9", a)
+    pg.fill("#lvl", "20"); pg.evaluate("pointsChanged()"); pg.wait_for_timeout(250); z = E(AX % hi_q)
+    check("%s: at level 20 the axis runs to 20 and the 5%% zone follows the same scale (up to level 10: %.0f px of %.0f px slot)" % (label, z["z"], z["slot"]), z["axis"][-1] == 20 and abs(z["z"] - (10 - z["axis"][0] + 1) * z["slot"]) < 2, z)
+    pg.fill("#lvl", "9"); pg.evaluate("pointsChanged()"); pg.wait_for_timeout(200)
+    pg.click("#qsShowDone"); pg.wait_for_timeout(250)
+    on = E("""(()=>{const d=[...document.querySelectorAll('.qsdot.done')],s=d[0]&&d[0].querySelector('svg'),sh=s&&s.firstElementChild,cs=sh&&getComputedStyle(sh);return{n:d.length,ck:d.every(x=>x.querySelector('.ck')),fo:cs&&cs.fillOpacity,fill:cs&&cs.fill,col:d[0]&&getComputedStyle(d[0]).color,pressed:document.getElementById('qsShowDone').getAttribute('aria-pressed'),
+      note:document.querySelector('.qsbnote').textContent.slice(0,45),ls:localStorage.getItem('w3p.quests.banddone'),hash:location.hash,hide:document.getElementById('qsHide')}})()""")
+    k0 = E("QS.byG.get(document.querySelector('.qsdot.done').dataset.g).t")
+    check("%s: Show done on: %d done dots, each the filled shape in its type colour at 35%% opacity with a small check, the footnote changes, the choice is stored (w3p.quests.banddone) and not in the link (%s)" % (label, on["n"], {k: on[k] for k in ("fo", "fill", "note", "ls")}),
+          on["n"] == nd and on["ck"] and on["fo"] == "0.35" and on["fill"] == on["col"] and on["col"] == "rgb(%d, %d, %d)" % rgb(TOK[k0]) and on["pressed"] == "true" and "shown faintly" in on["note"] and on["ls"] == "1" and on["hash"].endswith(".s1Q") and "done" not in on["hash"], on)
+    pg.reload(); until(pg, READY); opened(pg); pr = E("[QS.view,QS.showDone,document.getElementById('qsShowDone').getAttribute('aria-pressed')]")
+    pg.click("#qsVList"); hd = E("[document.getElementById('qsHide').getAttribute('aria-pressed'),[...document.querySelectorAll('#qsRows .qsrow.st-done')].length]")
+    pg.click("#qsHide"); sd = E("QS.showDone")
+    check("%s: the toggle is remembered after a reload, and separate from the List's Hide done (list: Hide done %s, %s done rows; turning it on leaves Show done %s)" % (label, hd[0], hd[1], sd), pr == ["band", True, "true"] and hd[0] == "false" and hd[1] >= 0 and sd is True, [pr, hd, sd])
+    pg.click("#qsHide"); pg.click("#qsVBand"); pg.click("#qsShowDone"); off2 = E("[document.querySelectorAll('.qsdot.done').length,localStorage.getItem('w3p.quests.banddone')]")
+    check("%s: Show done off again hides them and stores 0 (%s)" % (label, off2), off2 == [0, "0"], off2)
     check("%s: no script errors" % label, not errs, errs[:1]); pg.close()

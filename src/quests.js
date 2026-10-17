@@ -8,14 +8,15 @@ const QS_SAVE={JS_Success:'done',JS_Active:'active',JS_Failed:'failed',JS_Inacti
 const QS_ICON={none:'<circle cx="8" cy="8" r="5.2" fill="none" stroke="currentColor" stroke-width="1.6"/>',active:'<circle cx="8" cy="8" r="5.2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="8" r="2.6" fill="currentColor"/>',
  done:'<path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',failed:'<path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
  inactive:'<circle cx="8" cy="8" r="5.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2.2 2.2"/>'};
+const QS_DONE_KEY='w3p.quests.banddone';   // '1' | '0': the Level band's own "Show done" toggle, off by default (v33d)
 const QS_VIEW_KEY='w3p.quests.view';   // 'list' | 'band': the view last chosen in this browser (v33b); the default is the List
-const QS={data:null,byG:null,byObj:null,byDesc:null,load:null,err:false,region:'ve',view:'list',kind:'all',hide:false,q:'',sel:null,descP:null,desc:null,init:false,shown:false,lv:0,open:false,reveal:new Set(),cells:new Set(),
+const QS={showDone:false,data:null,byG:null,byObj:null,byDesc:null,load:null,err:false,region:'ve',view:'list',kind:'all',hide:false,q:'',sel:null,descP:null,desc:null,init:false,shown:false,lv:0,open:false,reveal:new Set(),cells:new Set(),
  store:{manual:{},save:null,changed:0},ok:true,confirm:false};
 // the Level band's dot shapes, one per type (14 px, inline SVG; status = fill: outline for not started, filled for active, outline with a small x for failed, dashed for inactive); the colours are CSS tokens (--t-main ...) in quests.css
 const QS_STAR=Array.from({length:10},(_,i)=>{const a=-Math.PI/2+i*Math.PI/5,r=i%2?2.9:6.6;return(7+r*Math.cos(a)).toFixed(2)+','+(7+r*Math.sin(a)).toFixed(2)}).join(' ');
 const QS_SHAPE={main:'<polygon points="7,0.8 13.2,7 7,13.2 0.8,7"/>',side:'<circle cx="7" cy="7" r="5.8"/>',contract:'<polygon points="7,1 13.2,12.4 0.8,12.4"/>',treasure:'<rect x="1.4" y="1.4" width="11.2" height="11.2"/>',
  gwent:'<polygon points="7,0.9 12.6,4 12.6,10 7,13.1 1.4,10 1.4,4"/>',race:'<polygon points="'+QS_STAR+'"/>',fist:'<polygon points="5.4,1 8.6,1 8.6,5.4 13,5.4 13,8.6 8.6,8.6 8.6,13 5.4,13 5.4,8.6 1,8.6 1,5.4 5.4,5.4"/>'};
-const qsShape=(kind,st,legend)=>`<svg class="qsshape qs-${st}" viewBox="0 0 14 14" width="14" height="14" aria-hidden="true" focusable="false">${QS_SHAPE[kind]}${st==='failed'&&!legend?'<path class="x" d="M4.6 4.6l4.8 4.8M9.4 4.6l-4.8 4.8"/>':''}</svg>`;
+const qsShape=(kind,st,legend)=>`<svg class="qsshape qs-${st}" viewBox="0 0 14 14" width="14" height="14" aria-hidden="true" focusable="false">${QS_SHAPE[kind]}${st==='failed'&&!legend?'<path class="x" d="M4.6 4.6l4.8 4.8M9.4 4.6l-4.8 4.8"/>':''}${st==='done'&&!legend?'<path class="ck" d="M4.2 7.2l2 2 3.6-4"/>':''}</svg>`;
 const qsEl=id=>document.getElementById(id);
 const qsEsc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const qsIcon=(st,kind)=>`<svg class="qsic qs-${st}${kind?' t-'+kind:''}" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">${QS_ICON[st]||QS_ICON.none}</svg>`;
@@ -30,8 +31,9 @@ function qsClean(o){   // untrusted (the file the user loads, or another version
   q:take(o.save.q,['done','active','failed','inactive'],6000),o:take(o.save.o,['done','active','failed','inactive'],12000),e:take(o.save.e,['done','active','failed','inactive'],12000)};
  return out}
 function qsStoreInit(){if(QS.read)return;QS.read=true;qsRead()}
-function qsRead(){try{const v=localStorage.getItem(QS_VIEW_KEY);if(v==='list'||v==='band')QS.view=v}catch(e){}   // the view first: it must win on load whether or not any progress is stored (v33c; v33b skipped it when nothing was stored)
+function qsRead(){try{const v=localStorage.getItem(QS_VIEW_KEY);if(v==='list'||v==='band')QS.view=v;QS.showDone=localStorage.getItem(QS_DONE_KEY)==='1'}catch(e){}   // the view first: it must win on load whether or not any progress is stored (v33c; v33b skipped it when nothing was stored)
  try{const raw=localStorage.getItem(QS_KEY);QS.ok=true;if(!raw)return;const c=qsClean(JSON.parse(raw));if(c)QS.store=c}catch(e){QS.ok=false}}
+function qsSetDone(on){QS.showDone=on;try{localStorage.setItem(QS_DONE_KEY,on?'1':'0')}catch(e){}}
 function qsSetView(v){QS.view=v;QS.open=false;try{localStorage.setItem(QS_VIEW_KEY,v)}catch(e){}}
 function qsWrite(){try{localStorage.setItem(QS_KEY,JSON.stringify(Object.assign({v:1},QS.store)));QS.ok=true}catch(e){QS.ok=false}qsChip()}
 function qsTouch(){QS.store.changed=Date.now();qsWrite()}
@@ -94,15 +96,18 @@ function qsRenderList(host){const reg=qsInRegion(QS.region),cnt=k=>reg.filter(q=
  rows.querySelectorAll('.qsrow').forEach(b=>{b.onclick=()=>qsSelect(b.dataset.g,true);b.onkeydown=e=>{if(e.key!=='ArrowDown'&&e.key!=='ArrowUp')return;const rs=[...rows.querySelectorAll('.qsrow')],i=rs.indexOf(b)+(e.key==='ArrowDown'?1:-1);if(i>=0&&i<rs.length){e.preventDefault();rs[i].focus()}}})}
 // ---- the Level band: x = quest levels from the lowest to the highest in this region (at least 24 px per level), one row per type; dots of one level side by side in the level's slot, three lines at most ("+n" opens the rest) ----
 const QS_DOT=14,QS_STEP=16,QS_SLOT=24,QS_LABEL=112;
-function qsRenderBand(host){const my=qsMy(),reg=qsInRegion(QS.region),vis=reg.filter(q=>q.lv!=null&&qsState(q.g)!=='done'),nol=reg.filter(q=>q.lv==null&&qsState(q.g)!=='done').length;
- const note=`<p class="qsbnote">Done quests are hidden. Each type has its own shape and colour; outline = not started, filled = active, outline with × = failed. ${nol?nol+' quest'+(nol===1?' has':'s have')+' no level yet and '+(nol===1?'is':'are')+' only in the List. ':''}The hatched zone is where a quest gives only 5% XP (the game's rule, r4Game.ws OnGiveReward, normal difficulty, first playthrough).</p>`;
- if(!vis.length){host.innerHTML='<p class="qshint">No quests to show here: every quest of this region is done or has no level.</p>'+note;QS.place=null;return}
- const lo=Math.min(...vis.map(q=>q.lv)),hi=Math.max(...vis.map(q=>q.lv)),span=hi-lo+1,kinds=QS_KINDS.filter(([k])=>vis.some(q=>q.t===k));
+function qsBandTools(){return`<div class="qsbtools"><button type="button" class="qschip${QS.showDone?' on':''}" id="qsShowDone" aria-pressed="${QS.showDone}" title="Show the quests you have done as faint dots with a check">Show done</button></div>`}
+function qsRenderBand(host){const my=qsMy(),reg=qsInRegion(QS.region),vis=reg.filter(q=>q.lv!=null&&(QS.showDone||qsState(q.g)!=='done')),nol=reg.filter(q=>q.lv==null&&(QS.showDone||qsState(q.g)!=='done')).length;
+ const tools=qsBandTools(),bind=()=>{qsEl('qsShowDone').onclick=()=>{qsSetDone(!QS.showDone);qsRenderView();const n=qsEl('qsShowDone');if(n)n.focus()}};
+ const note=`<p class="qsbnote">${QS.showDone?'Done quests are shown faintly, with a check.':'Done quests are hidden: turn on Show done to see them.'} Each type has its own shape and colour; outline = not started, filled = active, outline with × = failed. ${nol?nol+' quest'+(nol===1?' has':' have')+' no level yet and '+(nol===1?'is':'are')+' only in the List. ':''}The hatched zone is where a quest gives only 5% XP (the game's rule, r4Game.ws OnGiveReward, normal difficulty, first playthrough).</p>`;
+ if(!vis.length){host.innerHTML=tools+'<p class="qshint">No quests to show here: every quest of this region is done or has no level.</p>'+note;bind();QS.place=null;return}
+ const lo=Math.min(my,...vis.map(q=>q.lv)),hi=Math.max(my,...vis.map(q=>q.lv)),span=hi-lo+1,   // the axis always holds the player's level (v33d)
+  kinds=QS_KINDS.filter(([k])=>vis.some(q=>q.t===k));
  const avail=(host.clientWidth||900)-QS_LABEL-22,slot=Math.max(QS_SLOT,avail/span),W=Math.round(slot*span),per=Math.max(1,Math.floor(slot/QS_STEP)),cap=per*3;
  const lx=lv=>(Math.max(lo,Math.min(hi,lv))-lo+.5)*slot,zoneLv=my-10,zw=zoneLv>=lo?(Math.min(zoneLv,hi)-lo+1)*slot:0,flip=lx(my)>W-90;
  const zone=zw?`<i class="qsz5" style="width:${zw}px"></i>`:'',line=`<i class="qsme" style="left:${lx(my)}px"></i>`;
  let rows='';
- kinds.forEach(([k,n])=>{const byLv=new Map();vis.filter(q=>q.t===k).sort((a,b)=>(qsState(b.g)==='active')-(qsState(a.g)==='active')||a.n.localeCompare(b.n)).forEach(q=>{if(!byLv.has(q.lv))byLv.set(q.lv,[]);byLv.get(q.lv).push(q)});
+ kinds.forEach(([k,n])=>{const byLv=new Map();vis.filter(q=>q.t===k).sort((a,b)=>(qsState(a.g)==='done')-(qsState(b.g)==='done')||(qsState(b.g)==='active')-(qsState(a.g)==='active')||a.n.localeCompare(b.n)).forEach(q=>{if(!byLv.has(q.lv))byLv.set(q.lv,[]);byLv.get(q.lv).push(q)});
   let lines=1,dots='';
   byLv.forEach((list,lv)=>{const key=k+':'+lv,open=QS.cells.has(key),over=list.length>cap,shown=over&&!open?list.slice(0,cap-1):list,total=shown.length+(over?1:0),nl=Math.ceil(total/per);lines=Math.max(lines,nl);
    const x0=(lv-lo)*slot;
@@ -111,8 +116,8 @@ function qsRenderBand(host){const my=qsMy(),reg=qsInRegion(QS.region),vis=reg.fi
    if(over)dots+=`<button type="button" class="qsmore" data-cell="${key}" style="${place(shown.length)}" aria-expanded="${open}" aria-label="${open?'Show fewer quests':(list.length-shown.length)+' more quests at level '+lv}">${open?'−':'+'+(list.length-shown.length)}</button>`});
   rows+=`<div class="qsbrow t-${k}" style="min-height:${Math.max(56,lines*QS_STEP+16)}px"><div class="qsblabel">${n}</div><div class="qsbplot" style="width:${W}px">${zone}${line}${dots}</div></div>`});
  const axis=Array.from({length:span},(_,i)=>`<span style="left:${((i+.5)*slot).toFixed(1)}px">${lo+i}</span>`).join('');
- host.innerHTML=`<div class="qsband" id="qsBand"><div class="qsbinner" style="width:${QS_LABEL+W}px"><div class="qsbhead"><span></span><div class="qsbplot head" style="width:${W}px">${zone}${zw?`<b class="qszl" style="left:6px">${zw>=56?'5% XP':'5%'}</b><b class="qszl full" style="left:${zw+6}px">full XP</b>`:''}${line}<b class="qsml${flip?' flip':''}" style="left:${lx(my)}px">You · ${my}</b></div></div>${rows}<div class="qsbaxis"><span></span><div class="qsbplot axis" style="width:${W}px">${axis}</div></div></div></div><ul class="qslegend" aria-label="Quest types">${QS_KINDS.map(([k,n])=>`<li class="t-${k}">${qsShape(k,'none',true)}<span>${n}</span></li>`).join('')}</ul>`+note;
- host.querySelectorAll('.qsdot').forEach(d=>{d.onclick=()=>qsSelect(d.dataset.g,true);d.onmouseenter=d.onfocus=()=>qsTip(d);d.onmouseleave=d.onblur=()=>qsTipHide()});
+ host.innerHTML=tools+`<div class="qsband" id="qsBand"><div class="qsbinner" style="width:${QS_LABEL+W}px"><div class="qsbhead"><span></span><div class="qsbplot head" style="width:${W}px">${zone}${zw?`<b class="qszl" style="left:6px">${zw>=56?'5% XP':'5%'}</b><b class="qszl full" style="left:${zw+6}px">full XP</b>`:''}${line}<b class="qsml${flip?' flip':''}" style="left:${lx(my)}px">You · ${my}</b></div></div>${rows}<div class="qsbaxis"><span></span><div class="qsbplot axis" style="width:${W}px">${axis}</div></div></div></div><ul class="qslegend" aria-label="Quest types">${QS_KINDS.map(([k,n])=>`<li class="t-${k}">${qsShape(k,'none',true)}<span>${n}</span></li>`).join('')}</ul>`+note;
+ bind();host.querySelectorAll('.qsdot').forEach(d=>{d.onclick=()=>qsSelect(d.dataset.g,true);d.onmouseenter=d.onfocus=()=>qsTip(d);d.onmouseleave=d.onblur=()=>qsTipHide()});
  host.querySelectorAll('.qsmore').forEach(b=>{b.onclick=()=>{const k=b.dataset.cell;if(QS.cells.has(k))QS.cells.delete(k);else QS.cells.add(k);qsRenderBand(host);const n=host.querySelector('.qsmore[data-cell="'+k+'"]');if(n)n.focus()}});
  QS.place=null}
 // one tooltip for dots: name, type · region · level, status (on hover and on keyboard focus)
