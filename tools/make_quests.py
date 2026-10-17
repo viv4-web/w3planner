@@ -8,9 +8,9 @@ Inputs (read-only): ~/incoming/w3planner-journal.zip (every .journal file, made 
 ~/incoming/gamedata/csv/**/*quest_levels*.csv (the level of each quest). Nothing else: no third-party guide, wiki or spreadsheet (docs/QUESTS.md).
 
 Outputs
-  data/QUESTS.json            the quest list (committed, like the item lists): per quest the journal GUID (how a save names it), id, name, type, region, level, pack and the objectives
-                              (objective GUID + title). Names and objective titles are short labels; the journal TEXT is not in here.
-  <art-dir>/quests/desc.json  the journal descriptions {quest id: [text, ...]}. GAME TEXT: like the Glossary it stays in the private art folder, never committed;
+  data/QUESTS.json            the quest list (committed, like the item lists): per quest the journal GUID (how a save names it), id, name, type, region, level, pack, `hs` (1 when the
+                              Hearts of Stone XP rule applies) and the GUIDs of its objectives and journal entries. Quest names are the only text; objective titles and journal text are not in here.
+  <art-dir>/quests/desc.json  {quest id: {"d": [journal entry text, ...], "o": [objective title, ...]}}, in the order of the GUID lists. GAME TEXT: like the Glossary it stays in the private art folder, never committed;
                               tools/build.py turns it into one hashed script of the live build, loaded when a quest is opened.
   <art-dir>/quests/manifest.json
 The decisions behind it are in docs/QUESTS.md.
@@ -20,7 +20,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools" / "extract"))
-import cr2w, w3dec   # noqa: E402
+import bundle as W3B, cr2w, w3dec   # noqa: E402
 
 HOME = Path.home()
 VERSION = 1
@@ -32,6 +32,9 @@ WORLD = {4: "wo", 5: "vz", 9: "ve", 1: "no", 2: "sk", 3: "km"}
 PACK_REGION = {"ep1": "hos", "bob": "baw"}
 # debug and placeholder entries, dropped from the data entirely: no title, the journal groups "testlevel" ([PL] Exploration, [Interaction]) and the E3 / press-demo leftovers
 DROP_GROUPS = {"testlevel", "Demo Quests"}
+# region of a quest the journal gives no (usable) code, by decision of Vivek (2026-10-17, v33b); everything else without a code stays in Other & epilogue
+REGION_OF = {"SQ106 Killbill": "no", "mq3031_aging_romance": "no", "mq2048_msg_in_a_bottle": "sk", "SQ108 Master Blacksmith": "ve", "LW_Prologue_Deserter_Camps": "wo",
+             "Q402 Allies for Kaer Morhen": "km", "Q402 Isle of Mists": "km"}
 # levels the CSVs name with a different key than the quest id (the quest's `baseName`): id -> (key found in the CSV, why). Everything else is matched by the exact id
 # (case and surrounding spaces ignored); a quest with no source keeps level null (the page shows "—, not computed yet").
 LEVEL_KEY = {"plegmund_poi_0%d" % i: ("plegmund", "the CSV has one row for the five Big Feet to Fill quests") for i in range(1, 6)}
@@ -86,6 +89,19 @@ def read_journal(zpath, strs):
     return quests, groups, kids
 
 
+def hos_prefixes(game_dir):
+    """The quest prefixes (q601 ...) that have a reward whose name contains "q60": the only rewards the game's Hearts of Stone XP rule applies to (r4Game.ws OnGiveReward, StrContains(rewardName, "q60"))."""
+    out = set()
+    for bn in ("xml", "ep1", "bob"):
+        b = W3B.Bundle(Path(game_dir) / "bundles" / (bn + ".bundle"))
+        for e in b.match("*gameplay\\rewards\\rewards.xml"):
+            for m in re.finditer(r'<reward\s+name\s*=\s*"([^"]+)"', b.read(e).decode("utf-8-sig", "replace")):
+                n = m.group(1).lower(); pm = re.match(r"q\d+", n)
+                if "q60" in n and pm: out.add(pm.group(0))
+        b.close()
+    return out
+
+
 def kind_of(q, group):
     n = q["name"]
     if group == "Gwint" or n.startswith("Gwent:") or q["id"] == "Card Game Meta: Gather All": return "gwent"
@@ -97,7 +113,7 @@ def kind_of(q, group):
 def build(zpath, game_dir):
     strs, _ = w3dec.decode(str(game_dir / "en.w3strings"))
     quests, groups, kids = read_journal(zpath, strs)
-    levels, clash = read_levels(game_dir)
+    levels, clash = read_levels(game_dir); hos = hos_prefixes(game_dir)
     sub = lambda g, cl: [x for x in sorted(kids[g], key=lambda x: x[1]) if x[0] == cl]
     out, desc, dropped, fixes, nolevel = [], {}, [], [], []
     for g, q in quests.items():
@@ -108,11 +124,13 @@ def build(zpath, game_dir):
         elif q["id"] in LEVEL_KEY and LEVEL_KEY[q["id"]][0] in levels:
             src = levels[LEVEL_KEY[q["id"]][0]]; fixes.append((q["id"], q["name"], LEVEL_KEY[q["id"]][0], LEVEL_KEY[q["id"]][1], src))
         if src is None: nolevel.append((q["id"], q["name"]))
-        region = PACK_REGION.get(q["pack"]) or WORLD.get(q["world"], "oth")
-        objs = [[o[2], o[3]] for ph in sub(g, "CJournalQuestPhase") for o in sub(ph[2], "CJournalQuestObjective") if o[3]]
-        out.append(dict(g=g, id=q["id"], n=q["name"], t=kind_of(q, grp), r=region, lv=src[0] if src else None, p=q["pack"], o=objs, _w=q["world"], _grp=grp))
-        texts = [e[3] for dg in sub(g, "CJournalQuestDescriptionGroup") for e in sub(dg[2], "CJournalQuestDescriptionEntry") if e[3]]
-        if texts: desc[q["id"]] = texts
+        region = PACK_REGION.get(q["pack"]) or WORLD.get(q["world"]) or REGION_OF.get(q["id"], "oth")
+        objs = [o for ph in sub(g, "CJournalQuestPhase") for o in sub(ph[2], "CJournalQuestObjective") if o[3]]
+        ents = [e for dg in sub(g, "CJournalQuestDescriptionGroup") for e in sub(dg[2], "CJournalQuestDescriptionEntry") if e[3]]
+        pm = re.match(r"(?i)q\d+", q["id"]); rec = dict(g=g, id=q["id"], n=q["name"], t=kind_of(q, grp), r=region, lv=src[0] if src else None, p=q["pack"])
+        if pm and pm.group(0).lower() in hos: rec["hs"] = 1      # its rewards are named q60...: the Hearts of Stone XP rule
+        rec.update(o=[o[2] for o in objs], d=[e[2] for e in ents], _w=q["world"], _grp=grp); out.append(rec)
+        if objs or ents: desc[q["id"]] = {"d": [e[3] for e in ents], "o": [o[3] for o in objs]}
     out.sort(key=lambda x: (x["lv"] is None, x["lv"] or 0, x["n"], x["id"]))
     return out, desc, dropped, fixes, nolevel, clash
 
@@ -130,7 +148,7 @@ def main():
     blob = json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n"
     dblob = json.dumps(desc, ensure_ascii=False, separators=(",", ":")) + "\n"
     man = dict(version=VERSION, counts=dict(quests=len(quests), descriptions=len(desc)), files=["desc.json"], sha1=hashlib.sha1(dblob.encode()).hexdigest()[:12])
-    log("quests %d (dropped %d), with a description %d, objectives %d, level known %d, level missing %d" % (len(quests), len(dropped), len(desc), sum(len(q["o"]) for q in quests),
+    log("quests %d (dropped %d), with a description %d, objective GUIDs %d, journal entries %d, Hearts of Stone rule %d, level known %d, level missing %d" % (len(quests), len(dropped), len(desc), sum(len(q["o"]) for q in quests), sum(len(q["d"]) for q in quests), sum(1 for q in quests if q.get("hs")),
         sum(q["lv"] is not None for q in quests), len(nolevel)))
     log("by region:", dict(collections.Counter(q["r"] for q in quests))); log("by kind:", dict(collections.Counter(q["t"] for q in quests))); log("by pack:", dict(collections.Counter(q["p"] for q in quests)))
     log("level CSV keys with two different levels:", clash or "none")

@@ -35,26 +35,33 @@
 .qslv{flex:0 0 auto;min-width:30px;text-align:right;color:var(--gold);font-size:19px}.qslv.na{color:var(--dim);cursor:help}
 .qsic{flex:0 0 16px;margin-top:2px}.qsrow .qsic{margin-top:0}.qs-none{color:#8f8575}.qs-active{color:#e0b25a}.qs-done{color:#6cbc4a}.qs-failed{color:#e0604c}.qs-inactive{color:#8f8575}
 .qshint{margin:0;padding:18px 8px;color:var(--dim);font-size:17px}
-/* level band */
+/* level band: full width, scrolls sideways inside its own box; the detail is a drawer */
 .qsband{overflow-x:auto;padding-bottom:2px}
-.qsbhead,.qsbrow,.qsbaxis{display:grid;grid-template-columns:104px minmax(560px,1fr);gap:8px;min-width:680px}
-.qsbplot{position:relative;min-width:0}
-.qsbplot.head{height:34px}.qsbplot.axis{height:22px;color:var(--dim);font-size:14px}.qsbplot.axis span{position:absolute;transform:translateX(-50%)}.qsbplot.axis span:last-child{transform:translateX(-100%)}
-.qsbrow{border-top:1px solid #2a2219}.qsblabel{padding:6px 0;color:var(--dim);font-size:17px;text-transform:uppercase;letter-spacing:.8px}
-.qsbrow .qsbplot{min-height:30px}
-.qsz5{position:absolute;left:0;top:0;bottom:0;background:repeating-linear-gradient(135deg,#3a2a1a55 0 6px,#2a1f1455 6px 12px);border-right:1px dashed #8a6a3a;pointer-events:none;overflow:hidden}
-.qszfull{position:absolute;top:0;bottom:0;right:0;pointer-events:none;overflow:hidden}
-.qsz5 b,.qszfull b{position:absolute;top:2px;left:6px;font-weight:500;font-size:14px;letter-spacing:.8px;text-transform:uppercase;color:#c9a46a;white-space:nowrap}
-.qszfull b{color:#7fae62}
+.qsbinner{min-width:100%}
+.qsbhead,.qsbrow,.qsbaxis{display:flex;align-items:stretch}
+.qsbhead>span:first-child,.qsbaxis>span:first-child,.qsblabel{flex:0 0 112px;position:sticky;left:0;z-index:4;background:#0f0c09}
+.qsbplot{position:relative;flex:0 0 auto;min-width:0}
+.qsbplot.head{height:38px}.qsbplot.axis{height:22px;color:var(--dim);font-size:14px}.qsbplot.axis span{position:absolute;transform:translateX(-50%);top:3px}
+.qsbrow{border-top:1px solid #2a2219}.qsblabel{padding:8px 6px 0 0;color:var(--dim);font-size:17px;text-transform:uppercase;letter-spacing:.8px}
+.qsz5{position:absolute;left:0;top:0;bottom:0;background:repeating-linear-gradient(135deg,#3a2a1a55 0 6px,#2a1f1455 6px 12px);border-right:1px dashed #8a6a3a;pointer-events:none}
+.qszl{position:absolute;top:2px;font-weight:500;font-size:14px;letter-spacing:.8px;text-transform:uppercase;color:#c9a46a;white-space:nowrap;pointer-events:none}.qszl.full{color:#7fae62}
 .qsme{position:absolute;top:0;bottom:0;width:0;border-left:2px solid #fff;pointer-events:none;z-index:2}
-.qsme b{position:absolute;top:14px;left:5px;font-weight:500;font-size:14px;color:#fff;background:#0d0b09cc;padding:0 4px;white-space:nowrap}
-.qsdot{position:absolute;width:16px;height:16px;padding:0;border-radius:50%;border:2px solid #b8a67f;background:transparent;cursor:pointer;z-index:1}
-.qsdot.active{background:#e0b25a;border-color:#fff2c4;box-shadow:0 0 8px #e0b25acc}.qsdot.failed{border-color:#e0604c;opacity:.7}.qsdot.inactive{border-style:dashed}
+.qsml{position:absolute;top:19px;margin-left:5px;font-weight:500;font-size:14px;color:#fff;background:#0d0b09cc;padding:0 4px;white-space:nowrap;z-index:3}.qsml.flip{transform:translateX(-100%);margin-left:-5px}
+.qsdot{position:absolute;width:14px;height:14px;padding:0;border-radius:50%;border:2px solid #b8a67f;background:transparent;cursor:pointer;z-index:1}
+.qsdot.active{background:#e0b25a;border-color:#fff2c4;box-shadow:0 0 6px #e0b25acc}.qsdot.failed{border-color:#e0604c;opacity:.7}.qsdot.inactive{border-style:dashed}
 .qsdot.hos{border-radius:3px;transform:rotate(45deg) scale(.82)}
-.qsdot:hover,.qsdot.on{border-color:#fff;transform:scale(1.25);z-index:3}.qsdot.hos:hover,.qsdot.hos.on{transform:rotate(45deg) scale(1.05)}
+.qsdot:hover,.qsdot.on,.qsdot:focus-visible{border-color:#fff;z-index:3}.qsdot:hover,.qsdot.on{transform:scale(1.25)}.qsdot.hos:hover,.qsdot.hos.on{transform:rotate(45deg) scale(1.05)}
+.qsmore{position:absolute;height:14px;min-width:14px;padding:0 3px;border:1px solid #8a6a3a;border-radius:7px;background:#1d1710;color:#e0c48a;font:inherit;font-size:12px;line-height:12px;cursor:pointer;z-index:1}.qsmore:hover,.qsmore:focus-visible{border-color:#fff;color:#fff}
 .qsbnote{margin:8px 2px 0;color:var(--dim);font-size:15px;line-height:1.3}
+.qstip{position:fixed;z-index:90;max-width:300px;background:#0f0c09;border:1px solid var(--gold);box-shadow:0 6px 20px #000c;padding:6px 10px;pointer-events:none;display:flex;flex-direction:column;gap:1px;font-size:16px;line-height:1.2}.qstip[hidden]{display:none}.qstip b{font-weight:500;color:#fff;font-size:18px}.qstip span{color:#cdbf9e}
+.qsscreen.qs-band .qsbody{grid-template-columns:minmax(0,1fr)}
+.qsscreen.qs-band .qsdetail{position:fixed;right:0;top:132px;bottom:0;width:min(460px,100vw);max-height:none;z-index:45;transform:translateX(105%);visibility:hidden;transition:transform .18s ease,visibility 0s .18s;box-shadow:-10px 0 30px #000c;border-width:1px 0 0 1px}
+.qsscreen.qs-band.qs-open .qsdetail{transform:none;visibility:visible;transition:transform .18s ease}
+.qsclose{display:none;position:absolute;right:8px;top:8px;width:44px;height:44px;padding:0;font-size:28px;line-height:1;z-index:2}.qsscreen.qs-band .qsclose{display:block}
+.qsscreen.qs-band .qstitle{padding-right:50px}
+@media (prefers-reduced-motion:reduce){.qsscreen.qs-band .qsdetail{transition:none}}
 /* detail */
-.qsdetail{border:1px solid #4a3d2c;background:linear-gradient(180deg,#171310,#0d0b09);padding:14px 16px 18px;min-width:0;position:sticky;top:132px;max-height:calc(100vh - 150px);overflow:auto}
+.qsdetail{position:relative;border:1px solid #4a3d2c;background:linear-gradient(180deg,#171310,#0d0b09);padding:14px 16px 18px;min-width:0;position:sticky;top:132px;max-height:calc(100vh - 150px);overflow:auto}
 .qsback{display:none;margin-bottom:8px;min-height:44px}
 .qsempty{color:var(--dim);font-size:19px;padding:24px 4px;text-align:center}
 .qstitle{display:flex;gap:10px;align-items:flex-start;margin:0;font-weight:500;font-size:28px;line-height:1.1;color:#fff}.qstitle .qsic{width:22px;height:22px;flex-basis:22px;margin-top:5px}.qstitle span{overflow-wrap:anywhere}
@@ -65,7 +72,7 @@
 .qsprog{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:14px 0 4px}.qsplabel{flex:0 0 100%;color:var(--gold);font-size:15px;letter-spacing:1px;text-transform:uppercase}
 .qsmark{display:inline-flex;align-items:center;gap:6px;min-height:40px;font-size:17px}.qsmark.on{border-color:var(--gold);background:#2a2113;color:#fff}
 .qsclear{font:inherit;font-size:15px;background:none;border:0;color:var(--gold);text-decoration:underline;padding:6px 4px;cursor:pointer;min-height:40px}.qsclear:hover{color:#fff}
-.qsdesc{max-height:260px;overflow:auto;border:1px solid #3a3025;background:#0d0b09;padding:8px 12px;font-size:18px;line-height:1.35;color:#d6ccb8}.qsdesc p{margin:0 0 .7em}.qsdesc p:last-child{margin-bottom:0}.qsdesc:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.qsspoil{margin-top:8px;min-height:40px}.qsdesc{max-height:260px;overflow:auto;border:1px solid #3a3025;background:#0d0b09;padding:8px 12px;font-size:18px;line-height:1.35;color:#d6ccb8}.qsdesc p{margin:0 0 .7em}.qsdesc p:last-child{margin-bottom:0}.qsdesc:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
 .qsobjs{list-style:none;margin:0;padding:0}.qsobjs li{display:flex;gap:8px;align-items:flex-start;padding:3px 0;font-size:18px;border-bottom:1px solid #221b13}.qsobjs li span{overflow-wrap:anywhere}
 .qsobjs li.done{color:#8f8575}.qsobjs li.done span{text-decoration:line-through;text-decoration-color:#5a4a36}.qsobjs li.active{color:#fff}.qsobjs li.none,.qsobjs li.inactive{color:#b3a78f}
 .qscredit{margin:10px 2px 0;color:var(--dim);font-size:16px}.qscredit a{color:var(--gold)}
@@ -82,7 +89,7 @@
 @media (max-width:1180px){.qscards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:900px){
  .qsscreen{padding:4px 12px 24px}.qsbody{grid-template-columns:minmax(0,1fr)}
- .qsdetail{position:static;max-height:none;display:none}.qsscreen.qs-detail .qsdetail{display:block}.qsscreen.qs-detail .qscentre{display:none}.qsback{display:inline-flex;align-items:center}
+ .qsscreen:not(.qs-band) .qsdetail{position:static;max-height:none;display:none}.qsscreen:not(.qs-band).qs-detail .qsdetail{display:block}.qsscreen:not(.qs-band).qs-detail .qscentre{display:none}.qsscreen:not(.qs-band) .qsback{display:inline-flex;align-items:center}.qsscreen.qs-band .qsdetail{width:100vw}
  .qsrows{max-height:none}
 }
 @media (max-width:600px){

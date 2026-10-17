@@ -8,7 +8,8 @@ const QS_SAVE={JS_Success:'done',JS_Active:'active',JS_Failed:'failed',JS_Inacti
 const QS_ICON={none:'<circle cx="8" cy="8" r="5.2" fill="none" stroke="currentColor" stroke-width="1.6"/>',active:'<circle cx="8" cy="8" r="5.2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="8" r="2.6" fill="currentColor"/>',
  done:'<path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',failed:'<path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
  inactive:'<circle cx="8" cy="8" r="5.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2.2 2.2"/>'};
-const QS={data:null,byG:null,byObj:null,load:null,err:false,region:'ve',view:'band',kind:'all',hide:false,q:'',sel:null,descP:null,desc:null,init:false,shown:false,lv:0,
+const QS_VIEW_KEY='w3p.quests.view';   // 'list' | 'band': the view last chosen in this browser (v33b); the default is the List
+const QS={data:null,byG:null,byObj:null,byDesc:null,load:null,err:false,region:'ve',view:'list',kind:'all',hide:false,q:'',sel:null,descP:null,desc:null,init:false,shown:false,lv:0,open:false,reveal:new Set(),cells:new Set(),
  store:{manual:{},save:null,changed:0},ok:true,confirm:false};
 const qsEl=id=>document.getElementById(id);
 const qsEsc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -21,10 +22,12 @@ function qsClean(o){   // untrusted (the file the user loads, or another version
  const take=(src,allowed,max)=>{const r={};if(src&&typeof src==='object')for(const k of Object.keys(src).slice(0,max)){const v=src[k];if(QS_GUID.test(k)&&allowed.includes(v))r[k]=v}return r};
  out.manual=take(o.manual,QS_MARKS,6000);
  if(o.save&&typeof o.save==='object')out.save={at:Number.isFinite(o.save.at)?Math.max(0,Math.floor(o.save.at)):0,file:typeof o.save.file==='string'?o.save.file.slice(0,120):'',
-  q:take(o.save.q,['done','active','failed','inactive'],6000),o:take(o.save.o,['done','active','failed','inactive'],12000)};
+  q:take(o.save.q,['done','active','failed','inactive'],6000),o:take(o.save.o,['done','active','failed','inactive'],12000),e:take(o.save.e,['done','active','failed','inactive'],12000)};
  return out}
 function qsStoreInit(){if(QS.read)return;QS.read=true;qsRead()}
-function qsRead(){try{const raw=localStorage.getItem(QS_KEY);QS.ok=true;if(!raw)return;const c=qsClean(JSON.parse(raw));if(c)QS.store=c}catch(e){QS.ok=false}}
+function qsRead(){try{const raw=localStorage.getItem(QS_KEY);QS.ok=true;if(!raw)return;const c=qsClean(JSON.parse(raw));if(c)QS.store=c}catch(e){QS.ok=false}
+ try{const v=localStorage.getItem(QS_VIEW_KEY);if(v==='list'||v==='band')QS.view=v}catch(e){}}
+function qsSetView(v){QS.view=v;QS.open=false;try{localStorage.setItem(QS_VIEW_KEY,v)}catch(e){}}
 function qsWrite(){try{localStorage.setItem(QS_KEY,JSON.stringify(Object.assign({v:1},QS.store)));QS.ok=true}catch(e){QS.ok=false}qsChip()}
 function qsTouch(){QS.store.changed=Date.now();qsWrite()}
 const qsSaveState=g=>QS.store.save&&QS.store.save.q[g]||'none';
@@ -36,16 +39,16 @@ const qsHasProgress=()=>!!(qsHand()||QS.store.save);
 // ---- data ----
 function qsLoad(){if(QS.data)return Promise.resolve(QS.data);
  return QS.load||(QS.load=(async()=>{if(!(window.W3DATA&&W3DATA.QUESTS))await eqScript(QS_URL);const d=W3DATA.QUESTS;if(!d||!d.quests)throw new Error('empty');
-  QS.data=d;QS.byG=new Map(d.quests.map(q=>[q.g,q]));QS.byObj=new Map();d.quests.forEach(q=>q.o.forEach((o,i)=>QS.byObj.set(o[0],[q,i])));QS.regions=new Map(d.regions);return d})().catch(e=>{QS.load=null;QS.err=true;throw e}))}
+  QS.data=d;QS.byG=new Map(d.quests.map(q=>[q.g,q]));QS.byObj=new Map();QS.byDesc=new Set();d.quests.forEach(q=>{q.o.forEach((g,i)=>QS.byObj.set(g,[q,i]));q.d.forEach(g=>QS.byDesc.add(g))});QS.regions=new Map(d.regions);return d})().catch(e=>{QS.load=null;QS.err=true;throw e}))}
 function qsDescLoad(){if(QS.desc)return Promise.resolve(QS.desc);if(!QS_DESC)return Promise.reject(new Error('none'));
  return QS.descP||(QS.descP=new Promise((ok,bad)=>{const s=document.createElement('script');s.src=QS_DESC.desc;s.onload=()=>{const d=(window.W3DATA||{}).quests_desc;if(d){QS.desc=d;ok(d)}else{QS.descP=null;bad(new Error('empty'))}};
   s.onerror=()=>{QS.descP=null;s.remove();bad(new Error('load'))};document.head.appendChild(s)}))}
 
-// ---- the XP rule (r4Game.ws OnGiveReward, lines 1020-1078): a quest 10 or more levels under yours gives 5 %; Hearts of Stone rewards (named q60...) also scale by 16 % per level, from 150 % down ----
-function qsXp(q,my){if(q.lv==null)return null;const d=q.lv-my;if(d<=-10)return .05;if(q.p!=='ep1')return 1;let m=1;if(d<10){m=Math.max(0,Math.min(1.5,1+d*.16))}return m>0?m:.05}
+// ---- the XP rule (r4Game.ws OnGiveReward, lines 1020-1078): a quest 10 or more levels under yours gives 5 %; only rewards whose name contains "q60" (q.hs, set by tools/make_quests.py) also scale by 16 % per level, at most 150 % ----
+function qsXp(q,my){if(q.lv==null)return null;const d=q.lv-my;if(d<=-10)return .05;if(!q.hs)return 1;let m=1;if(d<10){m=Math.max(0,Math.min(1.5,1+d*.16))}return m>0?m:.05}
 const qsPct=m=>Math.round(m*100)+'%';
 const qsXpText=(q,my)=>{const m=qsXp(q,my);if(m==null)return'XP at your level: not computed yet (no level for this quest)';
- return q.p==='ep1'?'Hearts of Stone scales XP by level: '+qsPct(m)+' of the usual XP at level '+my:m<1?'5% XP: this quest is 10 or more levels under level '+my:'Full XP at level '+my}
+ return q.hs?'This Hearts of Stone reward scales XP by level: '+qsPct(m)+' of the usual XP at level '+my:m<1?'5% XP: this quest is 10 or more levels under level '+my:'Full XP at level '+my}
 const qsLevelText=q=>q.lv==null?'—':String(q.lv);
 const qsMy=()=>lvl();
 function qsLvSpan(q){return q.lv==null?'<span class="qslv na" title="not computed yet">—</span>':`<span class="qslv">${q.lv}</span>`}
@@ -60,13 +63,14 @@ function qsRenderRegs(){const el=qsEl('qsRegs');
  const on=el.querySelector('.qsreg.on');if(on&&innerWidth<760)on.scrollIntoView({block:'nearest',inline:'center'})}
 
 // ---- Next up: active quests first (with the current objective), then quests not started that still give full XP, nearest to my level, then the region of the first active quest ----
-function qsCurrent(q){const out=[];if(!QS.store.save)return out;q.o.forEach(([g,t])=>{if(QS.store.save.o[g]==='active')out.push(t)});return out}
+const qsTitles=q=>QS.desc&&QS.desc[q.id]?QS.desc[q.id].o:null;   // objective titles are game text: in the lazy file, live build only
+function qsCurrent(q){const out=[];if(!QS.store.save)return out;const T=qsTitles(q);q.o.forEach((g,i)=>{if(QS.store.save.o[g]==='active')out.push(T?T[i]:null)});return out}   // null = an active objective whose title is not in this build
 function qsNextUp(){const my=qsMy(),all=QS.data.quests,act=all.filter(q=>qsState(q.g)==='active').sort((a,b)=>Math.abs((a.lv==null?999:a.lv)-my)-Math.abs((b.lv==null?999:b.lv)-my)||a.n.localeCompare(b.n));
  const home=act.length?act[0].r:QS.region,fresh=all.filter(q=>qsState(q.g)==='none'&&q.lv!=null&&qsXp(q,my)>=1).sort((a,b)=>Math.abs(a.lv-my)-Math.abs(b.lv-my)||(a.r===home?0:1)-(b.r===home?0:1)||a.lv-b.lv||a.n.localeCompare(b.n));
  return act.concat(fresh).slice(0,4)}
 function qsRenderNext(){const el=qsEl('qsNext'),list=qsNextUp(),my=qsMy();
  el.innerHTML=`<h3>Next up</h3><div class="qscards">${list.map(q=>{const st=qsState(q.g),cur=st==='active'?qsCurrent(q):[];
-  return`<button type="button" class="qscard${QS.sel===q.g?' on':''}" data-g="${q.g}">${qsIcon(st)}<span class="qscn"><b>${qsEsc(q.n)}</b><small>${qsEsc(QS.regions.get(q.r))} · level ${qsLevelText(q)} · ${QS_NAMES[st]}</small><em>${st==='active'?(cur.length?qsEsc(cur[0])+(cur.length>1?' (+'+(cur.length-1)+')':''):'Current objective: not known'):qsEsc(qsXp(q,my)>=1?'Full XP at your level':'')}</em></span></button>`}).join('')||'<p class="qshint">Nothing left to suggest.</p>'}</div>`;
+  return`<button type="button" class="qscard${QS.sel===q.g?' on':''}" data-g="${q.g}">${qsIcon(st)}<span class="qscn"><b>${qsEsc(q.n)}</b><small>${qsEsc(QS.regions.get(q.r))} · level ${qsLevelText(q)} · ${QS_NAMES[st]}</small><em>${st==='active'?(cur.length?(cur[0]===null?cur.length+' active objective'+(cur.length>1?'s':'')+' (text not in this build)':qsEsc(cur[0])+(cur.length>1?' (+'+(cur.length-1)+')':'')):'Current objective: not known'):qsEsc(qsXp(q,my)>=1?'Full XP at your level':'')}</em></span></button>`}).join('')||'<p class="qshint">Nothing left to suggest.</p>'}</div>`;
  el.querySelectorAll('.qscard').forEach(b=>{b.onclick=()=>qsSelect(b.dataset.g,true)})}
 
 // ---- the views ----
@@ -83,47 +87,80 @@ function qsRenderList(host){const reg=qsInRegion(QS.region),cnt=k=>reg.filter(q=
  rows.scrollTop=top;host.querySelectorAll('.qschip[data-k]').forEach(b=>{b.onclick=()=>{QS.kind=b.dataset.k;qsRenderView()}});qsEl('qsHide').onclick=()=>{QS.hide=!QS.hide;qsRenderView()};
  const inp=qsEl('qsQ');inp.oninput=()=>{QS.q=inp.value;const p=inp.selectionStart;qsRenderView();const n=qsEl('qsQ');n.focus();n.setSelectionRange(p,p)};
  rows.querySelectorAll('.qsrow').forEach(b=>{b.onclick=()=>qsSelect(b.dataset.g,true);b.onkeydown=e=>{if(e.key!=='ArrowDown'&&e.key!=='ArrowUp')return;const rs=[...rows.querySelectorAll('.qsrow')],i=rs.indexOf(b)+(e.key==='ArrowDown'?1:-1);if(i>=0&&i<rs.length){e.preventDefault();rs[i].focus()}}})}
-const QS_MAXLV=60,qsX=lv=>(Math.max(1,Math.min(QS_MAXLV,lv))-1)/(QS_MAXLV-1)*100;
+// ---- the Level band: x = quest levels from the lowest to the highest in this region (at least 24 px per level), one row per type; dots of one level side by side in the level's slot, three lines at most ("+n" opens the rest) ----
+const QS_DOT=14,QS_STEP=16,QS_SLOT=24,QS_LABEL=112;
 function qsRenderBand(host){const my=qsMy(),reg=qsInRegion(QS.region),vis=reg.filter(q=>q.lv!=null&&qsState(q.g)!=='done'),nol=reg.filter(q=>q.lv==null&&qsState(q.g)!=='done').length;
- const kinds=QS_KINDS.filter(([k])=>reg.some(q=>q.t===k));
- host.innerHTML=`<div class="qsband" id="qsBand"><div class="qsbhead"><span></span><div class="qsbplot head"><i class="qsz5" style="width:${my-10>=1?(qsX(my-9.5)).toFixed(2):0}%"><b>${my-10>=1?'5% XP':''}</b></i><i class="qszfull" style="left:${my-10>=1?qsX(my-9.5).toFixed(2):0}%"><b>full XP</b></i><i class="qsme" style="left:${qsX(my).toFixed(2)}%"><b>You · ${my}</b></i></div></div>
-  ${kinds.map(([k,n])=>`<div class="qsbrow" data-k="${k}"><div class="qsblabel">${n}</div><div class="qsbplot" data-k="${k}"><i class="qsz5" style="width:${my-10>=1?(qsX(my-9.5)).toFixed(2):0}%"></i><i class="qsme" style="left:${qsX(my).toFixed(2)}%"></i></div></div>`).join('')}
-  <div class="qsbaxis"><span></span><div class="qsbplot axis">${[1,5,10,15,20,25,30,35,40,45,50,55,60].map(n=>`<span style="left:${qsX(n).toFixed(2)}%">${n}</span>`).join('')}</div></div></div>
-  <p class="qsbnote">Done quests are hidden. Hollow = not started, filled = active. ${nol?nol+' quest'+(nol===1?' has':'s have')+' no level yet and '+(nol===1?'is':'are')+' only in the List. ':''}Zones follow the game's quest XP rule (r4Game.ws, OnGiveReward), on normal difficulty and a first playthrough.</p>`;
- const place=()=>{const band=qsEl('qsBand');if(!band)return;band.querySelectorAll('.qsbplot[data-k]').forEach(plot=>{const k=plot.dataset.k,px=plot.clientWidth||600,step=px/(QS_MAXLV-1),D=16,lanes=[];
-  plot.querySelectorAll('.qsdot').forEach(d=>d.remove());
-  vis.filter(q=>q.t===k).sort((a,b)=>a.lv-b.lv||a.n.localeCompare(b.n)).forEach(q=>{const x=(q.lv-1)*step;let ln=lanes.findIndex(e=>x-e>=D);if(ln<0){ln=lanes.length;lanes.push(-1e9)}lanes[ln]=x;
-   const st=qsState(q.g),b=document.createElement('button');b.type='button';b.className='qsdot '+st+(QS.sel===q.g?' on':'')+(q.p==='ep1'?' hos':'');b.dataset.g=q.g;b.style.left='calc('+qsX(q.lv).toFixed(2)+'% - '+(D/2)+'px)';b.style.top=(6+ln*(D+2))+'px';
-   const m=qsXp(q,my);b.title=q.n+' · level '+q.lv+' · '+QS_NAMES[st]+' · '+(q.p==='ep1'?'Hearts of Stone XP '+qsPct(m):m<1?'5% XP':'full XP');b.setAttribute('aria-label',b.title);b.onclick=()=>qsSelect(q.g,true);plot.appendChild(b)});
-  plot.style.height=Math.max(1,lanes.length)*(D+2)+10+'px'})};
- place();QS.place=place}
-function qsRenderView(){const host=qsEl('qsView');
+ const note=`<p class="qsbnote">Done quests are hidden. Hollow = not started, filled = active. ${nol?nol+' quest'+(nol===1?' has':'s have')+' no level yet and '+(nol===1?'is':'are')+' only in the List. ':''}The hatched zone is where a quest gives only 5% XP (the game's rule, r4Game.ws OnGiveReward, normal difficulty, first playthrough).</p>`;
+ if(!vis.length){host.innerHTML='<p class="qshint">No quests to show here: every quest of this region is done or has no level.</p>'+note;QS.place=null;return}
+ const lo=Math.min(...vis.map(q=>q.lv)),hi=Math.max(...vis.map(q=>q.lv)),span=hi-lo+1,kinds=QS_KINDS.filter(([k])=>vis.some(q=>q.t===k));
+ const avail=(host.clientWidth||900)-QS_LABEL-22,slot=Math.max(QS_SLOT,avail/span),W=Math.round(slot*span),per=Math.max(1,Math.floor(slot/QS_STEP)),cap=per*3;
+ const lx=lv=>(Math.max(lo,Math.min(hi,lv))-lo+.5)*slot,zoneLv=my-10,zw=zoneLv>=lo?(Math.min(zoneLv,hi)-lo+1)*slot:0,flip=lx(my)>W-90;
+ const zone=zw?`<i class="qsz5" style="width:${zw}px"></i>`:'',line=`<i class="qsme" style="left:${lx(my)}px"></i>`;
+ let rows='';
+ kinds.forEach(([k,n])=>{const byLv=new Map();vis.filter(q=>q.t===k).sort((a,b)=>(qsState(b.g)==='active')-(qsState(a.g)==='active')||a.n.localeCompare(b.n)).forEach(q=>{if(!byLv.has(q.lv))byLv.set(q.lv,[]);byLv.get(q.lv).push(q)});
+  let lines=1,dots='';
+  byLv.forEach((list,lv)=>{const key=k+':'+lv,open=QS.cells.has(key),over=list.length>cap,shown=over&&!open?list.slice(0,cap-1):list,total=shown.length+(over?1:0),nl=Math.ceil(total/per);lines=Math.max(lines,nl);
+   const x0=(lv-lo)*slot;
+   const place=(i,n)=>{const ln=Math.floor(i/per),inLine=Math.min(per,total-ln*per);return'left:'+(x0+(slot-inLine*QS_STEP)/2+(i%per)*QS_STEP+1).toFixed(1)+'px;top:'+(8+ln*QS_STEP)+'px'};
+   shown.forEach((q,i)=>{const st=qsState(q.g);dots+=`<button type="button" class="qsdot ${st}${QS.sel===q.g?' on':''}${q.hs?' hos':''}" data-g="${q.g}" style="${place(i)}" aria-label="${qsEsc(q.n)}, ${QS_NAMES[st]}, level ${q.lv}"></button>`});
+   if(over)dots+=`<button type="button" class="qsmore" data-cell="${key}" style="${place(shown.length)}" aria-expanded="${open}" aria-label="${open?'Show fewer quests':(list.length-shown.length)+' more quests at level '+lv}">${open?'−':'+'+(list.length-shown.length)}</button>`});
+  rows+=`<div class="qsbrow" style="min-height:${Math.max(56,lines*QS_STEP+16)}px"><div class="qsblabel">${n}</div><div class="qsbplot" style="width:${W}px">${zone}${line}${dots}</div></div>`});
+ const axis=Array.from({length:span},(_,i)=>`<span style="left:${((i+.5)*slot).toFixed(1)}px">${lo+i}</span>`).join('');
+ host.innerHTML=`<div class="qsband" id="qsBand"><div class="qsbinner" style="width:${QS_LABEL+W}px"><div class="qsbhead"><span></span><div class="qsbplot head" style="width:${W}px">${zone}${zw?`<b class="qszl" style="left:6px">${zw>=56?'5% XP':'5%'}</b><b class="qszl full" style="left:${zw+6}px">full XP</b>`:''}${line}<b class="qsml${flip?' flip':''}" style="left:${lx(my)}px">You · ${my}</b></div></div>${rows}<div class="qsbaxis"><span></span><div class="qsbplot axis" style="width:${W}px">${axis}</div></div></div></div>`+note;
+ host.querySelectorAll('.qsdot').forEach(d=>{d.onclick=()=>qsSelect(d.dataset.g,true);d.onmouseenter=d.onfocus=()=>qsTip(d);d.onmouseleave=d.onblur=()=>qsTipHide()});
+ host.querySelectorAll('.qsmore').forEach(b=>{b.onclick=()=>{const k=b.dataset.cell;if(QS.cells.has(k))QS.cells.delete(k);else QS.cells.add(k);qsRenderBand(host);const n=host.querySelector('.qsmore[data-cell="'+k+'"]');if(n)n.focus()}});
+ QS.place=null}
+// one tooltip for dots: name, type · region · level, status (on hover and on keyboard focus)
+function qsTip(d){const q=QS.byG.get(d.dataset.g),t=qsEl('qsTip');if(!q)return;const st=qsState(q.g),m=qsXp(q,qsMy());
+ t.innerHTML=`<b>${qsEsc(q.n)}</b><span>${qsEsc(qsKindName(q.t))} · ${qsEsc(QS.regions.get(q.r))} · level ${qsLevelText(q)}</span><span>${QS_NAMES[st]}${q.hs?' · Hearts of Stone XP '+qsPct(m):m<1?' · 5% XP':''}</span>`;t.hidden=false;
+ const r=d.getBoundingClientRect(),w=t.offsetWidth,h=t.offsetHeight;t.style.left=Math.max(6,Math.min(innerWidth-w-6,r.left+r.width/2-w/2))+'px';t.style.top=(r.top-h-8>6?r.top-h-8:r.bottom+8)+'px'}
+function qsTipHide(){const t=qsEl('qsTip');if(t)t.hidden=true}
+function qsRenderView(){const host=qsEl('qsView'),sc=qsEl('screenQ');qsTipHide();
  qsEl('qsVBand').classList.toggle('on',QS.view==='band');qsEl('qsVList').classList.toggle('on',QS.view==='list');qsEl('qsVBand').setAttribute('aria-pressed',String(QS.view==='band'));qsEl('qsVList').setAttribute('aria-pressed',String(QS.view==='list'));
+ sc.classList.toggle('qs-band',QS.view==='band');sc.classList.toggle('qs-open',QS.view==='band'&&QS.open);
  if(QS.view==='band')qsRenderBand(host);else qsRenderList(host)}
 
-// ---- the detail panel ----
+// ---- the detail panel (a column beside the list; in the Level band a drawer from the right) ----
+function qsJournal(q,el){   // the spoiler gate: with a save only the entries the save has shown, otherwise nothing, until the player asks for the whole journal
+ const T=QS.desc&&QS.desc[q.id],full=QS.reveal.has(q.id),sv=QS.store.save,seen=g=>sv&&sv.e&&sv.e[g]&&sv.e[g]!=='inactive';
+ const idx=q.d.map((g,i)=>i).filter(i=>full||seen(q.d[i])),want=q.g;el.textContent='';
+ const fill=()=>{if(QS.sel!==want)return;el.textContent='';
+  const msg=t=>{const p=document.createElement('p');p.className='dim';p.textContent=t;el.appendChild(p)};
+  if(!T||!T.d.length){msg(QS_DESC?'This quest has no journal text.':'Journal text is not included in this build.');return}
+  if(!idx.length)msg(sv?'Your save has not shown any journal text for this quest yet.':'The journal is hidden so it does not spoil the story. Import a save to see what you have read, or show all of it.');
+  idx.forEach(i=>{const p=document.createElement('p');glMarkup(p,T.d[i],[]);el.appendChild(p)});
+  const b=document.createElement('button');b.type='button';b.className='btn qsspoil';b.textContent=full?'Hide full journal':'Show full journal (spoilers)';b.setAttribute('aria-expanded',String(full));
+  b.onclick=()=>{if(full)QS.reveal.delete(q.id);else QS.reveal.add(q.id);qsJournal(q,el)};if(T.d.length>idx.length||full)el.appendChild(b)};
+ if(T){fill();return}
+ const l=document.createElement('p');l.className='dim';l.textContent='Loading…';el.appendChild(l);
+ qsDescLoad().then(D=>{QS.desc=D;fill()},()=>{if(QS.sel!==want)return;el.textContent='';msg2(el,QS_DESC?'The journal text could not be loaded. Check your connection and try again.':'Journal text is not included in this build.')})}
+function msg2(el,t){const p=document.createElement('p');p.className='dim';p.textContent=t;el.appendChild(p)}
 function qsRenderDetail(){const el=qsEl('qsDetail'),q=QS.sel&&QS.byG.get(QS.sel);
- if(!q){el.innerHTML='<div class="qsempty"><p>Choose a quest to see its objectives and journal text.</p></div>';el.classList.remove('has');return}
- el.classList.add('has');
- const st=qsState(q.g),sv=qsSaveState(q.g),hand=QS.store.manual[q.g],haveSave=!!QS.store.save,cur=qsCurrent(q),my=qsMy();
+ if(!q){el.innerHTML='<button type="button" class="btn qsclose" id="qsClose" aria-label="Close">×</button><div class="qsempty"><p>Choose a quest to see its objectives and journal text.</p></div>';qsEl('qsClose').onclick=()=>qsCloseDrawer(true);el.classList.remove('has');return}
+ el.classList.add('has');const hadFocus=document.activeElement&&document.activeElement.id==='qsClose';   // a re-draw (the text arriving) must not drop the focus
+ const st=qsState(q.g),sv=qsSaveState(q.g),hand=QS.store.manual[q.g],haveSave=!!QS.store.save,cur=qsCurrent(q),my=qsMy(),T=qsTitles(q);
  const saveLine=!haveSave?'No save imported: use <b>My progress</b> below, or import a save.':`In your save: <b>${QS_NAMES[sv]}</b>${sv==='none'?' (no journal entry)':''}`+(hand?` · you marked it <b>${QS_NAMES[hand]}</b>`:'');
- el.innerHTML=`<button type="button" class="btn qsback" id="qsBack" aria-label="Back to the list">◀ Back</button><h2 class="qstitle">${qsIcon(st)}<span>${qsEsc(q.n)}</span></h2>
+ const curHtml=cur.length?`<ul>${cur.map(t=>`<li>${t===null?'An active objective (its text is not included in this build)':qsEsc(t)}</li>`).join('')}</ul>`:'<p class="dim">Not known: the save has no active objective for it.</p>';
+ el.innerHTML=`<button type="button" class="btn qsclose" id="qsClose" aria-label="Close">×</button><button type="button" class="btn qsback" id="qsBack" aria-label="Back to the list">◀ Back</button><h2 class="qstitle">${qsIcon(st)}<span>${qsEsc(q.n)}</span></h2>
   <p class="qsmeta">${qsEsc(qsKindName(q.t))} · ${qsEsc(QS.regions.get(q.r))} · ${q.lv==null?'<span title="not computed yet">level —</span>':'level '+q.lv}</p>
   <p class="qsxp">${qsEsc(qsXpText(q,my))}</p><p class="qssave">${saveLine}</p>
-  ${st==='active'?`<div class="qscur"><h3>Current objective${cur.length>1?'s':''}</h3>${cur.length?`<ul>${cur.map(t=>`<li>${qsEsc(t)}</li>`).join('')}</ul>`:'<p class="dim">Not known: the save has no active objective for it.</p>'}</div>`:''}
+  ${st==='active'?`<div class="qscur"><h3>Current objective${cur.length>1?'s':''}</h3>${curHtml}</div>`:''}
   <div class="qsprog" role="radiogroup" aria-label="My progress"><span class="qsplabel">My progress</span>${QS_MARKS.map(s=>`<button type="button" class="btn qsmark${st===s?' on':''}" role="radio" aria-checked="${st===s}" data-s="${s}">${qsIcon(s)}${QS_NAMES[s]}</button>`).join('')}${hand?'<button type="button" class="qsclear" id="qsClear">Follow my save</button>':''}</div>
-  <h3 class="qsh3">Journal</h3><div class="qsdesc" id="qsDesc" tabindex="0"><p class="dim">Loading…</p></div>
-  <h3 class="qsh3">Objectives</h3>${q.o.length?`<ul class="qsobjs">${q.o.map(([g,t])=>{const s=QS.store.save&&QS.store.save.o[g]||'none';return`<li class="${s}">${qsIcon(s)}<span>${qsEsc(t)}</span></li>`}).join('')}</ul>`:'<p class="dim">No objectives listed.</p>'}`;
- el.querySelectorAll('.qsmark').forEach(b=>{b.onclick=()=>qsMark(q.g,b.dataset.s)});const c=qsEl('qsClear');if(c)c.onclick=()=>qsMark(q.g,null);qsEl('qsBack').onclick=()=>{qsEl('screenQ').classList.remove('qs-detail');const r=document.querySelector('.qsrow.on,.qsdot.on');if(r)r.focus()};
- const d=qsEl('qsDesc'),want=q.g;
- qsDescLoad().then(D=>{if(QS.sel!==want)return;d.textContent='';const t=D[q.id];if(!t||!t.length){d.innerHTML='<p class="dim">This quest has no journal text.</p>';return}t.forEach(x=>{const p=document.createElement('p');glMarkup(p,x,[]);d.appendChild(p)})},
-  e=>{if(QS.sel===want)d.innerHTML=`<p class="dim">${QS_DESC?'The journal text could not be loaded. Check your connection and try again.':'Journal text is not included in this build.'}</p>`})}
-function qsSelect(g,focus){QS.sel=g;const q=QS.byG.get(g);if(q&&q.r!==QS.region&&!(QS.view==='list'&&glWords(QS.q).length)){QS.region=q.r}qsRenderAll();
- qsEl('screenQ').classList.add('qs-detail');if(innerWidth<=900&&focus)qsEl('qsDetail').scrollIntoView({block:'start'})}
+  <h3 class="qsh3">Journal</h3><div class="qsdesc" id="qsDesc" tabindex="0"></div>
+  <h3 class="qsh3">Objectives</h3>${q.o.length?(T?`<ul class="qsobjs">${q.o.map((g,i)=>{const s=QS.store.save&&QS.store.save.o[g]||'none';return`<li class="${s}">${qsIcon(s)}<span>${qsEsc(T[i]||'')}</span></li>`}).join('')}</ul>`:`<p class="dim">${QS_DESC?'Loading…':q.o.length+' objectives (their text is not included in this build).'}</p>`):'<p class="dim">No objectives listed.</p>'}`;
+ el.querySelectorAll('.qsmark').forEach(b=>{b.onclick=()=>qsMark(q.g,b.dataset.s)});const c=qsEl('qsClear');if(c)c.onclick=()=>qsMark(q.g,null);
+ qsEl('qsBack').onclick=()=>{qsEl('screenQ').classList.remove('qs-detail');const r=document.querySelector('.qsrow.on');if(r)r.focus()};qsEl('qsClose').onclick=()=>qsCloseDrawer(true);
+ qsJournal(q,qsEl('qsDesc'));if(hadFocus)qsEl('qsClose').focus({preventScroll:true});
+ if(!T&&QS_DESC)qsDescLoad().then(D=>{QS.desc=D;if(QS.sel===q.g)qsRenderDetail();qsRenderNext()},()=>{})}
+function qsSelect(g,focus){QS.sel=g;const q=QS.byG.get(g);if(q&&q.r!==QS.region&&!(QS.view==='list'&&glWords(QS.q).length)){QS.region=q.r}
+ if(QS.view==='band'){QS.open=true;QS.opener=g}qsRenderAll();qsEl('screenQ').classList.add('qs-detail');
+ if(QS.view==='band'){qsDrawerPlace();const c=qsEl('qsClose');if(c)c.focus({preventScroll:true})}else if(innerWidth<=900&&focus)qsEl('qsDetail').scrollIntoView({block:'start'})}
+function qsDrawerPlace(){const tb=qsEl('topbar'),el=qsEl('qsDetail');el.style.top=(innerWidth>=600?Math.max(0,tb.getBoundingClientRect().bottom):0)+'px'}
+function qsCloseDrawer(focus){if(!QS.open)return;QS.open=false;qsEl('screenQ').classList.remove('qs-open');if(focus){const d=document.querySelector('.qsdot[data-g="'+QS.opener+'"]')||document.querySelector('.qscard.on');if(d)d.focus()}}
 
 // ---- progress by hand ----
 function qsMark(g,s){if(s===null)delete QS.store.manual[g];else QS.store.manual[g]=s;qsTouch();qsRenderAll()}
-function qsRenderAll(){if(!QS.data)return;qsRenderRegs();qsRenderNext();qsRenderView();qsRenderDetail();qsChip()}
+function qsRenderAll(){if(!QS.data)return;qsRenderRegs();qsRenderNext();qsRenderView();qsRenderDetail();qsChip();if(QS.open)qsDrawerPlace()}
 
 // ---- the chip: Saved in this browser | export | load | reset ----
 const qsWhen=t=>t?new Date(t).toLocaleString([],{dateStyle:'medium',timeStyle:'short'}):'never';
@@ -150,21 +187,22 @@ async function qsLoadFile(f){const msg=qsEl('qsMsg2');if(f.size>(2<<20)){msg.tex
  QS.store=c;qsWrite();qsRenderAll();qsEl('qsMsg2')&&(qsEl('qsMsg2').textContent='Loaded '+f.name+': '+qsMarked()+' quests marked.')}
 
 // ---- from a save (v33): saveread.js gives [[guid, status], ...]; the page keeps the quests and objectives it knows ----
-function qsFromJournal(j){if(!j||!QS.data)return null;const q={},o={};
- j.forEach(([g,s])=>{const st=QS_SAVE[s];if(!st)return;if(QS.byG.has(g))q[g]=st;else if(QS.byObj.has(g))o[g]=st});return{q,o}}
+function qsFromJournal(j){if(!j||!QS.data)return null;const q={},o={},e={};
+ j.forEach(([g,s])=>{const st=QS_SAVE[s];if(!st)return;if(QS.byG.has(g))q[g]=st;else if(QS.byObj.has(g))o[g]=st;else if(QS.byDesc.has(g))e[g]=st});return{q,o,e}}   // e: the journal entries (text) the save has shown
 function qsCounts(stateOf){const c={done:0,active:0,failed:0,inactive:0,none:0};QS.data.quests.forEach(q=>{c[stateOf(q.g)]++});return c}
 // what importing would change: counts now and after, and the quests whose hand mark disagrees with the save
 function qsCompare(J){const now=qsCounts(qsState),keep=qsCounts(g=>QS.store.manual[g]||J.q[g]||'none'),repl=qsCounts(g=>J.q[g]||'none');
  const diff=QS.data.quests.filter(q=>QS.store.manual[q.g]&&QS.store.manual[q.g]!==(J.q[q.g]||'none'));return{now,keep,repl,diff}}
-function qsApplyJournal(J,name,mode){QS.store.save={at:Date.now(),file:String(name||'').slice(0,120),q:J.q,o:J.o};if(mode==='replace')QS.store.manual={};qsTouch()}
+function qsApplyJournal(J,name,mode){QS.store.save={at:Date.now(),file:String(name||'').slice(0,120),q:J.q,o:J.o,e:J.e};if(mode==='replace')QS.store.manual={};qsTouch()}
 
 // ---- screen ----
 function qsBind(){
- qsEl('qsVBand').onclick=()=>{QS.view='band';qsRenderView()};qsEl('qsVList').onclick=()=>{QS.view='list';qsRenderView()};
+ const sw=v=>{qsSetView(v);qsEl('screenQ').classList.remove('qs-detail');qsRenderView();qsRenderDetail()};qsEl('qsVBand').onclick=()=>sw('band');qsEl('qsVList').onclick=()=>sw('list');
  const chip=qsEl('qsChip');chip.onclick=e=>{e.stopPropagation();qsMenu(qsEl('qsMenu').hidden)};
  document.addEventListener('click',e=>{const m=qsEl('qsMenu');if(!m.hidden&&!e.composedPath().includes(qsEl('qsChipWrap')))qsMenu(false)});   // composedPath: a click on a button the menu has just re-drawn is still inside it
  document.addEventListener('keydown',e=>{const m=qsEl('qsMenu');if(!m.hidden&&e.key==='Escape'){e.preventDefault();qsMenu(false);chip.focus()}});
- addEventListener('resize',()=>{if(QS.shown&&QS.view==='band'&&QS.place)QS.place()})}
+ let rt=0;addEventListener('resize',()=>{if(!QS.shown||!QS.data)return;clearTimeout(rt);rt=setTimeout(()=>{if(QS.view==='band')qsRenderView();if(QS.open)qsDrawerPlace()},120)});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&QS.shown&&QS.open&&qsEl('qsMenu').hidden){e.preventDefault();qsCloseDrawer(true)}})}
 function qsClose(){QS.shown=false;const w=qsEl('qsChipWrap');if(w){w.hidden=true;qsMenu(false)}}
 function qsOpen(){if(QS.shown)return;QS.shown=true;if(!QS.init){QS.init=true;qsBind()}qsStoreInit();
  qsEl('qsChipWrap').hidden=false;qsChip();
