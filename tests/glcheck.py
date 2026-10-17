@@ -43,32 +43,32 @@ def maplink(b, url, check, label):
     check("%s: the World Map panel has the link first: 'Open witcher3map.com ↗' to https://witcher3map.com, target _blank, rel noopener noreferrer, then Open Inventory and Open Glossary (%s)" % (label, r),
           r["open"] and r["order"] == ["Open witcher3map.com ↗", "Open Inventory", "Open Glossary"] and r["tag"] == "A" and r["href"] == "https://witcher3map.com" and r["target"] == "_blank" and r["rel"] == "noopener noreferrer" and r["vis"] and r["h"] >= 44 and "btn" in r["cls"] and r["focus"] == "igMap", r)
     pg.keyboard.press("Escape"); others = []
-    for tid in ("tabAlch", "tabQuests", "tabMed"):
+    for tid in ("tabAlch", "tabMed"):
         pg.click("#" + tid); others.append(E("document.getElementById('igMap').getClientRects().length")); pg.keyboard.press("Escape")
-    s = E("[S.scr,location.hash.indexOf('s1')<0]"); check("%s: no other tab's panel shows the link (%s), the map tab stays greyed, and opening the panel leaves the screen and the link alone" % (label, others), others == [0, 0, 0] and s == ["char", True] and E("document.getElementById('tabMap').classList.contains('off')"), [others, s])
+    s = E("[S.scr,location.hash.indexOf('s1')<0]"); check("%s: no other tab's panel shows the link (%s), the map tab stays greyed, and opening the panel leaves the screen and the link alone" % (label, others), others == [0, 0] and s == ["char", True] and E("document.getElementById('tabMap').classList.contains('off')"), [others, s])
     check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
 
 
 def barcheck(b, fix, check, label):
     pg, errs, reqs = newpage(b, fix); E = pg.evaluate
     tabs = E("[...document.querySelectorAll('#stabs .stab')].map(b=>b.childNodes[0].textContent.trim())")
-    check("%s: the top bar reads Glossary, Alchemy, Inventory, World Map, Quests, Character, Meditation (%s)" % (label, tabs), tabs == ["Glossary", "Alchemy", "Inventory", "World Map", "Quests", "Character", "Meditation"], tabs)
+    check("%s: the top bar reads Glossary, Alchemy, Inventory, World Map, Quests, Character, Meditation (Quests is live since v33) (%s)" % (label, tabs), tabs == ["Glossary", "Alchemy", "Inventory", "World Map", "Quests", "Character", "Meditation"], tabs)
     live = E("[...document.querySelectorAll('#stabs .stab:not(.off)')].map(b=>b.id)"); off = E("[...document.querySelectorAll('#stabs .stab.off')].map(b=>[b.id,b.querySelector('small').textContent])")
-    check("%s: Glossary, Inventory and Character are live; the other four are greyed with an 'in game only' line" % label, live == ["tabGlo", "tabInv", "tabChar"] and [x[0] for x in off] == ["tabAlch", "tabMap", "tabQuests", "tabMed"] and all(x[1] == "in game only" for x in off), [live, off])
+    check("%s: Glossary, Inventory, Quests and Character are live; the other three are greyed with an 'in game only' line" % label, live == ["tabGlo", "tabInv", "tabQuests", "tabChar"] and [x[0] for x in off] == ["tabAlch", "tabMap", "tabMed"] and all(x[1] == "in game only" for x in off), [live, off])
     why = {"tabAlch": ("Alchemy", "Crafting happens in the game; plan consumables in Inventory slots."), "tabMap": ("World Map", "The world map is in-game only. For an interactive map, use witcher3map.com, a free, ad-free fan project (CC BY-NC-SA)."),
-           "tabQuests": ("Quests", "Quest progress lives in the game."), "tabMed": ("Meditation", "Meditation can only be done in the game.")}
+           "tabMed": ("Meditation", "Meditation can only be done in the game.")}
     for tid, (title, reason) in why.items():
         pg.click("#" + tid); r = E("(()=>{const o=document.getElementById('igov');return{open:!o.hidden,title:document.getElementById('igtitle').textContent,only:o.querySelector('.igonly').textContent,why:document.getElementById('igwhy').textContent,btns:[...o.querySelectorAll('.igbtns button')].map(b=>b.textContent),focus:document.activeElement.id,screen:S.scr}})()")
         ok = r["open"] and r["title"] == title and r["only"] == "In-game feature only." and r["why"] == reason and r["btns"] == ["Open Inventory", "Open Glossary"] and r["screen"] == "char"
         pg.keyboard.press("Escape"); closed = E("document.getElementById('igov').hidden") and E("document.activeElement.id") == tid
         check("%s: clicking %s opens the in-game-only panel (title, 'In-game feature only.', its reason, Open Inventory / Open Glossary); Escape closes it and returns focus (%s)" % (label, title, r), ok and closed, r)
-    pg.click("#tabQuests"); pg.click("#igInv"); a = E("[S.scr,document.getElementById('igov').hidden]"); pg.click("#tabMed"); pg.click("#igGlo"); c = E("[S.scr,document.getElementById('igov').hidden]")
+    pg.click("#tabAlch"); pg.click("#igInv"); a = E("[S.scr,document.getElementById('igov').hidden]"); pg.click("#tabMed"); pg.click("#igGlo"); c = E("[S.scr,document.getElementById('igov').hidden]")
     check("%s: 'Open Inventory' and 'Open Glossary' in the panel go there (%s, %s)" % (label, a, c), a == ["inv", True] and c == ["glo", True], [a, c])
     pg.click("#tabChar"); steps = []
     for sel in ("#scrPrev", "#scrPrev", "#scrNext", "#scrNext"):
         if not E("document.querySelector('%s').disabled" % sel): pg.click(sel)
         steps.append(E("S.scr"))
-    check("%s: the arrows step Character, Inventory, Glossary and back, skipping the greyed tabs, and are disabled at each end (%s)" % (label, steps), steps == ["inv", "glo", "inv", "char"], steps)
+    check("%s: the arrows step Character, Quests, Inventory and back, skipping the greyed tabs, and are disabled at each end (%s)" % (label, steps), steps == ["q", "inv", "q", "char"], steps)
     pg.click("#tabGlo"); e1 = E("[document.querySelector('#scrPrev').disabled,document.querySelector('#scrNext').disabled]"); pg.click("#tabChar"); e2 = E("[document.querySelector('#scrPrev').disabled,document.querySelector('#scrNext').disabled]")
     check("%s: on Glossary the left arrow is disabled, on Character the right one (%s, %s)" % (label, e1, e2), e1 == [True, False] and e2 == [False, True], [e1, e2])
     check("%s: no script errors" % label, not errs, errs[:1]); pg.close()

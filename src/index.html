@@ -27,13 +27,14 @@
       <button type="button" class="stab off" id="tabAlch" role="tab" data-ig="alchemy" aria-selected="false" aria-haspopup="dialog" title="In game only">Alchemy<small>in game only</small></button>
       <button type="button" class="stab" id="tabInv" role="tab" data-s="inv" aria-selected="false" aria-controls="screenInv">Inventory</button>
       <button type="button" class="stab off" id="tabMap" role="tab" data-ig="map" aria-selected="false" aria-haspopup="dialog" title="In game only">World Map<small>in game only</small></button>
-      <button type="button" class="stab off" id="tabQuests" role="tab" data-ig="quests" aria-selected="false" aria-haspopup="dialog" title="In game only">Quests<small>in game only</small></button>
+      <button type="button" class="stab" id="tabQuests" role="tab" data-s="q" aria-selected="false" aria-controls="screenQ" aria-keyshortcuts="Q" title="Quests (Q)">Quests</button>
       <button type="button" class="stab" id="tabChar" role="tab" data-s="char" aria-selected="true" aria-controls="screenChar">Character</button>
       <button type="button" class="stab off" id="tabMed" role="tab" data-ig="meditation" aria-selected="false" aria-haspopup="dialog" title="In game only">Meditation<small>in game only</small></button>
     </div>
     <button type="button" class="arrow" id="scrNext" aria-label="Next screen">▶</button>
   </nav>
   <div class="topright">
+    <div class="qschipwrap" id="qsChipWrap" hidden><button class="btn" id="qsChip" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="qsMenu">Saved in this browser ▾</button><div class="qsmenu" id="qsMenu" hidden role="menu" aria-label="Quest progress"></div></div>
     <button class="btn" id="pstatsbtn" type="button" aria-label="Player stats" aria-keyshortcuts="C" aria-pressed="false" title="Player stats (C)"><svg class="psico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Player stats</span></button>
     <button class="btn" id="savebtn" type="button" aria-haspopup="dialog" aria-label="Import save"><svg class="impico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Import save</span></button>
     <div class="rsg" role="radiogroup" aria-label="Game mode"><button class="btn" type="button" role="radio" data-rs="ng" aria-checked="true" title="First playthrough" aria-label="First playthrough">NG</button><button class="btn" type="button" role="radio" data-rs="ng_plus" aria-checked="false" title="New Game Plus" aria-label="New Game Plus">NG+</button></div>
@@ -92,6 +93,19 @@
       <div class="glpic" id="glPic"></div>
       <div class="glside"><h2 class="gltitle" id="glTitle"></h2><div class="gltext" id="glText" tabindex="0"></div><div class="glweak" id="glWeak" hidden></div></div>
     </section>
+  </div>
+</section>
+<section id="screenQ" class="screen qsscreen" role="tabpanel" aria-labelledby="tabQuests" hidden>
+  <nav class="qsregnav" aria-label="Regions"><div class="qsregs" id="qsRegs" role="tablist" aria-label="Regions"></div></nav>
+  <p class="glmsg" id="qsLoadMsg" role="status" hidden></p>
+  <div class="qsbody" id="qsBody" hidden>
+    <section class="qscentre" aria-label="Quests">
+      <div class="qsnext" id="qsNext"></div>
+      <div class="qsviews" role="group" aria-label="View"><button type="button" class="qsv off" id="qsVTime" disabled aria-disabled="true" title="Needs base-game quest data · coming next">Timeline<small>Needs base-game quest data · coming next</small></button><button type="button" class="qsv on" id="qsVBand" aria-pressed="true">Level band</button><button type="button" class="qsv" id="qsVList" aria-pressed="false">List</button></div>
+      <div class="qsview" id="qsView"></div>
+      <p class="qscredit">For a hand-curated order with tips, see the <a href="https://docs.google.com/spreadsheets/d/1p2R7Mz8FJMkhnKuloh2gpebW_3jMk3vc2EsFslf4mNc" target="_blank" rel="noopener noreferrer">Witcher 3 Optimal Quest Order Guide by ChrisRi</a> ↗</p>
+    </section>
+    <aside class="qsdetail" id="qsDetail" aria-label="Quest"></aside>
   </div>
 </section>
 </div>

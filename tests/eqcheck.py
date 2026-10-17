@@ -101,12 +101,12 @@ def screencheck(b, base, check, label):
     check("%s: Level, Bonus points, NG / NG+ and Copy link are on the Character screen" % label, shared())
     check("%s: Alchemy is greyed, says 'in game only' and does not leave Character (it opens the in-game-only panel: tests/glcheck.py)" % label, E("(()=>{const a=document.getElementById('tabAlch');return /in game only/.test(a.textContent)&&a.classList.contains('off')})()") and E("(()=>{document.getElementById('tabAlch').click();return S.scr})()") == "char" and E("(()=>{const o=!document.getElementById('igov').hidden;document.getElementById('igclose').click();return o})()"))
     check("%s: on Character the right arrow is disabled and the left arrow is not" % label, E("document.getElementById('scrNext').disabled") and not E("document.getElementById('scrPrev').disabled"))
-    pg.click("#scrPrev"); pg.wait_for_timeout(100)
-    check("%s: the left arrow goes to Inventory: its screen shown, s1I in the link, the active tab is the filled gold block (%s)" % (label, E("getComputedStyle(document.getElementById('tabInv')).backgroundColor")),
+    pg.click("#scrPrev"); pg.wait_for_timeout(100); q1 = E("S.scr"); pg.click("#scrPrev"); pg.wait_for_timeout(100)
+    check("%s: the left arrow goes to Quests (v33), then to Inventory: its screen shown, s1I in the link, the active tab is the filled gold block (%s)" % (label, E("getComputedStyle(document.getElementById('tabInv')).backgroundColor")),
           vis("#screenInv") and not vis("#screenChar") and E("S.scr") == "inv" and E("/\\.s1I$/.test(location.hash)") and E("getComputedStyle(document.getElementById('tabInv')).backgroundColor") == "rgb(200, 168, 107)" and E("getComputedStyle(document.getElementById('tabChar')).backgroundColor") != "rgb(200, 168, 107)")
     check("%s: Level, Bonus points, NG / NG+ and Copy link are on the Inventory screen too; on Inventory both arrows work (Glossary is to the left, Character to the right)" % label, shared() and not E("document.getElementById('scrPrev').disabled") and not E("document.getElementById('scrNext').disabled"))
-    pg.click("#scrNext"); pg.wait_for_timeout(100)
-    check("%s: the right arrow goes back to Character (no s1 segment again)" % label, E("S.scr") == "char" and vis("#screenChar") and not E("/\\.s1I/.test(location.hash)"))
+    pg.click("#scrNext"); pg.wait_for_timeout(100); q2 = E("S.scr"); pg.click("#scrNext"); pg.wait_for_timeout(100)
+    check("%s: the right arrow goes to Quests (%s, first step left from Character: %s), then back to Character (no s1 segment again)" % (label, q2, q1), q1 == "q" and q2 == "q" and E("S.scr") == "char" and vis("#screenChar") and not E("/\\.s1I/.test(location.hash)"))
     pg.click("#tabInv"); pg.wait_for_timeout(100); a = E("S.scr"); pg.click("#tabChar"); pg.wait_for_timeout(100)
     check("%s: the tabs switch screens (Inventory, then Character)" % label, a == "inv" and E("S.scr") == "char")
     pg.fill("#lvl", "55"); pg.click("#tabInv"); pg.wait_for_timeout(100)
@@ -118,10 +118,10 @@ def screencheck(b, base, check, label):
     SW = """([sel,dx])=>{const el=document.querySelector(sel),r=el.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+Math.min(40,r.height/2),mk=(t,cx)=>new Touch({identifier:7,target:el,clientX:cx,clientY:y});
       el.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,cancelable:true,touches:[mk(el,x)],changedTouches:[mk(el,x)]}));
       el.dispatchEvent(new TouchEvent('touchend',{bubbles:true,cancelable:true,touches:[],changedTouches:[mk(el,x+dx)]}));return S.scr}"""
-    on_tree = E(SW, ["#treePanel", -140]); on_char = E(SW, ["#treeHint", 140]); on_inv = E(SW, ["#invMid", -140]) if False else None
-    check("%s: 390 px: a swipe that starts on the skill tree does nothing (%s); a swipe right from the Character text goes to Inventory (%s)" % (label, on_tree, on_char), on_tree == "char" and on_char == "inv")
+    on_tree = E(SW, ["#treePanel", -140]); on_char = E(SW, ["#treeHint", 140]); on_q = E(SW, ["#qsNext", 140])
+    check("%s: 390 px: a swipe that starts on the skill tree does nothing (%s); a swipe right from the Character text goes to Quests (%s), another to Inventory (%s)" % (label, on_tree, on_char, on_q), on_tree == "char" and on_char == "q" and on_q == "inv")
     left = E(SW, ["#invMid", -140]); right = E(SW, ["#invMid", 140]); short = E(SW, ["#invMid", -30])
-    check("%s: 390 px: on Inventory a swipe left goes to Character (%s), a swipe right back (%s), a short swipe does nothing (%s)" % (label, left, right, short), left == "char" and right == "inv" and short == "inv")
+    check("%s: 390 px: on Inventory a swipe left goes to Quests (%s), a swipe right back (%s), a short swipe does nothing (%s)" % (label, left, right, short), left == "q" and right == "inv" and short == "inv")
     m.close()
 
 

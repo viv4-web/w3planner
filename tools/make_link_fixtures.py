@@ -156,6 +156,20 @@ def gear_specs_v31b():
     return out
 
 
+def gear_specs_v33():
+    """v33: links that end in s1Q (the Quests screen is open), alone and with skills, mutagens, gear and consumables, in both rulesets; no quest progress is ever in a link."""
+    out = []; add = lambda name, **kw: out.append((name, kw))
+    cons = {"potion1": "Swallow 3", "potion2": "Mutagen 1", "potion3": "Cat 2", "potion4": "White Raffards Decoction 3", "petard1": "Dancing Star 3", "pocket": "Torch", "oil_steel": "Beast Oil 3", "oil_silver": "Specter Oil 2"}
+    gear = {"steel": "Lynx School steel sword 4", "silver": "Lynx School silver sword 4", "chest": "Lynx Armor 4", "gloves": "Lynx Gloves 5", "trousers": "Lynx Pants 5", "boots": "Lynx Boots 5"}
+    add("Quests screen, empty build, level 1", level=1, bonus=0, scr="q")
+    add("Quests screen, level 35 with 10 bonus points", level=35, bonus=10, scr="q")
+    add("Quests screen with gear and every consumable slot, first playthrough", level=100, bonus=0, rs="ng", gear=gear, cons=cons, scr="q")
+    add("Quests screen, New Game Plus, gear and consumables", level=100, bonus=100, rs="ng_plus", gear=gear, cons=cons, scr="q")
+    add("Quests screen with skills, mutations, mutagens, gear and consumables together", level=100, bonus=100, trees=[1], fill="max", equip=True, research=[0, 1, 2], active=2, muts=[9, 18, 27, 3], rs="ng", gear=gear, cons=cons, scr="q")
+    add("the same full build on the Character screen", level=100, bonus=100, trees=[1], fill="max", equip=True, research=[0, 1, 2], active=2, muts=[9, 18, 27, 3], rs="ng", gear=gear, cons=cons)
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--version", required=True, help="the app version whose code makes the links, e.g. v24")
@@ -175,7 +189,7 @@ def main():
         info = pg.evaluate("""({ntrees:TREES.length,nmut:MUT.length,nmutagen:MUTS.length,
             special:MUTS.map((m,i)=>m.special?i:-1).filter(i=>i>=0),regular:MUTS.map((m,i)=>m.special?-1:i).filter(i=>i>=0)})""")
         rows, seen = [], set()
-        use = specs(info) if a.version == "v24" else gear_specs() if a.version == "v27" else gear_specs_b() if a.version == "v27b" else gear_specs_v28() if a.version == "v28" else gear_specs_v29() if a.version == "v29" else gear_specs_v31b() if a.version == "v31b" else sys.exit("no fixture recipe for %s: add one to this tool" % a.version)
+        use = specs(info) if a.version == "v24" else gear_specs() if a.version == "v27" else gear_specs_b() if a.version == "v27b" else gear_specs_v28() if a.version == "v28" else gear_specs_v29() if a.version == "v29" else gear_specs_v31b() if a.version == "v31b" else gear_specs_v33() if a.version == "v33" else sys.exit("no fixture recipe for %s: add one to this tool" % a.version)
         top = pg.evaluate("async rs=>{await eqLoad(rs);const o={};EQ_SLOTS.forEach(s=>{const l=EQ.rs[rs].bySlot[s]||[];o[s]=l.reduce((a,b)=>a.n>b.n?a:b).id});return o}", "ng_plus") if a.version in ("v27", "v27b") else {}
         for name, spec in use:
             if spec.get("gear") == {"steel": None, "silver": None}: spec = dict(spec, gear=top)

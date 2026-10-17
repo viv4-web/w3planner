@@ -29,6 +29,12 @@ const want={'Wraith mutagen':'Wraith mutagen','Gryphon mutagen':'Griffin mutagen
 for(const[k,v]of Object.entries(want))ok('mutagen table: '+k+' -> '+v,names[A[k]]===v,names[A[k]]);
 // the names of items a quick slot can hold that the planner does not plan
 const N=JSON.parse(fs.readFileSync(path.join(root,'savenames.json')));ok('savenames: Cows milk -> Cow\'s milk, Bottled water -> Water, Torch',N['Cows milk']==="Cow's milk"&&N['Bottled water']==='Water'&&N['Torch']==='Torch');
+// the journal of the two stats saves (v33): the entries the save lists, by the GUID of the last path element (checked against data/QUESTS.json: 29 / 15 / 1 / 1 and 28 / 13 / 1 / 1)
+{const Q=JSON.parse(fs.readFileSync(path.join(root,'QUESTS.json'))).quests,byG=new Map(Q.map(q=>[q.g,q])),fx=path.join(os.homedir(),'work/w3planner-art/save-spike/fixtures');
+ for(const[sub,want,total]of[['stats-l9b',{JS_Success:29,JS_Active:15,JS_Failed:1,JS_Inactive:1},927],['stats-l9',{JS_Success:28,JS_Active:13,JS_Failed:1,JS_Inactive:1},898]]){
+  const d=path.join(fx,sub),f=fs.existsSync(d)?fs.readdirSync(d).find(x=>x.endsWith('.sav')):null;if(!f){console.log('journal '+sub+': fixture not present, skipped');continue}
+  const j=W.readSave(new Uint8Array(fs.readFileSync(path.join(d,f)))).journal,c={};j.forEach(([g,s])=>{if(byG.has(g))c[s]=(c[s]||0)+1});
+  ok('journal '+sub+': '+total+' entries, every guid 32 hex digits, quest states '+JSON.stringify(want),j.length===total&&j.every(e=>/^[0-9a-f]{32}$/.test(e[0]))&&Object.keys(want).every(k=>c[k]===want[k])&&Object.keys(c).length===4,c)}}
 // the reference save, when the local fixture exists
 const ref=path.join(os.homedir(),'work/w3planner-art/save-spike/fixtures/refsave/ManualSave_52587_7ea48400_3d23fe3.sav');
 if(fs.existsSync(ref)){const R=W.readSave(new Uint8Array(fs.readFileSync(ref)));
