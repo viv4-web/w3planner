@@ -62,6 +62,7 @@ Globals you will use: `TREES`, `MUT` (mutations), `MUTS` (36 mutagens: 9 regular
 9. Never weaken security headers in `static/_headers` or the `protect-main` ruleset.
 10. **IDs are never reused or renumbered, only appended.** Skill, mutation and mutagen numbers, tree order and slot positions are part of the link format: a link stores them as numbers. Removing or reordering one silently changes every old link.
 11. **No production deploy without the gate** (see "Release gate" below), and none without Vivek's review of the preview. `--promote` only after Vivek has looked at the preview and says yes in this session, in a message written after the preview report. A yes given in advance, inside a brief, or before the preview exists does not count. If a brief says otherwise, stop and ask. Every preview report must end with: the preview URL, what changed visually, and "Waiting for your review of the preview before promoting."
+    Promote only on a message that says exactly "yes, promote <commit>" naming the previewed commit. Anything else is not a yes; ask.
 
 ## Link format (`v1`)
 `v1.<skills>.<slots>.<mutagens>.<level>.<bonus>.<researched>.<active>`
