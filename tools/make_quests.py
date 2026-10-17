@@ -11,7 +11,7 @@ Outputs
   data/QUESTS.json            the quest list (committed, like the item lists): per quest the journal GUID (how a save names it), id, name, type, region, level, pack, `hs` (1 when the
                               Hearts of Stone XP rule applies) and the GUIDs of its objectives and journal entries. Quest names are the only text; objective titles and journal text are not in here.
   <art-dir>/quests/desc.json  {quest id: {"d": [journal entry text, ...], "o": [objective title, ...]}}, in the order of the GUID lists. GAME TEXT: like the Glossary it stays in the private art folder, never committed;
-                              tools/build.py turns it into one hashed script of the live build, loaded when a quest is opened.
+                              tools/build.py turns it into one hashed script of the live build, loaded when the Quests tab opens (Next up shows the current objective).
   <art-dir>/quests/manifest.json
 The decisions behind it are in docs/QUESTS.md.
 """

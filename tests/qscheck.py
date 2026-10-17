@@ -202,8 +202,8 @@ def text(b, base, check, label, real):
         check("%s: the whole journal on request: every entry as a paragraph, the game's tags as elements, not markup (%d entries, %s)" % (label, n, t[:50]), n == want == 4 and E("document.querySelector('#qsDesc i')!==null&&document.querySelector('#qsDesc b')!==null") and "<i>" not in t, t)
     pg.click(".qsspoil"); back = E("document.querySelectorAll('#qsDesc p:not(.dim)').length"); check("%s: 'Hide full journal' collapses it again" % label, back == 0)
     pg.close()
-    pg, errs, reqs = newpage(b, base); E = pg.evaluate; opened(pg)
-    check("%s: no quest text script is requested before a quest is opened" % label, not [r for r in reqs if "/quests/" in r[1]] or real, [r for r in reqs if "/quests/" in r[1]]); pg.close()
+    pg, errs, reqs = newpage(b, base); E = pg.evaluate; before = [r for r in reqs if "/quests/" in r[1]]; opened(pg); until(pg, "!!QS.desc"); after = [r for r in reqs if "/quests/" in r[1]]
+    check("%s: the quest text file is not requested until the Quests tab opens (Next up needs the objective titles), and then once (%d)" % (label, len(after)), not before and len(after) == 1, [before, after]); pg.close()
 
 
 def publicbuild(b, base, check, label):
@@ -225,8 +225,8 @@ def fixture(b, base, check, label):
         check("%s [%s]: %s" % (label, sub, "the save's journal gives %d done, %d active, %d failed, %d inactive (%s)" % (want["done"], want["active"], want["failed"], want["inactive"], c)), c == want, c)
         check("%s [%s]: the active quests are the spike's list (%s)" % (label, sub, act), act == names, [x for x in act if x not in names] + [x for x in names if x not in act])
         check("%s [%s]: the failed quest is Collect 'Em All and the inactive one Novigrad, Closed City II" % (label, sub), E("QS.data.quests.filter(q=>qsSaveState(q.g)==='failed').map(q=>q.n)") == ["Collect 'Em All"] and E("QS.data.quests.filter(q=>qsSaveState(q.g)==='inactive').map(q=>q.n)") == ["Novigrad, Closed City II"])
-        until(pg, "S.scr==='char'"); opened(pg); nx = E("[...document.querySelectorAll('#qsNext .qscard')].map(c=>[c.querySelector('b').textContent,c.querySelector('em').textContent])")
-        check("%s [%s]: Next up leads with active quests and shows the current objective of each (%s)" % (label, sub, nx[:2]), len(nx) == 4 and all(x[0] in names for x in nx) and all(x[1] and "not known" not in x[1] for x in nx[:2]), nx)
+        until(pg, "S.scr==='char'"); opened(pg); until(pg, "!!QS.desc"); nx = E("[...document.querySelectorAll('#qsNext .qscard')].map(c=>[c.querySelector('b').textContent,c.querySelector('em').textContent])")
+        check("%s [%s]: Next up leads with active quests and shows the current objective of each (%s)" % (label, sub, nx[:2]), len(nx) == 4 and all(x[0] in names for x in nx) and all(x[1] and "not known" not in x[1] and "not in this build" not in x[1] for x in nx[:2]) and all(x[1].startswith("Invented objective") for x in nx[:2]), nx)
         pg.click(".qscard >> nth=0"); d1 = E("document.getElementById('qsDetail').textContent"); cur = E("[...document.querySelectorAll('.qscur li')].map(x=>x.textContent)")
         check("%s [%s]: the detail of an active quest names its current objective(s) and says 'In your save: Active' (%s)" % (label, sub, cur), "In your save: Active" in d1 and len(cur) >= 1, d1[:120])
         pr = E("document.querySelectorAll('.qsobjs li.active').length+document.querySelectorAll('.qsobjs li.done').length")

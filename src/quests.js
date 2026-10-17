@@ -212,5 +212,7 @@ function qsClose(){QS.shown=false;const w=qsEl('qsChipWrap');if(w){w.hidden=true
 function qsOpen(){if(QS.shown)return;QS.shown=true;if(!QS.init){QS.init=true;qsBind()}qsStoreInit();
  qsEl('qsChipWrap').hidden=false;qsChip();
  const body=qsEl('qsBody');qsEl('qsLoadMsg').hidden=true;qsEl('qsLoadMsg').textContent='';
- qsLoad().then(()=>{if(!QS.shown)return;body.hidden=false;QS.lv=qsMy();qsRenderAll()},()=>{body.hidden=true;qsEl('qsLoadMsg').hidden=false;qsEl('qsLoadMsg').textContent='The quest list could not be loaded. Check your connection and try again.'})}
+ qsLoad().then(()=>{if(!QS.shown)return;body.hidden=false;QS.lv=qsMy();qsRenderAll();   // the objective titles (Next up) come with the lazy text file
+   if(QS_DESC&&!QS.desc)qsDescLoad().then(D=>{QS.desc=D;if(QS.shown){qsRenderNext();qsRenderDetail()}},()=>{})},
+  ()=>{body.hidden=true;qsEl('qsLoadMsg').hidden=false;qsEl('qsLoadMsg').textContent='The quest list could not be loaded. Check your connection and try again.'})}
 function qsSync(){if(QS.shown&&QS.data&&QS.lv!==qsMy()){QS.lv=qsMy();qsRenderAll()}}   // the Level field changed: zones, Next up and tooltips follow it
