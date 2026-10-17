@@ -2,7 +2,7 @@
 // The reader (src/saveread.js) is a separate hashed script loaded when the dialog first opens. It matches by SAVE ID = OUR ITEM/SKILL ID (never by name or icon) and the dialog shows our localised names.
 const SAVEMUT=/*@data:SAVEMUT*/;   // save item id of a skill mutagen -> index in MUTS (tools/make_save_data.py)
 const SAVEREAD_URL=/*@lazyjs:saveread*/, SAVENAMES_URL=/*@file:savenames*/;
-const IMP={R:null,side:null,file:null,plan:null,opener:null,sel:{}};
+const IMP={R:null,side:null,file:null,plan:null,opener:null,sel:{},qmode:'keep'};
 const impEl=id=>document.getElementById(id);
 const impNum=n=>Number(n).toLocaleString('en-US');
 function impNode(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
@@ -12,7 +12,7 @@ function impClose(){impEl('impov').hidden=true;document.body.classList.remove('i
 function impReset(){IMP.R=IMP.plan=IMP.side=IMP.file=null;impEl('impStep1').hidden=false;impEl('impStep2').hidden=true;impErr('');impEl('impfile').value='';impEl('impdrop').classList.remove('over')}
 function impErr(msg,why){const e=impEl('imperr');e.hidden=!msg;e.textContent='';if(msg){e.appendChild(impNode('b',null,msg));if(why)e.appendChild(impNode('span',null,' '+why))}}
 async function impLoad(){   // the reader, the names of items the planner does not plan, and the planner's own item lists (to match and to name)
- if(!window.W3SAVE)await eqScript(SAVEREAD_URL);if(!(window.W3DATA&&W3DATA.savenames))await eqScript(SAVENAMES_URL);await eqLoad(S.rs);await cnLoad()}
+ if(!window.W3SAVE)await eqScript(SAVEREAD_URL);if(!(window.W3DATA&&W3DATA.savenames))await eqScript(SAVENAMES_URL);await eqLoad(S.rs);await cnLoad();await qsLoad().catch(()=>{})}
 async function impHandle(files){
  const list=[...files],sav=list.filter(f=>/\.sav$/i.test(f.name)),js=list.find(f=>/\.json$/i.test(f.name));
  if(!sav.length){impErr(list.length?"This isn't a Witcher 3 save.":'Choose a .sav file.',list.length?'The file must end in .sav.':'');return}
@@ -53,7 +53,8 @@ function impPlan(R){
   if(g){plannable++;(['steel','silver','crossbow','bolts'].includes(g.slot)?stash.weapons:stash.armor).push({id:g.id,qty:r.qty})}
   else if(c){plannable++;(c.cat==='oil'?stash.alchemy.oils:c.cat==='bomb'?stash.alchemy.bombs:stash.alchemy.potions).push({id:c.id,qty:r.qty})}});
  stash.crowns=R.crowns;
- return{play:R.playTimeSec==null?null:R.playTimeSec,effects:R.effects||[],stored:R.abilities||null,rolled,level,bonus,total,learned,notSk,slots,slotNames,open,equipped,muts,mutRows,notMut,gear,gearRows,notGear,setInfo,cons,consRows,stash,plannable,records:R.inventory.length}}
+ qsStoreInit();const qJ=qsFromJournal(R.journal),quests=qJ?{J:qJ,cmp:qsHasProgress()?qsCompare(qJ):null}:null;
+ return{quests,play:R.playTimeSec==null?null:R.playTimeSec,effects:R.effects||[],stored:R.abilities||null,rolled,level,bonus,total,learned,notSk,slots,slotNames,open,equipped,muts,mutRows,notMut,gear,gearRows,notGear,setInfo,cons,consRows,stash,plannable,records:R.inventory.length}}
 function impDisplay(id){return id?((window.W3DATA&&W3DATA.savenames&&W3DATA.savenames[id])||id):'an unknown item'}
 
 // ---- the review ----
@@ -66,7 +67,7 @@ function impSec(key,title,dest,destGold){const s=impNode('section','impsec');con
  h.append(cb,impNode('b',null,title),impNode('span','impdest'+(destGold?' gold':''),dest));s.append(h);const body=impNode('div','impbody');s.append(body);return[s,body]}
 const impLine=(parent,text,cls)=>parent.appendChild(impNode('p','impline'+(cls?' '+cls:''),text));
 function impReview(){
- const R=IMP.R,P=IMP.plan,side=IMP.side,ch=R.character;IMP.sel={character:true,mutagens:true,equipment:true,consumables:true,stash:true};
+ const R=IMP.R,P=IMP.plan,side=IMP.side,ch=R.character;IMP.sel={character:true,mutagens:true,equipment:true,consumables:true,stash:true,quests:!!P.quests};IMP.qmode='keep';
  impEl('impStep1').hidden=true;const root=impEl('impStep2');root.hidden=false;const main=impEl('impReviewBody');main.textContent='';
  const when=IMP.file.lastModified?new Date(IMP.file.lastModified):null,ver=side&&side.build?'game '+side.build:'save version '+R.codes[0]+' · game '+R.codes[1];
  impEl('impmeta').textContent=[IMP.file.name,when?when.toLocaleString([], {dateStyle:'medium',timeStyle:'short'}):null,ver].filter(Boolean).join(' · ');
@@ -97,9 +98,24 @@ function impReview(){
  // Stash
  [s,b]=impSec('stash','Stash','Stays on this computer',true);colB.append(s);
  impLine(b,impNum(P.records)+' items read · '+impNum(P.plannable)+' plannable');impLine(b,'Crowns: '+impNum(P.stash.crowns));impLine(b,'Kept in this browser only, never in the link.','gold');
+ // Quests
+ impQuests(colB,P);
  const nr=impNode('div','impnot');nr.append(impNode('b',null,'Not read in this version'),impNode('span',null,' · active mutation · oils on swords · NG+ — set these by hand after import.'));
  const cols=impNode('div','impcols');cols.append(colA,colB);main.append(cols,nr);
  impEl('impApply').focus({preventScroll:true})}
+
+// the quests the save's journal holds (v33): counts, and, when this browser already has progress, a table of what each choice leaves and the three choices
+function impQuests(col,P){const[s,b]=impSec('quests','Quests','Stays on this computer',true);col.append(s);
+ if(!P.quests){const cb=s.querySelector('input');cb.checked=false;cb.disabled=true;IMP.sel.quests=false;impLine(b,'No journal was found in this save.','dim');return}
+ const J=P.quests.J,c={done:0,active:0,failed:0,inactive:0};Object.values(J.q).forEach(v=>c[v]++);
+ impLine(b,Object.keys(J.q).length+' quests in the journal: '+c.done+' done · '+c.active+' active · '+c.failed+' failed'+(c.inactive?' · '+c.inactive+' inactive':''));
+ impLine(b,'Kept in this browser only, never in the link.','gold');
+ const m=P.quests.cmp;if(!m)return;
+ const tbl=impNode('table','qsimp'),rows=[['done','Done'],['active','Active'],['failed','Failed'],['none','Not started']];
+ const th=impNode('tr');['','Now','Keep my hand-ticks','Replace all'].forEach(t=>th.appendChild(impNode('th',null,t)));tbl.appendChild(th);
+ rows.forEach(([k,n])=>{const tr=impNode('tr');[n,m.now[k],m.keep[k],m.repl[k]].forEach(v=>tr.appendChild(impNode('td',null,String(v))));tbl.appendChild(tr)});b.appendChild(tbl);
+ impLine(b,m.diff.length?m.diff.length+' of your hand-ticks differ from this save'+(m.diff.length<=4?': '+m.diff.map(q=>q.n).join(', '):' (e.g. '+m.diff.slice(0,3).map(q=>q.n).join(', ')+')')+'.':'None of your hand-ticks differ from this save.','dim');
+ [['keep','Use save, keep my hand-ticks'],['replace','Replace everything with save'],['cancel','Cancel: leave my quest progress as it is']].forEach(([k,t])=>{const l=impNode('label','qschoice'),r=impNode('input');r.type='radio';r.name='impq';r.value=k;r.checked=k==='keep';r.onchange=()=>{IMP.qmode=k};l.append(r,impNode('span',null,t));b.appendChild(l)})}
 
 // ---- apply: only the ticked sections, through the planner's own state ----
 async function impDoApply(){
@@ -111,10 +127,11 @@ async function impDoApply(){
  if(sel.equipment)S.gear=P.gear.slice();
  if(sel.consumables){for(let i=0;i<6;i++)S.cons[i]=P.cons[i]}      // the sword oils (positions 6 and 7) are not read: left as they are
  if(sel.stash){try{localStorage.setItem('w3planner.stash',JSON.stringify(P.stash));stashDrawn=false}catch(e){notify('The stash could not be kept: this browser blocks storage for the site.')}}
+ let qNote='';if(sel.quests&&P.quests&&IMP.qmode!=='cancel'){qsApplyJournal(P.quests.J,f.name,IMP.qmode);const k=Object.values(P.quests.J.q);qNote=' Quests: '+k.filter(v=>v==='done').length+' done, '+k.filter(v=>v==='active').length+' active.'}
  if(sel.character){PS.play=P.play;PS.imp.effects=P.effects}if(sel.equipment)PS.imp.rolled=P.rolled;enforceLocks();eqValidate();cnValidate();S.scr='char';
  PS.imp.stored=sel.character?P.stored:null;PS.imp.link=enc();   // the save's own ability list, used (and checked) by Player Stats only while the build is still this one
  impClose();save();window.scrollTo({top:0});
- notify('Imported from '+f.name+(sel.character?': level '+P.level+', '+P.learned.length+' skills':'')+'. The link now holds this build; use Copy link to share it.')}
+ notify('Imported from '+f.name+(sel.character?': level '+P.level+', '+P.learned.length+' skills':'')+'.'+qNote+' The link now holds this build; use Copy link to share it.')}
 function impBind(){
  const b=impEl('savebtn');if(typeof CFG!=='undefined'&&CFG.share===false){b.hidden=true;return}
  b.onclick=()=>impOpen(b);impEl('impx').onclick=impClose;impEl('impback').onclick=impReset;impEl('impAnother').onclick=impReset;

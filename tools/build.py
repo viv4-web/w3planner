@@ -31,6 +31,8 @@ def main():
     ap.add_argument("--art-dir", help="folder with the art files (required for the game variant)")
     ap.add_argument("--out", required=True)
     ap.add_argument("--src", default=str(ROOT / "src"), help="source folder (index.html, app.css, app.js); default src/")
+    ap.add_argument("--quests-dir", help="the Quests journal text (made by tools/make_quests.py). The game variant reads <art-dir>/quests by itself; the public build never has any "
+                    "(the detail panel says \"not included\"); this option exists for the tests (tests/fixtures/quests)")
     ap.add_argument("--glossary-dir", help="Glossary content (made by tools/build_glossary.py). The game variant reads <art-dir>/glossary by itself; the public build never has any "
                     "(it shows \"not included\"); this option exists for the tests, which build with a tiny fake one (tests/fixtures/glossary)")
     a = ap.parse_args()
@@ -111,18 +113,26 @@ def main():
             gfiles[key] = "glossary/%s.%s.js" % (key, hashlib.sha1(blob).hexdigest()[:12]); files[gfiles[key]] = blob
         gloss = {"files": gfiles, "counts": gm["counts"]}
 
+    # Quests journal text (game text): game variant only, from <art-dir>/quests/desc.json, never committed; one hashed script quests/desc.<hash>.js (W3DATA.quests_desc), loaded when a quest is opened.
+    qdir = Path(a.quests_dir) if a.quests_dir else (art_dir / "quests" if a.variant == "game" else None)
+    quests = None
+    if qdir and (qdir / "manifest.json").is_file() and (qdir / "desc.json").is_file():
+        blob = ('(window.W3DATA=window.W3DATA||{}).quests_desc=%s;\n' % read(qdir / "desc.json").strip()).encode("utf-8")
+        qname = "quests/desc.%s.js" % hashlib.sha1(blob).hexdigest()[:12]; files[qname] = blob; quests = {"desc": qname}
+
     src = Path(a.src)
     extra = lambda *names: "".join(("\n" + read(src / n)) for n in names if (src / n).is_file())   # screens.css, equipment.js, consumables.js, screens.js: more source of the same page (one scope), in this order
-    css = tokens(read(src / "app.css") + extra("screens.css", "glossary.css", "importsave.css"))
-    js = re.sub(r"/\*@lazyjs:([a-z0-9_]+)\*/", lazyjs, re.sub(r"/\*@file:([a-z0-9_]+)\*/", lazy, tokens(re.sub(r"/\*@data:([A-Z_]+)\*/", data, read(src / "app.js") + extra("equipment.js", "consumables.js", "screens.js", "glossary.js", "importsave.js", "stats.js")))))
+    css = tokens(read(src / "app.css") + extra("screens.css", "glossary.css", "quests.css", "importsave.css"))
+    js = re.sub(r"/\*@lazyjs:([a-z0-9_]+)\*/", lazyjs, re.sub(r"/\*@file:([A-Za-z0-9_]+)\*/", lazy, tokens(re.sub(r"/\*@data:([A-Z_]+)\*/", data, read(src / "app.js") + extra("equipment.js", "consumables.js", "screens.js", "glossary.js", "quests.js", "importsave.js", "stats.js")))))
     if gloss: js = js.replace("/*@glossary*/null", json.dumps(gloss, separators=(",", ":")))
+    if quests: js = js.replace("/*@quests*/null", json.dumps(quests, separators=(",", ":")))
     html = tokens(read(src / "index.html")).replace("{{css}}", css).replace("{{js}}", js)
     (out / "index.html").write_bytes(html.encode("utf-8"))
     for name, blob in files.items():
         (out / name).parent.mkdir(parents=True, exist_ok=True)
         (out / name).write_bytes(blob)
     shutil.copytree(ROOT / "static", out, dirs_exist_ok=True)
-    print("Built %s variant into %s (%d files, index.html %d KB%s)" % (a.variant, out, len(files), len(html) // 1024, ", Glossary included" if gloss else ""))
+    print("Built %s variant into %s (%d files, index.html %d KB%s)" % (a.variant, out, len(files), len(html) // 1024, (", Glossary included" if gloss else "") + (", Quest text included" if quests else "")))
 
 
 if __name__ == "__main__":

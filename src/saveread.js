@@ -124,7 +124,7 @@ function readSave(bytes){
  const equipped={};slots.forEach((s,i)=>{const v=s&&s.value;if(v&&SLOT_NAMES[i]){const r=byRef.get(v);equipped[SLOT_NAMES[i]]=r?{id:r.id,qty:r.qty,extras:r.extras,abilities:r.abilities}:{id:null,ref:v}}});
  const mutagenSlots=(am.mutagenSlots||[]).map(m=>{const v=m.item&&m.item.value;const r=v?byRef.get(v):null;return{slot:m.equipmentSlot,unlockedAt:m.unlockedAtLevel,item:r?r.id:null}});
  const crowns=(invr.items.find(r=>r.id==='Crowns')||{}).qty||0;
- return{codes:tb.codes,character,skills,skillSlots,mutagenSlots,equipped,inventory:invr.items,inventoryHeader:invr.count,crowns,playTimeSec:playTime(d,N),effects:effects(P.effectManager,N),abilities:abilityList(d,N,stats)}}
+ return{codes:tb.codes,character,skills,skillSlots,mutagenSlots,equipped,inventory:invr.items,inventoryHeader:invr.count,crowns,playTimeSec:playTime(d,N),journal:journal(d,tb),effects:effects(P.effectManager,N),abilities:abilityList(d,N,stats)}}
 // The player's own ability list (v32c): the block "stats" > "characterStats" of the player's blob holds `count` and `value`, an array of CNames in which an ability that was added n times appears n times
 // (the abilities the game's ability manager and the Character screen add: Lvl2.., all_PC_ability, perk_24 x medium armour pieces x level, <mutagen>_x, <mutagen>_synergy_bonus, active effects ...). -> {name: count} or null.
 function abilityList(d,N,range){if(!range)return null;
@@ -149,6 +149,24 @@ function effects(pr,N){const out=[];if(!pr)return out;const v=pr.val;
 function playTime(d,N){const g=N.indexOf('GameTime')+1,t=N.indexOf('Double')+1;if(g<1||t<1)return null;const dv=new DataView(d.buffer,d.byteOffset,d.length);
  for(let i=0;i+12<=d.length;i++)if(d[i]===(g&255)&&d[i+1]===(g>>8)&&d[i+2]===(t&255)&&d[i+3]===(t>>8)){const x=dv.getFloat64(i+4,true);if(x>=0&&x<1e8)return x}
  return null}
+
+// The journal (v33): CJournalManager > JActiveEntries is a list of SJournalEntryStatus, each a `path` (one CGUID per level, root first), a `status` (EJournalStatus) and JEntryUnread. The var table lists
+// every token ([offset,size] sorted); "BS" tokens are structs, "VL" tokens values: 'VL' name u16, type u16, then the value. An entry is named by the GUID of its LAST path element (a quest, a phase, an objective,
+// a description ...); the page matches it to data/QUESTS.json. A quest with no entry is "not started". -> [[guid hex (32), 'JS_Active' | 'JS_Success' | 'JS_Failed' | 'JS_Inactive'], ...] in save order, or null when the block is not there.
+function journal(d,tb){
+ const N=tb.names,E=tb.ents,nm=i=>N[u16(d,E[i][0]+2)-1],mg=i=>str(d,E[i][0],2);
+ let a=-1;for(let i=0;i<E.length;i++)if(mg(i)==='BS'&&nm(i)==='JActiveEntries'){a=i;break}
+ if(a<0)return null;
+ const out=[];let cur=null;
+ const flush=()=>{if(cur&&cur.g&&cur.s)out.push([cur.g,cur.s]);cur=null};
+ for(let i=a+1;i<E.length&&out.length<20000;i++){const m=mg(i),o=E[i][0],ts=(i+1<E.length?E[i+1][0]:o+E[i][1])-o,n=nm(i);
+  if(m==='BS'){if(n==='SJournalEntryStatus'){flush();cur={g:null,s:null}}else if(n!=='path')break}
+  else if(m==='VL'&&cur){
+   if(n==='guid'&&ts>=22){let h='';for(let k=0;k<16;k++)h+=(d[o+6+k]+256).toString(16).slice(1);cur.g=h}      // the last guid of the path wins
+   else if(n==='status'){const x=u16(d,o+6);cur.s=x>=1&&x<=N.length?N[x-1]:null}
+   else if(n!=='resource'&&n!=='flags'&&n!=='JEntryUnread'&&n!=='Size')break}
+  else if(m!=='VL')break}
+ flush();return out}
 
 // the JSON next to a save: {saveMetadata:{initial buildID, current buildID, gameVersion, saveVersion, platform, modsMetadata:{numMods, modsList:{mod...}}}}
 function parseSidecar(text){

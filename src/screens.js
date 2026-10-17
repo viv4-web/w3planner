@@ -1,7 +1,7 @@
-// ---- Screens (v28, v29): Glossary | Inventory | Character are live; Alchemy, World Map, Quests and Meditation are greyed ("in game only") and open a panel; swipe on a phone ----
-// The open screen is S.scr ('char', 'inv' or 'glo') and lives in the link as the s1I / s1G segment (absent = Character). The level block, the ruleset switch and Copy link belong to every screen.
-const SCR_ORDER=['glo','inv','char'];   // the live screens, left to right as in the bar: the arrows step through these and skip the greyed tabs
-const SCR_IDS={glo:'screenGlo',inv:'screenInv',char:'screenChar'},SCR_TABS={glo:'tabGlo',inv:'tabInv',char:'tabChar'};
+// ---- Screens (v28, v29, v33): Glossary | Inventory | Quests | Character are live; Alchemy, World Map and Meditation are greyed ("in game only") and open a panel; swipe on a phone ----
+// The open screen is S.scr ('char', 'inv', 'glo' or 'q') and lives in the link as the s1I / s1G / s1Q segment (absent = Character). The level block, the ruleset switch and Copy link belong to every screen.
+const SCR_ORDER=['glo','inv','q','char'];   // the live screens, left to right as in the bar: the arrows step through these and skip the greyed tabs
+const SCR_IDS={glo:'screenGlo',inv:'screenInv',q:'screenQ',char:'screenChar'},SCR_TABS={glo:'tabGlo',inv:'tabInv',q:'tabQuests',char:'tabChar'};
 function scrGo(s){if(s===S.scr||!SCR_ORDER.includes(s))return;if(EQ.pick)eqClosePick(true);if(typeof psClose==='function')psClose(true);S.scr=s;save();window.scrollTo({top:0})}
 function scrStep(d){const i=SCR_ORDER.indexOf(S.scr)+d;if(i>=0&&i<SCR_ORDER.length)scrGo(SCR_ORDER[i])}
 function scrApply(){const inv=S.scr==='inv';
@@ -10,9 +10,9 @@ function scrApply(){const inv=S.scr==='inv';
  const i=SCR_ORDER.indexOf(S.scr),pv=document.getElementById('scrPrev'),nx=document.getElementById('scrNext');pv.disabled=i<=0;nx.disabled=i>=SCR_ORDER.length-1;
  pv.setAttribute('aria-disabled',String(pv.disabled));nx.setAttribute('aria-disabled',String(nx.disabled));
  const on=document.querySelector('#stabs .stab.on');if(on&&innerWidth<600)on.scrollIntoView({block:'nearest',inline:'center'});   // the phone's tab row scrolls sideways
- if(inv&&!stashDrawn)stashRender();if(S.scr==='glo'){if(typeof glOpen==='function')glOpen()}else if(typeof glClose==='function')glClose();if(typeof psSync==='function')psSync()}
+ if(inv&&!stashDrawn)stashRender();if(S.scr==='glo'){if(typeof glOpen==='function')glOpen()}else if(typeof glClose==='function')glClose();if(S.scr==='q'){if(typeof qsOpen==='function')qsOpen();if(typeof qsSync==='function')qsSync()}else if(typeof qsClose==='function')qsClose();if(typeof psSync==='function')psSync()}
 // the greyed tabs: a centred panel (title, "In-game feature only.", the reason, and the two live places to go instead)
-const IG_WHY={alchemy:['Alchemy','Crafting happens in the game; plan consumables in Inventory slots.'],map:['World Map','The world map is in-game only. For an interactive map, use witcher3map.com, a free, ad-free fan project (CC BY-NC-SA).'],quests:['Quests','Quest progress lives in the game.'],meditation:['Meditation','Meditation can only be done in the game.'],crafting:['Crafting','Crafting happens in the game; plan consumables in Inventory slots.']};
+const IG_WHY={alchemy:['Alchemy','Crafting happens in the game; plan consumables in Inventory slots.'],map:['World Map','The world map is in-game only. For an interactive map, use witcher3map.com, a free, ad-free fan project (CC BY-NC-SA).'],meditation:['Meditation','Meditation can only be done in the game.'],crafting:['Crafting','Crafting happens in the game; plan consumables in Inventory slots.']};
 let igOpener=null;
 function igOpen(k,opener){const w=IG_WHY[k];if(!w)return;igOpener=opener||document.activeElement;document.getElementById('igtitle').textContent=w[0];document.getElementById('igwhy').textContent=w[1];
  const o=document.getElementById('igov'),ext=document.getElementById('igMap');ext.hidden=k!=='map';o.hidden=false;(k==='map'?ext:document.getElementById('igInv')).focus()}   // World Map only: a plain link to witcher3map.com (another site; nothing of it is loaded or copied)
@@ -33,12 +33,15 @@ document.getElementById('copy').onclick=copyLink;
 {const mq=matchMedia('(max-width:599px)'),il=document.getElementById('invLeft'),tb=document.getElementById('topbar');
  const sync=()=>{const open=mq.matches&&il.classList.contains('panelopen');if(open){window.scrollTo({top:0});document.documentElement.style.setProperty('--tbh',tb.offsetHeight+'px')}document.body.classList.toggle('sheet-open',open)};
  new MutationObserver(sync).observe(il,{attributes:true,attributeFilter:['class']});addEventListener('resize',sync)}
-document.getElementById('tabGlo').onclick=()=>scrGo('glo');document.getElementById('tabInv').onclick=()=>scrGo('inv');document.getElementById('tabChar').onclick=()=>scrGo('char');
+document.getElementById('tabGlo').onclick=()=>scrGo('glo');document.getElementById('tabQuests').onclick=()=>scrGo('q');document.getElementById('tabInv').onclick=()=>scrGo('inv');document.getElementById('tabChar').onclick=()=>scrGo('char');
+// key Q opens Quests from any screen (not while typing, not in a dialog or the slot panel)
+document.addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey||(e.key!=='q'&&e.key!=='Q'))return;const t=e.target;if(t&&(/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)||t.isContentEditable))return;
+ if(document.querySelector('.igov:not([hidden]),.impov:not([hidden]),.mov:not([hidden])')||(typeof EQ!=='undefined'&&EQ.pick))return;e.preventDefault();scrGo('q')});
 document.getElementById('scrPrev').onclick=()=>scrStep(-1);document.getElementById('scrNext').onclick=()=>scrStep(1);
 document.querySelectorAll('#topbar .rsg [data-rs]').forEach(b=>{b.onclick=()=>eqSwitch(b.dataset.rs);b.onkeydown=e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();const o=b.dataset.rs==='ng'?'ng_plus':'ng';eqSwitch(o);const n=document.querySelector('#topbar .rsg [data-rs="'+o+'"]');if(n)n.focus()}}});
 // swipe: on a narrow screen a horizontal swipe left goes to the next screen, right to the previous one. Not on the skill tree or mutation grid (they drag), not in fields and not inside the item grids.
 {let x0=0,y0=0,t0=0,ok=false;const root=document.getElementById('screens');
- root.addEventListener('touchstart',e=>{const t=e.target;ok=innerWidth<1024&&e.touches.length===1&&!(t.closest&&t.closest('svg,input,select,textarea,.pkgrid,.oilgrid,#mutov,.glsubs,.glrows,.gltext,.stabs'));if(ok){x0=e.touches[0].clientX;y0=e.touches[0].clientY;t0=Date.now()}},{passive:true});
+ root.addEventListener('touchstart',e=>{const t=e.target;ok=innerWidth<1024&&e.touches.length===1&&!(t.closest&&t.closest('svg,input,select,textarea,.pkgrid,.oilgrid,#mutov,.glsubs,.glrows,.gltext,.stabs,.qsregs,.qsband,.qsrows,.qsdetail'));if(ok){x0=e.touches[0].clientX;y0=e.touches[0].clientY;t0=Date.now()}},{passive:true});
  root.addEventListener('touchend',e=>{if(!ok||!e.changedTouches.length)return;ok=false;const dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;
   if(Date.now()-t0<800&&Math.abs(dx)>=70&&Math.abs(dy)<Math.abs(dx)*.6)scrStep(dx<0?1:-1)},{passive:true})}
 

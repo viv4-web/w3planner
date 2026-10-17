@@ -17,6 +17,7 @@ import serve
 import linkcheck
 import eqcheck
 import glcheck
+import qscheck
 import importcheck
 import statscheck
 import rulesetcheck
@@ -76,7 +77,7 @@ def main():
     threading.Thread(target=server.serve_forever, daemon=True).start(); base = "http://127.0.0.1:%d/" % port
     # the Glossary tests build the site once more, with the tiny FAKE glossary (tests/fixtures/glossary); the build under test (public or live) is checked on its own
     gsite = tmp / "gsite"
-    if subprocess.run([sys.executable, str(ROOT / "tools" / "build.py"), "--variant", "placeholder", "--glossary-dir", str(ROOT / "tests/fixtures/glossary"), "--out", str(gsite)], stdout=subprocess.DEVNULL).returncode: sys.exit("fixture build failed")
+    if subprocess.run([sys.executable, str(ROOT / "tools" / "build.py"), "--variant", "placeholder", "--glossary-dir", str(ROOT / "tests/fixtures/glossary"), "--quests-dir", str(ROOT / "tests/fixtures/quests"), "--out", str(gsite)], stdout=subprocess.DEVNULL).returncode: sys.exit("fixture build failed")
     gserver = serve.make_server(gsite, 0); threading.Thread(target=gserver.serve_forever, daemon=True).start(); gbase = "http://127.0.0.1:%d/" % gserver.server_address[1]
     ref = json.loads((ROOT / "tests/fixtures/tooltips_ref.json").read_text())
     print("\n== Equipment data (data/items.json, items_ng.json, items_ng_plus.json) ==")
@@ -166,6 +167,11 @@ def main():
         print("\n== Player Stats ==")
         statscheck.run(b, base, check, "online"); statscheck.fixture(b, base, check, "online"); statscheck.rulesets(b, base, check, "online"); statscheck.signs(b, base, check, "online")
         rulesetcheck.run(b, base, check, "online")
+        print("\n== Quests ==")
+        qscheck.data(check); qscheck.run(b, gbase, check, "online"); qscheck.text(b, gbase, check, "online (fake text)", False)
+        if a.variant == "game": qscheck.text(b, base, check, "online (live build)", True)
+        else: qscheck.publicbuild(b, base, check, "online (public build)")
+        qscheck.fixture(b, gbase, check, "online"); qscheck.phone(b, gbase, check, "online"); qscheck.viewmemory(b, gbase, check, "online"); qscheck.colours(b, gbase, check, "online"); qscheck.banddone(b, gbase, check, "online")
         nd = shutil.which("node"); nr = subprocess.run([nd, str(ROOT / "tests/test_saveread.js")], capture_output=True, text=True) if nd else None
         check("the save reader without a browser: LZ4, header errors, sidecar, the mutagen table, the reference save when the local fixture is present", (nr is None) or nr.returncode == 0, (nr.stderr or nr.stdout).strip()[-300:] if nr else "node not found: skipped")
         rt = b.new_page(); rt.goto(base); rt.wait_for_timeout(600); r = rt.evaluate(ROUNDTRIP); rt.close(); check("%d random builds survive a link round trip unchanged (%d with special mutagens)" % (r["n"], r["spec"]), r["bad"] == 0, r["bad"])
@@ -214,7 +220,7 @@ def main():
                 linkcheck.check_fixtures(b, off, "offline", check)
                 eqcheck.run(b, off, check, "offline", a.quick)
                 glcheck.publicbuild(b, off, None, glcheck.GLINK, check, "offline")
-                importcheck.offline(b, off, check, "offline"); statscheck.run(b, off, check, "offline")
+                importcheck.offline(b, off, check, "offline"); statscheck.run(b, off, check, "offline"); qscheck.publicbuild(b, off, check, "offline")
                 rulesetcheck.run(b, off, check, "offline")
                 check("the offline package contains no glossary", not any("glossary" in n.lower() for n in zipfile.ZipFile(zp).namelist()))
                 o.fill("#imp", "https://w3planner.pages.dev/#" + code); o.click("#impbtn"); o.wait_for_timeout(300)
