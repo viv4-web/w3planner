@@ -38,10 +38,11 @@ function eqLines(it){const skip=it.slot==='steel'?'SilverDamage':it.slot==='silv
  return[...(it.base||[]),...(it.bonuses||[])].filter(e=>e.line!==undefined&&e.stat!==skip&&e!==p).sort((a,b)=>a.line-b.line)}
 const eqColor=e=>{const t=EQ.disp&&EQ.disp.get(String(e.stat).toLowerCase());return t&&t.color?'#'+t.color:'#BAADA0'};
 // The game blocks an item when GetItemLevel(item) > GetLevel() (HasRequiredLevelToEquipItem, r4Player.ws:11723). Only the Level field counts: bonus points, skill points and places of power never enter it.
-const eqReq=it=>it.level_varies||it.required_level==null?null:it.required_level;
+// v35.2: a generic item whose stats are a range (the rolled crossbows) is levelled within a range when it drops and the save does not store which; the hard requirement is the BOTTOM of the range (required_level_min), the top is shown only as the end of the range
+const eqReq=it=>it.level_varies||it.required_level==null?null:(it.required_level_min!=null?it.required_level_min:it.required_level);
 const eqLow=it=>{const r=eqReq(it);return r!=null&&r>lvl()};
 function eqRange(it){const g=n=>{const e=(it.bonuses||[]).find(b=>b.stat===n);return e?e.min:null},a=g('item_level_min'),b=g('item_level_max');return S.rs==='ng'&&a!=null&&b!=null?' ('+a+' to '+b+')':''}   // autogen relics: the level is rolled when the item drops; only some carry the XML range, and in NG+ it moves with the NG+ level
-function eqLevel(it){if(it.level_varies)return{t:'Level varies'+eqRange(it),bad:false};if(it.slot==='mask'||it.required_level==null)return null;return{t:'Requires level '+it.required_level,bad:eqLow(it)}}   // masks: the game's tooltip shows no level for them (guiTooltipComponent.ws:505)
+function eqLevel(it){if(it.level_varies)return{t:'Level varies'+eqRange(it),bad:false};if(it.slot==='mask'||it.required_level==null)return null;return{t:'Requires level '+(it.required_level_min!=null?it.required_level_min+'–'+it.required_level:it.required_level),bad:eqLow(it)}}   // masks: the game's tooltip shows no level for them (guiTooltipComponent.ws:505)
 function eqSetOf(it){return it.set&&EQ.meta?EQ.meta.sets[it.set]:null}
 function eqTip(it){const q=EQ_QUAL[it.quality]||['',''],p=eqPrimary(it),lv=eqLevel(it),st=eqSetOf(it),lines=eqLines(it);
  let h=`<div class="eqt"><div class="eqt-name" style="color:${q[1]||'#e6dcc8'}">${eqEsc(it.name)}</div><div class="eqt-rar">${[q[0],it.armor_class?it.armor_class[0].toUpperCase()+it.armor_class.slice(1)+' armor':EQ_NAME[it.slot],it.quest?'Quest item':''].filter(Boolean).map(eqEsc).join(' · ')}</div>`;

@@ -92,6 +92,8 @@ def main():
     sb = [(s_, b) for s_, v in items["sets"].items() for b in v["bonuses"]]
     check("every set bonus has its thresholds, a filled text and a script and XML source (%d bonuses)" % len(sb), len(sb) == 13 and all(b["pieces"] in (3, 6) and "$S$" not in b["text"] and any(x.startswith("scripts/") for x in b["source"]) for _, b in sb), [s_ for s_, b in sb if "$S$" in b["text"]])
     lvl = lambda rs, i: next(r["required_level"] for r in per[rs] if r["id"] == i)
+    check("v35.2 range-levelled items: only the five rolled crossbows carry required_level_min (Crossbow 2 to 6: 1-7, 3-14, 7-21, 10-24, 14-26), in both rulesets; no set piece or fixed item has one",
+          all({r["id"]: (r["required_level_min"], r["required_level"]) for r in per[rs] if r.get("required_level_min") is not None} == {"Crossbow 2": (1, 7), "Crossbow 3": (3, 14), "Crossbow 4": (7, 21), "Crossbow 5": (10, 24), "Crossbow 6": (14, 26)} for rs in per))
     reg = json.loads((ROOT / "data/item_ids.json").read_text(encoding="utf-8"))["ids"]
     check("every item has its registry number (data/item_ids.json: append-only, 1 to 4095)", all(reg.get(r["id"]) == r["n"] for r in recs) and len(set(reg.values())) == len(reg) and max(reg.values()) <= 4095)
     check("required levels follow the game's formula (a Grandmaster Feline armor needs level 40 in ng, 70 in ng_plus)", lvl("ng", "Lynx Armor 4") == 40 and lvl("ng_plus", "Lynx Armor 4") == 70)
@@ -162,7 +164,7 @@ def main():
         eqcheck.run(b, base, check, "online", a.quick)
         print("\n== Top bar and Glossary ==")
         check("the public build has no glossary files, the live build has the real ones", ((site / "glossary").is_dir()) == (a.variant == "game") and (a.variant == "game" or not any("glossary" in p.name for p in site.rglob("*"))))
-        glcheck.run(b, gbase, check, "online", main=base, real=a.variant == "game", quick=a.quick)
+        glcheck.run(b, gbase, check, "online", main=base, real=a.variant == "game", quick=a.quick); glcheck.thumbs(b, gbase, check, "online (fake pictures)"); (glcheck.thumbs(b, base, check, "online (live build)") if a.variant == "game" else None); (glcheck.thumbfiles(check, a.art_dir) if a.variant == "game" else None)
         print("\n== Import save ==")
         importcheck.run(b, base, check, "online")
         print("\n== Player Stats ==")

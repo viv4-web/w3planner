@@ -72,7 +72,7 @@ def run(b, base, check, label, ref=True):
     check("%s: no script errors" % label, not errs, errs[:1])
     other = [u for u in reqs if not u.startswith(("http://127.0.0.1", "http://localhost", "data:", "blob:"))]; check("%s: no request to any other site" % label, not other, other[:2]); pg.close()
     mutagen_rule(b, base, check, label)
-    if ref: refsave(b, base, check, label); save_l9(b, base, check, label)
+    if ref: refsave(b, base, check, label); save_l9(b, base, check, label); sockets_1(b, base, check, label)
     phone(b, base, check, label)
 
 
@@ -96,6 +96,7 @@ def mutagen_rule(b, base, check, label):
 
 
 L9 = Path.home() / "work/w3planner-art/save-spike/fixtures/save-l9"
+SOCK1 = Path.home() / "work/w3planner-art/save-spike/fixtures/sockets-1"
 
 
 def save_l9(b, base, check, label):
@@ -111,6 +112,29 @@ def save_l9(b, base, check, label):
     rows = bonus_rows(pg)
     check("%s: level-9 save: Character shows Sign intensity +48%%, Sign intensity +34%%, Vitality +180, one line per mutagen (%s)" % (label, rows),
           len(rows) == 3 and "Sign intensity +48%" in rows[0] and "Sign intensity +34%" in rows[1] and "Vitality +180" in rows[2] and E("+document.getElementById('lvl').value") == 9 and E("synergyLv()") == 2, rows)
+    check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
+
+
+def sockets_1(b, base, check, label):
+    """v35.2: a version-67 save (a rune in a sword, a glyph in an armour): the gear imports (the dye indices are 147/150 here, not 67/68), the 'game version we haven't tested' notice shows, sockets are not imported. Skips when the fixture is absent."""
+    sav = sorted(SOCK1.glob("*.sav")) if SOCK1.is_dir() else []
+    if not sav: print("  SKIP  %s: version-67 save import (fixture not present)" % label); return
+    pg, errs, reqs = page(b, base); E = pg.evaluate; pg.click("#savebtn"); pg.set_input_files("#impfile", [str(sav[0])]); ok = until(pg, "!document.getElementById('impStep2').hidden")
+    r = E("""(()=>({notes:[...document.querySelectorAll('.impnote')].map(n=>n.textContent),secs:Object.fromEntries([...document.querySelectorAll('.impsec')].map(s=>[s.querySelector('.imphead b').textContent,[...s.querySelectorAll('.impline')].map(l=>l.textContent)]))}))()""") if ok else {"notes": [], "secs": {}}
+    eq = " | ".join(r["secs"].get("Equipment", []))
+    check("%s: version-67 save: the review shows the existing 'game version we haven't tested' notice and finds the gear (the planner's names for Gryphon School silver and steel swords, Gryphon Armor, Gloves 1, Boots 1, Pants 1, Crossbow 5: %s)" % (label, eq[:170]), ok and "Saved with a game version we haven't tested. We'll try; check the results." in r["notes"]
+          and all(n in eq for n in ("Steel sword: Griffin steel sword", "Silver sword: Griffin silver sword", "Crossbow: Crossbow", "Chest armor: Griffin armor", "Gloves: Griffin gauntlets", "Trousers: Griffin trousers", "Boots: Griffin boots")) and "not found" not in eq.lower() and "empty" not in eq.split("Mask")[0], r)
+    lvl = E("+document.getElementById('lvl').value"); eqs = [l for l in r["secs"].get("Character", []) if l.startswith("Equipped:")]
+    check("%s: version-67 save, planner Level field at %s: 'Equipped: X of Y open slots' is worked out from the save's own level (level 16, 30 points: all 12 slots open), not the Level field or the save's unlock flag (%s)" % (label, lvl, eqs), lvl == 1 and eqs == ["Equipped: 12 of 12 open slots"], eqs)
+    pg.click("#impApply"); until(pg, "document.getElementById('impov').hidden"); pg.wait_for_timeout(400)
+    g = E("S.gear.slice()"); n = E("S.gear.filter(x=>x>0).length")
+    check("%s: version-67 save: applied, 7 gear slots are filled (steel, silver, crossbow, chest, gloves, trousers, boots; %s), nothing about sockets is in the link" % (label, g), n >= 7 and "socket" not in E("enc()").lower(), g)
+    # v35.2: Crossbow 5 is a generic item whose level the game rolls within a range at drop (10 to 24); the save does not store it, so the range is shown and "Level too low" needs a player level under the bottom
+    cx = E("""(()=>{const it=eqCur(EQ_SLOTS.indexOf('crossbow'));return{id:it.id,lv:eqLevel(it).t,low:eqLow(it),req:eqReq(it)}})()""")
+    E("scrGo('inv')"); pg.wait_for_timeout(300); w16 = E("(document.querySelector('.eqwarn')||{}).textContent||''"); sl16 = E("document.querySelector('.eqslot[data-i=\"2\"]').classList.contains('low')")
+    E("document.getElementById('lvl').value=9;document.getElementById('lvl').dispatchEvent(new Event('input',{bubbles:true}))"); pg.wait_for_timeout(300); w9 = E("(document.querySelector('.eqwarn')||{}).textContent||''"); sl9 = E("document.querySelector('.eqslot[data-i=\"2\"]').classList.contains('low')")
+    check("%s: version-67 save, Crossbow 5 at level 16: 'Requires level 10\u201324', no 'Level too low' for it (%s | %s); at level 9 (below the bottom of the range) it is flagged (%s)" % (label, cx, w16[:60], w9[:80]),
+          cx["id"] == "Crossbow 5" and cx["lv"] == "Requires level 10\u201324" and not cx["low"] and "crossbow" not in w16.lower() and not sl16 and "crossbow" in w9.lower() and sl9, [cx, w16, w9, sl16, sl9])
     check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
 
 

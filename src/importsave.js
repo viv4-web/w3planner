@@ -33,7 +33,7 @@ function impPlan(R){
  const ch=R.character,total=ch.pointsUsed+ch.pointsFree,level=Math.max(1,Math.min(100,ch.level)),bonus=Math.max(0,Math.min(100,total-(level-1)));
  const learned=[],notSk=[];R.skills.forEach(s=>{if(s.level<=0||s.core)return;const k=sk.get(s.id);if(k)learned.push({ti:k[0],ix:k[1],level:Math.min(s.level,TREES[k[0]].sk[k[1]].max)});else notSk.push(s.id)});
  const has=(ti,ix)=>learned.some(x=>x.ti===ti&&x.ix===ix),slots=Array(16).fill(null),slotNames=[];let open=0,equipped=0;
- R.skillSlots.forEach(s=>{if(s.unlocked)open++;if(!s.skill)return;const k=sk.get(s.skill);if(k&&has(k[0],k[1])&&s.id>=1&&s.id<=16){slots[s.id-1]=[k[0],k[1]];equipped++;slotNames[s.id-1]=TREES[k[0]].sk[k[1]].name}else notSk.push(s.skill)});
+ R.skillSlots.forEach(s=>{if(s.id>=1&&s.id<=12?total>=SLOT_UNLOCK[s.id-1]:s.unlocked)open++;if(!s.skill)return;const k=sk.get(s.skill);if(k&&has(k[0],k[1])&&s.id>=1&&s.id<=16){slots[s.id-1]=[k[0],k[1]];equipped++;slotNames[s.id-1]=TREES[k[0]].sk[k[1]].name}else notSk.push(s.skill)});
  const muts=[null,null,null,null],mutRows=[],notMut=[];
  R.mutagenSlots.slice(0,4).forEach((m,g)=>{if(!m.item){mutRows.push({slot:g+1,name:null});return}const i=SAVEMUT[m.item];if(i==null){notMut.push(m.item);mutRows.push({slot:g+1,name:null,skip:true})}else{muts[g]=i;mutRows.push({slot:g+1,name:MUTS[i].name})}});
  const GEAR=[['steel','SteelSword'],['silver','SilverSword'],['crossbow','RangedWeapon'],['bolts','Bolt'],['chest','Armor'],['gloves','Gloves'],['trousers','Pants'],['boots','Boots'],['mask','Mask']];
