@@ -195,13 +195,14 @@ def stats_of(game, item):
 
 
 # ---- the game's required-level rule: GetItemLevel in components/inventoryComponent.ws (the tooltip) with the stat steps of gameParams.ws ----
-def required_level(category, entries, quality, tags, name):
+def required_level(category, entries, quality, tags, name, low=False):
     """Level shown as "Requires level N" for an item whose numbers are in the XML. The formula is transcribed from the scripts (cited in rules.required_level).
     Attributes that the item does not define count as 0 (an assumption: the engine's default is not in the scripts)."""
+    top = (lambda e: e["min"]) if low else (lambda e: e.get("max", e["min"]))   # low=True: the level at the bottom of the roll (v35.2)
     def base(attr):  # valueBase: the base-type entries, max of the roll
-        return sum(e.get("max", e["min"]) for e in entries if e.get("stat") == attr and e.get("type") == "base")
+        return sum(top(e) for e in entries if e.get("stat") == attr and e.get("type") == "base")
     def mult(attr):
-        return sum(e.get("max", e["min"]) for e in entries if e.get("stat") == attr and e.get("type") == "mult")
+        return sum(top(e) for e in entries if e.get("stat") == attr and e.get("type") == "mult")
     level = None
     if category in ("armor", "boots", "gloves", "pants"):
         lo, step = {"armor": (25, 5), "boots": (5, 2), "gloves": (1, 2), "pants": (5, 2)}[category]; level = math.floor(1 + (base("armor") - lo) / step)
@@ -286,8 +287,10 @@ def build_ruleset(g, sc):
         if weight is None and it.get("weight"): weight = num(it.get("weight"))
         enh = int(it.get("enhancement_slots")) if it.get("enhancement_slots") is not None else None
         lvl = None if autogen else required_level(it.get("category"), entries, q, tags, name)
+        lvl_min = None if autogen or lvl is None else required_level(it.get("category"), entries, q, tags, name, low=True)   # v35.2: an item whose stats are a range (the five rolled crossbows) is levelled within a range when it drops
+        if lvl_min == lvl: lvl_min = None
         rec = {"id": name, "name": disp, "slot": slot, "group": group, "set": sid, "carry_over": name[4:] if name.startswith("NGP ") else None, "legendary": ("legendary" in (disp or "").lower()) or None,
-               "tier": tier, "tier_name": tier_name, "quality": q or None, "quality_name": QUALITY.get(q), "required_level": lvl,
+               "tier": tier, "tier_name": tier_name, "quality": q or None, "quality_name": QUALITY.get(q), "required_level": lvl, "required_level_min": lvl_min,
                "armor_class": next((c for t, c in (("LightArmor", "light"), ("MediumArmor", "medium"), ("HeavyArmor", "heavy")) if t in tags), None) if SLOT_KIND[slot] == "armor" else None,
                "weight": weight, "price": num(it.get("price")) if it.get("price") else None,
                "base": [{k: v for k, v in e.items() if k != "ability"} for e in sorted(base, key=lambda e: e.get("line", 9999))],

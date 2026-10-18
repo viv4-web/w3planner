@@ -129,6 +129,12 @@ def sockets_1(b, base, check, label):
     pg.click("#impApply"); until(pg, "document.getElementById('impov').hidden"); pg.wait_for_timeout(400)
     g = E("S.gear.slice()"); n = E("S.gear.filter(x=>x>0).length")
     check("%s: version-67 save: applied, 7 gear slots are filled (steel, silver, crossbow, chest, gloves, trousers, boots; %s), nothing about sockets is in the link" % (label, g), n >= 7 and "socket" not in E("enc()").lower(), g)
+    # v35.2: Crossbow 5 is a generic item whose level the game rolls within a range at drop (10 to 24); the save does not store it, so the range is shown and "Level too low" needs a player level under the bottom
+    cx = E("""(()=>{const it=eqCur(EQ_SLOTS.indexOf('crossbow'));return{id:it.id,lv:eqLevel(it).t,low:eqLow(it),req:eqReq(it)}})()""")
+    E("scrGo('inv')"); pg.wait_for_timeout(300); w16 = E("(document.querySelector('.eqwarn')||{}).textContent||''"); sl16 = E("document.querySelector('.eqslot[data-i=\"2\"]').classList.contains('low')")
+    E("document.getElementById('lvl').value=9;document.getElementById('lvl').dispatchEvent(new Event('input',{bubbles:true}))"); pg.wait_for_timeout(300); w9 = E("(document.querySelector('.eqwarn')||{}).textContent||''"); sl9 = E("document.querySelector('.eqslot[data-i=\"2\"]').classList.contains('low')")
+    check("%s: version-67 save, Crossbow 5 at level 16: 'Requires level 10\u201324', no 'Level too low' for it (%s | %s); at level 9 (below the bottom of the range) it is flagged (%s)" % (label, cx, w16[:60], w9[:80]),
+          cx["id"] == "Crossbow 5" and cx["lv"] == "Requires level 10\u201324" and not cx["low"] and "crossbow" not in w16.lower() and not sl16 and "crossbow" in w9.lower() and sl9, [cx, w16, w9, sl16, sl9])
     check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
 
 

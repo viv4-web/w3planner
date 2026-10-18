@@ -5,7 +5,7 @@ run(b, fix, check, label, main=None, real=False)
   main  URL of the site the rest of the suite uses; real=True when it was built with the game's glossary (the live build): the real counts and every real
         susceptibility chip are tested there; real=False when it is the public build: it must say the glossary is not included, and request nothing
 Used by tests/run_all.py (online and offline builds) and tests/smoke.py (preview and production, real data)."""
-import json
+import json, re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -247,3 +247,20 @@ def thumbs(b, url, check, label, tabs=("bestiary", "characters", "books")):
     bad = [x for x in res if abs(x["rend"] / x["nat"] - 1) > .02 or x["cx"] > 1.5 or x["cy"] > 1.5 or x["box"] != [64, 64]]
     check("%s: v35.2 pictures of other proportions (64x40, 40x64, 58x64, 64x64, 20x60) are shown as they are, centred in the 64 px box (%s)" % (label, [(x["w"], x["h"], x["rw"], x["rh"]) for x in res]), not bad, bad[:2])
     check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
+
+
+def thumbfiles(check, art_dir, label="live art"):
+    """v35.2: the list thumbnail FILES (not the CSS) keep the proportions of the large picture: every Bestiary, Characters and Paintings pair is within 2% of its large picture's aspect ratio, and the Books list uses the game's own
+    icon for both (one file). Reads the art folder (never committed); skips when it is absent."""
+    from PIL import Image
+    g = Path(art_dir) / "glossary"
+    if not (g / "manifest.json").is_file(): print("  SKIP  %s: glossary thumbnail files (no art folder)" % label); return
+    ref = lambda r: g / "img" / (re.match(r"@@gimg:(.+)@@", r).group(1) + ".webp"); n = same = 0; bad = []
+    for name in ("bestiary.json", "characters.json", "books_index.json"):
+        d = json.loads((g / name).read_text(encoding="utf-8")); E = d["entries"] if isinstance(d, dict) else d
+        for e in E:
+            if not e.get("img") or not e.get("thumb"): continue
+            if e["img"] == e["thumb"]: same += 1; continue
+            a, b = Image.open(ref(e["img"])), Image.open(ref(e["thumb"])); n += 1
+            if abs((b.width / b.height) / (a.width / a.height) - 1) > .02 or max(b.size) > 64: bad.append((e["name"], a.size, b.size))
+    check("%s: v35.2 list thumbnail files keep the large picture's proportions (%d pairs within 2%%, at most 64 px; %d book icons are one file for list and picture)" % (label, n, same), n > 250 and not bad, bad[:3])
