@@ -1,5 +1,5 @@
 
-const APP_VERSION="v34.3";
+const APP_VERSION="v34.4";
 const CFG=Object.assign({mode:"online",shareBase:""},window.PLANNER_CONFIG||{});
 const DATA=/*@data:DATA*/;
 
