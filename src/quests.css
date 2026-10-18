@@ -151,3 +151,10 @@
 .qsgk.passed span{color:#8f8575}
 .qsl-fb,.qsl-more{display:flex;align-items:center;gap:7px;font-size:17px;color:var(--ink)}.qsl-fb .qsfb{position:static;width:22px;height:12px;flex:0 0 auto}.qsl-more .qsmore{position:static;cursor:default;display:inline-block}
 .qsme{border-left:2px solid #f0d48a;z-index:4}
+/* v34.3: "Missable, story point unknown" under the Timeline: the grid's orange bracket per gate (dashed grey once passed), 20 px markers like the grid */
+.qsmu{margin:14px 0 0}.qsmu .qsbnote{margin:0 2px 8px}
+.qsmugs{display:flex;flex-wrap:wrap;gap:14px 18px;align-items:flex-start}
+.qsmug{box-sizing:border-box;max-width:100%;border:1.5px solid var(--fail);border-bottom:0;border-radius:3px 3px 0 0;padding:3px 8px 6px}.qsmug.passed{border-style:dashed;border-color:#8f8575}
+.qsmug .qsfl{position:static;height:auto;margin:0 0 5px;flex-wrap:wrap}.qsmug .qsfl em{font-style:normal;color:var(--ink)}.qsmug.passed .qsfl{color:#8f8575}.qsmug.passed .qsfl em{color:#8f8575}
+.qsmud{display:flex;flex-wrap:wrap;gap:6px}
+.qsmu .qsdot{position:relative;width:20px;height:20px;display:flex;align-items:center;justify-content:center}.qsmu .qsshape{width:18px;height:18px}

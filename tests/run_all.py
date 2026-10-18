@@ -8,12 +8,13 @@
 Setup once:  pip install -r requirements.txt  &&  python -m playwright install chromium
 What it does: builds the site, serves it with the security headers from _headers, drives it with a real browser.
 """
-import argparse, json, random, shutil, subprocess, sys, tempfile, threading, urllib.parse, zipfile
+import argparse, json, random, re, shutil, subprocess, sys, tempfile, threading, urllib.parse, zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 import serve
+import html as htmllib
 import linkcheck
 import eqcheck
 import glcheck
@@ -171,7 +172,7 @@ def main():
         qscheck.data(check); qscheck.rules(check); qscheck.run(b, gbase, check, "online"); qscheck.text(b, gbase, check, "online (fake text)", False)
         if a.variant == "game": qscheck.text(b, base, check, "online (live build)", True)
         else: qscheck.publicbuild(b, base, check, "online (public build)")
-        qscheck.fixture(b, gbase, check, "online"); qscheck.phone(b, gbase, check, "online"); qscheck.viewmemory(b, gbase, check, "online"); qscheck.colours(b, gbase, check, "online"); qscheck.banddone(b, gbase, check, "online"); qscheck.timeline(b, gbase, check, "online"); qscheck.timelinesave(b, gbase, check, "online"); qscheck.timelinephone(b, gbase, check, "online"); qscheck.timeline2(b, gbase, check, "online"); qscheck.timeline2save(b, gbase, check, "online"); qscheck.timeline2phone(b, gbase, check, "online")
+        qscheck.fixture(b, gbase, check, "online"); qscheck.phone(b, gbase, check, "online"); qscheck.viewmemory(b, gbase, check, "online"); qscheck.colours(b, gbase, check, "online"); qscheck.banddone(b, gbase, check, "online"); qscheck.timeline(b, gbase, check, "online"); qscheck.timelinesave(b, gbase, check, "online"); qscheck.timelinephone(b, gbase, check, "online"); qscheck.timeline2(b, gbase, check, "online"); qscheck.timeline2save(b, gbase, check, "online"); qscheck.timeline2phone(b, gbase, check, "online"); qscheck.missunknown(b, gbase, check, "online")
         nd = shutil.which("node"); nr = subprocess.run([nd, str(ROOT / "tests/test_saveread.js")], capture_output=True, text=True) if nd else None
         check("the save reader without a browser: LZ4, header errors, sidecar, the mutagen table, the reference save when the local fixture is present", (nr is None) or nr.returncode == 0, (nr.stderr or nr.stdout).strip()[-300:] if nr else "node not found: skipped")
         rt = b.new_page(); rt.goto(base); rt.wait_for_timeout(600); r = rt.evaluate(ROUNDTRIP); rt.close(); check("%d random builds survive a link round trip unchanged (%d with special mutagens)" % (r["n"], r["spec"]), r["bad"] == 0, r["bad"])
@@ -190,6 +191,15 @@ def main():
         print("\n== Pages and layout ==")
         for name in ("help.html", "about.html", "privacy.html", "support.html"):
             rr = pg.request.get(base + name); check("%s is served" % name, rr.status == 200 and "<title>" in rr.text())
+        SITE = "The Witcher 3 Build Planner & Quest Tracker – Remaster"; titles = {}
+        for name, want in (("", SITE), ("help.html", "Help – " + SITE), ("about.html", "About – " + SITE), ("privacy.html", "Privacy – " + SITE), ("support.html", "Support – " + SITE)):
+            html = pg.request.get(base + name).text(); m = re.search(r"<title>(.*?)</title>", html, re.S); titles[name or "index"] = (htmllib.unescape(m.group(1)) if m else None, want)
+            meta = [htmllib.unescape(x) for x in re.findall(r'<meta (?:name="description"|property="og:title"|property="og:description"|name="twitter:title"|property="og:site_name") content="([^"]*)"', html)]
+            titles[name or "index"] += (meta,)
+        check("page titles: the index is '%s' and the static pages are '<Page> – %s' (%s)" % (SITE, SITE, [t[0] for t in titles.values()]), all(t[0] == t[1] for t in titles.values()), titles)
+        check("no page title, description or social tag says Next-Gen, and every description names The Witcher 3 and the remaster in under 160 characters", all("next-gen" not in x.lower() and "next gen" not in x.lower() for t in titles.values() for x in [t[0]] + t[2])
+              and all(len(x) < 160 and "The Witcher 3" in x and "remaster" in x.lower() for n, t in titles.items() for x in t[2] if x not in (t[0],) and not x.startswith("The Witcher 3 Build Planner")), titles)
+        check("the og:title of the index is its title", titles["index"][1] in titles["index"][2], titles["index"][2])
         cc = lambda path: pg.request.get(base + path).headers.get("cache-control", "")
         check("HTML is served with Cache-Control: no-cache (/, index.html, help.html)", all("no-cache" in cc(x) for x in ("", "index.html", "help.html")), [cc(x) for x in ("", "index.html", "help.html")])
         font = next(f for f in sorted((ROOT / "static/fonts").rglob("*")) if f.is_file()).relative_to(ROOT / "static"); img0 = E("MUTIMG[0]")
