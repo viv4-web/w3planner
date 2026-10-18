@@ -10,13 +10,19 @@ journal block's Failure or Deactivate input fires. This tool keeps only what tha
     toggle: facts with "pause", "unpause" or "failsafe" in the name are dropped (mq3026_race_pause, q602_pants_failsafe ...)
   * a story point that the spike derived "by default (no gate found)" is stored as unknown (no `s`)
   * the cutoffs of the spike are merged into the gates of GATES below (the confirmed story points of no return) and each gate says when a save has passed it
+v35 adds two things, each from a file of the v35 spike (game files only, never committed), and stops when the file is missing or does not add up:
+  * `u` on every quest with no story point: "ungated" (the v35 placement found no story gate for it: 157) or "unknown" (a gate exists that we cannot read yet: 34, the 3 "likely" ones included,
+    which get no placement and no likely text) - placements.tsv
+  * `k` ("can fail by a choice") on the quests of the rows of choices-verified.tsv that were classed keep-quest: [["q"]] = a choice in the quest's own conversation fails it,
+    [["q", <quest guid>]] = it fails through a choice in that other quest. Ids only; no scene output, fact name or text.
 docs/QUESTS.md ("Timeline, missables, unlock chains") has the rules and the numbers.
 """
-import argparse, json, re, sys
+import argparse, csv, json, re, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SPIKE = Path.home() / "work" / "w3planner-art" / "quest-spike" / "v34"
+SPIKE35 = Path.home() / "work" / "w3planner-art" / "quest-spike" / "v35"
 POINTS = [("p", "Prologue"), ("a", "Act I"), ("i", "Isle of Mists"), ("b", "Battle of Kaer Morhen"), ("3", "Act III"), ("e", "Epilogue"), ("h", "Hearts of Stone"), ("w", "Blood and Wine")]
 SP = {"Prologue": "p", "Act I free roam": "a", "Isle of Mists": "i", "Battle of Kaer Morhen": "b", "Act III": "3", "Epilogue": "e", "Hearts of Stone start": "h", "Blood and Wine start": "w"}
 TOGGLE = re.compile(r"pause|failsafe", re.I)
@@ -46,7 +52,59 @@ ENTER = {"p": ["Q001 Dream", "Q001 Find Yennefer", "Q002 Griffin hunt"], "a": ["
          "h": ["q601intro"], "w": ["Q701_Festival"]}
 
 
-def build(spike=SPIKE):
+def read_tsv(path, need):
+    """-> the rows of a tab-separated spike file as dicts; stops when the file is missing or lacks a column"""
+    path = Path(path)
+    if not path.is_file(): sys.exit("missing input: %s (the v35 spike; see docs/QUESTS.md)" % path)
+    with path.open(encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f, delimiter="\t"))
+    if not rows or not set(need) <= set(rows[0]): sys.exit("%s: columns %s expected, found %s" % (path, need, list(rows[0]) if rows else "no rows"))
+    return rows
+
+
+def apply_placements(out, qinfo, id2g, rows):
+    """v35: `u` = "ungated" | "unknown" on every quest that has no story point. The rows must be exactly the quests without one (each once), so a quest the spike lost or invented stops the tool.
+    -> (ungated, unknown)"""
+    unplaced = {g for g in qinfo if "s" not in out.get(g, {})}
+    seen = {}
+    for r in rows:
+        g = id2g.get(r["quest_id"])
+        if g is None: sys.exit("placements.tsv: %r is not a quest of QUESTS.json" % r["quest_id"])
+        if g in seen: sys.exit("placements.tsv: %r twice" % r["quest_id"])
+        if r["ungated"] not in ("ungated", ""): sys.exit("placements.tsv: %r: ungated column is %r (expected 'ungated' or empty)" % (r["quest_id"], r["ungated"]))
+        seen[g] = r
+    if set(seen) != unplaced:
+        sys.exit("placements.tsv does not match the quests without a story point: %d rows, %d quests; missing %s; extra %s" % (len(seen), len(unplaced),
+                 sorted(qinfo[g]["id"] for g in unplaced - set(seen))[:5], sorted(qinfo[g]["id"] for g in set(seen) - unplaced)[:5]))
+    ung = unk = 0
+    for g, r in seen.items():
+        if r["ungated"] == "ungated": out.setdefault(g, {})["u"] = "ungated"; ung += 1
+        else: out.setdefault(g, {})["u"] = "unknown"; unk += 1
+    if ung + unk != len(unplaced): sys.exit("placements: %d ungated + %d unknown is not the %d unplaced quests" % (ung, unk, len(unplaced)))
+    return ung, unk
+
+
+def apply_choices(out, qinfo, id2g, rows):
+    """v35: `k` on the quests of the verified choice rows (class keep-quest); drop rows add nothing. -> (keep-quest, drop)"""
+    n = {"keep-quest": 0, "drop": 0}
+    for r in rows:
+        c = r["class"]
+        if c not in n: sys.exit("choices-verified.tsv row %s: class %r (keep-quest or drop)" % (r["row"], c))
+        n[c] += 1
+        if c == "drop": continue
+        g = id2g.get(r["quest"])
+        if g is None or g != r["quest_guid"]: sys.exit("choices-verified.tsv row %s: quest %r does not match QUESTS.json" % (r["row"], r["quest"]))
+        holder = r["holder_quest"]
+        if holder:
+            if holder not in id2g or id2g[holder] == g: sys.exit("choices-verified.tsv row %s: holder quest %r" % (r["row"], holder))
+            e = ["q", id2g[holder]]
+        else: e = ["q"]
+        k = out.setdefault(g, {}).setdefault("k", [])
+        if e not in k: k.append(e)
+    return n["keep-quest"], n["drop"]
+
+
+def build(spike=SPIKE, placements=None, choices=None):
     R = json.loads((spike / "rules.json").read_text(encoding="utf-8")); Q = json.loads((ROOT / "data" / "QUESTS.json").read_text(encoding="utf-8"))["quests"]
     qinfo = {q["g"]: q for q in Q}; gid = set(qinfo); id2g = {q["id"]: q["g"] for q in Q}
     cname = {c["id"]: c["name"] for c in R["cutoffs"]}; byname = {n: g for g in GATES for n in g["cuts"]}
@@ -92,6 +150,8 @@ def build(spike=SPIKE):
                     after.append(id2g[i])
         if after: rec["a"] = after[:4]
         if rec: out[g] = rec
+    ung, unk2 = apply_placements(out, qinfo, id2g, read_tsv(placements or SPIKE35 / "placements.tsv", ["quest_id", "ungated", "confidence"]))
+    kq, kd = apply_choices(out, qinfo, id2g, read_tsv(choices or SPIKE35 / "choices-verified.tsv", ["row", "class", "quest", "quest_guid", "objective_guid", "holder_quest"]))
     used = {k[0] for rec in out.values() for k in rec.get("c", [])}
     gates = []
     for gt in GATES:
@@ -103,15 +163,17 @@ def build(spike=SPIKE):
         if gt.get("real"): gate["real"] = 1
         gates.append(gate)
     data = dict(v=1, points=[list(p) for p in POINTS], gates=gates, enter={k: [id2g[i] for i in v] for k, v in ENTER.items()}, quests=out)
-    return data, dropped, unknown
+    return data, dropped, unknown, dict(ungated=ung, unknown=unk2, keep_quest=kq, drop=kd)
 
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--check", action="store_true"); ap.add_argument("--spike", default=str(SPIKE)); a = ap.parse_args()
-    data, dropped, unknown = build(Path(a.spike)); blob = json.dumps(data, separators=(",", ":")) + "\n"
+    ap = argparse.ArgumentParser(); ap.add_argument("--check", action="store_true"); ap.add_argument("--spike", default=str(SPIKE))
+    ap.add_argument("--placements", default=str(SPIKE35 / "placements.tsv")); ap.add_argument("--choices", default=str(SPIKE35 / "choices-verified.tsv")); a = ap.parse_args()
+    data, dropped, unknown, v35 = build(Path(a.spike), Path(a.placements), Path(a.choices)); blob = json.dumps(data, separators=(",", ":")) + "\n"
     q = data["quests"]
     print("quests with a story point: %d, unknown (stored without `s`): %d; with a cutoff: %d (whole-quest %d); with predecessors: %d; gates: %d" % (sum("s" in r for r in q.values()), unknown,
           sum("c" in r for r in q.values()), sum(any(k[1] == "q" for k in r.get("c", [])) for r in q.values()), sum("a" in r for r in q.values()), len(data["gates"])), file=sys.stderr)
+    print("v35: no story point: %(ungated)d ungated + %(unknown)d unknown = %(t)d; choice rows: keep-quest %(keep_quest)d, drop %(drop)d" % dict(v35, t=v35["ungated"] + v35["unknown"]), file=sys.stderr)
     for what, detail in dropped: print("LEFT OUT: %s: %s" % (what, detail), file=sys.stderr)
     p = ROOT / "data" / "QUEST-RULES.json"
     if a.check:

@@ -75,7 +75,7 @@ def rules(check):
     qs = {q["g"]: q for q in json.loads((ROOT / "data" / "QUESTS.json").read_text(encoding="utf-8"))["quests"]}; by = {q["id"]: q["g"] for q in qs.values()}
     raw = (ROOT / "data" / "QUEST-RULES.json").read_text(encoding="utf-8"); d = json.loads(raw); R = d["quests"]; gates = {g["id"]: g for g in d["gates"]}
     check("QUEST-RULES.json: every quest in it is a quest of QUESTS.json; only ids, codes and numbers (no game text: every string is a 32-digit GUID, a code of at most 12 characters, or a gate / point name)",
-          set(R) <= set(qs) and all(set(r) <= {"s", "h", "c", "a"} for r in R.values()) and all(re.fullmatch(r"[0-9a-f]{32}", g) for g in R) and
+          set(R) <= set(qs) and all(set(r) <= {"s", "h", "c", "a", "u", "k"} for r in R.values()) and all(re.fullmatch(r"[0-9a-f]{32}", g) for g in R) and
           all(re.fullmatch(r"[0-9a-f]{32}", a) for r in R.values() for a in r.get("a", [])) and set(R_ for r in R.values() for R_ in [r.get("s")] if R_) <= {p[0] for p in d["points"]} and len(raw) < 60000)
     check("QUEST-RULES.json: %d gates: the base-game gates in story order (%s) and the Blood and Wine and Hearts of Stone ones" % (len(gates), [g["id"] for g in d["gates"] if g["lane"] == "b"]),
           [g["id"] for g in sorted(d["gates"], key=lambda g: g["x"]) if g["lane"] == "b"] == ["prologue", "isle", "battle", "novigrad3", "skellige3", "naglfar", "ciri", "finish"] and {"bawnight", "baw703", "hos"} <= set(gates) and all(set(g) - {"code", "real"} == {"id", "name", "lane", "x", "done", "next"} for g in gates.values())
@@ -83,8 +83,13 @@ def rules(check):
     check("QUEST-RULES.json: Q106 and Q107 fail at Isle of Mists (a whole-quest Failure), the story points of Q402, Q403 and Q111 are Isle of Mists, Battle of Kaer Morhen and Act III",
           R[by["Q106 Keira's bussiness"]]["c"] == [["isle", "q", "f"]] and R[by["Q107 Swamps"]]["c"] == [["isle", "q", "f"]] and R[by["Q402 Isle of Mists"]]["s"] == "i" and R[by["Q403 Battle of Kaer Morhen"]]["s"] == "b" and R[by["Q111 Imlerith"]]["s"] == "3")
     check("QUEST-RULES.json: left out: the temporary toggles (MQ3026 Novigrad Horse Racing has no cutoff) and the demon-mark flag (Q310 Ciri's Night Out has none); Collect 'Em All has no rule; a story point derived by default is stored as unknown (mq1001 Dog Trail has none)",
-          "c" not in R.get(by["MQ3026 Novigrad Horse Racing"], {}) and "c" not in R.get(by["Q310 Ciri's Night Out"], {}) and by["Card Game Meta: Gather All"] not in R and "s" not in R.get(by["mq1001 Dog Trail"], {}) and
+          "c" not in R.get(by["MQ3026 Novigrad Horse Racing"], {}) and "c" not in R.get(by["Q310 Ciri's Night Out"], {}) and "s" not in R.get(by["Card Game Meta: Gather All"], {}) and "s" not in R.get(by["mq1001 Dog Trail"], {}) and
           sum("s" not in R.get(g, {}) for g in qs) == 191 and sum("s" in r for r in R.values()) == 210)
+    U = {g: r["u"] for g, r in R.items() if "u" in r}; K = {g: r["k"] for g, r in R.items() if "k" in r}
+    check("QUEST-RULES.json (v35): every quest with no story point has `u` (ungated 157 + unknown 34 = 191), no placed quest has one, the 3 'likely' ones carry nothing but `unknown`", len(U) == 191 and sum(v == "ungated" for v in U.values()) == 157 and sum(v == "unknown" for v in U.values()) == 34
+          and set(U) == {g for g in qs if "s" not in R.get(g, {})} and all(v in ("ungated", "unknown") for v in U.values()) and all(set(R[by[i]]) == {"u"} or set(R[by[i]]) <= {"u", "c", "a", "k"} for i in ("SQ302 Philippa", "mq1057: The Great Spirit", "NML Hunt: Fogling")) and all(U[by[i]] == "unknown" for i in ("SQ302 Philippa", "mq1057: The Great Spirit", "NML Hunt: Fogling")))
+    check("QUEST-RULES.json (v35): `k` (can fail by a choice) = [['q']] own conversation or [['q', quest guid]] through another quest; guids of QUESTS.json only; 4 quests, no objective entry",
+          len(K) == 4 and all(len(e) in (1, 2) and e[0] == "q" and (len(e) == 1 or (e[1] in qs and e[1] != g)) for g, es in K.items() for e in es) and sum(len(e) == 2 for es in K.values() for e in es) == 2)
     check("QUEST-RULES.json: Hearts of Stone and Blood and Wine quests all have their lane as story point; no cutoff is stored for a quest on a toggle", all(R[g]["s"] == "h" for g, q in qs.items() if q["p"] == "ep1") and all(R[g]["s"] == "w" for g, q in qs.items() if q["p"] == "bob"))
 
 
@@ -418,10 +423,10 @@ def timeline(b, base, check, label):
           and E("document.querySelectorAll('#qsTL .qsgl').length") == 0, gk)
     check("%s: Timeline: no 'You' marker without a save; the view is not in the link and is remembered (%s)" % (label, E("QS.view")), E("document.querySelectorAll('#qsTL .qsme').length") == 0 and E("location.hash") == h0 and E("localStorage.getItem('w3p.quests.view')") == "time", h0)
     st = E("""(()=>{const known=q=>QS.R.quests[q.g]&&QS.R.quests[q.g].s,open=QS.data.quests.filter(q=>known(q)&&'pai b3e'.includes(known(q))&&QS.timeDone===false&&qsState(q.g)!=='done');const dots=[...document.querySelectorAll('#qsTL .qsdot')],more=[...document.querySelectorAll('#qsTL .qsmore')].reduce((a,b)=>a+(b.textContent[0]==='+'?+b.textContent.slice(1):0),0);
-      const unk=new Set(QS.data.quests.filter(q=>!known(q)).map(q=>q.g));return{dots:dots.length,more:more,want:open.length,unkDrawn:dots.filter(d=>unk.has(d.dataset.g)).length,unkN:unk.size,summary:document.querySelector('#qsUnk summary').textContent,items:document.querySelectorAll('#qsUnk .qsunkl .qsrow').length,
+      const unk=new Set(QS.data.quests.filter(q=>!known(q)).map(q=>q.g));return{dots:dots.length,more:more,want:open.length,unkDrawn:dots.filter(d=>unk.has(d.dataset.g)).length,unkN:unk.size,summary:[...document.querySelectorAll('.qsug summary')].map(s=>s.textContent).join(' | '),items:document.querySelectorAll('.qsug .qsdot').length+[...document.querySelectorAll('.qsug .qsmore')].reduce((a,e)=>a+(e.textContent[0]==='+'?+e.textContent.slice(1):0),0),
       rings:document.querySelectorAll('#qsTL .qsfb').length,wantRings:document.querySelectorAll('#qsTL .qsfl').length,ringOnFails:document.querySelectorAll('#qsTL .qsfd,#qsTL .qsring').length===0,anyFail:open.filter(q=>qsFailsAt(q)).length}})()""")
     check("%s: Timeline: every quest with a known story point is drawn once (%d dots + %d in '+n' chips of %d), none of the %d quests without one; they are in the collapsed row '%s' (%d listed)" % (label, st["dots"], st["more"], st["want"], st["unkN"], st["summary"], st["items"]),
-          st["dots"] + st["more"] >= st["want"] and st["unkDrawn"] == 0 and st["summary"] == "Placement not computed yet (%d)" % st["unkN"] and st["items"] == st["unkN"] == 191 and not E("document.getElementById('qsUnk').open"), st)
+          st["dots"] + st["more"] >= st["want"] and st["unkDrawn"] == 0 and st["summary"] == "No story gate found (157) | Not computed yet (34)" and st["items"] == st["unkN"] == 191 and E("document.getElementById('qsNoGate').open") and not E("document.getElementById('qsNotComputed').open"), st)
     check("%s: Timeline: a quest with a confirmed cutoff the save has not passed has no orange dot or ring; its tooltip says 'Fails at <gate>' (%d such quests; %d brackets, %d labels)" % (label, st["anyFail"], st["rings"], st["wantRings"]), st["rings"] == st["wantRings"] and st["ringOnFails"] and st["anyFail"] > 15, st)
     pg.hover('#qsTL .qsdot.fails >> nth=0'); tip = E("document.getElementById('qsTip').textContent"); pg.mouse.move(5, 5)
     check("%s: Timeline: tooltip of a ringed dot (%s)" % (label, tip[:80]), "Fails at " in tip and "·" in tip, tip)
@@ -544,10 +549,10 @@ def timeline2(b, base, check, label):
         hs[sc] = E("""(()=>{const t=document.getElementById('qsTL'),cl=[...t.querySelectorAll('.qsbaxis span')].map(e=>e.getBoundingClientRect()),cw=cl.map(r=>r.left+r.width/2),lefts=[...t.querySelectorAll('.qscol')].map(e=>e.getBoundingClientRect().left),bars=[...t.querySelectorAll('.qstlhead .qsgate')].map(e=>[e.dataset.gates,e.getBoundingClientRect().left]),
           bd=[...t.querySelectorAll('.qstlhead .qsgb')].map(e=>{const r=e.getBoundingClientRect();return[e.textContent,Math.round(r.left+r.width/2)]}),w=[...t.querySelectorAll('.qsbaxis span')].map((e,i,a)=>i?parseFloat(e.style.left)-parseFloat(a[i-1].style.left):null).filter(Boolean),plot=t.querySelector('.qsbplot.head').getBoundingClientRect().width;
           return{key:[...document.querySelectorAll('.qsgkey .qsgk')].map(e=>e.textContent),note:(document.querySelector('.qsscnote')||{}).textContent,rows:[...t.querySelectorAll('.qsblabel')].map(e=>e.textContent),badges:bd.map(x=>x[0]).join(''),bd,bars:bars.map(b=>b[0]),barsOnEdge:bars.every(b=>lefts.some(l=>Math.abs(l-b[1])<1.5)),
-          real:[...document.querySelectorAll('.qsgk.real')].map(e=>e.textContent),realBar:t.querySelectorAll('.qsgb.real').length,minstep:Math.min(...w),plot:Math.round(plot),box:t.clientWidth,unk:document.querySelector('#qsUnk summary').textContent,pressed:[...document.querySelectorAll('#qsScope .qssc')].map(e=>e.getAttribute('aria-pressed')).join(),mem:localStorage.getItem('w3p.quests.timescope'),cols:t.querySelectorAll('.qstc').length,hash:location.hash}})()""")
+          real:[...document.querySelectorAll('.qsgk.real')].map(e=>e.textContent),realBar:t.querySelectorAll('.qsgb.real').length,minstep:Math.min(...w),plot:Math.round(plot),box:t.clientWidth,unk:[...document.querySelectorAll('.qsug summary')].map(s=>s.textContent).join(' | '),pressed:[...document.querySelectorAll('#qsScope .qssc')].map(e=>e.getAttribute('aria-pressed')).join(),mem:localStorage.getItem('w3p.quests.timescope'),cols:t.querySelectorAll('.qstc').length,hash:location.hash}})()""")
         x = hs[sc]
-        check("%s: v34.2 scope %s: one lane by level, the note, %d numbered gate%s (bars %s on the edge before their level's column, badges side by side), 'Placement not computed yet (191)' kept, remembered" % (label, tab, ng, "s" if ng > 1 else "", x["bars"]),
-              x["rows"] == [rowname] and x["note"] == "Laid out by quest level: every %s quest shares one story point in the game's quest graphs." % pack and len(x["key"]) == ng and x["badges"] == "".join(str(i + 1) for i in range(ng)) and x["barsOnEdge"] and x["minstep"] >= 100 and x["unk"] == "Placement not computed yet (191)" and x["mem"] == sc and x["cols"] == 0
+        check("%s: v34.2 scope %s: one lane by level, the note, %d numbered gate%s (bars %s on the edge before their level's column, badges side by side), no unplaced quest in this pack so no 'No story gate found' / 'Not computed yet' section, remembered" % (label, tab, ng, "s" if ng > 1 else "", x["bars"]),
+              x["rows"] == [rowname] and x["note"] == "Laid out by quest level: every %s quest shares one story point in the game's quest graphs." % pack and len(x["key"]) == ng and x["badges"] == "".join(str(i + 1) for i in range(ng)) and x["barsOnEdge"] and x["minstep"] >= 100 and x["unk"] == "" and x["mem"] == sc and x["cols"] == 0
               and (x["bars"] == ["1", "2", "3,4", "5,6"] and x["bd"][3][1] - x["bd"][2][1] == 24 and x["bd"][5][1] - x["bd"][4][1] == 24 if sc == "bob" else x["bars"] == ["1"])
               and (x["real"] == ["4The Night of Long Fangs real cutoff"] if sc == "bob" else not x["real"]) and (x["realBar"] == 1 if sc == "bob" else x["realBar"] == 0) and x["pressed"] == ",".join("true" if k == sc else "false" for k in ("base", "hos", "bob")), x)
         check("%s: v34.2 scope %s: the chart fills the box when its columns are narrower than it (plot %d px, box %d)" % (label, tab, x["plot"], x["box"]), x["plot"] >= x["box"] - 117, x)
@@ -614,7 +619,7 @@ def timeline2phone(b, base, check, label):
 
 # v34.3: "Missable, story point unknown" under the Timeline
 STRIPJS = """(()=>{const lane=({base:null,hos:'h',bob:'w'})[QS.tscope],keys=qsGateKey(lane||'b'),cols=QS_TCOLS.map(c=>c[0]),inScope=s=>lane?s===lane:cols.includes(s),R=QS.R,Q=QS.data.quests,out={gates:[],bad:[]};
-  const strip=g=>[...document.querySelectorAll('#qsMU .qsmug[data-gate="'+g+'"] .qsdot')].map(d=>d.dataset.g),unkRows=new Set([...document.querySelectorAll('#qsUnk .qsunkl .qsrow')].map(b=>b.dataset.g)),grid=[...document.querySelectorAll('#qsTL .qsdot')].map(d=>d.dataset.g);
+  const strip=g=>[...document.querySelectorAll('#qsMU .qsmug[data-gate="'+g+'"] .qsdot')].map(d=>d.dataset.g),unkRows=new Set([...document.querySelectorAll('.qsug .qsdot')].map(b=>b.dataset.g)),grid=[...document.querySelectorAll('#qsTL .qsdot')].map(d=>d.dataset.g);
   // from the raw rules: the whole-quest cutoffs of a quest in this lane, in story order; an open quest sits at its earliest gate not passed, any other at its earliest
   const raw=q=>{const r=R.quests[q.g];return r&&r.c?r.c.filter(c=>c[1]==='q'&&R.gmap.get(c[0])&&R.gmap.get(c[0]).lane===(lane||'b')).map(c=>R.gmap.get(c[0])).sort((a,b)=>a.x-b.x):[]},
    at=q=>{const c=raw(q);if(!c.length)return null;const open=['none','active','inactive'].includes(qsState(q.g));return(open&&c.find(g=>!qsPassed(g))||c[0]).id};
@@ -629,7 +634,7 @@ STRIPJS = """(()=>{const lane=({base:null,hos:'h',bob:'w'})[QS.tscope],keys=qsGa
   const all=[...document.querySelectorAll('#qsMU .qsdot')].map(d=>d.dataset.g);out.dup=all.length-new Set(all).size;out.total=all.length;
   // the panel (lanes b and w, the next gate not passed): the open quests it lists = the ones in that gate's bracket + the ones in that gate's strip group
   const ml=qsMissLists().find(m=>m.gate.lane===(lane||'b'));out.panel=ml?{gate:ml.gate.id,n:ml.whole.length,ok:JSON.stringify(ml.whole.map(q=>q.g).sort())===JSON.stringify([...Q.filter(q=>qsFailsAtGate(q,ml.gate)&&((R.quests[q.g]&&R.quests[q.g].s&&inScope(R.quests[q.g].s))||strip(ml.gate.id).includes(q.g))).map(q=>q.g)].sort())}:null;
-  out.vis=!!document.getElementById('qsMU');out.sum=document.querySelector('#qsUnk summary').textContent;return out})()"""
+  out.vis=!!document.getElementById('qsMU');out.sum=[...document.querySelectorAll('.qsug summary')].map(s=>s.textContent).join(' | ');return out})()"""
 
 
 def missunknown(b, base, check, label):
@@ -637,10 +642,10 @@ def missunknown(b, base, check, label):
     pg, errs, _ = newpage(b, base); E = pg.evaluate; opened(pg); pg.click("#qsVTime"); until(pg, "!!document.getElementById('qsTL')"); pg.wait_for_timeout(200)
     for sc in ("base", "hos", "bob"):
         pg.click('#qsScope [data-scope="%s"]' % sc); pg.wait_for_timeout(200); r = E(STRIPJS)
-        check("%s: v34.3 no save (%s): no strip (the Missable panel is not there either), nothing is taken out of 'Placement not computed yet (191)', the brackets are the grid's own (%s)" % (label, sc, r["sum"]),
-              not r["vis"] and r["sum"] == "Placement not computed yet (191)" and E("document.getElementById('qsMiss').hidden") and not [x for x in r["bad"] if x[0] != "strip" and x[0] != "repeated in the collapsed row"], r)
+        check("%s: v34.3 no save (%s): no strip (the Missable panel is not there either), the two sections hold all the unplaced quests of the scope (no strip to take any out), the brackets are the grid's own (%s)" % (label, sc, r["sum"]),
+              not r["vis"] and r["sum"] == ("No story gate found (157) | Not computed yet (34)" if sc == "base" else "") and E("document.getElementById('qsMiss').hidden") and not [x for x in r["bad"] if x[0] != "strip" and x[0] != "repeated in the collapsed row"], r)
     ks = E("Object.keys(localStorage).sort()"); check("%s: v34.3 no new storage keys (%s) and the link is unchanged" % (label, ks), all(k.startswith("w3p.quests.") for k in ks) and not [k for k in ks if re.search(r"strip|miss|unknown", k)] and not re.search(r"[0-9a-f]{32}|miss", E("location.hash")), ks)
-    check("%s: v34.3 APP_VERSION is v34.4" % label, E("APP_VERSION") == "v34.4")
+    check("%s: v35.1 APP_VERSION is v35.1" % label, E("APP_VERSION") == "v35.1")
     check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
     for sub in ("stats-l9b", "stats-l9"):
         d = FIXD / sub; sav = sorted(d.glob("*.sav")) if d.is_dir() else []
@@ -652,9 +657,9 @@ def missunknown(b, base, check, label):
         check("%s [%s]: v34.3 Base game: the strip '%s' sits under the grid with the help line, with Redania's Most Wanted under the Isle of Mists gate (%s)" % (label, sub, ttl, g[0]),
               ttl == "Missable, story point unknown" and help_ == "These can be missed, but the game files don't say where in the story they open." and g[0][0] == "isle" and "Redania's Most Wanted" in g[0][2]
               and E("document.getElementById('qsTL').compareDocumentPosition(document.getElementById('qsMU'))&Node.DOCUMENT_POSITION_FOLLOWING") != 0 and E("document.getElementById('qsMU').compareDocumentPosition(document.querySelector('.qslegend'))&Node.DOCUMENT_POSITION_FOLLOWING") != 0, [ttl, g])
-        rm = E("(()=>{const q=QS.data.quests.find(q=>q.n==='Redania\\'s Most Wanted');return{inUnk:[...document.querySelectorAll('#qsUnk .qsunkl .qsrow b')].some(e=>e.textContent===q.n),inGrid:!!document.querySelector('#qsTL .qsdot[data-g=\"'+q.g+'\"]'),inStrip:!!document.querySelector('#qsMU .qsmug[data-gate=\"isle\"] .qsdot[data-g=\"'+q.g+'\"]'),cut:QS.R.quests[q.g].c,s:QS.R.quests[q.g].s}})()")
-        check("%s [%s]: v34.3 Redania's Most Wanted (Novigrad, no story point, failed by the Isle of Mists cut) is in the strip under that gate, not in the grid and not under 'Placement not computed yet' (%s)" % (label, sub, rm), rm["inStrip"] and not rm["inUnk"] and not rm["inGrid"] and rm["s"] is None, rm)
-        check("%s [%s]: v34.3 the collapsed row lost exactly the strip's quests (%s; %d in the strip)" % (label, sub, r["sum"], r["total"]), r["sum"] == "Placement not computed yet (%d)" % (191 - r["total"]) and r["total"] == 8 and r["dup"] == 0, r)
+        rm = E("(()=>{const q=QS.data.quests.find(q=>q.n==='Redania\\'s Most Wanted');return{inUnk:[...document.querySelectorAll('.qsug .qsdot')].some(e=>e.dataset.g===q.g),inGrid:!!document.querySelector('#qsTL .qsdot[data-g=\"'+q.g+'\"]'),inStrip:!!document.querySelector('#qsMU .qsmug[data-gate=\"isle\"] .qsdot[data-g=\"'+q.g+'\"]'),cut:QS.R.quests[q.g].c,s:QS.R.quests[q.g].s}})()")
+        check("%s [%s]: v34.3 Redania's Most Wanted (Novigrad, no story point, failed by the Isle of Mists cut) is in the strip under that gate, not in the grid and not under 'No story gate found / Not computed yet' (%s)" % (label, sub, rm), rm["inStrip"] and not rm["inUnk"] and not rm["inGrid"] and rm["s"] is None, rm)
+        check("%s [%s]: v35 the two sections lost exactly the strip's quests (and the done ones, hidden without Show done) (%s; %d in the strip)" % (label, sub, r["sum"], r["total"]), sum(int(x) for x in re.findall(r"\((\d+)\)", r["sum"])) + r["total"] + E("QS.data.quests.filter(q=>!(QS.R.quests[q.g]&&QS.R.quests[q.g].s)&&qsState(q.g)==='done').length") == 191 and r["total"] == 8 and r["dup"] == 0, r)
         check("%s [%s]: v34.3 invariant, Base game, every gate: the open quests that fail at a gate = those in its bracket (placed) + those in its strip group; none drawn twice; the Missable panel's list at the next gate = bracket + strip group (%s)" % (label, sub, r["panel"]), not r["bad"] and r["panel"] and r["panel"]["ok"] and r["panel"]["gate"] == "isle" and r["panel"]["n"] == 10, r)
         order = E("[...document.querySelectorAll('#qsMU .qsmug')].map(x=>x.dataset.gate+(x.classList.contains('passed')?'*':''))")
         check("%s [%s]: v34.3 groups: the next gate not passed first, then the others in story order, passed gates last and dashed grey (%s)" % (label, sub, order), order == ["isle", "battle", "novigrad3", "skellige3", "prologue*"], order)
@@ -667,7 +672,7 @@ def missunknown(b, base, check, label):
         pg.hover('#qsMU .qsmug[data-gate="isle"] .qsdot >> nth=0'); tip = E("document.getElementById('qsTip').textContent"); pg.mouse.move(5, 5)
         check("%s [%s]: v34.3 the tooltip of a strip entry says name, type, status and 'Fails at Isle of Mists' (%s)" % (label, sub, tip[:90]), "Redania's Most Wanted" in tip and "Fails at Isle of Mists" in tip and "Secondary" in tip, tip)
         pg.click('#qsMU .qsmug[data-gate="isle"] .qsdot >> nth=0'); pg.wait_for_timeout(350); dr = E("(()=>{const d=document.getElementById('qsDetail');return{open:document.getElementById('screenQ').classList.contains('qs-open'),txt:d.textContent,sel:QS.byG.get(QS.sel).n}})()")
-        check("%s [%s]: v34.3 a click on a strip entry opens the same drawer (%s)" % (label, sub, dr["txt"][:80]), dr["open"] and dr["sel"] == "Redania's Most Wanted" and "Fails at Isle of Mists" in dr["txt"] and "placement not computed yet" in dr["txt"], dr["txt"][:200])
+        check("%s [%s]: v34.3 a click on a strip entry opens the same drawer (%s)" % (label, sub, dr["txt"][:80]), dr["open"] and dr["sel"] == "Redania's Most Wanted" and "Fails at Isle of Mists" in dr["txt"] and "— not computed yet" in dr["txt"], dr["txt"][:200])
         pg.keyboard.press("Escape"); pg.wait_for_timeout(250); foc = E("document.activeElement.dataset.g===QS.byG.get(QS.sel).g||document.activeElement.className")
         check("%s [%s]: v34.3 Escape closes the drawer and puts the focus back on a marker of that quest (%s)" % (label, sub, foc), E("!document.getElementById('screenQ').classList.contains('qs-open')") and E("(document.activeElement.dataset||{}).g===QS.sel"), foc)
         txt = E("document.getElementById('qsMU').textContent"); names = E("QS.data.quests.map(q=>q.n)")
@@ -696,3 +701,145 @@ def missunknown(b, base, check, label):
         pg.click('#qsMU .qsdot >> nth=0'); pg.wait_for_timeout(350); dr = E("(()=>{const d=document.getElementById('qsDetail').getBoundingClientRect();return[Math.round(d.width),innerWidth]})()")
         check("%s: v34.3 390 px: the strip wraps inside the screen and the page does not scroll sideways (%s); a marker opens the full-screen drawer (%s)" % (label, m, dr), m["page"] <= 1 and m["in"] and m["groups"] and dr[0] == dr[1], [m, dr])
         check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
+
+
+# ---------------------------------------------------------------- v35: the unplaced quests split, "can fail by a choice"
+SPIKE35 = Path.home() / "work" / "w3planner-art" / "quest-spike" / "v35"
+KNOWN_KEYS = {"w3p.quests.v1", "w3p.quests.view", "w3p.quests.banddone", "w3p.quests.timedone", "w3p.quests.timescope"}
+HELP_NOGATE = "They open when you reach the place, meet the person or find the item. The game files show no story point for them."
+HELP_UNKNOWN = "The game files have a story gate for these that we can't read yet."
+
+
+def verified_rows():
+    """the rows of choices-verified.tsv (local, never committed); None when the file is absent"""
+    f = SPIKE35 / "choices-verified.tsv"
+    if not f.is_file(): return None
+    import csv
+    return list(csv.DictReader(f.open(encoding="utf-8"), delimiter="\t"))
+
+
+def leaks(pg):
+    """internal scene output or fact names (from the local evidence column) and snake_case tokens in the screen's text"""
+    txt = pg.evaluate("document.getElementById('screenQ').innerText"); bad = sorted(set(re.findall(r"\b[a-z][a-z0-9]*_[a-z0-9_]+\b", txt)))
+    rows = verified_rows() or []
+    names = {m for r in rows for m in re.findall(r'scene output "([^"]+)"', r["evidence"])}
+    bad += [n for n in names if re.search(r"[A-Z_ 0-9]", n[1:]) and re.search(r"\b%s\b" % re.escape(n), txt)]   # plain English words (done, bye) are not told apart from the interface text
+    return bad
+
+
+def v35(b, base, check, label):
+    pg, errs, _ = newpage(b, base); E = pg.evaluate; opened(pg); until(pg, "!!QS.R&&!!QS.desc"); h0 = E("location.hash")
+    rows = verified_rows(); R = json.loads((ROOT / "data" / "QUEST-RULES.json").read_text(encoding="utf-8"))["quests"]; names = {q["g"]: q for q in json.loads((ROOT / "data" / "QUESTS.json").read_text(encoding="utf-8"))["quests"]}
+    # --- the Timeline bottom, no save
+    pg.click("#qsVTime"); until(pg, "!!document.getElementById('qsTL')"); pg.wait_for_timeout(250)
+    s1 = E("(()=>{const a=document.getElementById('qsNoGate'),c=document.getElementById('qsNotComputed');return{a:a.querySelector('summary').textContent,ao:a.open,ah:a.querySelector('.qsbnote').textContent,c:c.querySelector('summary').textContent,co:c.open,ch:c.querySelector('.qsbnote').textContent,order:[...document.querySelectorAll('#qsTL,#qsMU,.qslegend,#qsNoGate,#qsNotComputed')].map(e=>e.id||e.className),old:!!document.getElementById('qsUnk')||/Placement not computed/.test(document.getElementById('qsView').textContent)}})()")
+    check("%s: v35 Timeline bottom, no save: 'No story gate found (157)' open with its help line, then 'Not computed yet (34)' collapsed with its help line; the old 'Placement not computed yet' row is gone (%s)" % (label, s1["a"] + " / " + s1["c"]),
+          s1["a"] == "No story gate found (157)" and s1["ao"] and s1["ah"] == HELP_NOGATE and s1["c"] == "Not computed yet (34)" and not s1["co"] and s1["ch"] == HELP_UNKNOWN and not s1["old"] and s1["order"][-2:] == ["qsNoGate", "qsNotComputed"], s1)
+    g = E("""(()=>{const rows=[...document.querySelectorAll('#qsNoGate .qsugrow')],all=[...document.querySelectorAll('#qsNoGate .qsdot,#qsNotComputed .qsdot')];
+      return{labels:rows.map(r=>r.querySelector('.qsblabel').textContent),markers:all.every(d=>d.querySelector('svg.qsshape')&&/^qsdot t-/.test(d.className)),chips:[...document.querySelectorAll('#qsNoGate .qsmore')].length,
+      kinds:[...document.querySelectorAll('#qsNoGate .qsdot')].every(d=>QS.R.quests[d.dataset.g].u==='ungated'),kinds2:(document.getElementById('qsNotComputed').open=true,[...document.querySelectorAll('#qsNotComputed .qsdot')].every(d=>QS.R.quests[d.dataset.g].u==='unknown'||!QS.R.quests[d.dataset.g]))}})()""")
+    check("%s: v35 the section is grouped by region like the grid rows (%s), same markers, '+N' chips (%d), only 'ungated' quests in the first section and only 'unknown' ones in the second" % (label, g["labels"], g["chips"]), g["labels"][0] == "White Orchard" and "Velen" in g["labels"] and g["markers"] and g["chips"] > 0 and g["kinds"] and g["kinds2"], g)
+    pg.click("#qsNoGate .qsmore >> nth=0"); pg.wait_for_timeout(150); more = E("document.querySelector('#qsNoGate .qsmore').textContent"); pg.click("#qsNoGate .qsmore >> nth=0"); pg.wait_for_timeout(100)
+    check("%s: v35 the chip expands its row in place ('−') and folds it back" % label, more == "−" and E("document.querySelector('#qsNoGate .qsmore').textContent[0]") == "+", more)
+    ung = E("document.querySelector('#qsNoGate .qsdot').dataset.g"); unk = E("(document.getElementById('qsNotComputed').open=true,document.querySelector('#qsNotComputed .qsdot').dataset.g)")
+    pg.click('#qsNoGate .qsdot >> nth=0'); pg.wait_for_timeout(300); d1 = E("[document.querySelector('#qsDetail .qsrule').textContent,QS.sel,document.getElementById('screenQ').classList.contains('qs-open')]")
+    pg.keyboard.press("Escape"); pg.wait_for_timeout(200); pg.click('#qsNotComputed .qsdot >> nth=0'); pg.wait_for_timeout(300); d2 = E("[document.querySelector('#qsDetail .qsrule').textContent,QS.sel]")
+    check("%s: v35 a click opens the drawer; 'Story point:' says 'no story gate found' for an ungated quest and '— not computed yet' for an unknown one (%s | %s)" % (label, d1[0], d2[0]),
+          d1[0] == "Story point: no story gate found" and d1[1] == ung and d1[2] and d2[0] == "Story point: — not computed yet" and d2[1] == unk, [d1, d2])
+    pg.keyboard.press("Escape")
+    # --- the marker and the drawer block on the keep rows
+    keep = {}
+    for g_, es in ((g_, r["k"]) for g_, r in R.items() if "k" in r): keep[g_] = es
+    if rows is not None:
+        vk = {r["quest_guid"] for r in rows if r["class"].startswith("keep")}
+        check("%s: v35 choices-verified.tsv (%d keep, %d drop) and the quest rules agree: exactly the keep rows' quests carry `k`, no drop-only quest does" % (label, len(vk), sum(r["class"] == "drop" for r in rows)),
+              vk == set(keep) and not ({r["quest_guid"] for r in rows if r["class"] == "drop"} - vk) & set(keep), [vk ^ set(keep)])
+        for r in rows:
+            e = keep.get(r["quest_guid"], [])
+            if r["class"] == "keep-quest": ok = (["q", names[[q for q in names if names[q]["id"] == r["holder_quest"]][0]]["g"]] if r["holder_quest"] else ["q"]) in e
+            else: ok = True
+            if not ok: check("%s: v35 row %s (%s) is in the quest rules" % (label, r["row"], r["class"]), False, e)
+    # list view: every keep quest has the ring marker and the 'by choice' tag, every other quest none
+    pg.click("#qsVList"); pg.wait_for_timeout(200); E("QS.q='';QS.kind='all';QS.hide=false"); out = {}
+    for rg in [x[0] for x in E("QS.data.regions")]:
+        E("QS.region='%s';qsRenderAll()" % rg); out[rg] = E("[...document.querySelectorAll('#qsRows .qsrow')].map(r=>[r.dataset.g,r.classList.contains('choice'),!!r.querySelector('.qsbych'),getComputedStyle(r,'::after').content])")
+    flat = [x for v in out.values() for x in v]; seen = {x[0] for x in flat if x[1]}
+    check("%s: v35 list: the ring and the 'by choice' tag are on the %d keep quests and on no other (%d rows)" % (label, len(keep), len(flat)), seen == set(keep) and all(x[1] == x[2] for x in flat) and all(x[3] != "none" for x in flat if x[1]), [seen ^ set(keep)])
+    # drawer: the block for every keep quest
+    res = {}
+    for g_ in keep:
+        pg.evaluate("QS.reveal.clear();qsSelect('%s',true)" % g_); pg.wait_for_timeout(120)
+        res[g_] = E("(()=>{const c=document.getElementById('qsChoice');return c?{h:c.querySelector('h3').textContent,rows:[...c.querySelectorAll('.qschrow')].map(p=>p.textContent),foot:c.querySelector('.qsmfoot').textContent,links:[...c.querySelectorAll('.qslink')].map(b=>b.dataset.g)}:null})()")
+    bad = []
+    for g_, es in keep.items():
+        x = res[g_]
+        if not x or x["h"] != "Can fail by choice" or x["foot"] != "From the game's quest graphs." or len(x["rows"]) != len(es): bad.append((names[g_]["n"], x)); continue
+        for e, t in zip(es, x["rows"]):
+            if e == ["q"] and t != "A choice in this quest's conversation ends it as failed.": bad.append((names[g_]["n"], t))
+            if e[0] == "q" and len(e) == 2 and not (t == "Fails through a choice in " + names[e[1]]["n"] and x["links"] == [e[1]]): bad.append((names[g_]["n"], t))
+    check("%s: v35 drawer: every keep quest has the CAN FAIL BY CHOICE block with the wording for its kind and the footer (%d quests)" % (label, len(keep)), not bad and len(res) == len(keep), bad[:3])
+    nob = [g_ for g_ in names if g_ not in keep]
+    pg.evaluate("QS.reveal.clear();qsSelect('%s',true)" % nob[0]); pg.wait_for_timeout(100)
+    check("%s: v35 a quest that is not a keep row has no block and no marker (%s)" % (label, names[nob[0]]["n"]), E("!document.getElementById('qsChoice')"))
+    dq = [g_ for g_ in names if names[g_]["id"] in ("Q302 War Of Gangs", "Q302 Mafia", "SQ104 Werewolf")]
+    ok = []
+    for g_ in dq: pg.evaluate("QS.reveal.clear();qsSelect('%s',true)" % g_); pg.wait_for_timeout(100); ok.append(E("!document.getElementById('qsChoice')&&!document.querySelector('#qsRows .qsrow[data-g=\"%s\"].choice')&&!/fail by choice/i.test(document.getElementById('qsDetail').textContent)" % g_))
+    check("%s: v35 the three objective rows (Get Junior, The Gangs of Novigrad, Wild at Heart) are dropped: no block, no marker" % label, len(dq) == 3 and all(ok), ok)
+    # cross-quest link
+    fp = [g_ for g_ in keep if any(len(e) == 2 and e[0] == "q" for e in keep[g_])]
+    ok = []
+    for g_ in fp:
+        pg.evaluate("qsSelect('%s',true)" % g_); pg.wait_for_timeout(100); pg.click("#qsChoice .qslink"); pg.wait_for_timeout(150); holder = [e[1] for e in keep[g_] if len(e) == 2][0]
+        ok.append(E("[QS.sel,document.querySelector('#qsDetail .qstitle').textContent]") == [holder, names[holder]["n"]])
+    check("%s: v35 the cross-quest link opens the other quest's drawer (%d links)" % (label, len(fp)), fp and all(ok), ok)
+    # the story-gate line of a quest with the block
+    kg = next(iter(keep)); pg.evaluate("qsSelect('%s',true)" % kg); pg.wait_for_timeout(100); nm = E("[...document.querySelectorAll('#qsDetail .qsnomiss')].map(e=>e.textContent)")
+    pg.evaluate("qsSelect('%s',true)" % nob[0]); pg.wait_for_timeout(100); nm2 = E("[...document.querySelectorAll('#qsDetail .qsnomiss')].map(e=>e.textContent)")
+    check("%s: v35 where the block is shown the line says 'No story gate fails this quest' (%s); elsewhere 'Not missable as far as computed' (%s)" % (label, nm, nm2), nm == ["No story gate fails this quest"] and nm2 in (["Not missable as far as computed"], []), [nm, nm2])
+    # leaks and storage
+    bad = leaks(pg); ks = E("Object.keys(localStorage).sort()"); src = (ROOT / "src" / "quests.js").read_text(encoding="utf-8")
+    check("%s: v35 no internal scene output or fact name appears in the screen (%s)" % (label, bad[:3]), not bad, bad)
+    check("%s: v35 no new storage keys (%s; the source names only the five known ones) and the link is unchanged" % (label, ks), set(ks) <= KNOWN_KEYS and set(re.findall(r"'(w3p\.[a-z0-9.]+)'", src)) == KNOWN_KEYS and E("location.hash") == h0, ks)
+    check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
+
+
+def v35save(b, base, check, label):
+    d = FIXD / "stats-l9b"; sav = sorted(d.glob("*.sav")) if d.is_dir() else []
+    if not sav: print("  SKIP  %s: v35 against the stats-l9b save (fixture not present)" % label); return
+    pg, errs, _ = newpage(b, base); E = pg.evaluate; pg.click("#savebtn"); pg.set_input_files("#impfile", [str(sav[0])]); until(pg, "!document.getElementById('impStep2').hidden"); pg.click("#impApply"); until(pg, "document.getElementById('impov').hidden")
+    opened(pg); until(pg, "!!QS.R&&!!QS.desc"); h0 = E("location.hash"); pg.click("#qsVTime"); until(pg, "!!document.getElementById('qsTL')"); pg.wait_for_timeout(250)
+    COUNT = """(()=>{const n=s=>{const e=document.querySelector(s+' summary');return e?+e.textContent.match(/\\((\\d+)\\)/)[1]:0},pk=QS.tscope,pack=q=>q.p==='ep1'?'hos':q.p==='bob'?'bob':'base',un=QS.data.quests.filter(q=>!(QS.R.quests[q.g]&&QS.R.quests[q.g].s)&&pack(q)===pk),
+      strip=document.querySelectorAll('#qsMU .qsdot').length,a=n('#qsNoGate'),c=n('#qsNotComputed'),dots=[...document.querySelectorAll('.qsug .qsdot')].map(d=>d.dataset.g),st=new Set([...document.querySelectorAll('#qsMU .qsdot')].map(d=>d.dataset.g));
+      return{strip,a,c,unplaced:un.length,done:un.filter(q=>qsState(q.g)==='done').length,showDone:QS.timeDone,overlap:dots.filter(g=>st.has(g)).length,dup:dots.length-new Set(dots).size,
+       shown:document.querySelectorAll('.qsug .qsdot').length+[...document.querySelectorAll('.qsug .qsmore')].reduce((s,e)=>s+(e.textContent[0]==='+'?+e.textContent.slice(1):0),0)}})()"""
+    for sc in ("base", "hos", "bob"):
+        pg.click('#qsScope [data-scope="%s"]' % sc); pg.wait_for_timeout(250)
+        for sd in (False, True):
+            if E("QS.timeDone") != sd: pg.click("#qsShowDoneT"); pg.wait_for_timeout(200)
+            r = E(COUNT); tot = r["strip"] + r["a"] + r["c"] + (0 if sd else r["done"])
+            check("%s [stats-l9b]: v35 scope %s, Show done %s: strip %d + 'No story gate found' %d + 'Not computed yet' %d%s = all %d unplaced quests of the scope; the strip is not repeated; markers shown = counts" % (label, sc, "on" if sd else "off", r["strip"], r["a"], r["c"], "" if sd else " + %d done hidden" % r["done"], r["unplaced"]),
+                  tot == r["unplaced"] and r["overlap"] == 0 and r["dup"] == 0 and r["shown"] == r["a"] + r["c"] and (r["strip"] == 8 if sc == "base" else r["strip"] == 0), r)
+        if E("QS.timeDone"): pg.click("#qsShowDoneT"); pg.wait_for_timeout(150)
+    pg.click('#qsScope [data-scope="base"]'); pg.wait_for_timeout(200)
+    order = E("[...document.querySelectorAll('#qsMU .qsmug')].map(x=>x.dataset.gate+(x.classList.contains('passed')?'*':'')+':'+x.querySelectorAll('.qsdot').length).join()")
+    check("%s [stats-l9b]: v35 the strip is unchanged: 8 quests under the same gates (%s)" % (label, order), E("document.querySelectorAll('#qsMU .qsdot').length") == 8 and order.startswith("isle:") and order.endswith("prologue*:1"), order)
+    mis = E("[...document.querySelectorAll('#qsMiss .qsmi, #qsNext .qscard.fails')].map(e=>e.dataset.g)")
+    check("%s [stats-l9b]: v35 choice quests are not added to the Missable panel or Next up's 'Fails at' cards: every one listed has a gate cutoff (%d listed)" % (label, len(mis)), mis and all("c" in E("QS.R.quests['%s']" % g) for g in mis), mis)
+    # markers on the grid, the strip legend
+    leg = E("[...document.querySelectorAll('.qslegend li')].map(e=>e.textContent)"); ring = E("(()=>{const d=document.querySelector('#qsTL .qsdot.choice');if(!d)return null;const a=getComputedStyle(d,'::after');return{pos:[a.right,a.bottom],bd:a.borderTopColor,pe:a.position}})()")
+    pg.click("#qsVTime"); until(pg, "!!document.getElementById('qsTL')")
+    check("%s [stats-l9b]: v35 legend has 'Can fail by a choice'; the ring sits at the bottom right in cream (%s)" % (label, ring), "Can fail by a choice" in leg and ring and ring["pe"] == "absolute" and ring["pos"] == ["-2px", "-2px"] and ring["bd"] == "rgb(244, 234, 210)", [leg, ring])
+    ks = E("Object.keys(localStorage)"); check("%s [stats-l9b]: v35 no storage key beyond the known ones (%s; the save import's own stash is the only other) and the link is unchanged (%s -> %s)" % (label, ks, h0[:20], E("location.hash")[:20]), set(ks) <= KNOWN_KEYS | {"w3planner.stash"} and E("location.hash") == h0)
+    check("%s [stats-l9b]: no script errors" % label, not errs, errs[:1]); pg.close()
+    pg, errs, _ = newpage(b, base, w=390, h=844, mobile=True); E = pg.evaluate; pg.click("#savebtn"); pg.set_input_files("#impfile", [str(sav[0])]); until(pg, "!document.getElementById('impStep2').hidden"); pg.click("#impApply"); until(pg, "document.getElementById('impov').hidden")
+    opened(pg); until(pg, "!!QS.R&&!!QS.desc"); pg.click("#qsVTime"); until(pg, "!!document.getElementById('qsTL')"); pg.wait_for_timeout(250)
+    m = E("(()=>{const s=document.getElementById('qsNoGate').getBoundingClientRect();return{page:document.documentElement.scrollWidth-innerWidth,in:s.right<=innerWidth+1&&s.left>=0,rows:[...document.querySelectorAll('.qsug .qsbplot')].every(e=>e.getBoundingClientRect().right<=innerWidth+1),sum:Math.round(document.querySelector('.qsug summary').getBoundingClientRect().height)}})()")
+    check("%s [stats-l9b]: v35 390 px: the two sections stay inside the screen, the page does not scroll sideways, the summary is a 44 px target (%s)" % (label, m), m["page"] <= 1 and m["in"] and m["rows"] and m["sum"] >= 44, m)
+    check("%s [stats-l9b, phone]: no script errors" % label, not errs, errs[:1]); pg.close()
+
+
+def v35public(b, base, check, label):
+    """the public build: the block is there without any game text"""
+    pg, errs, _ = newpage(b, base); E = pg.evaluate; opened(pg); until(pg, "!!QS.R")
+    g = E("QS.data.quests.find(q=>q.id==='mq3019_herd_instincts').g"); pg.evaluate("qsSelect('%s',true)" % g); pg.wait_for_timeout(200); t = E("document.querySelector('#qsChoice .qschrow').textContent")
+    check("%s: v35 the block needs no game text (%s)" % (label, t), t == "A choice in this quest's conversation ends it as failed." and not errs, errs[:1]); pg.close()

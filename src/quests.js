@@ -119,7 +119,7 @@ function qsRenderList(host){const reg=qsInRegion(QS.region),cnt=k=>reg.filter(q=
  host.innerHTML=`<div class="qsfilters"><div class="qschips" role="group" aria-label="Quest type">${[['all','All']].concat(QS_KINDS).map(([k,n])=>`<button type="button" class="qschip${k==='all'?'':' t-'+k}${QS.kind===k?' on':''}" data-k="${k}" aria-pressed="${QS.kind===k}"${cnt(k)?'':' disabled'}>${n}</button>`).join('')}<button type="button" class="qschip hide${QS.hide?' on':''}" id="qsHide" aria-pressed="${QS.hide}">Hide done</button></div>
   <input id="qsQ" class="qssearch" type="search" placeholder="Search all quests" aria-label="Search all quests" autocomplete="off" spellcheck="false" value="${qsEsc(QS.q)}"></div><div class="qsrows" id="qsRows"></div>`;
  const rows=qsEl('qsRows'),l=qsRows(),all=glWords(QS.q).length;
- rows.innerHTML=l.map(q=>{const st=qsState(q.g);return`<button type="button" class="qsrow t-${q.t} st-${st}${QS.sel===q.g?' on':''}" data-g="${q.g}" aria-label="${qsEsc(q.n)}, ${qsKindName(q.t)}, ${QS_NAMES[st]}, level ${qsLevelText(q)}">${qsIcon(st,q.t)}<span class="qsrn2"><b>${qsEsc(q.n)}</b>${all?`<small>${qsEsc(QS.regions.get(q.r))}</small>`:''}</span>${qsLvSpan(q)}</button>`}).join('')||`<p class="qshint">${QS.q.trim()?'Nothing matches '+qsEsc(QS.q.trim())+'.':'No quests here.'}</p>`;
+ rows.innerHTML=l.map(q=>{const st=qsState(q.g),ch=qsByChoice(q);return`<button type="button" class="qsrow t-${q.t} st-${st}${ch?' choice':''}${QS.sel===q.g?' on':''}" data-g="${q.g}" aria-label="${qsEsc(q.n)}, ${qsKindName(q.t)}, ${QS_NAMES[st]}, level ${qsLevelText(q)}${ch?', can fail by a choice':''}">${qsIcon(st,q.t)}<span class="qsrn2"><b>${qsEsc(q.n)}</b>${all?`<small>${qsEsc(QS.regions.get(q.r))}</small>`:''}</span>${ch?'<span class="qsbych">by choice</span>':''}${qsLvSpan(q)}</button>`}).join('')||`<p class="qshint">${QS.q.trim()?'Nothing matches '+qsEsc(QS.q.trim())+'.':'No quests here.'}</p>`;
  rows.scrollTop=top;host.querySelectorAll('.qschip[data-k]').forEach(b=>{b.onclick=()=>{QS.kind=b.dataset.k;qsRenderView()}});qsEl('qsHide').onclick=()=>{QS.hide=!QS.hide;qsRenderView()};
  const inp=qsEl('qsQ');inp.oninput=()=>{QS.q=inp.value;const p=inp.selectionStart;qsRenderView();const n=qsEl('qsQ');n.focus();n.setSelectionRange(p,p)};
  rows.querySelectorAll('.qsrow').forEach(b=>{b.onclick=()=>qsSelect(b.dataset.g,true);b.onkeydown=e=>{if(e.key!=='ArrowDown'&&e.key!=='ArrowUp')return;const rs=[...rows.querySelectorAll('.qsrow')],i=rs.indexOf(b)+(e.key==='ArrowDown'?1:-1);if(i>=0&&i<rs.length){e.preventDefault();rs[i].focus()}}})}
@@ -165,6 +165,12 @@ function qsCellPlace(nF,nR,w,open){const per=Math.max(1,Math.min(QS_TPER,Math.fl
  return{per,over,fS,rS,chip,fLines,rLines,lines:fLines+rLines,more:nF+nR-fS-rS}}
 // does a quest fail at this gate (a whole-quest cutoff on it) and is it still open
 const qsFailsAtGate=(q,gt)=>!!gt&&qsOpenState(qsState(q.g))&&qsCuts(q).some(x=>x.whole&&x.gate===gt);
+// v35: a quest with no story point is "ungated" (the game files show no story gate for it) or "unknown" (there is a gate we can't read yet): `u` in data/QUEST-RULES.json; null = placed.
+// `k` = can fail by a choice: [["q"]] its own conversation, [["q", quest]] a choice in that other quest. Not part of the gates, the Missable panel or Next up.
+const qsPlaceKind=q=>{const r=qsRule(q.g);return r&&r.s?null:(r&&r.u==='ungated'?'ungated':'unknown')};
+const qsPack=q=>q.p==='ep1'?'hos':q.p==='bob'?'bob':'base';   // the Timeline scope a quest belongs to
+const qsChoices=q=>{const r=qsRule(q.g);return r&&r.k?r.k:[]};
+const qsByChoice=q=>qsChoices(q).length>0;
 // v34.3 "Missable, story point unknown": the quests with a whole-quest cutoff in this lane and no story point (so no place in the grid), grouped by the gate they fail at. Only with a save, like the Missable panel.
 // An open quest sits under the earliest gate it has not passed (for the next gate that is exactly qsFailsAtGate, the panel's and the brackets' test); a quest whose gates are all passed, or that is Done or Failed, under its earliest cutoff gate.
 const qsLaneCuts=(q,lane)=>qsCuts(q).filter(x=>x.whole&&x.gate.lane===lane).sort((a,b)=>a.gate.x-b.gate.x);
@@ -184,8 +190,8 @@ function qsGateKey(lane){return qsGates(lane).map((g,i)=>({g,n:i+1,passed:qsPass
 // where a gate stands: on the edge between two columns (base game: a whole number; the expansions: the edge before its level's column), or inside a column (base game, a fraction)
 function qsGatePlace(k,lane,lo,ncol){const x=k.g.x;if(lane)return{edge:Math.max(0,Math.min(ncol,Math.ceil(x-1e-9)-lo))};return Math.abs(x-Math.round(x))<1e-9?{edge:Math.round(x)}:{col:Math.floor(x)}}
 function qsSetScope(s){if(QS_TSCOPES.some(x=>x[0]===s)){QS.tscope=s;try{localStorage.setItem(QS_TSCOPE_KEY,s)}catch(e){}}}
-function qsDotHtml(q,pos){const st=qsState(q.g),fg=qsOpenState(st)?qsFailsAt(q):null;
- return`<button type="button" class="qsdot t-${q.t} ${st}${fg?' fails':''}${QS.sel===q.g?' on':''}" data-g="${q.g}" style="${pos}" aria-label="${qsEsc(q.n)}, ${qsKindName(q.t)}, ${QS_NAMES[st]}, level ${qsLevelText(q)}${fg?', fails at '+qsEsc(fg.name):''}">${qsShape(q.t,st)}</button>`}
+function qsDotHtml(q,pos){const st=qsState(q.g),fg=qsOpenState(st)?qsFailsAt(q):null,ch=qsByChoice(q);
+ return`<button type="button" class="qsdot t-${q.t} ${st}${fg?' fails':''}${ch?' choice':''}${QS.sel===q.g?' on':''}" data-g="${q.g}" style="${pos}" aria-label="${qsEsc(q.n)}, ${qsKindName(q.t)}, ${QS_NAMES[st]}, level ${qsLevelText(q)}${fg?', fails at '+qsEsc(fg.name):''}${ch?', can fail by a choice':''}">${qsShape(q.t,st)}</button>`}
 // the badge of a gate: its number (the key and the chart); grey once passed, a gold outline for the real cutoff; the tooltip has the name and the quest code
 const qsGateBadge=(k,style,cls)=>`<b class="qsgb${k.passed?' passed':''}${k.real?' real':''}${cls?' '+cls:''}"${style?` style="${style}"`:''} title="${qsEsc(k.name+(k.code?' ('+k.code+')':''))}${k.passed?' · passed':''}${k.real?' · real cutoff':''}">${k.n}</b>`;
 function qsGateKeyHtml(keys){return`<h3 class="qsgkh">Points of no return</h3><ol class="qsgkey" aria-label="Points of no return">${keys.map(k=>`<li class="qsgk${k.passed?' passed':''}${k.real?' real':''}" title="${qsEsc(k.name+(k.code?' ('+k.code+')':''))}">${qsGateBadge(k)}<span>${qsEsc(k.name)}${k.real?' <em>real cutoff</em>':''}${k.passed?' <small>· passed</small>':''}</span></li>`).join('')}</ol>`}
@@ -237,23 +243,31 @@ function qsRenderTime(host){
  const axis=lane?cols.map(c=>`<span style="left:${(c.x+c.w/2).toFixed(1)}px">${c.n}</span>`).join(''):'',
   lab=youX==null?'':`<b class="qsyou${youX<64?' lft':youX>W-70?' rgt':''}" style="left:${youX.toFixed(1)}px;top:${lane?24:4}px">You are here</b>`;
  body+=`<div class="qsbaxis qstfoot"><span></span><div class="qsbplot axis" style="width:${W}px;height:${lane?46:28}px">${bg}${bars}${you}${axis}${lab}</div></div>`;
- const strip=qsMissUnknown(lane||'b',keys),inStrip=new Set(strip.flatMap(x=>x.list.map(q=>q.g)));   // the quests in the strip are not repeated in the collapsed row
- const unk=Qs.filter(q=>!known(q)&&!inStrip.has(q.g)).sort((a,b)=>(a.lv==null)-(b.lv==null)||a.lv-b.lv||a.n.localeCompare(b.n));
+ const strip=qsMissUnknown(lane||'b',keys),inStrip=new Set(strip.flatMap(x=>x.list.map(q=>q.g)));   // the quests in the strip are not repeated in the two sections below
+ const un=Qs.filter(q=>!known(q)&&!inStrip.has(q.g)&&qsPack(q)===scope&&(QS.timeDone||qsState(q.g)!=='done')),ungated=un.filter(q=>qsPlaceKind(q)==='ungated'),unknown=un.filter(q=>qsPlaceKind(q)==='unknown');
  host.innerHTML=`<div class="qstbar">${tools}</div>
   ${qsGateKeyHtml(keys)}${lane?`<p class="qsbnote qsscnote">Laid out by quest level: every ${qsEsc(R.pts.get(lane))} quest shares one story point in the game's quest graphs.</p>`:''}
   <div class="qsband qstl" id="qsTL"><div class="qsbinner" style="width:${QS_LABEL+W}px">${head}${body}</div></div>
   ${qsMissUnknownHtml(strip,next&&next.g)}
-  <ul class="qslegend" aria-label="Quest types">${QS_KINDS.map(([k,n])=>`<li class="t-${k}">${qsShape(k,'none',true)}<span>${n}</span></li>`).join('')}<li class="qsl-fb"><i class="qsfb"></i><span>Fails at the next gate you haven't passed</span></li><li class="qsl-more"><span class="qsmore">+N</span><span>More in this cell</span></li></ul>
-  <details class="qsunk" id="qsUnk"${QS.unkOpen?' open':''}><summary>Placement not computed yet (${unk.length})</summary><p class="qsbnote">The game's graphs give no story point for these quests (nothing gates them before the first act); they are only in the List and the Level band.</p><div class="qsunkl">${unk.map(q=>{const st=qsState(q.g);return`<button type="button" class="qsrow t-${q.t} st-${st}" data-g="${q.g}">${qsIcon(st,q.t)}<span class="qsrn2"><b>${qsEsc(q.n)}</b><small>${qsEsc(QS.regions.get(q.r))}</small></span>${qsLvSpan(q)}</button>`}).join('')}</div></details>
+  <ul class="qslegend" aria-label="Quest types">${QS_KINDS.map(([k,n])=>`<li class="t-${k}">${qsShape(k,'none',true)}<span>${n}</span></li>`).join('')}<li class="qsl-fb"><i class="qsfb"></i><span>Fails at the next gate you haven't passed</span></li><li class="qsl-more"><span class="qsmore">+N</span><span>More in this cell</span></li><li class="qsl-ch"><i class="qsch" aria-hidden="true"></i><span>Can fail by a choice</span></li></ul>
+  ${qsUnplacedHtml('ungated',ungated,scope,avail)}${qsUnplacedHtml('unknown',unknown,scope,avail)}
   <p class="qsbnote">${QS.timeDone?'Done quests are shown faintly, with a check.':'Done quests are hidden: turn on Show done to see them.'} ${lane?'Quests are laid out by their level.':'Columns are the story sections the game\'s quest graphs place a quest in.'} The numbered gates are the points of no return; quests that fail at the next one you have not passed are grouped first in their cell, under an orange bracket. From the game's quest graphs.</p>`;
  qsEl('qsShowDoneT').onclick=()=>{qsSetTimeDone(!QS.timeDone);qsRenderView();const n=qsEl('qsShowDoneT');if(n)n.focus()};
- qsEl('qsUnk').ontoggle=e=>{QS.unkOpen=e.target.open};
+ [['qsNoGate','ungClosed',true],['qsNotComputed','unkOpen',false]].forEach(([id,k,inv])=>{const d=qsEl(id);if(d)d.ontoggle=e=>{QS[k]=inv?!e.target.open:e.target.open}});
  host.querySelectorAll('.qsdot').forEach(d=>{d.onclick=()=>qsSelect(d.dataset.g,true);d.onmouseenter=d.onfocus=()=>qsTip(d);d.onmouseleave=d.onblur=()=>qsTipHide()});
- host.querySelectorAll('.qsunkl .qsrow').forEach(b=>{b.onclick=()=>qsSelect(b.dataset.g,true)});
- host.querySelectorAll('#qsTL .qsmore').forEach(b=>{b.onclick=()=>{const k=b.dataset.cell;if(QS.cells.has(k))QS.cells.delete(k);else QS.cells.add(k);qsRenderTime(host);const n=host.querySelector('.qsmore[data-cell="'+k+'"]');if(n)n.focus()}})}
+ host.querySelectorAll('#qsTL .qsmore,.qsug .qsmore').forEach(b=>{b.onclick=()=>{const k=b.dataset.cell;if(QS.cells.has(k))QS.cells.delete(k);else QS.cells.add(k);qsRenderTime(host);const n=host.querySelector('.qsmore[data-cell="'+k+'"]');if(n)n.focus()}})}
+// v35: the quests with no story point, below the strip, in two sections grouped by region like the grid rows (same markers, status fill, "+N" chips; a click opens the drawer).
+// "No story gate found": the v35 placement found no story point for them; "Not computed yet": there is a gate we can't read. The strip's quests are not repeated; counts follow the scope tab, Show done and the save.
+const QS_UNPL={ungated:{id:'qsNoGate',title:'No story gate found',help:'They open when you reach the place, meet the person or find the item. The game files show no story point for them.'},
+ unknown:{id:'qsNotComputed',title:'Not computed yet',help:"The game files have a story gate for these that we can't read yet."}};
+function qsUnplacedHtml(kind,list,scope,avail){if(!list.length)return'';const m=QS_UNPL[kind],open=kind==='ungated'?!QS.ungClosed:!!QS.unkOpen,by=new Map();
+ list.forEach(q=>{if(!by.has(q.r))by.set(q.r,[]);by.get(q.r).push(q)});
+ const rows=QS.data.regions.map(r=>r[0]).filter(k=>by.has(k)).map(k=>{const o=qsSwarm(qsCellOrder(by.get(k),null),0,avail,'u:'+scope+':'+kind+':'+k,null,0);
+  return`<div class="qsbrow qsugrow" data-r="${k}"><div class="qsblabel">${qsEsc(QS.regions.get(k))}</div><div class="qsbplot" style="width:${avail}px;height:${Math.max(36,o.h)}px">${o.html}</div></div>`}).join('');
+ return`<details class="qsug" id="${m.id}"${open?' open':''}><summary>${m.title} (${list.length})</summary><p class="qsbnote">${qsEsc(m.help)}</p><div class="qsugl">${rows}</div></details>`}
 // one tooltip for dots: name, type · region · level, status (on hover and on keyboard focus)
 function qsTip(d){const q=QS.byG.get(d.dataset.g),t=qsEl('qsTip');if(!q)return;const st=qsState(q.g),m=qsXp(q,qsMy());
- t.innerHTML=`<b class="t-${q.t}">${qsEsc(q.n)}</b><span>${qsEsc(qsKindName(q.t))} · ${qsEsc(QS.regions.get(q.r))} · level ${qsLevelText(q)}</span><span>${QS_NAMES[st]}${q.hs?' · Hearts of Stone XP '+qsPct(m):m<1?' · 5% XP':''}</span>${(qsOpenState(st)&&qsFailsAt(q))?'<span class="qsfail">Fails at '+qsEsc(qsFailsAt(q).name)+'</span>':''}`;t.hidden=false;
+ t.innerHTML=`<b class="t-${q.t}">${qsEsc(q.n)}</b><span>${qsEsc(qsKindName(q.t))} · ${qsEsc(QS.regions.get(q.r))} · level ${qsLevelText(q)}</span><span>${QS_NAMES[st]}${q.hs?' · Hearts of Stone XP '+qsPct(m):m<1?' · 5% XP':''}</span>${(qsOpenState(st)&&qsFailsAt(q))?'<span class="qsfail">Fails at '+qsEsc(qsFailsAt(q).name)+'</span>':''}${qsByChoice(q)?'<span class="qschoicet">Can fail by a choice</span>':''}`;t.hidden=false;
  const r=d.getBoundingClientRect(),w=t.offsetWidth,h=t.offsetHeight;t.style.left=Math.max(6,Math.min(innerWidth-w-6,r.left+r.width/2-w/2))+'px';t.style.top=(r.top-h-8>6?r.top-h-8:r.bottom+8)+'px'}
 function qsTipHide(){const t=qsEl('qsTip');if(t)t.hidden=true}
 function qsRenderView(){const host=qsEl('qsView'),sc=qsEl('screenQ');qsTipHide();
@@ -276,6 +290,15 @@ function qsJournal(q,el){   // the spoiler gate: with a save only the entries th
  const l=document.createElement('p');l.className='dim';l.textContent='Loading…';el.appendChild(l);
  qsDescLoad().then(D=>{QS.desc=D;fill()},()=>{if(QS.sel!==want)return;el.textContent='';msg2(el,QS_DESC?'The journal text could not be loaded. Check your connection and try again.':'Journal text is not included in this build.')})}
 function msg2(el,t){const p=document.createElement('p');p.className='dim';p.textContent=t;el.appendChild(p)}
+// v35 "Can fail by choice" in the drawer: only the player's wording, never a scene output or a fact name.
+function qsChoiceFill(q,el){el.textContent='';const ch=qsChoices(q);if(!ch.length)return;
+ const h=document.createElement('h3');h.className='qsh3';h.textContent='Can fail by choice';el.appendChild(h);
+ ch.forEach(e=>{const p=document.createElement('p');p.className='qsrule qschrow';
+  if(e.length===1)p.textContent="A choice in this quest's conversation ends it as failed.";
+  else{const o=QS.byG.get(e[1]);p.appendChild(document.createTextNode('Fails through a choice in '));
+   if(o){const b=document.createElement('button');b.type='button';b.className='qslink t-'+o.t;b.dataset.g=o.g;b.textContent=o.n;b.onclick=()=>qsSelect(o.g,true);p.appendChild(b)}else p.appendChild(document.createTextNode('another quest'))}
+  el.appendChild(p)});
+ const f=document.createElement('small');f.className='qsmfoot';f.textContent="From the game's quest graphs.";el.appendChild(f)}
 function qsRenderDetail(){const el=qsEl('qsDetail'),q=QS.sel&&QS.byG.get(QS.sel);
  if(!q){el.innerHTML='<button type="button" class="btn qsclose" id="qsClose" aria-label="Close">×</button><div class="qsempty"><p>Choose a quest to see its objectives and journal text.</p></div>';qsEl('qsClose').onclick=()=>qsCloseDrawer(true);el.classList.remove('has');return}
  el.classList.add('has');const hadFocus=document.activeElement&&document.activeElement.id==='qsClose';   // a re-draw (the text arriving) must not drop the focus
@@ -283,22 +306,23 @@ function qsRenderDetail(){const el=qsEl('qsDetail'),q=QS.sel&&QS.byG.get(QS.sel)
  const saveLine=!haveSave?'No save imported: use <b>My progress</b> below, or import a save.':`In your save: <b>${QS_NAMES[sv]}</b>${sv==='none'?' (no journal entry)':''}`+(hand?` · you marked it <b>${QS_NAMES[hand]}</b>`:'');
 const rl=qsRule(q.g),cuts=qsCuts(q),afters=((rl&&rl.a)||[]).map(g=>QS.byG.get(g)).filter(Boolean),spn=rl&&rl.s?QS.R.pts.get(rl.s):null;
  const whole=cuts.filter(c=>c.whole),objs=cuts.filter(c=>!c.whole),gn=c=>`<b>${qsEsc(c.gate.name)}</b>${qsPassed(c.gate)?' <span class="dim">(passed in this save)</span>':''}`;
- const rulesHtml=!QS.R?'':`<div class="qsrules"><p class="qsrule">Story point: ${spn?'<b>'+qsEsc(spn)+'</b>':'<span title="not computed yet">placement not computed yet</span>'}</p>
+ const rulesHtml=!QS.R?'':`<div class="qsrules"><p class="qsrule">Story point: ${spn?'<b>'+qsEsc(spn)+'</b>':qsPlaceKind(q)==='ungated'?'<span class="qsnogate">no story gate found</span>':'<span title="not computed yet">— not computed yet</span>'}</p>
   ${afters.length?`<p class="qsrule qsafter">Opens after: ${afters.map(a=>`<button type="button" class="qslink t-${a.t}" data-g="${a.g}">${qsEsc(a.n)}</button>`).join(', ')}</p>`:''}
   ${whole.length?`<p class="qsrule qsfailsat">Fails at ${whole.map(gn).join(', ')}</p>`:''}
   ${objs.length?`<p class="qsrule qsloses">Loses an objective at ${objs.map(gn).join(', ')}</p>`:''}
-  ${!whole.length&&!objs.length?'<p class="qsrule qsnomiss">Not missable as far as computed</p>':''}</div>`;
+  ${!whole.length&&!objs.length?`<p class="qsrule qsnomiss">${qsByChoice(q)?'No story gate fails this quest':'Not missable as far as computed'}</p>`:''}</div>`;
  const curHtml=cur.length?`<ul>${cur.map(t=>`<li>${t===null?'An active objective (its text is not included in this build)':qsEsc(t)}</li>`).join('')}</ul>`:'<p class="dim">Not known: the save has no active objective for it.</p>';
  el.innerHTML=`<button type="button" class="btn qsclose" id="qsClose" aria-label="Close">×</button><button type="button" class="btn qsback" id="qsBack" aria-label="Back to the list">◀ Back</button><h2 class="qstitle t-${q.t}">${qsIcon(st,q.t)}<span>${qsEsc(q.n)}</span></h2>
   <p class="qsmeta">${qsEsc(qsKindName(q.t))} · ${qsEsc(QS.regions.get(q.r))} · ${q.lv==null?'<span title="not computed yet">level —</span>':'level '+q.lv}</p>
   <p class="qsxp">${qsEsc(qsXpText(q,my))}</p><p class="qssave">${saveLine}</p>
-  ${rulesHtml}
+  ${rulesHtml}${qsByChoice(q)?'<div class="qscfc" id="qsChoice"></div>':''}
   ${st==='active'?`<div class="qscur"><h3>Current objective${cur.length>1?'s':''}</h3>${curHtml}</div>`:''}
   <div class="qsprog t-${q.t}" role="radiogroup" aria-label="My progress"><span class="qsplabel">My progress</span>${QS_MARKS.map(s=>`<button type="button" class="btn qsmark${st===s?' on':''}" role="radio" aria-checked="${st===s}" data-s="${s}">${qsIcon(s)}${QS_NAMES[s]}</button>`).join('')}${hand?'<button type="button" class="qsclear" id="qsClear">Follow my save</button>':''}</div>
   <h3 class="qsh3">Journal</h3><div class="qsdesc" id="qsDesc" tabindex="0"></div>
   <h3 class="qsh3">Objectives</h3>${q.o.length?(T?`<ul class="qsobjs t-${q.t}">${q.o.map((g,i)=>{const s=QS.store.save&&QS.store.save.o[g]||'none';return`<li class="${s}">${qsIcon(s)}<span>${qsEsc(T[i]||'')}</span></li>`}).join('')}</ul>`:`<p class="dim">${QS_DESC?'Loading…':q.o.length+' objectives (their text is not included in this build).'}</p>`):'<p class="dim">No objectives listed.</p>'}`;
  el.querySelectorAll('.qsmark').forEach(b=>{b.onclick=()=>qsMark(q.g,b.dataset.s)});el.querySelectorAll('.qslink').forEach(b=>{b.onclick=()=>qsSelect(b.dataset.g,true)});const c=qsEl('qsClear');if(c)c.onclick=()=>qsMark(q.g,null);
  qsEl('qsBack').onclick=()=>{qsEl('screenQ').classList.remove('qs-detail');const r=document.querySelector('.qsrow.on');if(r)r.focus()};qsEl('qsClose').onclick=()=>qsCloseDrawer(true);
+ const chb=qsEl('qsChoice');if(chb)qsChoiceFill(q,chb);
  qsJournal(q,qsEl('qsDesc'));if(hadFocus)qsEl('qsClose').focus({preventScroll:true});
  if(!T&&QS_DESC)qsDescLoad().then(D=>{QS.desc=D;if(QS.sel===q.g)qsRenderDetail();qsRenderNext()},()=>{})}
 function qsSelect(g,focus){QS.sel=g;const q=QS.byG.get(g);if(q&&q.r!==QS.region&&!(QS.view==='list'&&glWords(QS.q).length)){QS.region=q.r}
