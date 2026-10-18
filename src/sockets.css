@@ -1,5 +1,5 @@
 /* Runes and glyphs in sockets (v36): discs in the top-left corner of a slot tile, the Sockets row of the item card, the picker */
-.socks{position:absolute;left:3px;top:3px;display:flex;gap:3px;z-index:2;pointer-events:none}
+.socks{position:absolute;left:3px;top:3px;display:flex;flex-direction:column;gap:3px;z-index:2;pointer-events:none}
 .sock{position:relative;display:inline-block;flex:none;width:13px;height:13px;padding:0;border-radius:50%;border:2px solid #9a8a6a;background:#0b0908cc;pointer-events:auto;min-height:0}
 .sock::before{content:"";position:absolute;inset:-5px}
 .sock.rune{background:#e08a2a;border-color:#f6d49a}.sock.glyph{background:#4f9be0;border-color:#b6d8f6}
@@ -23,5 +23,5 @@
 .skempty{padding:14px}
 .skfoot{display:flex;align-items:center;gap:12px;padding:8px 14px;border-top:1px solid #3a3025}
 body.skopen{overflow:hidden}
-@media (max-width:599px){.skov{padding:0}.skmodal{width:100%;max-height:100%;height:100%;border:0}.skrow,.sktab,.sksock,.skfoot .btn,.skhead .btn{min-height:44px}.skrow{grid-template-columns:36px minmax(0,1fr)}.skrow .skfx{grid-column:1 / -1}.skfilters input{min-height:40px}.sock::before{inset:-7px}}
+@media (max-width:599px){.socks{gap:1px}.skov{padding:0}.skmodal{width:100%;max-height:100%;height:100%;border:0}.skrow,.sktab,.sksock,.skfoot .btn,.skhead .btn{min-height:44px}.skrow{grid-template-columns:36px minmax(0,1fr)}.skrow .skfx{grid-column:1 / -1}.skfilters input{min-height:40px}.sock::before{inset:-7px}}
 .pssrc{color:#7fc16b;font-size:.8em}

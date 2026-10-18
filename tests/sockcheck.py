@@ -68,10 +68,10 @@ def run(b, base, check, label):
     E(SETUP, "ng"); pg.wait_for_timeout(200)
     geo = E("""(()=>{const g=u=>{const t=document.querySelector('.eqslot[data-i="'+u+'"] .eqtile').getBoundingClientRect(),ss=[...document.querySelectorAll('.eqslot[data-i="'+u+'"] .sock')].map(x=>x.getBoundingClientRect());
         return{n:ss.length,cls:[...document.querySelectorAll('.eqslot[data-i="'+u+'"] .sock')].map(x=>x.className.replace('sock ','')),
-          topleft:ss.length>0&&ss.every(r=>r.left>=t.left-1&&r.top>=t.top-1&&r.right<=t.left+t.width*0.6&&r.bottom<=t.top+t.height*0.3),under:ss.some(r=>r.top>t.bottom)}};
+          topleft:ss.length>0&&ss.every(r=>r.left>=t.left-1&&r.top>=t.top-1&&r.right<=t.left+t.width*0.3&&r.bottom<=t.top+t.height*0.65),under:ss.some(r=>r.top>t.bottom),stacked:ss.every((r,i)=>i===0||(Math.abs(r.left-ss[0].left)<1&&r.top>ss[i-1].top+r.height-1)),clear:(()=>{const x=document.querySelector('.eqslot[data-i="'+u+'"] .eqx'),bar=document.querySelector('.eqslot[data-i="'+u+'"] .eqbadge'),last=ss[ss.length-1];const hit=e=>{if(!e||!last)return false;const q=e.getBoundingClientRect();return !(last.right<=q.left||last.left>=q.right||last.bottom<=q.top||last.top>=q.bottom)};return !hit(x)&&!hit(bar)})()}};
       return{steel:g(0),silver:g(1),chest:g(4),gloves:g(5),crossbow:g(2),empty:g(7)}})()""")
-    check("%s: discs sit in the top-left corner of each weapon and armour tile: filled orange = rune, filled blue = glyph, hollow = empty; the count is the item's capacity (steel 3 hollow, silver 1 rune, chest 1 glyph) (%s)" % (label, json.dumps(geo)[:200]),
-          geo["steel"]["n"] == 3 and geo["steel"]["cls"] == ["empty"] * 3 and geo["silver"]["cls"] == ["rune"] and geo["chest"]["cls"] == ["glyph"] and all(geo[k]["topleft"] and not geo[k]["under"] for k in ("steel", "silver", "chest")), geo)
+    check("%s: discs are stacked vertically (one per row, socket 1 on top) in the top-left corner of each weapon and armour tile, clear of the x and the Level too low bar: filled orange = rune, filled blue = glyph, hollow = empty; the count is the item's capacity (steel 3 hollow, silver 1 rune, chest 1 glyph) (%s)" % (label, json.dumps(geo)[:200]),
+          geo["steel"]["n"] == 3 and geo["steel"]["cls"] == ["empty"] * 3 and geo["silver"]["cls"] == ["rune"] and geo["chest"]["cls"] == ["glyph"] and all(geo[k]["topleft"] and geo[k]["stacked"] and geo[k]["clear"] and not geo[k]["under"] for k in ("steel", "silver", "chest")), geo)
     check("%s: no discs on an empty slot, on the crossbow, bolts or mask (gloves slot empty: %d, crossbow: %d)" % (label, geo["gloves"]["n"], geo["crossbow"]["n"]), geo["gloves"]["n"] == 0 and geo["crossbow"]["n"] == 0 and geo["empty"]["n"] == 0, geo)
     col = E("""(()=>{const c=s=>getComputedStyle(document.querySelector(s)).backgroundColor;return{rune:c('.eqslot[data-i="1"] .sock.rune'),glyph:c('.eqslot[data-i="4"] .sock.glyph'),empty:c('.eqslot[data-i="0"] .sock.empty')}})()""")
     check("%s: filled rune disc is orange, filled glyph disc is blue, an empty one is hollow-dark (%s)" % (label, col), col["rune"] == "rgb(224, 138, 42)" and col["glyph"] == "rgb(79, 155, 224)" and col["empty"] != col["rune"] and col["empty"] != col["glyph"], col)
@@ -217,6 +217,14 @@ def run(b, base, check, label):
     sheet = m.evaluate("""(()=>{const r=document.querySelector('#skov .skmodal').getBoundingClientRect(),row=document.querySelector('#skov .skrow').getBoundingClientRect(),t=document.querySelector('#skov .sktab').getBoundingClientRect();return{w:r.width,h:r.height,row:row.height,tab:t.height,sw:document.documentElement.scrollWidth<=innerWidth+1}})()""")
     check("%s: on a phone the page does not scroll sideways, the picker is a full-screen sheet and its rows and tabs are 44 px high (%s)" % (label, sheet), ph["sw"] and sheet["w"] >= 388 and sheet["h"] >= 840 and sheet["row"] >= 44 and sheet["tab"] >= 44 and sheet["sw"] and ph["discs"] > 0, [ph, sheet])
     m.close()
+    # four stacked discs on the tallest case (the four-socket Wolven trousers, Level too low bar showing), desktop and phone
+    FOUR = """(async()=>{await eqLoad('ng_plus');document.getElementById('lvl').value=1;S.rs='ng_plus';const d=eqData();S.gear.fill(0);S.sock.fill(0);S.gear[6]=d.byId.get('NGP Wolf Pants 4').n;['Glyph yrden lesser','Glyph yrden','Glyph yrden greater','Glyph quen'].forEach((id,j)=>S.sock[16+j]=SK.byId.get(id).n);save();eqRender(true)})()"""
+    FOURG = """(()=>{const sl='.eqslot[data-i="6"]',t=document.querySelector(sl+' .eqtile').getBoundingClientRect(),ss=[...document.querySelectorAll(sl+' .sock')].map(x=>x.getBoundingClientRect()),bar=document.querySelector(sl+' .eqbadge'),x=document.querySelector(sl+' .eqx');
+      const hit=(a,e)=>{if(!e)return false;const q=e.getBoundingClientRect();return !(a.right<=q.left||a.left>=q.right||a.bottom<=q.top||a.top>=q.bottom)};
+      return{n:ss.length,inside:ss.every(r=>r.left>=t.left&&r.top>=t.top&&r.right<=t.right&&r.bottom<=t.bottom),bar:!!bar,overBar:ss.some(r=>hit(r,bar)),overX:ss.some(r=>hit(r,x)),col:new Set(ss.map(r=>Math.round(r.left))).size,tops:ss.map(r=>Math.round(r.top))}})()"""
+    for w, h, mob in ((1500, 1000, False), (390, 844, True)):
+        f, _ = page(b, base, w, h, mob); f.evaluate(FOUR); f.wait_for_timeout(250); g4 = f.evaluate(FOURG); f.close()
+        check("%s: %d wide: four stacked discs (socket 1 to 4 top to bottom) fit inside the tile, over neither the x nor the Level too low bar (%s)" % (label, w, g4), g4["n"] == 4 and g4["inside"] and g4["bar"] and not g4["overBar"] and not g4["overX"] and g4["col"] == 1 and g4["tops"] == sorted(g4["tops"]), g4)
     check("%s: no script errors" % label, not errs and not errs2, (errs + errs2)[:2])
 
 
