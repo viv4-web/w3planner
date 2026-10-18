@@ -259,3 +259,15 @@ def cons_placeholder(kind,S=64,ss=6):
         d.rectangle(P([(cx-4,16),(cx+4,24)]),fill=(110,106,100,255));d.line(P([(cx,16),(cx+8,8),(cx+14,10)]),fill=cork,width=int(1.6*k))
         d.polygon(P([(cx+14,10),(cx+17,5),(cx+19,10),(cx+22,8),(cx+18,14)]),fill=(240,170,60,255))
     return down(im,S,S)
+
+
+# ---------- rune and glyph placeholders (v36): one drawn disc per kind (orange rune, blue glyph); the game's icons are used on the live site only ----------
+SOCK_KINDS=['rune','glyph']
+def sock_placeholder(kind,S=64,ss=6):
+    im=canvas(S,S,ss);d=ImageDraw.Draw(im);k=ss;P=lambda pts:[(x*k,y*k) for x,y in pts];cx=S/2
+    d.rounded_rectangle([1*k,1*k,(S-1)*k,(S-1)*k],radius=4*k,fill=(34,31,28,255),outline=(78,66,48,255),width=int(1.2*k))
+    col=(226,132,38,255) if kind=='rune' else (74,150,230,255);ring=(246,214,150,255) if kind=='rune' else (170,214,250,255)
+    d.ellipse(P([(cx-17,cx-17),(cx+17,cx+17)]),fill=col,outline=ring,width=int(1.6*k))
+    if kind=='rune':d.line(P([(cx-5,cx-9),(cx-5,cx+9),(cx+7,cx-2),(cx-5,cx-2)]),fill=(40,24,10,255),width=int(2.2*k))
+    else:d.polygon(P([(cx,cx-10),(cx+8,cx),(cx,cx+10),(cx-8,cx)]),outline=(16,38,70,255),width=int(2.2*k)) if False else d.line(P([(cx,cx-10),(cx+8,cx),(cx,cx+10),(cx-8,cx),(cx,cx-10)]),fill=(16,38,70,255),width=int(2.2*k))
+    return down(im,S,S)

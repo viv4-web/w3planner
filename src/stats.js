@@ -13,7 +13,11 @@ const psL=k=>STATS.labels[k];
 const psRound=Math.round;
 
 // an equipped item's numbers for a stat name: v = the lowest, hi = the highest (the same unless the item gives the stat within a range, XML min and max)
-function psItem(it,name){if(!it)return{v:0,hi:0};let v=0,hi=0;[...(it.base||[]),...(it.bonuses||[])].forEach(b=>{if(b.stat===name){v+=b.min;hi+=b.max!=null?b.max:b.min}});return{v,hi}}
+function psItem(it,name){if(!it)return{v:0,hi:0};let v=0,hi=0;[...(it.base||[]),...(it.bonuses||[])].forEach(b=>{if(b.stat===name){v+=b.min;hi+=b.max!=null?b.max:b.min}});
+ if(typeof skStat==='function'&&it.slot){const x=skStat(it.slot,name);v+=x.v;hi+=x.hi}   // v36: the runes and glyphs socketed in this sword or armour piece (their ability is added to the item, docs/IMPORT.md)
+ return{v,hi}}
+// the runes and glyphs behind a number, for the bracket after it: [Lesser Glyph of Igni]
+const psSrc=(slots,names)=>{const o=[];if(typeof skStat==='function')slots.forEach(sl=>names.forEach(n=>skStat(sl,n).src.forEach(x=>o.push(x))));return o.length?'['+[...new Set(o)].join(', ')+']':''};
 const psSum=(it,names)=>names.reduce((a,n)=>{const x=psItem(it,n);return{v:a.v+x.v,hi:a.hi+x.hi}},{v:0,hi:0});
 // a mutagen's real stat (PlayerAbilityManager.ws OnSkillMutagenEquipped, MutagensSyngergyBonusUpdateSingle): its ability's number plus the synergy ability times Synergy level x (matching skills in its group + 1).
 // The extra "x" abilities the Character screen adds while it builds its panel (characterMenu.ws 1337-1420) are not part of a saved game's stats, so a mutagen with a matching skill in its group makes the stat unknown.
@@ -59,7 +63,7 @@ function psPass(hi){const d=eqData();if(!d||!EQ.meta||!CN.data)return null;
   const f=x=>unk?U:none?0:psRound(x),c=x=>unk?U:none?'0 %':psRound(x)+' %';
   out.det[k]=[[[f(s&&s.fast),psL('panel_common_statistics_tooltip_'+nm+'_fast_dps')],[c(s&&s.crit),psL('panel_common_statistics_tooltip_'+nm+'_fast_crit_chance')],[f(s&&s.fastC),psL('panel_common_statistics_tooltip_'+nm+'_fast_crit_dmg')]],
    [[f(s&&s.strong),psL('panel_common_statistics_tooltip_'+nm+'_strong_dps')],[c(s&&s.crit),psL('panel_common_statistics_tooltip_'+nm+'_strong_crit_chance')],[f(s&&s.strongC),psL('panel_common_statistics_tooltip_'+nm+'_strong_crit_dmg')]],
-   ['poinsonchance','bleedingchance','burningchance','confusionchance','freezingchance','staggerchance'].map(n=>[rolled(k)?U:chance(it,'desc_'+n+'_mult'),psL('attribute_name_desc_'+n+'_mult')])]});
+   ['poinsonchance','bleedingchance','burningchance','confusionchance','freezingchance','staggerchance'].map(n=>[rolled(k)?U:chance(it,'desc_'+n+'_mult'),psL('attribute_name_desc_'+n+'_mult'),psSrc([k],['desc_'+n+'_mult'])])]});
  // ---- crossbow (GetEquippedCrossbowDamage): ((bolt piercing + 0) x mult + add + (bolt silver + 0) x mult + add) / 2, mult = the crossbow's attack_power + the player's
  const xb=g.crossbow,bolt=g.bolts,bp=I(bolt,'PiercingDamage'),bs=I(bolt,'SilverDamage'),bb=I(bolt,'BludgeoningDamage'),bf=I(bolt,'FireDamage'),xa=I(xb,'attack_power');
  const xbUnk=offUnk||rolled('crossbow')||rolled('bolts')||touch(/^attack_power/);
@@ -68,12 +72,12 @@ function psPass(hi){const d=eqData();if(!d||!EQ.meta||!CN.data)return null;
  out.det.crossbow=[[[xbUnk&&!!xb?U:psRound(con.crit_chance*100)+' %',psL('panel_common_statistics_tooltip_crossbow_crit_chance')],[rolled('bolts')?U:psRound(steelD),psL(steelKey)],[rolled('bolts')?U:psRound(silverD),psL('attribute_name_silverdamage')]]];
  // ---- resistances, regeneration, additional
  const res=n=>ARM.some(rolled)||low?U:psRound(ARM.reduce((q,s)=>q+I(g[s],n),0)*100)+' %';
- out.det.armor=[[[res('slashing_resistance_perc'),psL('slashing_resistance_perc')],[res('piercing_resistance_perc'),psL('attribute_name_piercing_resistance_perc')],[res('bludgeoning_resistance_perc'),psL('bludgeoning_resistance_perc')],[res('rending_resistance_perc'),psL('attribute_name_rending_resistance_perc')],[res('elemental_resistance_perc'),psL('attribute_name_elemental_resistance_perc')]],
-  [['poison_resistance_perc',con.poison_resist],['bleeding_resistance_perc',con.bleeding_resist],['burning_resistance_perc',0]].map(([n,b])=>[ARM.some(rolled)||low?U:psRound((b+ARM.reduce((q,s)=>q+I(g[s],n),0))*100)+' %',psL('attribute_name_'+n)])];
+ out.det.armor=[[[res('slashing_resistance_perc'),psL('slashing_resistance_perc'),psSrc(ARM,['slashing_resistance_perc'])],[res('piercing_resistance_perc'),psL('attribute_name_piercing_resistance_perc'),psSrc(ARM,['piercing_resistance_perc'])],[res('bludgeoning_resistance_perc'),psL('bludgeoning_resistance_perc'),psSrc(ARM,['bludgeoning_resistance_perc'])],[res('rending_resistance_perc'),psL('attribute_name_rending_resistance_perc'),psSrc(ARM,['rending_resistance_perc'])],[res('elemental_resistance_perc'),psL('attribute_name_elemental_resistance_perc'),psSrc(ARM,['elemental_resistance_perc'])]],
+  [['poison_resistance_perc',con.poison_resist],['bleeding_resistance_perc',con.bleeding_resist],['burning_resistance_perc',0]].map(([n,b])=>[ARM.some(rolled)||low?U:psRound((b+ARM.reduce((q,s)=>q+I(g[s],n),0))*100)+' %',psL('attribute_name_'+n),psSrc(ARM,[n])])];
  // Vitality regeneration: GetAttributeValue(vitalityRegen / vitalityCombatRegen) = ConGeralt add 1 (mult 0), shown "N/s" (CharacterStatsPopup.ws 297-302); Stamina out of combat = max Stamina x staminaOutOfCombatRegen mult (1) + add (0) (312-317)
  const rg=re=>touch(re)||effTouch(re)||wornHas(['vitalityRegen','vitalityCombatRegen','staminaOutOfCombatRegen'])||mutOn;
  const vr=rg(/^vitalityRegen$/)?U:psRound(con.vit_regen)+'/s',vc=rg(/^vitalityCombatRegen$/)?U:psRound(con.vit_combat_regen)+'/s',so=stam==null||rg(/^staminaOutOfCombatRegen$/)?U:psRound(stam*con.stamina_ooc_mult)+'/s';
- out.det.vitality=[[[vr,psL('panel_common_statistics_tooltip_outofcombat_regen')],[vc,psL('panel_common_statistics_tooltip_incombat_regen')]]];
+ out.det.vitality=[[[vr,psL('panel_common_statistics_tooltip_outofcombat_regen'),psSrc(ARM,['vitalityRegen'])],[vc,psL('panel_common_statistics_tooltip_incombat_regen'),psSrc(ARM,['vitalityCombatRegen'])]]];
  out.det.toxicity=[[[tox==null?U:0,psL('toxicity_offset')],[tox==null?U:0,psL('toxicity')]]];
  // ---- Sign intensity and its lines (v32c). The game: CharacterStatsPopup.ws 'spell_power' (305-313) and AddCharacterStatSigns (411-570); the power of one Sign is W3PlayerWitcher.GetTotalSignSpellPower (playerWitcher.ws 9643-9693) =
  // GetSkillAttributeValue(the Sign's skill, spell_power, true, true) (PlayerAbilityManager.ws 1363-1415: the skill's own ability, the equipped skills that carry the Sign's tag, and every ability on the player) + spell_power_<sign>.
@@ -114,7 +118,7 @@ function psPass(hi){const d=eqData();if(!d||!EQ.meta||!CN.data)return null;
   yrdenDur:sgn(()=>{const a=skAttr('magic_3','trap_duration',true);return (a.b*(a.m+sp.yrden-1)+a.a).toFixed(2)+psL('per_second')}),
   axiiDur:sgn(()=>{const a=skAttr('magic_5','duration',true);return (a.b*(a.m+sp.axii)+a.a).toFixed(2)+psL('per_second')})};
  out.rows.sign={v:lines.total};
- out.det.sign=[[['',psL('Aard')]],[[lines.aardStagger,psL('attribute_name_knockdown')],[lines.aardDmg,psL('attribute_name_forcedamage')]],[['',psL('Igni')]],[[lines.igniDmg,psL('attribute_name_firedamage')],[lines.igniBurn,psL('effect_burning')]],[['',psL('Quen')]],[[lines.quenDmg,psL('physical_resistance')]],[['',psL('Yrden')]],[[lines.yrdenSlow,psL('SlowdownEffect')],[lines.yrdenDmg,psL('ShockDamage')],[lines.yrdenDur,psL('duration')]],[['',psL('Axii')]],[[lines.axiiDur,psL('duration')]]];
+ out.det.sign=[[['',psL('Aard'),psSrc(ARM,['spell_power_aard'])]],[[lines.aardStagger,psL('attribute_name_knockdown')],[lines.aardDmg,psL('attribute_name_forcedamage')]],[['',psL('Igni'),psSrc(ARM,['spell_power_igni'])]],[[lines.igniDmg,psL('attribute_name_firedamage')],[lines.igniBurn,psL('effect_burning')]],[['',psL('Quen'),psSrc(ARM,['spell_power_quen'])]],[[lines.quenDmg,psL('physical_resistance')]],[['',psL('Yrden'),psSrc(ARM,['spell_power_yrden'])]],[[lines.yrdenSlow,psL('SlowdownEffect')],[lines.yrdenDmg,psL('ShockDamage')],[lines.yrdenDur,psL('duration')]],[['',psL('Axii'),psSrc(ARM,['spell_power_axii'])]],[[lines.axiiDur,psL('duration')]]];
  // Stamina regeneration in combat: (staminaRegen add + staminaRegen mult x max Stamina) x (1 + the worn items' staminaRegen_armor_mod), CharacterStatsPopup.ws 322-330 and CalculatedArmorStaminaRegenBonus (playerWitcher.ws 8678-8733).
  // The mult: ConGeralt 0.1, magic_staminaregen x (levels of the equipped Signs skills that give it, PlayerAbilityManager.ws 147-190), perk_24 x medium armour pieces x level, the worn items' own staminaRegen, effects.
  const srAdd=spv('ConGeralt','sr')+(STATS.sgn.reduce((a,id)=>a+eqL(id),0))*spv('magic_staminaregen','sr')+eq.reduce((a,e)=>a+armCount(e)*spv(e.id,'sr'),0)+['chest','gloves','trousers','boots','mask'].reduce((a,sl)=>a+I(g[sl],'staminaRegen'),0);
@@ -131,7 +135,7 @@ function psPass(hi){const d=eqData();if(!d||!EQ.meta||!CN.data)return null;
 function psMerge(a,b){if(a==null||b==null)return null;if(a===b)return a;const num=x=>typeof x==='string'?parseFloat(x):x,sx=x=>typeof x==='string'?x.replace(/^[+-]?[\d.]+/,''):'';if(isNaN(num(a))||isNaN(num(b)))return null;return typeof a==='string'?(a[0]==='+'?'+':'')+num(a)+'–'+num(b)+sx(b):a+'–'+b}
 function psCalc(){const a=psPass(false);if(!a)return null;const b=psPass(true),o={rows:{},det:{}};
  Object.keys(a.rows).forEach(k=>{const r=a.rows[k],q=b.rows[k];o.rows[k]={v:psMerge(r.v,q.v),max:r.max==null?r.max:psMerge(r.max,q.max)};if(r.v===''){o.rows[k].v=''}});
- Object.keys(a.det).forEach(k=>{o.det[k]=a.det[k].map((blk,i)=>blk.map(([v,l],j)=>[psMerge(v,b.det[k][i][j][0]),l]))});return o}
+ Object.keys(a.det).forEach(k=>{o.det[k]=a.det[k].map((blk,i)=>blk.map(([v,l,src],j)=>[psMerge(v,b.det[k][i][j][0]),l,src]))});return o}
 
 // ---- the screen ----
 const psEl=id=>document.getElementById(id);
@@ -147,7 +151,7 @@ function psRender(){const R=psCalc(),list=psEl('psrows'),panel=psEl('pspanel');i
   sub=id==='vitality'||id==='stamina'||id==='toxicity'?`<small>${r.max==null?'—':psEsc(String(r.max))}</small>`:'';
   return`<button type="button" role="tab" class="psrow ${col}${sel?' sel':''}" id="pstab${i}" aria-selected="${sel}" aria-controls="pspanel" tabindex="${sel?0:-1}" data-i="${i}"><svg class="psicon" viewBox="0 0 24 24" aria-hidden="true">${PS_ICON[id]}</svg><span class="psnum">${big}${sub}</span><span class="psname">${psEsc(name)}</span></button>`}).join('');
  const [id,col,name]=PS_ROWS[PS.sel];panel.className='pspanel '+col;panel.setAttribute('aria-labelledby','pstab'+PS.sel);
- panel.innerHTML=`<h3 class="pshead">${psEsc(name)}</h3>`+(R?R.det[id].map(b=>`<div class="psblock">${b.map(([v,l])=>`<div class="psline${v===''?' psh':''}">${v===''?'<b></b>':psVal(v)}<span>${psEsc(l)}</span></div>`).join('')}</div>`).join(''):'<p class="dim">Loading…</p>');
+ panel.innerHTML=`<h3 class="pshead">${psEsc(name)}</h3>`+(R?R.det[id].map(b=>`<div class="psblock">${b.map(([v,l,src])=>`<div class="psline${v===''?' psh':''}">${v===''?'<b></b>':psVal(v)}<span>${psEsc(l)}${src?` <small class="pssrc">${psEsc(src)}</small>`:''}</span></div>`).join('')}</div>`).join(''):'<p class="dim">Loading…</p>');
  const pt=psEl('pstime');if(PS.play!=null){pt.hidden=false;pt.innerHTML=`<span>TOTAL PLAY TIME</span><b>${Math.floor(PS.play/3600)}</b> Hours <b>${Math.floor(PS.play%3600/60)}</b> Minutes`}else pt.hidden=true;
  const fe=psEl('pseff'),et=psEffects();fe.hidden=!et;fe.textContent=et;
  psPlace();
@@ -161,7 +165,7 @@ function psClose(quiet){if(!PS.open)return;PS.open=false;psEl('pstats').hidden=t
 function psSync(){if(PS.open)psRender()}   // called after every render (scrApply)
 document.addEventListener('keydown',e=>{
  if(e.ctrlKey||e.metaKey||e.altKey)return;const t=e.target,typing=t&&(/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)||t.isContentEditable);
- if((e.key==='c'||e.key==='C')&&!typing&&!document.querySelector('.igov:not([hidden]),.impov:not([hidden]),.mov:not([hidden])')&&!(typeof EQ!=='undefined'&&EQ.pick)){e.preventDefault();PS.open?psClose():psOpen();return}
+ if((e.key==='c'||e.key==='C')&&!typing&&!document.querySelector('.igov:not([hidden]),.impov:not([hidden]),.mov:not([hidden]),.skov:not([hidden])')&&!(typeof EQ!=='undefined'&&EQ.pick)){e.preventDefault();PS.open?psClose():psOpen();return}
  if(PS.open&&e.key==='Escape'){e.preventDefault();psClose();return}
  if(PS.open&&t&&t.classList&&t.classList.contains('psrow')){if(e.key==='ArrowDown'){e.preventDefault();psSelect(PS.sel+1)}else if(e.key==='ArrowUp'){e.preventDefault();psSelect(PS.sel-1)}else if(e.key==='Home'){e.preventDefault();psSelect(0)}else if(e.key==='End'){e.preventDefault();psSelect(PS_ROWS.length-1)}}});
 addEventListener('resize',()=>{if(PS.open)psPlace()});

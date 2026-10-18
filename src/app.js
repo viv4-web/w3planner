@@ -1,5 +1,5 @@
 
-const APP_VERSION="v35.2";
+const APP_VERSION="v36";
 const CFG=Object.assign({mode:"online",shareBase:""},window.PLANNER_CONFIG||{});
 const DATA=/*@data:DATA*/;
 
@@ -45,7 +45,7 @@ const MUTCOL={red:'#b33b3b',blue:'#3d74d4',green:'#4f9a3e'};
 TREES.forEach(t=>{t.parents=t.sk.map(s=>s.req);t.children=t.sk.map(()=>[]);t.edges.forEach(([p,c])=>t.children[p].push(c));});
 
 let S; // state
-function blank(){return{lv:TREES.map(t=>t.nodes.map(()=>0)),slots:Array(16).fill(null),muts:Array(4).fill(null),mres:Array(12).fill(0),mact:-1,gear:Array(9).fill(0),rs:'ng',cons:Array(8).fill(0),scr:'char'}}
+function blank(){return{lv:TREES.map(t=>t.nodes.map(()=>0)),slots:Array(16).fill(null),muts:Array(4).fill(null),mres:Array(12).fill(0),mact:-1,gear:Array(9).fill(0),rs:'ng',cons:Array(8).fill(0),sock:Array(24).fill(0),scr:'char'}}
 function demo(){const s=blank();const T=TREES[1],ix=id=>T.sk.findIndex(k=>k.id===id);
  ['magic_s42','magic_s3','magic_s11','magic_s35','magic_s37','magic_s40'].forEach(id=>s.lv[1][ix(id)]=1);s.lv[1][ix('magic_s11')]=3;
  ['magic_s11','magic_s3','magic_s35','magic_s37','magic_s40'].forEach((id,k)=>s.slots[k]=[1,ix(id)]);s.muts[0]=6;return s}
@@ -53,14 +53,15 @@ let tab=1, sel=null, selMut=null;
 
 // ---- encoding ----
 const A='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
-// ---- optional segments after the 8 base fields, each tagged by a 2-character prefix and written in this order (CLAUDE.md, "Link format"): g1 gear (v27), c1 consumables (v28), s1 the open screen (v28).
+// ---- optional segments after the 8 base fields, each tagged by a 2-character prefix and written in this order (CLAUDE.md, "Link format"): g1 gear (v27), c1 consumables (v28), r1 runes and glyphs (v36), s1 the open screen (v28).
 // A link without gear, consumables or the Inventory screen has none of them, so every link made before v28 re-encodes byte for byte. The decoder tells segments by prefix, not by position, and ignores a well-formed segment with a prefix it does not know.
 function gearSeg(){if(!S.gear.some(Boolean)&&S.rs!=='ng_plus')return'';return'.g1'+(S.rs==='ng_plus'?'B':'A')+S.gear.map(v=>A[v>>6]+A[v&63]).join('')}
 function consSeg(){return S.cons.some(Boolean)?'.c1'+S.cons.map(v=>A[v>>6]+A[v&63]).join(''):''}   // c1 + 8 slots x 2 characters: Potion 1-4, Bomb 1-2, steel sword oil, silver sword oil (CN_SLOTS)
+function sockSeg(){return S.sock.some(Boolean)?'.r1'+S.sock.map(v=>A[v>>6]+A[v&63]).join(''):''}   // r1 (v36) + 6 slots x 4 sockets x 2 characters (SK_SLOTS: steel, silver, chest, gloves, trousers, boots): a rune or glyph number from data/socket_ids.json, 0 = empty; only written when something is socketed
 function scrSeg(){return S.scr==='inv'?'.s1I':S.scr==='glo'?'.s1G':S.scr==='q'?'.s1Q':''}                                                      // s1I = the Inventory screen is open, s1G (v29) = the Glossary; absent = the Character screen
 function enc(){const d=S.lv.flat();let o='';for(let i=0;i<d.length;i+=3)o+=A[(d[i]||0)*16+(d[i+1]||0)*4+(d[i+2]||0)];
  o+='.';S.slots.forEach(x=>{const v=x?x[0]*20+x[1]+1:0;o+=A[v>>6]+A[v&63]});
- o+='.';S.muts.forEach(m=>o+=m==null?'-':m.toString(36));o+='.'+lvl()+'.'+bonusPts();o+='.'+parseInt(S.mres.map(x=>x?1:0).reverse().join(''),2).toString(36)+'.'+(S.mact+1);return'v1.'+o+gearSeg()+consSeg()+scrSeg()}
+ o+='.';S.muts.forEach(m=>o+=m==null?'-':m.toString(36));o+='.'+lvl()+'.'+bonusPts();o+='.'+parseInt(S.mres.map(x=>x?1:0).reverse().join(''),2).toString(36)+'.'+(S.mact+1);return'v1.'+o+gearSeg()+consSeg()+sockSeg()+scrSeg()}
 function dec(h){try{
  // Link data is untrusted: it is only ever read as numbers, and anything malformed is rejected.
  if(typeof h!=='string'||h.length>400)return null;
@@ -68,8 +69,8 @@ function dec(h){try{
  const [,l,sl,m,L,B,MR,MA]=P,ALPHA=[...A],inA=s=>[...s].every(c=>ALPHA.includes(c));
  const X={};for(const seg of P.slice(8)){   // optional tagged segments: a known prefix must be well formed and appear once; a well-formed unknown prefix is ignored (a later version's)
   if(!/^[a-z][0-9][A-Za-z0-9_-]*$/.test(seg))return null;const k=seg.slice(0,2);if(X[k]!==undefined)return null;
-  if(k==='g1'&&!/^g1[AB][A-Za-z0-9_-]{18}$/.test(seg))return null;if(k==='c1'&&!/^c1[A-Za-z0-9_-]{16}$/.test(seg))return null;if(k==='s1'&&seg!=='s1I'&&seg!=='s1G'&&seg!=='s1Q')return null;X[k]=seg}
- const G=X.g1,C=X.c1;
+  if(k==='g1'&&!/^g1[AB][A-Za-z0-9_-]{18}$/.test(seg))return null;if(k==='c1'&&!/^c1[A-Za-z0-9_-]{16}$/.test(seg))return null;if(k==='r1'&&!/^r1[A-Za-z0-9_-]{48}$/.test(seg))return null;if(k==='s1'&&seg!=='s1I'&&seg!=='s1G'&&seg!=='s1Q')return null;X[k]=seg}
+ const G=X.g1,C=X.c1,RR=X.r1;
  const NSK=TREES.reduce((a,t)=>a+t.sk.length,0);
  if(l.length!==Math.ceil(NSK/3)||!inA(l))return null;
  if(!(sl.length===24||sl.length===32)||!inA(sl))return null;
@@ -92,6 +93,7 @@ function dec(h){try{
  if(lv!==null){document.getElementById('lvl').value=lv;document.getElementById('bonuspts').value=bo===null?0:bo}
  if(G!==undefined){s.rs=G[2]==='B'?'ng_plus':'ng';for(let i=0;i<9;i++)s.gear[i]=A.indexOf(G[3+2*i])*64+A.indexOf(G[4+2*i])}
  if(C!==undefined)for(let i=0;i<8;i++)s.cons[i]=A.indexOf(C[2+2*i])*64+A.indexOf(C[3+2*i]);
+ if(RR!==undefined)for(let i=0;i<24;i++)s.sock[i]=A.indexOf(RR[2+2*i])*64+A.indexOf(RR[3+2*i]);
  if(X.s1)s.scr=X.s1==='s1G'?'glo':X.s1==='s1Q'?'q':'inv';
  return s}catch(e){return null}}
 // ---- rules ----

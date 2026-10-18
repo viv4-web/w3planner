@@ -92,12 +92,12 @@ function playerBlob(d,tb){
 // [name u16][4][7][dye u16 u16 = the name-table indices of 'Dye Default' and 'dye_default' (67/68 in saves 66, 147/150 in save 67: looked up by name, v35.2)][quantity u16][float: -1.0 or the durability][u8 extras n][n x (u16 name, u32 value, u8)][u16 id][u16 quality/level] ----
 const GEAR_CATEGORIES=['steelsword','silversword','armor','gloves','boots','pants','crossbow'];
 // the tail of an equipped sword / armour piece (found on a save with a rune in a sword and a glyph in an armour, docs/IMPORT.md "Sockets"): [u16 ref][u8 nSockets, each: u16 item name, u32, u8 nAb, nAb x u16 ability name][u8 nOils, nOils x u16][u16 category CName][u16 0],
-// the whole tail and nothing else. -> the socketed items' ability names, or null when the bytes are not that layout (then the older reading applies)
+// the whole tail and nothing else. -> {ab: the socketed items' ability names, socks: their item names (v36: 'Rune dazhbog', 'Glyph igni lesser')}, or null when the bytes are not that layout (then the older reading applies)
 function gearTail(raw,o,end,N){
- try{let p=o+2;const ns=raw[p++],ab=[];
-  for(let s=0;s<ns;s++){if(p+7>end)return null;const na=raw[p+6];p+=7;for(let j=0;j<na;j++){if(p+2>end)return null;const an=u16(raw,p);if(an<1||an>N.length)return null;ab.push(N[an-1]);p+=2}}
+ try{let p=o+2;const ns=raw[p++],ab=[],socks=[];
+  for(let s=0;s<ns;s++){if(p+7>end)return null;const sn=u16(raw,p);if(sn<1||sn>N.length)return null;socks.push(N[sn-1]);const na=raw[p+6];p+=7;for(let j=0;j<na;j++){if(p+2>end)return null;const an=u16(raw,p);if(an<1||an>N.length)return null;ab.push(N[an-1]);p+=2}}
   const no=raw[p++];p+=2*no;if(p+4!==end)return null;const cat=N[u16(raw,p)-1];
-  return GEAR_CATEGORIES.includes(cat)&&u16(raw,p+2)===0?ab:null}catch(e){return null}}
+  return GEAR_CATEGORIES.includes(cat)&&u16(raw,p+2)===0?{ab,socks}:null}catch(e){return null}}
 function inventory(raw,N){
  if(!raw||raw.length<30)return{count:0,items:[]};const header=u16(raw,11),starts=new Set(),dyeA=N.indexOf('Dye Default')+1,dyeB=N.indexOf('dye_default')+1;
  for(let i=13;i<raw.length-6;i++){
@@ -112,10 +112,11 @@ function inventory(raw,N){
   // after the extras: [u16 id][u16 count x 256][count x u16 ability name]...; items made by the game's random generator (autogen_*, MA_* magic abilities, quality_*) list their rolled abilities there,
   // the fixed relics and set pieces list none (docs/IMPORT.md, "Rolled values and sockets")
   const end=k+1<sorted.length?sorted[k+1]:raw.length,gt=gearTail(raw,o,end,N),abilities=[];
-  if(gt)abilities.push(...gt);   // a sword / armour piece: [u16 ref][sockets][oils][category][0]; what is socketed is not imported yet, but its ability names keep the item out of the stats numbers (as a rolled item is)
+  if(gt)abilities.push(...gt.ab);   // a sword / armour piece: [u16 ref][sockets][oils][category][0]; the socketed items' ability names keep the item out of the Player Stats numbers when the importer does not know them (as a rolled item is)
   else{const cnt=Math.min(raw[o+3],Math.max(0,Math.floor((end-(o+4))/2)));
    for(let j=0;j<cnt;j++){const an=u16(raw,o+4+2*j);if(an>=1&&an<=N.length)abilities.push(N[an-1])}}
-  items.push({id:N[name-1],qty:u16(raw,st+17),ref:u16(raw,o),extras:ex,abilities})});
+  const rec={id:N[name-1],qty:u16(raw,st+17),ref:u16(raw,o),extras:ex,abilities};if(gt&&gt.socks.length)rec.sockets=gt.socks;   // only when something is socketed: the result of a save without sockets is unchanged
+  items.push(rec)});
  return{count:header,items}}
 
 const SLOT_NAMES=['invalid','SilverSword','SteelSword','Armor','Boots','Pants','Gloves','Petard1','Petard2','RangedWeapon','Quickslot1','Quickslot2','Unused','Hair','Potion1','Potion2','Mask','Bolt','PotMut1','PotMut2','PotMut3','PotMut4','SkillMut1','SkillMut2','SkillMut3','SkillMut4','HorseBlinders','HorseSaddle','HorseBag','HorseTrophy','Potion3','Potion4'];
@@ -131,7 +132,7 @@ function readSave(bytes){
  const skills=(am.skills||[]).filter(x=>x.abilityName).map(x=>({id:x.abilityName,level:x.level||0,max:x.maxLevel||0,core:!!x.isCoreSkill}));
  const skillSlots=(am.skillSlots||[]).map(s=>({id:s.id,skill:s.socketedSkill?((am.skills||[]).find(x=>x.skillType===s.socketedSkill)||{}).abilityName||null:null,unlocked:!!s.unlocked}));
  const invr=inventory(inv,N),byRef=new Map();invr.items.forEach(r=>{if(!byRef.has(r.ref))byRef.set(r.ref,r)});
- const equipped={};slots.forEach((s,i)=>{const v=s&&s.value;if(v&&SLOT_NAMES[i]){const r=byRef.get(v);equipped[SLOT_NAMES[i]]=r?{id:r.id,qty:r.qty,extras:r.extras,abilities:r.abilities}:{id:null,ref:v}}});
+ const equipped={};slots.forEach((s,i)=>{const v=s&&s.value;if(v&&SLOT_NAMES[i]){const r=byRef.get(v);equipped[SLOT_NAMES[i]]=r?(r.sockets?{id:r.id,qty:r.qty,extras:r.extras,abilities:r.abilities,sockets:r.sockets}:{id:r.id,qty:r.qty,extras:r.extras,abilities:r.abilities}):{id:null,ref:v}}});
  const mutagenSlots=(am.mutagenSlots||[]).map(m=>{const v=m.item&&m.item.value;const r=v?byRef.get(v):null;return{slot:m.equipmentSlot,unlockedAt:m.unlockedAtLevel,item:r?r.id:null}});
  const crowns=(invr.items.find(r=>r.id==='Crowns')||{}).qty||0;
  return{codes:tb.codes,character,skills,skillSlots,mutagenSlots,equipped,inventory:invr.items,inventoryHeader:invr.count,crowns,playTimeSec:playTime(d,N),journal:journal(d,tb),effects:effects(P.effectManager,N),abilities:abilityList(d,N,stats)}}

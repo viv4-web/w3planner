@@ -51,6 +51,7 @@ function eqTip(it){const q=EQ_QUAL[it.quality]||['',''],p=eqPrimary(it),lv=eqLev
  lines.forEach(e=>{h+=`<div class="eqt-line" style="color:${eqColor(e)}"><span>${eqEsc(e.label||e.stat)}</span><b>${eqEsc(eqVal(e))}</b></div>`});
  const meta=[];if(it.enhancement_slots)meta.push(it.enhancement_slots+' '+(it.enhancement_kind||'upgrade')+' slot'+(it.enhancement_slots>1?'s':''));if(it.weight)meta.push('Weight '+(Math.round(it.weight*100)/100));
  if(meta.length)h+=`<div class="eqt-meta">${eqEsc(meta.join(' · '))}</div>`;
+ h+=skTip(it);
  if(st){h+=`<div class="eqt-set"><b>${eqEsc(st.name)}</b>${st.bonuses.length?(it.set_bonus_piece?' · counts toward the set bonus':' · does not count toward the set bonus'+(it.slot==='crossbow'||it.slot==='bolts'?': '+eqWhy(it):' in '+EQ_RS[S.rs]+' (no set bonus tag in the game data)')):' · no set bonus'}</div>`}
  return h+'</div>'}
 
@@ -77,12 +78,12 @@ const invSet=(u,n)=>{if(u<9)S.gear[u]=n;else S.cons[u-9]=n};
 const invTip=it=>it.cat?cnTip(it):eqTip(it);
 function eqSlotHtml(u){const it=invCur(u),cons=u>=9,low=!!(it&&!cons&&eqLow(it)),q=it?(cons?CN_COL[it.cat]:EQ_QUAL[it.quality]?EQ_QUAL[it.quality][1]:'#6b5a42'):'#6b5a42',name=invName(u),sq=cons||['bolts','mask'].includes(invKey(u)),
  oil=u===0||u===1?cnCur(u===0?6:7):null;
- return`<div class="eqslot${it?' on':''}${sq?' sq':''}${low?' low':''}${cons?' cons':''}" data-i="${u}"><button type="button" class="eqtile" data-i="${u}" style="--q:${q}" aria-haspopup="true" aria-label="${eqEsc(name)}: ${it?eqEsc(it.name):'empty'}${oil?'. Oil: '+eqEsc(oil.name):''}${low?'. Level too low, requires level '+eqReq(it):''}. Open the slot panel${it?'. Press Delete to unequip':''}">${it&&it.icon?`<img src="${it.icon}" alt="">`:`<span class="eqempty">${eqEsc(name)}</span>`}${oil&&oil.icon?`<i class="oilbadge" title="Oil: ${eqEsc(oil.name)}"><img src="${oil.icon}" alt=""></i>`:''}${low?'<i class="eqbadge">Level too low</i>':''}</button>
+ return`<div class="eqslot${it?' on':''}${sq?' sq':''}${low?' low':''}${cons?' cons':''}" data-i="${u}"><button type="button" class="eqtile" data-i="${u}" style="--q:${q}" aria-haspopup="true" aria-label="${eqEsc(name)}: ${it?eqEsc(it.name):'empty'}${oil?'. Oil: '+eqEsc(oil.name):''}${low?'. Level too low, requires level '+eqReq(it):''}. Open the slot panel${it?'. Press Delete to unequip':''}">${it&&it.icon?`<img src="${it.icon}" alt="">`:`<span class="eqempty">${eqEsc(name)}</span>`}${oil&&oil.icon?`<i class="oilbadge" title="Oil: ${eqEsc(oil.name)}"><img src="${oil.icon}" alt=""></i>`:''}${low?'<i class="eqbadge">Level too low</i>':''}</button>${u<9?skTile(u):''}
   <div class="eqsl"><b>${eqEsc(name)}</b><span>${it?eqEsc(it.name):'Empty'}</span></div>${it?`<button type="button" class="eqx" data-i="${u}" aria-label="Unequip ${eqEsc(it.name)}">×</button>`:''}</div>`}
 function eqItemStats(it){const q=EQ_QUAL[it.quality]||['',''],p=eqPrimary(it),lv=eqLevel(it),u=EQ_SLOTS.indexOf(it.slot),oil=u===0||u===1?cnCur(u===0?6:7):null;
  return`<section class="eqitem"><h4 style="color:${q[1]||'#e6dcc8'}">${eqEsc(it.name)}</h4><div class="eqim">${eqEsc(EQ_NAME[it.slot])}${it.tier_name&&it.set?' · '+eqEsc(it.tier_name):''}${lv?` · <span class="${lv.bad?'bad':''}">${lv.t}</span>`:''}</div>${oil?`<div class="eqoil">Oil: <b>${eqEsc(oil.name)}</b></div>`:''}
-  <div class="eqgrid">${p.label&&p.e?`<span>${eqEsc(p.label)}</span><b>${eqVal({...p.e,percent:false})}</b>`:''}${eqLines(it).map(e=>`<span style="color:${eqColor(e)}">${eqEsc(e.label||e.stat)}</span><b style="color:${eqColor(e)}">${eqEsc(eqVal(e))}</b>`).join('')}</div></section>`}
-const invSig=()=>[S.rs,S.gear.join(),S.cons.join(),lvl(),!!eqData(),!!CN.data,EQ.err,S.slots.join(),S.lv.flat().join(''),S.mact,S.mres.join()].join('|');
+  <div class="eqgrid">${p.label&&p.e?`<span>${eqEsc(p.label)}</span><b>${eqVal({...p.e,percent:false})}</b>`:''}${eqLines(it).map(e=>`<span style="color:${eqColor(e)}">${eqEsc(e.label||e.stat)}</span><b style="color:${eqColor(e)}">${eqEsc(eqVal(e))}</b>`).join('')}</div>${skCard(it)}</section>`}
+const invSig=()=>[S.rs,S.gear.join(),S.cons.join(),lvl(),!!eqData(),!!CN.data,EQ.err,S.slots.join(),S.lv.flat().join(''),S.mact,S.mres.join(),S.sock.join(),!!SK.data].join('|');
 function eqRender(force){const body=document.getElementById('eqbody');if(!body)return;
  const sig=invSig();if(!force&&sig===EQ.sig)return;EQ.sig=sig;
  document.querySelectorAll('#topbar .rsg [data-rs]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.rs===S.rs)));
@@ -104,24 +105,25 @@ function eqRender(force){const body=document.getElementById('eqbody');if(!body)r
  body.querySelectorAll('.eqtile[data-i]').forEach(b=>{const u=+b.dataset.i;b.onclick=()=>eqPick(u);b.oncontextmenu=e=>{e.preventDefault();eqUnequip(u)};
   b.onkeydown=e=>{if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();eqUnequip(u)}};
   const it=invCur(u);if(it){b.onmouseenter=()=>eqHoverTip(it,b);b.onmouseleave=eqHideTip;b.onfocus=()=>eqHoverTip(it,b);b.onblur=eqHideTip}});
- body.querySelectorAll('.eqx').forEach(b=>{b.onclick=()=>eqUnequip(+b.dataset.i)});const rt=document.getElementById('eqretry');if(rt)rt.onclick=eqStart;
+ body.querySelectorAll('.eqx').forEach(b=>{b.onclick=()=>eqUnequip(+b.dataset.i)});
+ body.querySelectorAll('.sock').forEach(b=>{b.onclick=()=>skOpen(+b.dataset.u,+b.dataset.j,b)});const rt=document.getElementById('eqretry');if(rt)rt.onclick=eqStart;
  if(had&&keep!=null){const n=body.querySelector('.eqtile[data-i="'+keep+'"]');if(n)n.focus({preventScroll:true})}
  if(EQ.pick&&typeof eqPickRender==='function')eqPickRender()}   // the open slot panel follows the build (level, ruleset, oil)
 function eqHoverTip(it,el){let t=document.getElementById('eqtip');if(!t){t=document.createElement('div');t.id='eqtip';t.className='eqtip';t.setAttribute('role','tooltip');document.body.appendChild(t)}
  t.innerHTML=invTip(it);t.hidden=false;const r=el.getBoundingClientRect(),w=t.offsetWidth,h=t.offsetHeight;let x=r.right+10;if(x+w>innerWidth-8)x=Math.max(8,r.left-w-10);t.style.left=x+'px';t.style.top=Math.max(8,Math.min(r.top,innerHeight-h-8))+'px'}
 function eqHideTip(){const t=document.getElementById('eqtip');if(t)t.hidden=true}
-function eqUnequip(u){const it=invCur(u);if(!it)return;invSet(u,0);save();eqRender(true);notify(it.name+' unequipped.');const b=document.querySelector('#eqbody .eqtile[data-i="'+u+'"]');if(b)b.focus()}
+function eqUnequip(u){const it=invCur(u);if(!it)return;invSet(u,0);const rm=skFit();save();eqRender(true);notify(it.name+' unequipped.'+(rm.length?' '+skRemovedText(rm):''));const b=document.querySelector('#eqbody .eqtile[data-i="'+u+'"]');if(b)b.focus()}
 // load the data right after the page has loaded (never inside index.html, and not before the skill tree is up)
 async function eqStart(){EQ.err=null;eqRender(true);
- try{await Promise.all([eqLoad(S.rs),cnLoad()]);const bad=eqValidate(),badc=cnValidate();if(bad||badc){save();notify((bad+badc)+' item'+(bad+badc>1?'s':'')+' in this build '+(bad+badc>1?'are':'is')+' not available'+(bad?' in '+EQ_RS[S.rs]:'')+' or does not fit its slot, and '+(bad+badc>1?'were':'was')+' removed.')}
+ try{await Promise.all([eqLoad(S.rs),cnLoad(),skLoad()]);const bad=eqValidate(),badc=cnValidate(),rm=skFit();if(bad||badc||rm.length){save();notify(((bad||badc)?(bad+badc)+' item'+(bad+badc>1?'s':'')+' in this build '+(bad+badc>1?'are':'is')+' not available'+(bad?' in '+EQ_RS[S.rs]:'')+' or does not fit its slot, and '+(bad+badc>1?'were':'was')+' removed.':'')+(rm.length?((bad||badc)?' ':'')+skRemovedText(rm):''))}
   if(CN.moved&&CN.moved.length)notify(CN.moved.join('. ')+'. The link text is unchanged until you edit the build.')}catch(e){EQ.err=e.message}   // the moved bomb is not saved here: opening an old link must not rewrite it
  eqRender(true)}
 async function eqSwitch(rs){if(rs===S.rs)return;
  try{await eqLoad(rs)}catch(e){notify('Could not load the '+EQ_RS[rs]+' data: '+e.message);return}
  const nu=EQ.rs[rs],old=eqData(),dropped=[];let kept=0;
  EQ_SLOTS.forEach((s,i)=>{const n=S.gear[i];if(!n)return;const it=nu.byN.get(n);if(!it||it.slot!==s){dropped.push(old&&old.byN.get(n)?old.byN.get(n).name:'an item');S.gear[i]=0}else kept++});
- S.rs=rs;save();eqRender(true);
- notify('Switched to '+EQ_RS[rs]+'. '+(dropped.length?'Removed because they do not exist in this mode: '+dropped.join(', ')+'.':'')+(kept?(dropped.length?' ':'')+kept+' item'+(kept>1?'s':'')+' kept (same item in both modes; its numbers are the new mode\'s).':(dropped.length?'':'Nothing was equipped.')))}
+ S.rs=rs;const rm=skFit();save();eqRender(true);
+ notify('Switched to '+EQ_RS[rs]+'. '+(rm.length?skRemovedText(rm)+' ':'')+(dropped.length?'Removed because they do not exist in this mode: '+dropped.join(', ')+'.':'')+(kept?(dropped.length?' ':'')+kept+' item'+(kept>1?'s':'')+' kept (same item in both modes; its numbers are the new mode\'s).':(dropped.length?'':'Nothing was equipped.')))}
 
 // ---- the slot panel: replaces the stash area while open (a full-screen sheet on a phone). Every item that fits the slot, one card per tier, a family together Basic to Grandmaster ----
 const invCands=u=>{if(u<9){const d=eqData();return d?d.bySlot[EQ_SLOTS[u]]||[]:[]}return CN.data?CN.bySlot[CN_SLOTS[u-9]]||[]:[]};
@@ -168,7 +170,7 @@ function oilRow(){const p=EQ.pick,row=document.getElementById('oilrow');if(!p||!
 function eqGridKey(e,b){const t=[...document.querySelectorAll('#pkgrid .pktile')],k=t.indexOf(b);let n=-1;
  if(e.key==='ArrowRight')n=k+1;else if(e.key==='ArrowLeft')n=k-1;else if(e.key==='ArrowDown'||e.key==='ArrowUp'){const dir=e.key==='ArrowDown'?1:-1;const x=b.offsetLeft;n=k;for(let j=k+dir;j>=0&&j<t.length;j+=dir){if(t[j].offsetTop!==b.offsetTop&&Math.abs(t[j].offsetLeft-x)<4){n=j;break}}}
  if(n>=0&&n<t.length&&n!==k){e.preventDefault();t[n].focus();t[n].click();t[n].focus()}}
-function eqEquip(it){const p=EQ.pick;if(!p||!it)return;if(!p.cons&&eqLow(it)){notify('Requires level '+eqReq(it)+'.');return}invSet(p.i,it.n);const u=p.i;save();eqClosePick(true);eqRender(true);notify(it.name+' equipped.');const b=document.querySelector('#eqbody .eqtile[data-i="'+u+'"]');if(b)b.focus()}
+function eqEquip(it){const p=EQ.pick;if(!p||!it)return;if(!p.cons&&eqLow(it)){notify('Requires level '+eqReq(it)+'.');return}invSet(p.i,it.n);const u=p.i,rm=skFit();save();eqClosePick(true);eqRender(true);notify(it.name+' equipped.'+(rm.length?' '+skRemovedText(rm):''));const b=document.querySelector('#eqbody .eqtile[data-i="'+u+'"]');if(b)b.focus()}
 // ---- Equip set: every piece of the selected item's set at the same tier and variant (NGP or not), into its slot ----
 const eqWords=t=>t.toLowerCase().split(/[\s_]+/);
 function eqSetPlan(it){const d=eqData();if(!d||!it||!it.set)return null;const ngp=x=>!!x.legendary,pieces=[],notes=[],skipped=[];   // the variant: normal or Legendary (in New Game Plus Wolven's lower tiers are the 'NGP' ids, its Grandmaster the plain id)
@@ -185,9 +187,9 @@ function eqSetPlan(it){const d=eqData();if(!d||!it||!it.set)return null;const ng
  return{pieces,notes,skipped,uncounted,countTiers}}
 function eqNoCount(pl){if(!pl.uncounted.length)return'';return pl.uncounted.map(x=>EQ_NAME[x.slot].toLowerCase()).join(', ')+' will not count toward the set bonus in '+EQ_RS[S.rs]+' (no set bonus tag in the game data); '+(pl.countTiers.length?'only the '+pl.countTiers.join(', ')+(pl.countTiers.length>1?' tiers count':' tier counts')+'.':'no tier of this set counts there.')}
 function eqSetNote(it){const pl=eqSetPlan(it);if(!pl)return'';const sk=pl.skipped.length?`<p class="pknote"><b>Skipped, level too low:</b> ${eqEsc(pl.skipped.map(x=>EQ_NAME[x.slot]+' (requires level '+eqReq(x.item)+')').join('; '))}.</p>`:'';if(!pl.pieces.length)return sk;return`<p class="pknote"><b>Equip set</b> puts ${pl.pieces.length} piece${pl.pieces.length===1?'':'s'} of ${eqEsc(EQ.meta.sets[it.set].name)} (${eqEsc(it.tier_name||'Basic')}) in ${pl.pieces.map(x=>EQ_NAME[x.slot].toLowerCase()).join(', ')}, replacing what is there.${pl.notes.length?` <b>Nearest tier used:</b> ${eqEsc(pl.notes.join('; '))}.`:''}</p>${pl.uncounted.length?`<p class="pknote"><b>Not counted:</b> ${eqEsc(eqNoCount(pl))}</p>`:''}${sk}`}
-function eqEquipSet(it){const p=EQ.pick,pl=eqSetPlan(it);if(!p||!pl||!pl.pieces.length)return;pl.pieces.forEach(x=>{S.gear[x.i]=x.item.n});const i=p.i;save();eqClosePick(true);eqRender(true);   // one save(): the link changes once
- notify('Set equipped: '+pl.pieces.length+' pieces of '+EQ.meta.sets[it.set].name+'.'+(pl.notes.length?' Nearest tier used for '+pl.notes.join('; ')+'.':'')+(pl.uncounted.length?' '+eqNoCount(pl).replace(/^./,c=>c.toUpperCase())+(/\.$/.test(eqNoCount(pl))?'':'.'):'')+(pl.skipped.length?' Skipped, level too low: '+pl.skipped.map(x=>EQ_NAME[x.slot].toLowerCase()+' (level '+eqReq(x.item)+')').join(', ')+'.':''));const b=document.querySelector('#eqbody .eqtile[data-i="'+i+'"]');if(b)b.focus()}
+function eqEquipSet(it){const p=EQ.pick,pl=eqSetPlan(it);if(!p||!pl||!pl.pieces.length)return;pl.pieces.forEach(x=>{S.gear[x.i]=x.item.n});const i=p.i,rm=skFit();save();eqClosePick(true);eqRender(true);   // one save(): the link changes once
+ notify('Set equipped: '+pl.pieces.length+' pieces of '+EQ.meta.sets[it.set].name+'.'+(rm.length?' '+skRemovedText(rm):'')+(pl.notes.length?' Nearest tier used for '+pl.notes.join('; ')+'.':'')+(pl.uncounted.length?' '+eqNoCount(pl).replace(/^./,c=>c.toUpperCase())+(/\.$/.test(eqNoCount(pl))?'':'.'):'')+(pl.skipped.length?' Skipped, level too low: '+pl.skipped.map(x=>EQ_NAME[x.slot].toLowerCase()+' (level '+eqReq(x.item)+')').join(', ')+'.':''));const b=document.querySelector('#eqbody .eqtile[data-i="'+i+'"]');if(b)b.focus()}
 function eqClosePick(quiet){const ov=document.getElementById('eqpick'),p=EQ.pick;EQ.pick=null;ov.hidden=true;ov.innerHTML='';document.getElementById('stash').hidden=false;document.getElementById('invLeft').classList.remove('panelopen');if(!quiet&&p&&p.opener&&p.opener.focus)p.opener.focus()}
 document.addEventListener('keydown',e=>{if(!EQ.pick)return;if(e.key==='Escape'){e.preventDefault();eqClosePick()}});
-function eqRefresh(){if(eqData())eqValidate();if(CN.data)cnValidate();eqRender(true)}
+function eqRefresh(){if(eqData())eqValidate();if(CN.data)cnValidate();skFit();eqRender(true)}
 if(document.readyState==='complete')setTimeout(eqStart,0);else window.addEventListener('load',()=>setTimeout(eqStart,0));
