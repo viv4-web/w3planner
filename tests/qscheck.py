@@ -88,8 +88,8 @@ def rules(check):
     U = {g: r["u"] for g, r in R.items() if "u" in r}; K = {g: r["k"] for g, r in R.items() if "k" in r}
     check("QUEST-RULES.json (v35): every quest with no story point has `u` (ungated 157 + unknown 34 = 191), no placed quest has one, the 3 'likely' ones carry nothing but `unknown`", len(U) == 191 and sum(v == "ungated" for v in U.values()) == 157 and sum(v == "unknown" for v in U.values()) == 34
           and set(U) == {g for g in qs if "s" not in R.get(g, {})} and all(v in ("ungated", "unknown") for v in U.values()) and all(set(R[by[i]]) == {"u"} or set(R[by[i]]) <= {"u", "c", "a", "k"} for i in ("SQ302 Philippa", "mq1057: The Great Spirit", "NML Hunt: Fogling")) and all(U[by[i]] == "unknown" for i in ("SQ302 Philippa", "mq1057: The Great Spirit", "NML Hunt: Fogling")))
-    check("QUEST-RULES.json (v35): `k` (can fail by a choice) = [['q']] own conversation, [['q', quest guid]] through another quest, [['o', objective guid]]; guids of QUESTS.json only; 7 quests (4 whole-quest, 3 objective)", len(K) == 7 and
-          all(e[0] in "qo" and ((e[0] == "q" and len(e) in (1, 2) and (len(e) == 1 or e[1] in qs and e[1] != g)) or (e[0] == "o" and len(e) == 2 and e[1] in qs[g]["o"])) for g, es in K.items() for e in es) and sum(e[0] == "q" for es in K.values() for e in es) == 4 and sum(e[0] == "o" for es in K.values() for e in es) == 3)
+    check("QUEST-RULES.json (v35): `k` (can fail by a choice) = [['q']] own conversation or [['q', quest guid]] through another quest; guids of QUESTS.json only; 4 quests, no objective entry",
+          len(K) == 4 and all(len(e) in (1, 2) and e[0] == "q" and (len(e) == 1 or (e[1] in qs and e[1] != g)) for g, es in K.items() for e in es) and sum(len(e) == 2 for es in K.values() for e in es) == 2)
     check("QUEST-RULES.json: Hearts of Stone and Blood and Wine quests all have their lane as story point; no cutoff is stored for a quest on a toggle", all(R[g]["s"] == "h" for g, q in qs.items() if q["p"] == "ep1") and all(R[g]["s"] == "w" for g, q in qs.items() if q["p"] == "bob"))
 
 
@@ -757,7 +757,6 @@ def v35(b, base, check, label):
         for r in rows:
             e = keep.get(r["quest_guid"], [])
             if r["class"] == "keep-quest": ok = (["q", names[[q for q in names if names[q]["id"] == r["holder_quest"]][0]]["g"]] if r["holder_quest"] else ["q"]) in e
-            elif r["class"] == "keep-obj": ok = ["o", r["objective_guid"]] in e
             else: ok = True
             if not ok: check("%s: v35 row %s (%s) is in the quest rules" % (label, r["row"], r["class"]), False, e)
     # list view: every keep quest has the ring marker and the 'by choice' tag, every other quest none
@@ -778,13 +777,14 @@ def v35(b, base, check, label):
         for e, t in zip(es, x["rows"]):
             if e == ["q"] and t != "A choice in this quest's conversation ends it as failed.": bad.append((names[g_]["n"], t))
             if e[0] == "q" and len(e) == 2 and not (t == "Fails through a choice in " + names[e[1]]["n"] and x["links"] == [e[1]]): bad.append((names[g_]["n"], t))
-            if e[0] == "o" and not t.startswith("A choice can close"): bad.append((names[g_]["n"], t))
     check("%s: v35 drawer: every keep quest has the CAN FAIL BY CHOICE block with the wording for its kind and the footer (%d quests)" % (label, len(keep)), not bad and len(res) == len(keep), bad[:3])
     nob = [g_ for g_ in names if g_ not in keep]
     pg.evaluate("QS.reveal.clear();qsSelect('%s',true)" % nob[0]); pg.wait_for_timeout(100)
     check("%s: v35 a quest that is not a keep row has no block and no marker (%s)" % (label, names[nob[0]]["n"]), E("!document.getElementById('qsChoice')"))
-    gangs = [g_ for g_ in keep if names[g_]["id"] == "Q302 War Of Gangs"][0]
-    check("%s: v35 The Gangs of Novigrad (one keep-obj row, three drop rows: the casino dwarves, both reward variants) shows exactly one entry" % label, len(res[gangs]["rows"]) == 1 and res[gangs]["rows"][0].startswith("A choice can close"), res[gangs])
+    dq = [g_ for g_ in names if names[g_]["id"] in ("Q302 War Of Gangs", "Q302 Mafia", "SQ104 Werewolf")]
+    ok = []
+    for g_ in dq: pg.evaluate("QS.reveal.clear();qsSelect('%s',true)" % g_); pg.wait_for_timeout(100); ok.append(E("!document.getElementById('qsChoice')&&!document.querySelector('#qsRows .qsrow[data-g=\"%s\"].choice')&&!/fail by choice/i.test(document.getElementById('qsDetail').textContent)" % g_))
+    check("%s: v35 the three objective rows (Get Junior, The Gangs of Novigrad, Wild at Heart) are dropped: no block, no marker" % label, len(dq) == 3 and all(ok), ok)
     # cross-quest link
     fp = [g_ for g_ in keep if any(len(e) == 2 and e[0] == "q" for e in keep[g_])]
     ok = []
@@ -792,12 +792,10 @@ def v35(b, base, check, label):
         pg.evaluate("qsSelect('%s',true)" % g_); pg.wait_for_timeout(100); pg.click("#qsChoice .qslink"); pg.wait_for_timeout(150); holder = [e[1] for e in keep[g_] if len(e) == 2][0]
         ok.append(E("[QS.sel,document.querySelector('#qsDetail .qstitle').textContent]") == [holder, names[holder]["n"]])
     check("%s: v35 the cross-quest link opens the other quest's drawer (%d links)" % (label, len(fp)), fp and all(ok), ok)
-    # spoiler rule: a quest the save has not reached keeps the objective title behind the full-journal button
-    wh = [g_ for g_ in keep if keep[g_][0][0] == "o"][0]; pg.evaluate("QS.reveal.clear();qsSelect('%s',true)" % wh); pg.wait_for_timeout(150)
-    t0 = E("document.querySelector('#qsChoice .qschrow').textContent"); title = E("QS.desc[QS.byG.get('%s').id].o[QS.byG.get('%s').o.indexOf('%s')]" % (wh, wh, keep[wh][0][1]))
-    pg.click(".qsspoil"); pg.wait_for_timeout(150); t1 = E("document.querySelector('#qsChoice .qschrow').textContent")
-    check("%s: v35 spoiler rule: before the full journal is shown the block says 'A choice can close an objective.' (%s) and hides the title; after 'Show full journal (spoilers)' it names it (%s)" % (label, t0[:60], t1[:70]),
-          title and title not in t0 and t0.startswith("A choice can close an objective") and t1 == "A choice can close the objective: %s." % title.rstrip("."), [t0, t1])
+    # the story-gate line of a quest with the block
+    kg = next(iter(keep)); pg.evaluate("qsSelect('%s',true)" % kg); pg.wait_for_timeout(100); nm = E("[...document.querySelectorAll('#qsDetail .qsnomiss')].map(e=>e.textContent)")
+    pg.evaluate("qsSelect('%s',true)" % nob[0]); pg.wait_for_timeout(100); nm2 = E("[...document.querySelectorAll('#qsDetail .qsnomiss')].map(e=>e.textContent)")
+    check("%s: v35 where the block is shown the line says 'No story gate fails this quest' (%s); elsewhere 'Not missable as far as computed' (%s)" % (label, nm, nm2), nm == ["No story gate fails this quest"] and nm2 in (["Not missable as far as computed"], []), [nm, nm2])
     # leaks and storage
     bad = leaks(pg); ks = E("Object.keys(localStorage).sort()"); src = (ROOT / "src" / "quests.js").read_text(encoding="utf-8")
     check("%s: v35 no internal scene output or fact name appears in the screen (%s)" % (label, bad[:3]), not bad, bad)
@@ -827,9 +825,6 @@ def v35save(b, base, check, label):
     check("%s [stats-l9b]: v35 the strip is unchanged: 8 quests under the same gates (%s)" % (label, order), E("document.querySelectorAll('#qsMU .qsdot').length") == 8 and order.startswith("isle:") and order.endswith("prologue*:1"), order)
     mis = E("[...document.querySelectorAll('#qsMiss .qsmi, #qsNext .qscard.fails')].map(e=>e.dataset.g)")
     check("%s [stats-l9b]: v35 choice quests are not added to the Missable panel or Next up's 'Fails at' cards: every one listed has a gate cutoff (%d listed)" % (label, len(mis)), mis and all("c" in E("QS.R.quests['%s']" % g) for g in mis), mis)
-    # a reached quest shows its objective title at once
-    g = E("QS.data.quests.find(q=>q.id==='Q302 War Of Gangs').g"); pg.evaluate("QS.reveal.clear();qsSelect('%s',true)" % g); pg.wait_for_timeout(200); t = E("document.querySelector('#qsChoice .qschrow').textContent")
-    check("%s [stats-l9b]: v35 The Gangs of Novigrad (active in the save) names the objective: %s" % (label, t[:70]), t.startswith("A choice can close the objective: "), t)
     # markers on the grid, the strip legend
     leg = E("[...document.querySelectorAll('.qslegend li')].map(e=>e.textContent)"); ring = E("(()=>{const d=document.querySelector('#qsTL .qsdot.choice');if(!d)return null;const a=getComputedStyle(d,'::after');return{pos:[a.right,a.bottom],bd:a.borderTopColor,pe:a.position}})()")
     pg.click("#qsVTime"); until(pg, "!!document.getElementById('qsTL')")
@@ -844,7 +839,7 @@ def v35save(b, base, check, label):
 
 
 def v35public(b, base, check, label):
-    """the public build has no objective titles: the block says 'an objective'"""
+    """the public build: the block is there without any game text"""
     pg, errs, _ = newpage(b, base); E = pg.evaluate; opened(pg); until(pg, "!!QS.R")
-    g = E("QS.data.quests.find(q=>q.id==='SQ104 Werewolf').g"); pg.evaluate("qsSelect('%s',true)" % g); pg.wait_for_timeout(200); t = E("document.querySelector('#qsChoice .qschrow').textContent")
-    check("%s: v35 without objective titles the block says 'an objective' (%s)" % (label, t), t == "A choice can close an objective." and not errs, errs[:1]); pg.close()
+    g = E("QS.data.quests.find(q=>q.id==='mq3019_herd_instincts').g"); pg.evaluate("qsSelect('%s',true)" % g); pg.wait_for_timeout(200); t = E("document.querySelector('#qsChoice .qschrow').textContent")
+    check("%s: v35 the block needs no game text (%s)" % (label, t), t == "A choice in this quest's conversation ends it as failed." and not errs, errs[:1]); pg.close()

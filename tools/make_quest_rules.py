@@ -13,8 +13,8 @@ journal block's Failure or Deactivate input fires. This tool keeps only what tha
 v35 adds two things, each from a file of the v35 spike (game files only, never committed), and stops when the file is missing or does not add up:
   * `u` on every quest with no story point: "ungated" (the v35 placement found no story gate for it: 157) or "unknown" (a gate exists that we cannot read yet: 34, the 3 "likely" ones included,
     which get no placement and no likely text) - placements.tsv
-  * `k` ("can fail by a choice") on the quests of the rows of choices-verified.tsv that were classed keep-quest / keep-obj: [["q"]] = a choice in the quest's own conversation fails it,
-    [["q", <quest guid>]] = it fails through a choice in that other quest, [["o", <objective guid>]] = a choice closes that objective. Ids only; no scene output, fact name or text.
+  * `k` ("can fail by a choice") on the quests of the rows of choices-verified.tsv that were classed keep-quest: [["q"]] = a choice in the quest's own conversation fails it,
+    [["q", <quest guid>]] = it fails through a choice in that other quest. Ids only; no scene output, fact name or text.
 docs/QUESTS.md ("Timeline, missables, unlock chains") has the rules and the numbers.
 """
 import argparse, csv, json, re, sys
@@ -85,27 +85,23 @@ def apply_placements(out, qinfo, id2g, rows):
 
 
 def apply_choices(out, qinfo, id2g, rows):
-    """v35: `k` on the quests of the verified choice rows (class keep-quest / keep-obj); drop rows add nothing. -> (keep-quest, keep-obj, drop)"""
-    n = {"keep-quest": 0, "keep-obj": 0, "drop": 0}
+    """v35: `k` on the quests of the verified choice rows (class keep-quest); drop rows add nothing. -> (keep-quest, drop)"""
+    n = {"keep-quest": 0, "drop": 0}
     for r in rows:
         c = r["class"]
-        if c not in n: sys.exit("choices-verified.tsv row %s: class %r (keep-quest, keep-obj or drop)" % (r["row"], c))
+        if c not in n: sys.exit("choices-verified.tsv row %s: class %r (keep-quest or drop)" % (r["row"], c))
         n[c] += 1
         if c == "drop": continue
         g = id2g.get(r["quest"])
         if g is None or g != r["quest_guid"]: sys.exit("choices-verified.tsv row %s: quest %r does not match QUESTS.json" % (r["row"], r["quest"]))
-        if c == "keep-quest":
-            holder = r["holder_quest"]
-            if holder:
-                if holder not in id2g or id2g[holder] == g: sys.exit("choices-verified.tsv row %s: holder quest %r" % (r["row"], holder))
-                e = ["q", id2g[holder]]
-            else: e = ["q"]
-        else:
-            if r["objective_guid"] not in qinfo[g]["o"]: sys.exit("choices-verified.tsv row %s: objective %r is not an objective of %s" % (r["row"], r["objective_guid"], r["quest"]))
-            e = ["o", r["objective_guid"]]
+        holder = r["holder_quest"]
+        if holder:
+            if holder not in id2g or id2g[holder] == g: sys.exit("choices-verified.tsv row %s: holder quest %r" % (r["row"], holder))
+            e = ["q", id2g[holder]]
+        else: e = ["q"]
         k = out.setdefault(g, {}).setdefault("k", [])
         if e not in k: k.append(e)
-    return n["keep-quest"], n["keep-obj"], n["drop"]
+    return n["keep-quest"], n["drop"]
 
 
 def build(spike=SPIKE, placements=None, choices=None):
@@ -155,7 +151,7 @@ def build(spike=SPIKE, placements=None, choices=None):
         if after: rec["a"] = after[:4]
         if rec: out[g] = rec
     ung, unk2 = apply_placements(out, qinfo, id2g, read_tsv(placements or SPIKE35 / "placements.tsv", ["quest_id", "ungated", "confidence"]))
-    kq, ko, kd = apply_choices(out, qinfo, id2g, read_tsv(choices or SPIKE35 / "choices-verified.tsv", ["row", "class", "quest", "quest_guid", "objective_guid", "holder_quest"]))
+    kq, kd = apply_choices(out, qinfo, id2g, read_tsv(choices or SPIKE35 / "choices-verified.tsv", ["row", "class", "quest", "quest_guid", "objective_guid", "holder_quest"]))
     used = {k[0] for rec in out.values() for k in rec.get("c", [])}
     gates = []
     for gt in GATES:
@@ -167,7 +163,7 @@ def build(spike=SPIKE, placements=None, choices=None):
         if gt.get("real"): gate["real"] = 1
         gates.append(gate)
     data = dict(v=1, points=[list(p) for p in POINTS], gates=gates, enter={k: [id2g[i] for i in v] for k, v in ENTER.items()}, quests=out)
-    return data, dropped, unknown, dict(ungated=ung, unknown=unk2, keep_quest=kq, keep_obj=ko, drop=kd)
+    return data, dropped, unknown, dict(ungated=ung, unknown=unk2, keep_quest=kq, drop=kd)
 
 
 def main():
@@ -177,7 +173,7 @@ def main():
     q = data["quests"]
     print("quests with a story point: %d, unknown (stored without `s`): %d; with a cutoff: %d (whole-quest %d); with predecessors: %d; gates: %d" % (sum("s" in r for r in q.values()), unknown,
           sum("c" in r for r in q.values()), sum(any(k[1] == "q" for k in r.get("c", [])) for r in q.values()), sum("a" in r for r in q.values()), len(data["gates"])), file=sys.stderr)
-    print("v35: no story point: %(ungated)d ungated + %(unknown)d unknown = %(t)d; choice rows: keep-quest %(keep_quest)d, keep-obj %(keep_obj)d, drop %(drop)d" % dict(v35, t=v35["ungated"] + v35["unknown"]), file=sys.stderr)
+    print("v35: no story point: %(ungated)d ungated + %(unknown)d unknown = %(t)d; choice rows: keep-quest %(keep_quest)d, drop %(drop)d" % dict(v35, t=v35["ungated"] + v35["unknown"]), file=sys.stderr)
     for what, detail in dropped: print("LEFT OUT: %s: %s" % (what, detail), file=sys.stderr)
     p = ROOT / "data" / "QUEST-RULES.json"
     if a.check:

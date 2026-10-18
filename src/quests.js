@@ -166,7 +166,7 @@ function qsCellPlace(nF,nR,w,open){const per=Math.max(1,Math.min(QS_TPER,Math.fl
 // does a quest fail at this gate (a whole-quest cutoff on it) and is it still open
 const qsFailsAtGate=(q,gt)=>!!gt&&qsOpenState(qsState(q.g))&&qsCuts(q).some(x=>x.whole&&x.gate===gt);
 // v35: a quest with no story point is "ungated" (the game files show no story gate for it) or "unknown" (there is a gate we can't read yet): `u` in data/QUEST-RULES.json; null = placed.
-// `k` = can fail by a choice: [["q"]] its own conversation, [["q", quest]] a choice in that other quest, [["o", objective]] a choice closes that objective. Not part of the gates, the Missable panel or Next up.
+// `k` = can fail by a choice: [["q"]] its own conversation, [["q", quest]] a choice in that other quest. Not part of the gates, the Missable panel or Next up.
 const qsPlaceKind=q=>{const r=qsRule(q.g);return r&&r.s?null:(r&&r.u==='ungated'?'ungated':'unknown')};
 const qsPack=q=>q.p==='ep1'?'hos':q.p==='bob'?'bob':'base';   // the Timeline scope a quest belongs to
 const qsChoices=q=>{const r=qsRule(q.g);return r&&r.k?r.k:[]};
@@ -285,21 +285,18 @@ function qsJournal(q,el){   // the spoiler gate: with a save only the entries th
   if(!idx.length)msg(sv?'Your save has not shown any journal text for this quest yet.':'The journal is hidden so it does not spoil the story. Import a save to see what you have read, or show all of it.');
   idx.forEach(i=>{const p=document.createElement('p');glMarkup(p,T.d[i],[]);el.appendChild(p)});
   const b=document.createElement('button');b.type='button';b.className='btn qsspoil';b.textContent=full?'Hide full journal':'Show full journal (spoilers)';b.setAttribute('aria-expanded',String(full));
-  b.onclick=()=>{if(full)QS.reveal.delete(q.id);else QS.reveal.add(q.id);qsJournal(q,el);const c=qsEl('qsChoice');if(c&&QS.sel===q.g)qsChoiceFill(q,c)};if(T.d.length>idx.length||full)el.appendChild(b)};
+  b.onclick=()=>{if(full)QS.reveal.delete(q.id);else QS.reveal.add(q.id);qsJournal(q,el)};if(T.d.length>idx.length||full)el.appendChild(b)};
  if(T){fill();return}
  const l=document.createElement('p');l.className='dim';l.textContent='Loading…';el.appendChild(l);
  qsDescLoad().then(D=>{QS.desc=D;fill()},()=>{if(QS.sel!==want)return;el.textContent='';msg2(el,QS_DESC?'The journal text could not be loaded. Check your connection and try again.':'Journal text is not included in this build.')})}
 function msg2(el,t){const p=document.createElement('p');p.className='dim';p.textContent=t;el.appendChild(p)}
-// v35 "Can fail by choice" in the drawer: only the player's wording, never a scene output or a fact name. An objective's title is game text (the lazy file) and a spoiler for a quest the save/hand marks have not reached:
-// it shows once the full journal is revealed, otherwise the block says an objective can be closed. A missing title shows "an objective".
-function qsChoiceFill(q,el){el.textContent='';const ch=qsChoices(q);if(!ch.length)return;const T=qsTitles(q),full=QS.reveal.has(q.id),reached=qsState(q.g)!=='none',canReveal=!!(T&&QS.desc&&QS.desc[q.id]&&QS.desc[q.id].d.length);
+// v35 "Can fail by choice" in the drawer: only the player's wording, never a scene output or a fact name.
+function qsChoiceFill(q,el){el.textContent='';const ch=qsChoices(q);if(!ch.length)return;
  const h=document.createElement('h3');h.className='qsh3';h.textContent='Can fail by choice';el.appendChild(h);
  ch.forEach(e=>{const p=document.createElement('p');p.className='qsrule qschrow';
-  if(e[0]==='q'&&e.length===1)p.textContent="A choice in this quest's conversation ends it as failed.";
-  else if(e[0]==='q'){const o=QS.byG.get(e[1]);p.appendChild(document.createTextNode('Fails through a choice in '));
+  if(e.length===1)p.textContent="A choice in this quest's conversation ends it as failed.";
+  else{const o=QS.byG.get(e[1]);p.appendChild(document.createTextNode('Fails through a choice in '));
    if(o){const b=document.createElement('button');b.type='button';b.className='qslink t-'+o.t;b.dataset.g=o.g;b.textContent=o.n;b.onclick=()=>qsSelect(o.g,true);p.appendChild(b)}else p.appendChild(document.createTextNode('another quest'))}
-  else{const i=q.o.indexOf(e[1]),t=T&&i>=0&&T[i]?String(T[i]).replace(/\s*\.$/,''):'',show=t&&(full||reached);
-   p.textContent=show?'A choice can close the objective: '+t+'.':t&&canReveal?'A choice can close an objective. Show the full journal (spoilers) to see which.':'A choice can close an objective.'}
   el.appendChild(p)});
  const f=document.createElement('small');f.className='qsmfoot';f.textContent="From the game's quest graphs.";el.appendChild(f)}
 function qsRenderDetail(){const el=qsEl('qsDetail'),q=QS.sel&&QS.byG.get(QS.sel);
@@ -313,7 +310,7 @@ const rl=qsRule(q.g),cuts=qsCuts(q),afters=((rl&&rl.a)||[]).map(g=>QS.byG.get(g)
   ${afters.length?`<p class="qsrule qsafter">Opens after: ${afters.map(a=>`<button type="button" class="qslink t-${a.t}" data-g="${a.g}">${qsEsc(a.n)}</button>`).join(', ')}</p>`:''}
   ${whole.length?`<p class="qsrule qsfailsat">Fails at ${whole.map(gn).join(', ')}</p>`:''}
   ${objs.length?`<p class="qsrule qsloses">Loses an objective at ${objs.map(gn).join(', ')}</p>`:''}
-  ${!whole.length&&!objs.length?'<p class="qsrule qsnomiss">Not missable as far as computed</p>':''}</div>`;
+  ${!whole.length&&!objs.length?`<p class="qsrule qsnomiss">${qsByChoice(q)?'No story gate fails this quest':'Not missable as far as computed'}</p>`:''}</div>`;
  const curHtml=cur.length?`<ul>${cur.map(t=>`<li>${t===null?'An active objective (its text is not included in this build)':qsEsc(t)}</li>`).join('')}</ul>`:'<p class="dim">Not known: the save has no active objective for it.</p>';
  el.innerHTML=`<button type="button" class="btn qsclose" id="qsClose" aria-label="Close">×</button><button type="button" class="btn qsback" id="qsBack" aria-label="Back to the list">◀ Back</button><h2 class="qstitle t-${q.t}">${qsIcon(st,q.t)}<span>${qsEsc(q.n)}</span></h2>
   <p class="qsmeta">${qsEsc(qsKindName(q.t))} · ${qsEsc(QS.regions.get(q.r))} · ${q.lv==null?'<span title="not computed yet">level —</span>':'level '+q.lv}</p>

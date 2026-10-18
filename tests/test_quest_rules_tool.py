@@ -46,9 +46,9 @@ tsv(d / "q.tsv", HEAD, [["Q3", "", "", "", "", "yes", "", "", ""]] + rows(["Q4",
 check("placements: a bad `ungated` value stops", "ungated column" in (stops(M.apply_placements, {G[0]: {"s": "a"}, G[1]: {"s": "p"}}, qinfo, id2g, M.read_tsv(d / "q.tsv", ["quest_id", "ungated"])) or ""))
 CH = ["row", "class", "quest", "quest_guid", "objective_guid", "holder_quest"]
 o = {}
-r = [["1", "keep-quest", "Q1", G[0], "", ""], ["2", "keep-quest", "Q2", G[1], "", "Q3"], ["3", "keep-obj", "Q4", G[3], qinfo[G[3]]["o"][0], ""], ["4", "drop", "Q5", G[4], "", ""]]
-check("choices: keep-quest [q], cross-quest [q, holder], keep-obj [o, objective]; drop adds nothing", M.apply_choices(o, qinfo, id2g, [dict(zip(CH, x)) for x in r]) == (2, 1, 1) and o == {G[0]: {"k": [["q"]]}, G[1]: {"k": [["q", G[2]]]}, G[3]: {"k": [["o", qinfo[G[3]]["o"][0]]]}}, o)
-for name, bad in (("an unknown class", ["1", "maybe", "Q1", G[0], "", ""]), ("a quest guid that is not the quest's", ["1", "keep-quest", "Q1", G[1], "", ""]), ("an objective of another quest", ["1", "keep-obj", "Q1", G[0], qinfo[G[1]]["o"][0], ""]), ("an unknown holder", ["1", "keep-quest", "Q1", G[0], "", "Q99"])):
+r = [["1", "keep-quest", "Q1", G[0], "", ""], ["2", "keep-quest", "Q2", G[1], "", "Q3"], ["3", "drop", "Q4", G[3], qinfo[G[3]]["o"][0], ""], ["4", "drop", "Q5", G[4], "", ""]]
+check("choices: keep-quest [q] and cross-quest [q, holder]; drop adds nothing", M.apply_choices(o, qinfo, id2g, [dict(zip(CH, x)) for x in r]) == (2, 2) and o == {G[0]: {"k": [["q"]]}, G[1]: {"k": [["q", G[2]]]}}, o)
+for name, bad in (("an unknown class", ["1", "maybe", "Q1", G[0], "", ""]), ("a quest guid that is not the quest's", ["1", "keep-quest", "Q1", G[1], "", ""]), ("the retired keep-obj class", ["1", "keep-obj", "Q1", G[0], qinfo[G[0]]["o"][0], ""]), ("an unknown holder", ["1", "keep-quest", "Q1", G[0], "", "Q99"])):
     check("choices: %s stops" % name, stops(M.apply_choices, {}, qinfo, id2g, [dict(zip(CH, bad))]) is not None)
 # the committed file and, when the spike is here, the real run
 R = json.loads((ROOT / "data" / "QUEST-RULES.json").read_text(encoding="utf-8"))["quests"]
@@ -56,7 +56,7 @@ n = lambda v: sum(r.get("u") == v for r in R.values())
 check("committed QUEST-RULES.json: 157 ungated + 34 unknown = 191", (n("ungated"), n("unknown")) == (157, 34))
 if (M.SPIKE35 / "placements.tsv").is_file() and (M.SPIKE / "rules.json").is_file():
     data, _, _, v = M.build()
-    check("the tool on the real spike: 157 + 34 = 191, 4 keep-quest + 3 keep-obj + 14 drop, and the committed file is what it writes", (v["ungated"], v["unknown"]) == (157, 34) and (v["keep_quest"], v["keep_obj"], v["drop"]) == (4, 3, 14)
+    check("the tool on the real spike: 157 + 34 = 191, 4 keep-quest + 17 drop, and the committed file is what it writes", (v["ungated"], v["unknown"]) == (157, 34) and (v["keep_quest"], v["drop"]) == (4, 17)
           and (ROOT / "data" / "QUEST-RULES.json").read_text(encoding="utf-8") == json.dumps(data, separators=(",", ":")) + "\n", v)
     p = subprocess.run([sys.executable, str(ROOT / "tools" / "make_quest_rules.py"), "--check", "--placements", str(d / "none.tsv")], capture_output=True, text=True)
     check("the tool run with a missing placements.tsv fails hard (exit %d)" % p.returncode, p.returncode != 0 and "missing input" in p.stderr)
