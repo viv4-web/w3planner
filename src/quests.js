@@ -86,7 +86,7 @@ const qsOpenState=s=>s==='none'||s==='active'||s==='inactive';
 const QS_SECTIONS=['p','a','i','b','3','e'];
 function qsSection(){if(!QS.R)return -1;let best=-1;QS_SECTIONS.forEach((k,i)=>{if((QS.R.enter[k]||[]).some(g=>qsState(g)!=='none'))best=i});return best}   // the highest story section with a quest in the save
 function qsCuts(q){const r=qsRule(q.g);return r&&r.c?r.c.map(([id,lv,how])=>({gate:QS.R.gmap.get(id),whole:lv==='q',how:how==='f'?'Failure':'Deactivate'})).filter(x=>x.gate):[]}
-function qsFailsAt(q){const c=qsCuts(q).find(x=>x.whole&&!qsPassed(x.gate));return c?c.gate:null}   // the gate a quest that is still open fails at
+function qsFailsAt(q){const c=qsCuts(q).filter(x=>x.whole&&!qsPassed(x.gate)).sort((a,b)=>a.gate.x-b.gate.x)[0];return c?c.gate:null}   // the gate a quest that is still open fails at: the earliest in the story (the one the panel and the brackets use)
 function qsMissLists(){   // per lane in use: the next gate not passed, the open quests that fail there, and the ones that only lose an objective
  const out=[];if(!QS.R||!QS.store.save)return out;const lanes=['b'];if(QS.data.quests.some(q=>q.p==='bob'&&qsState(q.g)!=='none'))lanes.push('w');
  lanes.forEach(l=>{const gt=qsGates(l).find(x=>!qsPassed(x));if(!gt)return;const whole=[],obj=[];
@@ -165,6 +165,16 @@ function qsCellPlace(nF,nR,w,open){const per=Math.max(1,Math.min(QS_TPER,Math.fl
  return{per,over,fS,rS,chip,fLines,rLines,lines:fLines+rLines,more:nF+nR-fS-rS}}
 // does a quest fail at this gate (a whole-quest cutoff on it) and is it still open
 const qsFailsAtGate=(q,gt)=>!!gt&&qsOpenState(qsState(q.g))&&qsCuts(q).some(x=>x.whole&&x.gate===gt);
+// v34.3 "Missable, story point unknown": the quests with a whole-quest cutoff in this lane and no story point (so no place in the grid), grouped by the gate they fail at. Only with a save, like the Missable panel.
+// An open quest sits under the earliest gate it has not passed (for the next gate that is exactly qsFailsAtGate, the panel's and the brackets' test); a quest whose gates are all passed, or that is Done or Failed, under its earliest cutoff gate.
+const qsLaneCuts=(q,lane)=>qsCuts(q).filter(x=>x.whole&&x.gate.lane===lane).sort((a,b)=>a.gate.x-b.gate.x);
+function qsStripGate(q,lane){const c=qsLaneCuts(q,lane);if(!c.length)return null;const u=qsOpenState(qsState(q.g))?c.find(x=>!qsPassed(x.gate)):null;return(u||c[0]).gate}
+function qsMissUnknown(lane,keys){   // -> [{k: the gate's key entry, list}], the next gate not passed first, then the other gates not passed, then the passed ones, each in story order
+ if(!QS.R||!QS.store.save)return[];const by=new Map();
+ QS.data.quests.forEach(q=>{if(qsRule(q.g)&&qsRule(q.g).s)return;const g=qsStripGate(q,lane);if(!g)return;if(!by.has(g))by.set(g,[]);by.get(g).push(q)});
+ return keys.filter(k=>by.has(k.g)).map(k=>({k,list:by.get(k.g)})).sort((a,b)=>a.k.passed-b.k.passed||a.k.g.x-b.k.g.x)}
+function qsMissUnknownHtml(groups,gt){const vis=groups.map(x=>({k:x.k,list:qsCellOrder(x.list.filter(q=>QS.timeDone||qsState(q.g)!=='done'),gt)})).filter(x=>x.list.length);if(!vis.length)return'';
+ return`<section class="qsmu" id="qsMU" aria-labelledby="qsMUh"><h3 class="qsgkh" id="qsMUh">Missable, story point unknown</h3><p class="qsbnote">These can be missed, but the game files don't say where in the story they open.</p><div class="qsmugs">${vis.map(x=>`<div class="qsmug${x.k.passed?' passed':''}" data-gate="${x.k.g.id}" role="group" aria-label="Fails at ${qsEsc(x.k.name)}${x.k.passed?', passed':''}"><span class="qsfl">fails at <b class="qsgb mini${x.k.passed?' passed':''}" title="${qsEsc(x.k.name+(x.k.code?' ('+x.k.code+')':''))}${x.k.passed?' · passed':''}">${x.k.n}</b><em>${qsEsc(x.k.name)}</em></span><div class="qsmud">${x.list.map(q=>qsDotHtml(q,'')).join('')}</div></div>`).join('')}</div></section>`}
 // a cell's order: quests that fail at the next gate first, then Main, then the other types in the legend's order; then active first, done last, by name
 function qsCellOrder(list,gt){const ty=q=>QS_KINDS.findIndex(k=>k[0]===q.t),fl=q=>qsFailsAtGate(q,gt)?0:1,
  ord=(a,b)=>(qsState(a.g)==='done')-(qsState(b.g)==='done')||(qsState(b.g)==='active')-(qsState(a.g)==='active')||a.n.localeCompare(b.n);
@@ -227,10 +237,12 @@ function qsRenderTime(host){
  const axis=lane?cols.map(c=>`<span style="left:${(c.x+c.w/2).toFixed(1)}px">${c.n}</span>`).join(''):'',
   lab=youX==null?'':`<b class="qsyou${youX<64?' lft':youX>W-70?' rgt':''}" style="left:${youX.toFixed(1)}px;top:${lane?24:4}px">You are here</b>`;
  body+=`<div class="qsbaxis qstfoot"><span></span><div class="qsbplot axis" style="width:${W}px;height:${lane?46:28}px">${bg}${bars}${you}${axis}${lab}</div></div>`;
- const unk=Qs.filter(q=>!known(q)).sort((a,b)=>(a.lv==null)-(b.lv==null)||a.lv-b.lv||a.n.localeCompare(b.n));
+ const strip=qsMissUnknown(lane||'b',keys),inStrip=new Set(strip.flatMap(x=>x.list.map(q=>q.g)));   // the quests in the strip are not repeated in the collapsed row
+ const unk=Qs.filter(q=>!known(q)&&!inStrip.has(q.g)).sort((a,b)=>(a.lv==null)-(b.lv==null)||a.lv-b.lv||a.n.localeCompare(b.n));
  host.innerHTML=`<div class="qstbar">${tools}</div>
   ${qsGateKeyHtml(keys)}${lane?`<p class="qsbnote qsscnote">Laid out by quest level: every ${qsEsc(R.pts.get(lane))} quest shares one story point in the game's quest graphs.</p>`:''}
   <div class="qsband qstl" id="qsTL"><div class="qsbinner" style="width:${QS_LABEL+W}px">${head}${body}</div></div>
+  ${qsMissUnknownHtml(strip,next&&next.g)}
   <ul class="qslegend" aria-label="Quest types">${QS_KINDS.map(([k,n])=>`<li class="t-${k}">${qsShape(k,'none',true)}<span>${n}</span></li>`).join('')}<li class="qsl-fb"><i class="qsfb"></i><span>Fails at the next gate you haven't passed</span></li><li class="qsl-more"><span class="qsmore">+N</span><span>More in this cell</span></li></ul>
   <details class="qsunk" id="qsUnk"${QS.unkOpen?' open':''}><summary>Placement not computed yet (${unk.length})</summary><p class="qsbnote">The game's graphs give no story point for these quests (nothing gates them before the first act); they are only in the List and the Level band.</p><div class="qsunkl">${unk.map(q=>{const st=qsState(q.g);return`<button type="button" class="qsrow t-${q.t} st-${st}" data-g="${q.g}">${qsIcon(st,q.t)}<span class="qsrn2"><b>${qsEsc(q.n)}</b><small>${qsEsc(QS.regions.get(q.r))}</small></span>${qsLvSpan(q)}</button>`}).join('')}</div></details>
   <p class="qsbnote">${QS.timeDone?'Done quests are shown faintly, with a check.':'Done quests are hidden: turn on Show done to see them.'} ${lane?'Quests are laid out by their level.':'Columns are the story sections the game\'s quest graphs place a quest in.'} The numbered gates are the points of no return; quests that fail at the next one you have not passed are grouped first in their cell, under an orange bracket. From the game's quest graphs.</p>`;
