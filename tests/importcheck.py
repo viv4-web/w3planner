@@ -124,6 +124,8 @@ def sockets_1(b, base, check, label):
     eq = " | ".join(r["secs"].get("Equipment", []))
     check("%s: version-67 save: the review shows the existing 'game version we haven't tested' notice and finds the gear (the planner's names for Gryphon School silver and steel swords, Gryphon Armor, Gloves 1, Boots 1, Pants 1, Crossbow 5: %s)" % (label, eq[:170]), ok and "Saved with a game version we haven't tested. We'll try; check the results." in r["notes"]
           and all(n in eq for n in ("Steel sword: Griffin steel sword", "Silver sword: Griffin silver sword", "Crossbow: Crossbow", "Chest armor: Griffin armor", "Gloves: Griffin gauntlets", "Trousers: Griffin trousers", "Boots: Griffin boots")) and "not found" not in eq.lower() and "empty" not in eq.split("Mask")[0], r)
+    lvl = E("+document.getElementById('lvl').value"); eqs = [l for l in r["secs"].get("Character", []) if l.startswith("Equipped:")]
+    check("%s: version-67 save, planner Level field at %s: 'Equipped: X of Y open slots' is worked out from the save's own level (level 16, 30 points: all 12 slots open), not the Level field or the save's unlock flag (%s)" % (label, lvl, eqs), lvl == 1 and eqs == ["Equipped: 12 of 12 open slots"], eqs)
     pg.click("#impApply"); until(pg, "document.getElementById('impov').hidden"); pg.wait_for_timeout(400)
     g = E("S.gear.slice()"); n = E("S.gear.filter(x=>x>0).length")
     check("%s: version-67 save: applied, 7 gear slots are filled (steel, silver, crossbow, chest, gloves, trousers, boots; %s), nothing about sockets is in the link" % (label, g), n >= 7 and "socket" not in E("enc()").lower(), g)
