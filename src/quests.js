@@ -318,7 +318,7 @@ const rl=qsRule(q.g),cuts=qsCuts(q),afters=((rl&&rl.a)||[]).map(g=>QS.byG.get(g)
  el.innerHTML=`<button type="button" class="btn qsclose" id="qsClose" aria-label="Close">×</button><button type="button" class="btn qsback" id="qsBack" aria-label="Back to the list">◀ Back</button><h2 class="qstitle t-${q.t}">${qsIcon(st,q.t)}<span>${qsEsc(q.n)}</span></h2>
   <p class="qsmeta">${qsEsc(qsKindName(q.t))} · ${qsEsc(QS.regions.get(q.r))} · ${q.lv==null?'<span title="not computed yet">level —</span>':'level '+q.lv}</p>
   <p class="qsxp">${qsEsc(qsXpText(q,my))}</p><p class="qssave">${saveLine}</p>
-  ${rulesHtml}${qsByChoice(q)?'<div class="qschoice" id="qsChoice"></div>':''}
+  ${rulesHtml}${qsByChoice(q)?'<div class="qscfc" id="qsChoice"></div>':''}
   ${st==='active'?`<div class="qscur"><h3>Current objective${cur.length>1?'s':''}</h3>${curHtml}</div>`:''}
   <div class="qsprog t-${q.t}" role="radiogroup" aria-label="My progress"><span class="qsplabel">My progress</span>${QS_MARKS.map(s=>`<button type="button" class="btn qsmark${st===s?' on':''}" role="radio" aria-checked="${st===s}" data-s="${s}">${qsIcon(s)}${QS_NAMES[s]}</button>`).join('')}${hand?'<button type="button" class="qsclear" id="qsClear">Follow my save</button>':''}</div>
   <h3 class="qsh3">Journal</h3><div class="qsdesc" id="qsDesc" tabindex="0"></div>

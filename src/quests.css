@@ -164,5 +164,5 @@
 .qsrow{position:relative}.qsrow.choice::after{content:"";position:absolute;left:19px;top:calc(50% + 2px);box-sizing:border-box;width:8px;height:8px;border-radius:50%;border:1.5px solid #f4ead2;box-shadow:0 0 0 1px #0d0b09;pointer-events:none}
 .qsbych{flex:0 0 auto;font-size:13px;line-height:18px;padding:0 7px;border:1px solid #cfc3a6;border-radius:9px;color:#f4ead2;white-space:nowrap}
 .qsl-ch{display:flex;align-items:center;gap:7px;font-size:17px;color:var(--ink)}.qsl-ch .qsch{display:inline-block;box-sizing:border-box;width:10px;height:10px;border-radius:50%;border:1.5px solid #f4ead2}
-.qschoice{margin:10px 0 0;padding:6px 10px 8px;border-left:3px solid #f4ead2;background:#17130e}.qschoice .qsh3{margin:0 0 4px}.qschrow{color:#efe5cc}.qschoice .qsmfoot{margin-top:4px}
+.qscfc{margin:10px 0 0;padding:6px 10px 8px;border-left:3px solid #f4ead2;background:#17130e}.qscfc .qsh3{margin:0 0 4px}.qschrow{color:#efe5cc}.qscfc .qsmfoot{margin-top:4px}
 .qschoicet{color:#f4ead2}.qsnogate{color:#cdbf9e}
