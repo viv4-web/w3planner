@@ -24,7 +24,8 @@ button.glgroup{display:flex;gap:8px;align-items:center;width:100%;min-height:36p
 .glrow{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;text-align:left;background:none;border:0;border-bottom:1px solid #2a2219;padding:4px 10px;color:var(--ink);font:inherit}
 .glrow:hover{background:#17130e}.glrow.on{background:#241c11;box-shadow:inset 3px 0 0 var(--gold)}.glrow:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
 .glth{flex:0 0 64px;width:64px;height:64px;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,#2c241a,#0a0908 80%);border:1px solid #3a3025}
-.glth img{width:64px;height:64px;object-fit:contain}
+/* v35.2: the picture keeps its own proportions (up to 64 px each way), centred in the 64 px box: never stretched, never cropped; the box and so the row height stay the same */
+.glth img{display:block;width:auto;height:auto;max-width:64px;max-height:64px;object-fit:contain}
 .glname{display:flex;flex-direction:column;min-width:0;line-height:1.15}.glname b{font-weight:500;font-size:19px;overflow-wrap:anywhere}.glname small{color:var(--dim);font-size:14px;overflow-wrap:anywhere}
 .glsnip{font-size:14px}
 .glhint{margin:0;padding:18px 14px;color:var(--dim);font-size:17px}

@@ -229,3 +229,21 @@ def live(b, url, check):
     pg.click('.glst[data-t="bestiary"]'); until(pg, "document.querySelector('.glst.on').dataset.t==='bestiary'"); pg.wait_for_timeout(500)
     big = E("(()=>{const i=document.querySelector('#glPic img');return !!i&&i.complete&&i.naturalWidth>100})()"); check("glossary: the creature picture loads", big)
     check("glossary: no script errors and no HTTP errors", not errs and not bad, (errs + bad)[:2]); pg.close()
+
+
+def thumbs(b, url, check, label, tabs=("bestiary", "characters", "books")):
+    """v35.2: the list pictures (class glth: Bestiary, Characters, Books and Paintings) keep their own proportions: the rendered picture's aspect ratio is within 2% of the file's, it is centred in the
+    64 px box, nothing is cropped, and the box (so the row height) is the same for every picture. Real pictures of the tabs, plus injected 64x40, 40x64 and 58x64 ones."""
+    pg, errs, _ = newpage(b, url); E = pg.evaluate; opened(pg)
+    MEASURE = """(()=>{const out=[];document.querySelectorAll('#glRows .glth').forEach(s=>{const i=s.querySelector('img');if(!i||!i.complete||!i.naturalWidth)return;const r=i.getBoundingClientRect(),b=s.getBoundingClientRect();
+      out.push({nat:i.naturalWidth/i.naturalHeight,rend:r.width/r.height,box:[Math.round(b.width),Math.round(b.height)],cx:Math.abs((r.left+r.width/2)-(b.left+b.width/2)),cy:Math.abs((r.top+r.height/2)-(b.top+b.height/2)),inside:r.left>=b.left-1&&r.right<=b.right+1&&r.top>=b.top-1&&r.bottom<=b.bottom+1,fit:getComputedStyle(i).objectFit,row:Math.round(s.closest('.glrow').getBoundingClientRect().height)})});return out})()"""
+    for tab in tabs:
+        opened(pg, tab); pg.wait_for_timeout(700); m = E(MEASURE); bad = [x for x in m if abs(x["rend"] / x["nat"] - 1) > .02 or not x["inside"] or x["cx"] > 1.5 or x["cy"] > 1.5 or x["box"] != [64, 64] or x["fit"] != "contain"]
+        check("%s: v35.2 %s list: %d pictures keep their proportions (rendered within 2%% of the file's), centred, uncropped, in the same 64 px box (%d bad)" % (label, tab, len(m), len(bad)), len(m) > 0 and not bad, bad[:2])
+    opened(pg, "books"); pg.wait_for_timeout(400)
+    res = E("""(async()=>{const row=document.querySelector('#glRows .glrow'),out=[];for(const [w,h] of [[64,40],[40,64],[58,64],[64,64],[20,60]]){const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').fillRect(0,0,w,h);
+      const url=c.toDataURL('image/png'),sp=document.createElement('span');sp.className='glth';const im=document.createElement('img');im.src=url;sp.appendChild(im);row.insertBefore(sp,row.firstChild);await im.decode();
+      const r=im.getBoundingClientRect(),b=sp.getBoundingClientRect();out.push({w,h,rend:r.width/r.height,nat:w/h,cx:Math.abs((r.left+r.width/2)-(b.left+b.width/2)),cy:Math.abs((r.top+r.height/2)-(b.top+b.height/2)),box:[Math.round(b.width),Math.round(b.height)],rw:Math.round(r.width),rh:Math.round(r.height)});sp.remove()}return out})()""")
+    bad = [x for x in res if abs(x["rend"] / x["nat"] - 1) > .02 or x["cx"] > 1.5 or x["cy"] > 1.5 or x["box"] != [64, 64]]
+    check("%s: v35.2 pictures of other proportions (64x40, 40x64, 58x64, 64x64, 20x60) are shown as they are, centred in the 64 px box (%s)" % (label, [(x["w"], x["h"], x["rw"], x["rh"]) for x in res]), not bad, bad[:2])
+    check("%s: no script errors" % label, not errs, errs[:1]); pg.close()

@@ -89,11 +89,19 @@ function playerBlob(d,tb){
  throw new SaveError('PARSE','the player data was not found')}
 
 // ---- the inventory (CInventoryComponent) binary: u16 item count at byte 11, then variable records. Records are found by their fixed middle:
-// [name u16][4][7][dye u16 u16 = 43 00 44 00 for the default dye][quantity u16][float: -1.0 or the durability][u8 extras n][n x (u16 name, u32 value, u8)][u16 id][u16 quality/level] ----
+// [name u16][4][7][dye u16 u16 = the name-table indices of 'Dye Default' and 'dye_default' (67/68 in saves 66, 147/150 in save 67: looked up by name, v35.2)][quantity u16][float: -1.0 or the durability][u8 extras n][n x (u16 name, u32 value, u8)][u16 id][u16 quality/level] ----
+const GEAR_CATEGORIES=['steelsword','silversword','armor','gloves','boots','pants','crossbow'];
+// the tail of an equipped sword / armour piece (found on a save with a rune in a sword and a glyph in an armour, docs/IMPORT.md "Sockets"): [u16 ref][u8 nSockets, each: u16 item name, u32, u8 nAb, nAb x u16 ability name][u8 nOils, nOils x u16][u16 category CName][u16 0],
+// the whole tail and nothing else. -> the socketed items' ability names, or null when the bytes are not that layout (then the older reading applies)
+function gearTail(raw,o,end,N){
+ try{let p=o+2;const ns=raw[p++],ab=[];
+  for(let s=0;s<ns;s++){if(p+7>end)return null;const na=raw[p+6];p+=7;for(let j=0;j<na;j++){if(p+2>end)return null;const an=u16(raw,p);if(an<1||an>N.length)return null;ab.push(N[an-1]);p+=2}}
+  const no=raw[p++];p+=2*no;if(p+4!==end)return null;const cat=N[u16(raw,p)-1];
+  return GEAR_CATEGORIES.includes(cat)&&u16(raw,p+2)===0?ab:null}catch(e){return null}}
 function inventory(raw,N){
- if(!raw||raw.length<30)return{count:0,items:[]};const header=u16(raw,11),starts=new Set();
+ if(!raw||raw.length<30)return{count:0,items:[]};const header=u16(raw,11),starts=new Set(),dyeA=N.indexOf('Dye Default')+1,dyeB=N.indexOf('dye_default')+1;
  for(let i=13;i<raw.length-6;i++){
-  if(raw[i]===0x43&&raw[i+1]===0&&raw[i+2]===0x44&&raw[i+3]===0&&raw[i+4]===1&&raw[i+5]===0)starts.add(i-13);
+  if(dyeA&&dyeB&&u16(raw,i)===dyeA&&u16(raw,i+2)===dyeB&&raw[i+4]===1&&raw[i+5]===0)starts.add(i-13);
   if(raw[i]===0&&raw[i+1]===0&&raw[i+2]===0x80&&raw[i+3]===0xbf)starts.add(i-19)}
  const items=[],sorted=Array.from(starts).sort((a,b)=>a-b);
  sorted.forEach((st,k)=>{
@@ -103,8 +111,10 @@ function inventory(raw,N){
   if(!ok||o+4>raw.length)return;
   // after the extras: [u16 id][u16 count x 256][count x u16 ability name]...; items made by the game's random generator (autogen_*, MA_* magic abilities, quality_*) list their rolled abilities there,
   // the fixed relics and set pieces list none (docs/IMPORT.md, "Rolled values and sockets")
-  const end=k+1<sorted.length?sorted[k+1]:raw.length,cnt=Math.min(raw[o+3],Math.max(0,Math.floor((end-(o+4))/2))),abilities=[];
-  for(let j=0;j<cnt;j++){const an=u16(raw,o+4+2*j);if(an>=1&&an<=N.length)abilities.push(N[an-1])}
+  const end=k+1<sorted.length?sorted[k+1]:raw.length,gt=gearTail(raw,o,end,N),abilities=[];
+  if(gt)abilities.push(...gt);   // a sword / armour piece: [u16 ref][sockets][oils][category][0]; what is socketed is not imported yet, but its ability names keep the item out of the stats numbers (as a rolled item is)
+  else{const cnt=Math.min(raw[o+3],Math.max(0,Math.floor((end-(o+4))/2)));
+   for(let j=0;j<cnt;j++){const an=u16(raw,o+4+2*j);if(an>=1&&an<=N.length)abilities.push(N[an-1])}}
   items.push({id:N[name-1],qty:u16(raw,st+17),ref:u16(raw,o),extras:ex,abilities})});
  return{count:header,items}}
 

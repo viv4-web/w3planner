@@ -72,7 +72,7 @@ def run(b, base, check, label, ref=True):
     check("%s: no script errors" % label, not errs, errs[:1])
     other = [u for u in reqs if not u.startswith(("http://127.0.0.1", "http://localhost", "data:", "blob:"))]; check("%s: no request to any other site" % label, not other, other[:2]); pg.close()
     mutagen_rule(b, base, check, label)
-    if ref: refsave(b, base, check, label); save_l9(b, base, check, label)
+    if ref: refsave(b, base, check, label); save_l9(b, base, check, label); sockets_1(b, base, check, label)
     phone(b, base, check, label)
 
 
@@ -96,6 +96,7 @@ def mutagen_rule(b, base, check, label):
 
 
 L9 = Path.home() / "work/w3planner-art/save-spike/fixtures/save-l9"
+SOCK1 = Path.home() / "work/w3planner-art/save-spike/fixtures/sockets-1"
 
 
 def save_l9(b, base, check, label):
@@ -111,6 +112,21 @@ def save_l9(b, base, check, label):
     rows = bonus_rows(pg)
     check("%s: level-9 save: Character shows Sign intensity +48%%, Sign intensity +34%%, Vitality +180, one line per mutagen (%s)" % (label, rows),
           len(rows) == 3 and "Sign intensity +48%" in rows[0] and "Sign intensity +34%" in rows[1] and "Vitality +180" in rows[2] and E("+document.getElementById('lvl').value") == 9 and E("synergyLv()") == 2, rows)
+    check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
+
+
+def sockets_1(b, base, check, label):
+    """v35.2: a version-67 save (a rune in a sword, a glyph in an armour): the gear imports (the dye indices are 147/150 here, not 67/68), the 'game version we haven't tested' notice shows, sockets are not imported. Skips when the fixture is absent."""
+    sav = sorted(SOCK1.glob("*.sav")) if SOCK1.is_dir() else []
+    if not sav: print("  SKIP  %s: version-67 save import (fixture not present)" % label); return
+    pg, errs, reqs = page(b, base); E = pg.evaluate; pg.click("#savebtn"); pg.set_input_files("#impfile", [str(sav[0])]); ok = until(pg, "!document.getElementById('impStep2').hidden")
+    r = E("""(()=>({notes:[...document.querySelectorAll('.impnote')].map(n=>n.textContent),secs:Object.fromEntries([...document.querySelectorAll('.impsec')].map(s=>[s.querySelector('.imphead b').textContent,[...s.querySelectorAll('.impline')].map(l=>l.textContent)]))}))()""") if ok else {"notes": [], "secs": {}}
+    eq = " | ".join(r["secs"].get("Equipment", []))
+    check("%s: version-67 save: the review shows the existing 'game version we haven't tested' notice and finds the gear (the planner's names for Gryphon School silver and steel swords, Gryphon Armor, Gloves 1, Boots 1, Pants 1, Crossbow 5: %s)" % (label, eq[:170]), ok and "Saved with a game version we haven't tested. We'll try; check the results." in r["notes"]
+          and all(n in eq for n in ("Steel sword: Griffin steel sword", "Silver sword: Griffin silver sword", "Crossbow: Crossbow", "Chest armor: Griffin armor", "Gloves: Griffin gauntlets", "Trousers: Griffin trousers", "Boots: Griffin boots")) and "not found" not in eq.lower() and "empty" not in eq.split("Mask")[0], r)
+    pg.click("#impApply"); until(pg, "document.getElementById('impov').hidden"); pg.wait_for_timeout(400)
+    g = E("S.gear.slice()"); n = E("S.gear.filter(x=>x>0).length")
+    check("%s: version-67 save: applied, 7 gear slots are filled (steel, silver, crossbow, chest, gloves, trousers, boots; %s), nothing about sockets is in the link" % (label, g), n >= 7 and "socket" not in E("enc()").lower(), g)
     check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
 
 

@@ -162,7 +162,7 @@ def main():
         eqcheck.run(b, base, check, "online", a.quick)
         print("\n== Top bar and Glossary ==")
         check("the public build has no glossary files, the live build has the real ones", ((site / "glossary").is_dir()) == (a.variant == "game") and (a.variant == "game" or not any("glossary" in p.name for p in site.rglob("*"))))
-        glcheck.run(b, gbase, check, "online", main=base, real=a.variant == "game", quick=a.quick)
+        glcheck.run(b, gbase, check, "online", main=base, real=a.variant == "game", quick=a.quick); glcheck.thumbs(b, gbase, check, "online (fake pictures)"); (glcheck.thumbs(b, base, check, "online (live build)") if a.variant == "game" else None)
         print("\n== Import save ==")
         importcheck.run(b, base, check, "online")
         print("\n== Player Stats ==")
