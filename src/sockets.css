@@ -1,0 +1,27 @@
+/* Runes and glyphs in sockets (v36): discs in the top-left corner of a slot tile, the Sockets row of the item card, the picker */
+.socks{position:absolute;left:3px;top:3px;display:flex;gap:3px;z-index:2;pointer-events:none}
+.sock{position:relative;display:inline-block;flex:none;width:13px;height:13px;padding:0;border-radius:50%;border:2px solid #9a8a6a;background:#0b0908cc;pointer-events:auto;min-height:0}
+.sock::before{content:"";position:absolute;inset:-5px}
+.sock.rune{background:#e08a2a;border-color:#f6d49a}.sock.glyph{background:#4f9be0;border-color:#b6d8f6}
+.sock.empty:hover,.sock:hover,.sock:focus-visible{box-shadow:0 0 0 1px var(--gold),0 0 6px #c8a86b99}.sock:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.eqsocks{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 2px;padding-top:6px;border-top:1px solid #2a2219;color:var(--dim)}.eqsocks b{color:var(--ink);font-weight:500}
+.sockrow{display:flex;gap:8px}.sockrow .sock{width:20px;height:20px}.sockrow .sock::before{inset:-8px}
+.sockfx{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;margin:2px 0;color:#7fc16b}.sockfx span{flex:1 1 auto}.sockfx b{font-weight:500}.sockfx i{flex:1 1 100%;font-style:normal;font-size:.85em;color:#5f9a50}.sockfx.none{color:var(--dim)}.sockfx.none i{color:var(--dim)}
+.eqt .sockfx{font-size:inherit}
+.skov{position:fixed;inset:0;z-index:85;background:#000c;display:grid;place-items:center;padding:16px}.skov[hidden]{display:none}
+.skmodal{display:flex;flex-direction:column;width:min(640px,100%);max-height:min(720px,100%);border:1px solid #8a6a36;background:linear-gradient(180deg,#1b150e,#0d0b09);box-shadow:0 14px 50px #000;min-height:0}
+.skhead{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #3a3025}.skhead h2{margin:0;flex:1;min-width:0;font-weight:500;font-size:26px;color:#fff}
+.sksocks{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 14px 0}.sksocks .dim{flex:1 1 100%}
+.sksock{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border:1px solid #4a3d2c;background:#0d0c0a;color:var(--ink);font-size:16px;min-height:32px}.sksock .sock{pointer-events:none;width:14px;height:14px}.sksock.on{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+.skfilters{padding:8px 14px 0}.skfilters input{width:100%;box-sizing:border-box}
+.sktabs{display:flex;gap:6px;padding:8px 14px;border-bottom:1px solid #2a2219;flex-wrap:wrap}.sktab{padding:3px 12px;border:1px solid #4a3d2c;background:#0d0c0a;color:var(--ink);font-size:17px;min-height:32px}.sktab small{color:var(--dim)}.sktab.on{background:var(--gold);border-color:var(--gold);color:#17120a;font-weight:600}.sktab.on small{color:#17120a}.sktab:focus-visible,.sksock:focus-visible,.skrow:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.sklist{flex:1 1 auto;min-height:120px;overflow:auto;padding:6px 8px;display:flex;flex-direction:column;gap:4px}
+.skrow{display:grid;grid-template-columns:40px minmax(0,1fr) minmax(0,1.3fr);align-items:center;gap:10px;padding:4px 8px;border:1px solid #2f261a;background:#0a0908;color:var(--ink);text-align:left;font-size:17px}.skrow:hover{border-color:var(--gold);background:#17130e}.skrow.cur{background:#241c11;box-shadow:inset 3px 0 0 var(--gold);border-color:var(--gold)}
+.skrow .skname{overflow-wrap:anywhere}.skrow em{display:block;font-style:normal;font-size:.8em;color:var(--gold)}.skrow .skfx{color:#7fc16b;font-size:.95em;overflow-wrap:anywhere}
+.skic{width:36px;height:36px;object-fit:contain;display:grid;place-items:center}
+.skletter{border-radius:50%;font-size:20px;font-weight:600;color:#17120a;border:2px solid #f3e3c0}.skletter.rune{background:#e08a2a}.skletter.glyph{background:#4f9be0}
+.skempty{padding:14px}
+.skfoot{display:flex;align-items:center;gap:12px;padding:8px 14px;border-top:1px solid #3a3025}
+body.skopen{overflow:hidden}
+@media (max-width:599px){.skov{padding:0}.skmodal{width:100%;max-height:100%;height:100%;border:0}.skrow,.sktab,.sksock,.skfoot .btn,.skhead .btn{min-height:44px}.skrow{grid-template-columns:36px minmax(0,1fr)}.skrow .skfx{grid-column:1 / -1}.skfilters input{min-height:40px}.sock::before{inset:-7px}}
+.pssrc{color:#7fc16b;font-size:.8em}

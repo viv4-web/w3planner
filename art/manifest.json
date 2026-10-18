@@ -3270,5 +3270,248 @@
   "game": "png",
   "placeholder": "png",
   "placeholder_as": "cons/ph-pocket"
+ },
+ "sock/ph-rune": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "sock/ph-glyph": {
+  "game": "png",
+  "placeholder": "png"
+ },
+ "sock/glyph_aard_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-glyph"
+ },
+ "sock/glyph_aard_greater_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-glyph"
+ },
+ "sock/glyph_aard_lesser_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-glyph"
+ },
+ "sock/glyph_axii_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-glyph"
+ },
+ "sock/glyph_axii_greater_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-glyph"
+ },
+ "sock/glyph_axii_lesser_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-glyph"
+ },
+ "sock/glyph_igni_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-glyph"
+ },
+ "sock/glyph_igni_greater_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-glyph"
+ },
+ "sock/glyph_igni_lesser_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-glyph"
+ },
+ "sock/glyph_infusion_greater_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-glyph"
+ },
+ "sock/glyph_infusion_lesser_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-glyph"
+ },
+ "sock/glyph_quen_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-glyph"
+ },
+ "sock/glyph_quen_greater_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-glyph"
+ },
+ "sock/glyph_quen_lesser_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-glyph"
+ },
+ "sock/glyph_yrden_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-glyph"
+ },
+ "sock/glyph_yrden_greater_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-glyph"
+ },
+ "sock/glyph_yrden_lesser_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-glyph"
+ },
+ "sock/rune_dazhbog_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_dazhbog_greater_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_dazhbog_lesser_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_devana_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_devana_greater_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_devana_lesser_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_elemental_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_elemental_greater_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_elemental_lesser_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_morana_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_morana_greater_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_morana_lesser_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_perun_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_perun_greater_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_perun_lesser_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_stribog_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_stribog_greater_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_stribog_lesser_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_svarog_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_svarog_greater_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_svarog_lesser_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_triglav_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_triglav_greater_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_triglav_lesser_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_veles_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_veles_greater_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_veles_lesser_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_zoria_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_zoria_greater_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
+ },
+ "sock/rune_zoria_lesser_64x64": {
+  "game": "png",
+  "placeholder": "png",
+  "placeholder_as": "sock/ph-rune"
  }
 }

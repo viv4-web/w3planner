@@ -21,6 +21,7 @@ import glcheck
 import qscheck
 import importcheck
 import statscheck
+import sockcheck
 import rulesetcheck
 from playwright.sync_api import sync_playwright
 
@@ -165,8 +166,10 @@ def main():
         print("\n== Top bar and Glossary ==")
         check("the public build has no glossary files, the live build has the real ones", ((site / "glossary").is_dir()) == (a.variant == "game") and (a.variant == "game" or not any("glossary" in p.name for p in site.rglob("*"))))
         glcheck.run(b, gbase, check, "online", main=base, real=a.variant == "game", quick=a.quick); glcheck.thumbs(b, gbase, check, "online (fake pictures)"); (glcheck.thumbs(b, base, check, "online (live build)") if a.variant == "game" else None); (glcheck.thumbfiles(check, a.art_dir) if a.variant == "game" else None)
+        print("\n== Runes and glyphs in sockets ==")
+        sockcheck.data(check); sockcheck.run(b, base, check, "online")
         print("\n== Import save ==")
-        importcheck.run(b, base, check, "online")
+        importcheck.run(b, base, check, "online"); sockcheck.imported(b, base, check, "online")
         print("\n== Player Stats ==")
         statscheck.run(b, base, check, "online"); statscheck.fixture(b, base, check, "online"); statscheck.rulesets(b, base, check, "online"); statscheck.signs(b, base, check, "online")
         rulesetcheck.run(b, base, check, "online")
@@ -230,7 +233,7 @@ def main():
                 check("offline copy cannot create links, only open them", (not vis("#copy")) and vis("#imp"))
                 otips = OE(ALL_TIPS); check("offline tooltips match the reference", all(ref[k] == otips.get(k) for k in ref))
                 linkcheck.check_fixtures(b, off, "offline", check)
-                eqcheck.run(b, off, check, "offline", a.quick)
+                eqcheck.run(b, off, check, "offline", a.quick); sockcheck.run(b, off, check, "offline")
                 glcheck.publicbuild(b, off, None, glcheck.GLINK, check, "offline")
                 importcheck.offline(b, off, check, "offline"); statscheck.run(b, off, check, "offline"); qscheck.publicbuild(b, off, check, "offline")
                 rulesetcheck.run(b, off, check, "offline")

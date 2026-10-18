@@ -38,13 +38,14 @@ BUILD = """async spec=>{
  // gear (v27 and later): the items are chosen by id from the real data, stored as their registry numbers
  if(spec.rs){const rs=spec.rs;await eqLoad(rs);S.rs=rs;Object.entries(spec.gear||{}).forEach(([slot,id])=>{const it=EQ.rs[rs].byId.get(id);if(!it||it.slot!==slot)throw new Error('bad gear '+slot+' '+id);S.gear[EQ_SLOTS.indexOf(slot)]=it.n})}
  if(spec.cons){await cnLoad();Object.entries(spec.cons).forEach(([k,id])=>{const it=CN.byId.get(id);if(!it||!cnAccepts(k,it))throw new Error('bad consumable '+k+' '+id);S.cons[CN_SLOTS.indexOf(k)]=it.n})}
+ if(spec.sock){await skLoad();Object.entries(spec.sock).forEach(([slot,ids])=>ids.forEach((id,j)=>{if(id==null)return;const r=SK.byId.get(id);if(!r||!skFits(slot,r))throw new Error('bad socket '+slot+' '+id);S.sock[SK_SLOTS.indexOf(slot)*SK_MAX+j]=r.n}))}   // v36: runes and glyphs, by id
  if(spec.scr)S.scr=spec.scr;
- const state=()=>({level:+document.getElementById('lvl').value,bonus:+document.getElementById('bonuspts').value,lv:S.lv,slots:S.slots,muts:S.muts,mres:S.mres,mact:S.mact,gear:S.gear,ruleset:S.rs,cons:S.cons,screen:S.scr});
+ const state=()=>({level:+document.getElementById('lvl').value,bonus:+document.getElementById('bonuspts').value,lv:S.lv,slots:S.slots,muts:S.muts,mres:S.mres,mact:S.mact,gear:S.gear,ruleset:S.rs,cons:S.cons,sock:S.sock,screen:S.scr});
  const expect=JSON.parse(JSON.stringify(state())),code=enc().slice(0);
  // sanity: the build must be legal and must survive its own link
  const bad=[];if(spent()>budget())bad.push('overspent '+spent()+'>'+budget());
  const t=dec(code);if(!t)bad.push('does not decode');else{const l=JSON.stringify(expect);
-   const got=JSON.stringify({level:+document.getElementById('lvl').value,bonus:+document.getElementById('bonuspts').value,lv:t.lv,slots:t.slots,muts:t.muts,mres:t.mres,mact:t.mact,gear:t.gear,ruleset:t.rs,cons:t.cons,screen:t.scr});if(l!==got)bad.push('round trip differs')}
+   const got=JSON.stringify({level:+document.getElementById('lvl').value,bonus:+document.getElementById('bonuspts').value,lv:t.lv,slots:t.slots,muts:t.muts,mres:t.mres,mact:t.mact,gear:t.gear,ruleset:t.rs,cons:t.cons,sock:t.sock,screen:t.scr});if(l!==got)bad.push('round trip differs')}
  return {code,expect,bad,spent:spent(),budget:budget()}}"""
 
 
@@ -170,6 +171,25 @@ def gear_specs_v33():
     return out
 
 
+def gear_specs_v36():
+    """v36: links with an r1 segment (runes and glyphs): one rune, one glyph, every socket of every slot, with skills, mutagens, gear and consumables, on each screen, in both rulesets. Written after c1 and before s1."""
+    out = []; add = lambda name, **kw: out.append((name, kw))
+    cons = {"potion1": "Swallow 3", "potion2": "Mutagen 1", "petard1": "Dancing Star 3", "pocket": "Torch", "oil_steel": "Beast Oil 3", "oil_silver": "Specter Oil 2"}
+    lynx = {"steel": "Lynx School steel sword 4", "silver": "Lynx School silver sword 4", "chest": "Lynx Armor 4", "gloves": "Lynx Gloves 5", "trousers": "Lynx Pants 5", "boots": "Lynx Boots 5"}
+    gry = {"silver": "Gryphon School silver sword", "chest": "Gryphon Armor"}
+    add("one rune in the Griffin silver sword and one lesser glyph in the Griffin armor, first playthrough (the sockets-1 save)", level=16, bonus=15, rs="ng", gear=gry, sock={"silver": ["Rune dazhbog"], "chest": ["Glyph igni lesser"]}, scr="inv")
+    add("the same two in New Game Plus, where each has 3 sockets, one more in each", level=100, bonus=0, rs="ng_plus", gear=gry, sock={"silver": ["Rune dazhbog", "Rune veles greater", "Rune zoria lesser"], "chest": ["Glyph igni lesser", "Glyph quen", "Glyph aard greater"]}, scr="inv")
+    add("every socket of the six slots, first playthrough (3, 3, 3, 2, 2, 2)", level=100, bonus=0, rs="ng", gear=lynx, sock={"steel": ["Rune perun", "Rune svarog greater", "Rune triglav lesser"], "silver": ["Rune stribog", "Rune devana lesser", "Rune elemental greater"],
+        "chest": ["Glyph yrden", "Glyph axii lesser", "Glyph quen greater"], "gloves": ["Glyph aard", "Glyph igni"], "trousers": ["Glyph axii", "Glyph yrden lesser"], "boots": ["Glyph quen", "Glyph igni greater"]}, scr="inv")
+    add("the highest numbers: Glyph of Yrden (last glyph), Rune zoria (last rune), in New Game Plus with the four-socket Wolven trousers", level=100, bonus=100, rs="ng_plus", gear=dict(lynx, trousers="NGP Wolf Pants 4"),
+        sock={"steel": ["Rune zoria lesser", "Rune zoria", "Rune zoria greater"], "trousers": ["Glyph yrden lesser", "Glyph yrden", "Glyph yrden greater", "Glyph infusion greater"]}, scr="inv")
+    add("a gap: the first socket empty and the second filled", level=60, bonus=0, rs="ng", gear=lynx, sock={"chest": [None, "Glyph quen"]}, scr="inv")
+    add("sockets with skills, mutagens, gear and consumables on the Character screen", level=100, bonus=100, trees=[1], fill="max", equip=True, research=[0, 1, 2], active=2, muts=[9, 18, 27, 3], rs="ng", gear=lynx, cons=cons,
+        sock={"steel": ["Rune dazhbog"], "boots": ["Glyph mending lesser"]})
+    add("sockets on the Glossary screen, New Game Plus", level=70, bonus=0, rs="ng_plus", gear=lynx, sock={"silver": ["Rune morana", "Rune devana"], "gloves": ["Glyph warding", "Glyph binding greater"]}, scr="glo")
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--version", required=True, help="the app version whose code makes the links, e.g. v24")
@@ -189,7 +209,7 @@ def main():
         info = pg.evaluate("""({ntrees:TREES.length,nmut:MUT.length,nmutagen:MUTS.length,
             special:MUTS.map((m,i)=>m.special?i:-1).filter(i=>i>=0),regular:MUTS.map((m,i)=>m.special?-1:i).filter(i=>i>=0)})""")
         rows, seen = [], set()
-        use = specs(info) if a.version == "v24" else gear_specs() if a.version == "v27" else gear_specs_b() if a.version == "v27b" else gear_specs_v28() if a.version == "v28" else gear_specs_v29() if a.version == "v29" else gear_specs_v31b() if a.version == "v31b" else gear_specs_v33() if a.version == "v33" else sys.exit("no fixture recipe for %s: add one to this tool" % a.version)
+        use = specs(info) if a.version == "v24" else gear_specs() if a.version == "v27" else gear_specs_b() if a.version == "v27b" else gear_specs_v28() if a.version == "v28" else gear_specs_v29() if a.version == "v29" else gear_specs_v31b() if a.version == "v31b" else gear_specs_v33() if a.version == "v33" else gear_specs_v36() if a.version == "v36" else sys.exit("no fixture recipe for %s: add one to this tool" % a.version)
         top = pg.evaluate("async rs=>{await eqLoad(rs);const o={};EQ_SLOTS.forEach(s=>{const l=EQ.rs[rs].bySlot[s]||[];o[s]=l.reduce((a,b)=>a.n>b.n?a:b).id});return o}", "ng_plus") if a.version in ("v27", "v27b") else {}
         for name, spec in use:
             if spec.get("gear") == {"steel": None, "silver": None}: spec = dict(spec, gear=top)

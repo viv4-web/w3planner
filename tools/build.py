@@ -122,8 +122,8 @@ def main():
 
     src = Path(a.src)
     extra = lambda *names: "".join(("\n" + read(src / n)) for n in names if (src / n).is_file())   # screens.css, equipment.js, consumables.js, screens.js: more source of the same page (one scope), in this order
-    css = tokens(read(src / "app.css") + extra("screens.css", "glossary.css", "quests.css", "importsave.css"))
-    js = re.sub(r"/\*@lazyjs:([a-z0-9_]+)\*/", lazyjs, re.sub(r"/\*@file:([A-Za-z0-9_-]+)\*/", lazy, tokens(re.sub(r"/\*@data:([A-Z_]+)\*/", data, read(src / "app.js") + extra("equipment.js", "consumables.js", "screens.js", "glossary.js", "quests.js", "importsave.js", "stats.js")))))
+    css = tokens(read(src / "app.css") + extra("screens.css", "sockets.css", "glossary.css", "quests.css", "importsave.css"))
+    js = re.sub(r"/\*@lazyjs:([a-z0-9_]+)\*/", lazyjs, re.sub(r"/\*@file:([A-Za-z0-9_-]+)\*/", lazy, tokens(re.sub(r"/\*@data:([A-Z_]+)\*/", data, read(src / "app.js") + extra("equipment.js", "consumables.js", "sockets.js", "screens.js", "glossary.js", "quests.js", "importsave.js", "stats.js")))))
     if gloss: js = js.replace("/*@glossary*/null", json.dumps(gloss, separators=(",", ":")))
     if quests: js = js.replace("/*@quests*/null", json.dumps(quests, separators=(",", ":")))
     html = tokens(read(src / "index.html")).replace("{{css}}", css).replace("{{js}}", js)

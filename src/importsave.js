@@ -12,7 +12,7 @@ function impClose(){impEl('impov').hidden=true;document.body.classList.remove('i
 function impReset(){IMP.R=IMP.plan=IMP.side=IMP.file=null;impEl('impStep1').hidden=false;impEl('impStep2').hidden=true;impErr('');impEl('impfile').value='';impEl('impdrop').classList.remove('over')}
 function impErr(msg,why){const e=impEl('imperr');e.hidden=!msg;e.textContent='';if(msg){e.appendChild(impNode('b',null,msg));if(why)e.appendChild(impNode('span',null,' '+why))}}
 async function impLoad(){   // the reader, the names of items the planner does not plan, and the planner's own item lists (to match and to name)
- if(!window.W3SAVE)await eqScript(SAVEREAD_URL);if(!(window.W3DATA&&W3DATA.savenames))await eqScript(SAVENAMES_URL);await eqLoad(S.rs);await cnLoad();await qsLoad().catch(()=>{})}
+ if(!window.W3SAVE)await eqScript(SAVEREAD_URL);if(!(window.W3DATA&&W3DATA.savenames))await eqScript(SAVENAMES_URL);await eqLoad(S.rs);await cnLoad();await skLoad();await qsLoad().catch(()=>{})}
 async function impHandle(files){
  const list=[...files],sav=list.filter(f=>/\.sav$/i.test(f.name)),js=list.find(f=>/\.json$/i.test(f.name));
  if(!sav.length){impErr(list.length?"This isn't a Witcher 3 save.":'Choose a .sav file.',list.length?'The file must end in .sav.':'');return}
@@ -38,7 +38,18 @@ function impPlan(R){
  R.mutagenSlots.slice(0,4).forEach((m,g)=>{if(!m.item){mutRows.push({slot:g+1,name:null});return}const i=SAVEMUT[m.item];if(i==null){notMut.push(m.item);mutRows.push({slot:g+1,name:null,skip:true})}else{muts[g]=i;mutRows.push({slot:g+1,name:MUTS[i].name})}});
  const GEAR=[['steel','SteelSword'],['silver','SilverSword'],['crossbow','RangedWeapon'],['bolts','Bolt'],['chest','Armor'],['gloves','Gloves'],['trousers','Pants'],['boots','Boots'],['mask','Mask']];
  const gear=Array(9).fill(0),gearRows=[],notGear=[],rolled={};
- GEAR.forEach(([slot,key],i)=>{const e=R.equipped[key];if(!e){gearRows.push({slot,name:null});return}const it=e.id&&d.byId.get(e.id);if(it&&it.slot===slot){gear[i]=it.n;if(e.abilities&&e.abilities.length)rolled[slot]=it.id;gearRows.push({slot,name:it.name,set:it.set,item:it})}else{notGear.push(e.id||'?');gearRows.push({slot,name:null,skip:true})}});
+ GEAR.forEach(([slot,key],i)=>{const e=R.equipped[key];if(!e){gearRows.push({slot,name:null});return}const it=e.id&&d.byId.get(e.id);if(it&&it.slot===slot){gear[i]=it.n;if(impRolled(e))rolled[slot]=it.id;gearRows.push({slot,name:it.name,set:it.set,item:it})}else{notGear.push(e.id||'?');gearRows.push({slot,name:null,skip:true})}});
+ // v36: runes and glyphs socketed in the worn swords and armour (the item record's socket list, docs/IMPORT.md "Sockets"). A rune or glyph goes in when the planner knows it (same id), it is the right kind for the slot
+ // and the item has room for it in the chosen ruleset (the save does not say which ruleset it is; NG+ is not read, so the planner's NG / NG+ switch decides); anything else is named and left out
+ const sock=Array(24).fill(0),sockRows=[];
+ SK_SLOTS.forEach((slot,si)=>{const gi=EQ_SLOTS.indexOf(slot),e=R.equipped[GEAR[gi][1]];if(!e||!e.sockets||!e.sockets.length)return;
+  const it=gear[gi]?d.byN.get(gear[gi]):null,cap=skCap(it),list=[];let k=0;
+  e.sockets.forEach(id=>{const r=SK.byId.get(id);
+   if(!r)list.push({name:impDisplay(id),state:'unknown'});
+   else if(!skFits(slot,r))list.push({name:r.name,state:'kind'});
+   else if(!it||k>=cap)list.push({name:r.name,state:'room'});
+   else{sock[si*SK_MAX+k]=r.n;k++;list.push({name:r.name,state:'ok',r})}});
+  sockRows.push({slot,item:it?it.name:impDisplay(e.id),cap,list})});
  const setCount={};gearRows.forEach(r=>{if(r.set&&['steel','silver','chest','gloves','trousers','boots'].includes(r.slot))setCount[r.set]=(setCount[r.set]||0)+1});
  const topSet=Object.keys(setCount).sort((a,b)=>setCount[b]-setCount[a])[0]||null,setInfo=topSet?{name:EQ.meta.sets[topSet].name,n:setCount[topSet],of:EQ.meta.sets[topSet][S.rs].pieces.length}:null;
  const CONS=[['potion1','Potion1'],['potion2','Potion2'],['potion3','Potion3'],['potion4','Potion4'],['petard1','Petard1'],['pocket','Quickslot1']],cons=Array(8).fill(0),consRows=[];
@@ -54,7 +65,9 @@ function impPlan(R){
   else if(c){plannable++;(c.cat==='oil'?stash.alchemy.oils:c.cat==='bomb'?stash.alchemy.bombs:stash.alchemy.potions).push({id:c.id,qty:r.qty})}});
  stash.crowns=R.crowns;
  qsStoreInit();const qJ=qsFromJournal(R.journal),quests=qJ?{J:qJ,cmp:qsHasProgress()?qsCompare(qJ):null}:null;
- return{quests,play:R.playTimeSec==null?null:R.playTimeSec,effects:R.effects||[],stored:R.abilities||null,rolled,level,bonus,total,learned,notSk,slots,slotNames,open,equipped,muts,mutRows,notMut,gear,gearRows,notGear,setInfo,cons,consRows,stash,plannable,records:R.inventory.length}}
+ return{quests,play:R.playTimeSec==null?null:R.playTimeSec,effects:R.effects||[],stored:R.abilities||null,rolled,sock,sockRows,level,bonus,total,learned,notSk,slots,slotNames,open,equipped,muts,mutRows,notMut,gear,gearRows,notGear,setInfo,cons,consRows,stash,plannable,records:R.inventory.length}}
+// an item is "rolled" (its numbers unknown) when its record lists abilities this version does not account for; the _Stats ability of a rune or glyph the planner imports into the same sword or armour is accounted for
+function impRolled(e){if(!e.abilities||!e.abilities.length)return false;const known=(e.sockets||[]).filter(id=>SK.byId.has(id)).map(id=>id+' _Stats');return e.abilities.some(a=>!known.includes(a))}
 function impDisplay(id){return id?((window.W3DATA&&W3DATA.savenames&&W3DATA.savenames[id])||id):'an unknown item'}
 
 // ---- the review ----
@@ -67,7 +80,7 @@ function impSec(key,title,dest,destGold){const s=impNode('section','impsec');con
  h.append(cb,impNode('b',null,title),impNode('span','impdest'+(destGold?' gold':''),dest));s.append(h);const body=impNode('div','impbody');s.append(body);return[s,body]}
 const impLine=(parent,text,cls)=>parent.appendChild(impNode('p','impline'+(cls?' '+cls:''),text));
 function impReview(){
- const R=IMP.R,P=IMP.plan,side=IMP.side,ch=R.character;IMP.sel={character:true,mutagens:true,equipment:true,consumables:true,stash:true,quests:!!P.quests};IMP.qmode='keep';
+ const R=IMP.R,P=IMP.plan,side=IMP.side,ch=R.character;IMP.sel={character:true,mutagens:true,equipment:true,sockets:P.sockRows.some(r=>r.list.some(x=>x.state==='ok')),consumables:true,stash:true,quests:!!P.quests};IMP.qmode='keep';
  impEl('impStep1').hidden=true;const root=impEl('impStep2');root.hidden=false;const main=impEl('impReviewBody');main.textContent='';
  const when=IMP.file.lastModified?new Date(IMP.file.lastModified):null,ver=side&&side.build?'game '+side.build:'save version '+R.codes[0]+' · game '+R.codes[1];
  impEl('impmeta').textContent=[IMP.file.name,when?when.toLocaleString([], {dateStyle:'medium',timeStyle:'short'}):null,ver].filter(Boolean).join(' · ');
@@ -89,6 +102,11 @@ function impReview(){
  [s,b]=impSec('equipment','Equipment','Goes into the build link');colB.append(s);
  P.gearRows.forEach(r=>impLine(b,EQ_NAME[r.slot]+': '+(r.name||(r.skip?'not imported':'empty')),r.name?'':'dim'));
  if(P.setInfo)impLine(b,'Set: '+P.setInfo.name+' '+P.setInfo.n+'/'+P.setInfo.of,'gold');if(P.notGear.length)impLine(b,'Not imported: '+P.notGear.join(', ')+' (not in the '+EQ_RS[S.rs]+' list)','warn');
+ // Sockets (v36): only when the save has runes or glyphs in its worn swords or armor (a save without any imports exactly as before, with no extra section)
+ if(P.sockRows.length){[s,b]=impSec('sockets','Sockets in your save','Goes into the build link');colB.append(s);
+  P.sockRows.forEach(r=>{impLine(b,EQ_NAME[r.slot]+' · '+r.item+' ('+r.cap+' socket'+(r.cap===1?'':'s')+' in '+EQ_RS[S.rs]+')');
+   r.list.forEach(x=>impLine(b,'   '+x.name+(x.state==='ok'?'':x.state==='unknown'?' (not in planner) — left out':x.state==='kind'?' (does not fit this slot) — left out':' (no room in '+EQ_RS[S.rs]+') — left out'),x.state==='ok'?'':'warn'))});
+  if(!IMP.sel.sockets){const cb=s.querySelector('input');cb.checked=false;cb.disabled=true}}
  // Consumables
  [s,b]=impSec('consumables','Consumables','Goes into the build link');colB.append(s);
  P.consRows.forEach(r=>{const nm=r.label||CN_NAME[r.slot];
@@ -120,18 +138,19 @@ function impQuests(col,P){const[s,b]=impSec('quests','Quests','Stays on this com
 // ---- apply: only the ticked sections, through the planner's own state ----
 async function impDoApply(){
  const R=IMP.R,P=IMP.plan,sel=IMP.sel,f=IMP.file;if(!R||!P)return;
- await eqLoad(S.rs);await cnLoad();
+ await eqLoad(S.rs);await cnLoad();await skLoad();
  if(sel.character){S.lv=TREES.map(t=>t.nodes.map(()=>0));P.learned.forEach(x=>{S.lv[x.ti][x.ix]=x.level});
   impEl('lvl').value=P.level;impEl('bonuspts').value=P.bonus;S.slots=P.slots.map(x=>x?x.slice():null)}
  if(sel.mutagens)S.muts=P.muts.slice();
- if(sel.equipment)S.gear=P.gear.slice();
+ if(sel.equipment){S.gear=P.gear.slice();S.sock=Array(24).fill(0)}   // the worn pieces change, so the sockets of the old ones go
+ if(sel.sockets)S.sock=P.sock.slice();
  if(sel.consumables){for(let i=0;i<6;i++)S.cons[i]=P.cons[i]}      // the sword oils (positions 6 and 7) are not read: left as they are
  if(sel.stash){try{localStorage.setItem('w3planner.stash',JSON.stringify(P.stash));stashDrawn=false}catch(e){notify('The stash could not be kept: this browser blocks storage for the site.')}}
  let qNote='';if(sel.quests&&P.quests&&IMP.qmode!=='cancel'){qsApplyJournal(P.quests.J,f.name,IMP.qmode);const k=Object.values(P.quests.J.q);qNote=' Quests: '+k.filter(v=>v==='done').length+' done, '+k.filter(v=>v==='active').length+' active.'}
- if(sel.character){PS.play=P.play;PS.imp.effects=P.effects}if(sel.equipment)PS.imp.rolled=P.rolled;enforceLocks();eqValidate();cnValidate();S.scr='char';
+ if(sel.character){PS.play=P.play;PS.imp.effects=P.effects}if(sel.equipment)PS.imp.rolled=P.rolled;enforceLocks();eqValidate();cnValidate();const skRm=skFit();S.scr='char';
  PS.imp.stored=sel.character?P.stored:null;PS.imp.link=enc();   // the save's own ability list, used (and checked) by Player Stats only while the build is still this one
  impClose();save();window.scrollTo({top:0});
- notify('Imported from '+f.name+(sel.character?': level '+P.level+', '+P.learned.length+' skills':'')+'.'+qNote+' The link now holds this build; use Copy link to share it.')}
+ notify('Imported from '+f.name+(sel.character?': level '+P.level+', '+P.learned.length+' skills':'')+'.'+qNote+' The link now holds this build; use Copy link to share it.'+(skRm.length?' '+skRemovedText(skRm):''))}
 function impBind(){
  const b=impEl('savebtn');if(typeof CFG!=='undefined'&&CFG.share===false){b.hidden=true;return}
  b.onclick=()=>impOpen(b);impEl('impx').onclick=impClose;impEl('impback').onclick=impReset;impEl('impAnother').onclick=impReset;

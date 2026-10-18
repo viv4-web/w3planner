@@ -369,7 +369,7 @@ def levelcheck(b, base, check, label, pg):
 def run(b, base, check, label, quick=False):
     errs, events = [], []; pg = b.new_page(viewport={"width": 1400, "height": 950}); pg.on("pageerror", lambda e: errs.append(str(e).split("\n")[0][:100])); E = pg.evaluate
     pg.on("load", lambda p: events.append("load")); pg.on("request", lambda r: events.append("data") if ("/data/items" in r.url or "/data/consumables" in r.url) else None)
-    pg.goto(base); check("%s: the equipment and consumables data load after the page has loaded, only items.js, items_ng.js and consumables.js" % label, until(pg, READY) and sorted(E(KEYS)) == ["consumables.js", "items.js", "items_ng.js"] and events.index("load") < (events.index("data") if "data" in events else 99), [events[:4], E(KEYS)])
+    pg.goto(base); check("%s: the equipment and consumables data load after the page has loaded, only items.js, items_ng.js, consumables.js and (v36) socket_ids.js" % label, until(pg, READY) and sorted(E(KEYS)) == ["consumables.js", "items.js", "items_ng.js", "socket_ids.js"] and events.index("load") < (events.index("data") if "data" in events else 99), [events[:4], E(KEYS)])
     layoutcheck(b, base, check, label); copycheck(b, base, check, label); screencheck(b, base, check, label); conscheck(b, base, check, label); invcheck(b, base, check, label); tiercheck(b, base, check, label); countcheck(b, base, check, label)
     openinv(pg)
     pg.fill("#lvl", "100")      # the planner starts at Level 1 and the game blocks items above the level, so the walk-through below runs at the top level
