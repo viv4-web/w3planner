@@ -168,10 +168,10 @@ def main():
         statscheck.run(b, base, check, "online"); statscheck.fixture(b, base, check, "online"); statscheck.rulesets(b, base, check, "online"); statscheck.signs(b, base, check, "online")
         rulesetcheck.run(b, base, check, "online")
         print("\n== Quests ==")
-        qscheck.data(check); qscheck.run(b, gbase, check, "online"); qscheck.text(b, gbase, check, "online (fake text)", False)
+        qscheck.data(check); qscheck.rules(check); qscheck.run(b, gbase, check, "online"); qscheck.text(b, gbase, check, "online (fake text)", False)
         if a.variant == "game": qscheck.text(b, base, check, "online (live build)", True)
         else: qscheck.publicbuild(b, base, check, "online (public build)")
-        qscheck.fixture(b, gbase, check, "online"); qscheck.phone(b, gbase, check, "online"); qscheck.viewmemory(b, gbase, check, "online"); qscheck.colours(b, gbase, check, "online"); qscheck.banddone(b, gbase, check, "online")
+        qscheck.fixture(b, gbase, check, "online"); qscheck.phone(b, gbase, check, "online"); qscheck.viewmemory(b, gbase, check, "online"); qscheck.colours(b, gbase, check, "online"); qscheck.banddone(b, gbase, check, "online"); qscheck.timeline(b, gbase, check, "online"); qscheck.timelinesave(b, gbase, check, "online"); qscheck.timelinephone(b, gbase, check, "online"); qscheck.timeline2(b, gbase, check, "online"); qscheck.timeline2save(b, gbase, check, "online"); qscheck.timeline2phone(b, gbase, check, "online")
         nd = shutil.which("node"); nr = subprocess.run([nd, str(ROOT / "tests/test_saveread.js")], capture_output=True, text=True) if nd else None
         check("the save reader without a browser: LZ4, header errors, sidecar, the mutagen table, the reference save when the local fixture is present", (nr is None) or nr.returncode == 0, (nr.stderr or nr.stdout).strip()[-300:] if nr else "node not found: skipped")
         rt = b.new_page(); rt.goto(base); rt.wait_for_timeout(600); r = rt.evaluate(ROUNDTRIP); rt.close(); check("%d random builds survive a link round trip unchanged (%d with special mutagens)" % (r["n"], r["spec"]), r["bad"] == 0, r["bad"])

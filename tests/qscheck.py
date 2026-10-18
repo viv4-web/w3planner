@@ -70,6 +70,24 @@ def data(check):
     check("QUESTS.json: Gwent, Races and Fistfights are told apart from the game's own titles (%s)" % sorted(kinds), {"gwent", "race", "fist"} <= kinds and by["Q103 The Race"]["t"] == "main" and by["mq6001merchant"]["t"] == "race" and by["NVG: Fist Fighting"]["t"] == "fist")
 
 
+def rules(check):
+    """v34: data/QUEST-RULES.json (tools/make_quest_rules.py)"""
+    qs = {q["g"]: q for q in json.loads((ROOT / "data" / "QUESTS.json").read_text(encoding="utf-8"))["quests"]}; by = {q["id"]: q["g"] for q in qs.values()}
+    raw = (ROOT / "data" / "QUEST-RULES.json").read_text(encoding="utf-8"); d = json.loads(raw); R = d["quests"]; gates = {g["id"]: g for g in d["gates"]}
+    check("QUEST-RULES.json: every quest in it is a quest of QUESTS.json; only ids, codes and numbers (no game text: every string is a 32-digit GUID, a code of at most 12 characters, or a gate / point name)",
+          set(R) <= set(qs) and all(set(r) <= {"s", "h", "c", "a"} for r in R.values()) and all(re.fullmatch(r"[0-9a-f]{32}", g) for g in R) and
+          all(re.fullmatch(r"[0-9a-f]{32}", a) for r in R.values() for a in r.get("a", [])) and set(R_ for r in R.values() for R_ in [r.get("s")] if R_) <= {p[0] for p in d["points"]} and len(raw) < 60000)
+    check("QUEST-RULES.json: %d gates: the base-game gates in story order (%s) and the Blood and Wine and Hearts of Stone ones" % (len(gates), [g["id"] for g in d["gates"] if g["lane"] == "b"]),
+          [g["id"] for g in sorted(d["gates"], key=lambda g: g["x"]) if g["lane"] == "b"] == ["prologue", "isle", "battle", "novigrad3", "skellige3", "naglfar", "ciri", "finish"] and {"bawnight", "baw703", "hos"} <= set(gates) and all(set(g) - {"code", "real"} == {"id", "name", "lane", "x", "done", "next"} for g in gates.values())
+          and all(re.fullmatch(r"Q\d{3}", g["code"]) for g in gates.values() if "code" in g) and [i for i, g in gates.items() if g.get("real")] == ["bawnight"] and gates["isle"]["code"] == "Q402" and "code" not in gates["finish"])
+    check("QUEST-RULES.json: Q106 and Q107 fail at Isle of Mists (a whole-quest Failure), the story points of Q402, Q403 and Q111 are Isle of Mists, Battle of Kaer Morhen and Act III",
+          R[by["Q106 Keira's bussiness"]]["c"] == [["isle", "q", "f"]] and R[by["Q107 Swamps"]]["c"] == [["isle", "q", "f"]] and R[by["Q402 Isle of Mists"]]["s"] == "i" and R[by["Q403 Battle of Kaer Morhen"]]["s"] == "b" and R[by["Q111 Imlerith"]]["s"] == "3")
+    check("QUEST-RULES.json: left out: the temporary toggles (MQ3026 Novigrad Horse Racing has no cutoff) and the demon-mark flag (Q310 Ciri's Night Out has none); Collect 'Em All has no rule; a story point derived by default is stored as unknown (mq1001 Dog Trail has none)",
+          "c" not in R.get(by["MQ3026 Novigrad Horse Racing"], {}) and "c" not in R.get(by["Q310 Ciri's Night Out"], {}) and by["Card Game Meta: Gather All"] not in R and "s" not in R.get(by["mq1001 Dog Trail"], {}) and
+          sum("s" not in R.get(g, {}) for g in qs) == 191 and sum("s" in r for r in R.values()) == 210)
+    check("QUEST-RULES.json: Hearts of Stone and Blood and Wine quests all have their lane as story point; no cutoff is stored for a quest on a toggle", all(R[g]["s"] == "h" for g, q in qs.items() if q["p"] == "ep1") and all(R[g]["s"] == "w" for g, q in qs.items() if q["p"] == "bob"))
+
+
 def run(b, base, check, label):
     pg, errs, reqs = newpage(b, base); E = pg.evaluate
     tabs = E("[...document.querySelectorAll('#stabs .stab')].map(b=>b.childNodes[0].textContent.trim())")
@@ -83,8 +101,8 @@ def run(b, base, check, label):
     check("%s: a link ending in s1Q opens on Quests; without it a link opens on Character" % label, okq and q2.evaluate("dec(enc().replace(/\\.s1Q$/,'')).scr") == "char"); q2.close()
     regs = E("[...document.querySelectorAll('#qsRegs .qsreg')].map(b=>[b.querySelector('.qsrn').textContent,b.querySelector('small').textContent])")
     check("%s: the nine region tabs, each with its %% done (%s)" % (label, regs), [r[0] for r in regs] == REGIONS and all(re.fullmatch(r"\d+% done", r[1]) for r in regs), regs)
-    tl = E("(()=>{const t=document.getElementById('qsVTime');return{dis:t.disabled,txt:t.textContent,title:t.title}})()")
-    check("%s: the view switch has Timeline (disabled, 'Needs base-game quest data · coming next'), Level band and List; Quests opens in the List (%s)" % (label, tl), tl["dis"] and "Needs base-game quest data · coming next" in tl["txt"] and E("[QS.view,document.getElementById('qsVList').getAttribute('aria-pressed'),!!document.getElementById('qsRows')]") == ["list", "true", True], tl)
+    tl = E("(()=>{const t=document.getElementById('qsVTime');return{dis:t.disabled,txt:t.textContent}})()")
+    check("%s: the view switch has Timeline (enabled since v34), Level band and List; Quests opens in the List (%s)" % (label, tl), not tl["dis"] and tl["txt"] == "Timeline" and E("[QS.view,document.getElementById('qsVList').getAttribute('aria-pressed'),!!document.getElementById('qsRows')]") == ["list", "true", True], tl)
     cr = E("(()=>{const a=document.querySelector('.qscredit a');return{h:a.href,t:a.target,r:a.rel,x:a.textContent,p:a.parentNode.textContent}})()")
     check("%s: the credit link to ChrisRi's Optimal Quest Order Guide opens in a new tab and is a plain link (%s)" % (label, cr), cr["h"] == "https://docs.google.com/spreadsheets/d/1p2R7Mz8FJMkhnKuloh2gpebW_3jMk3vc2EsFslf4mNc" and cr["t"] == "_blank" and "noopener" in cr["r"] and cr["x"] == "Witcher 3 Optimal Quest Order Guide by ChrisRi"
           and cr["p"].startswith("For a hand-curated order with tips, see the"), cr)
@@ -226,8 +244,12 @@ def fixture(b, base, check, label):
         check("%s [%s]: the active quests are the spike's list (%s)" % (label, sub, act), act == names, [x for x in act if x not in names] + [x for x in names if x not in act])
         check("%s [%s]: the failed quest is Collect 'Em All and the inactive one Novigrad, Closed City II" % (label, sub), E("QS.data.quests.filter(q=>qsSaveState(q.g)==='failed').map(q=>q.n)") == ["Collect 'Em All"] and E("QS.data.quests.filter(q=>qsSaveState(q.g)==='inactive').map(q=>q.n)") == ["Novigrad, Closed City II"])
         until(pg, "S.scr==='char'"); opened(pg); until(pg, "!!QS.desc"); nx = E("[...document.querySelectorAll('#qsNext .qscard')].map(c=>[c.querySelector('b').textContent,c.querySelector('em').textContent])")
-        check("%s [%s]: Next up leads with active quests and shows the current objective of each (%s)" % (label, sub, nx[:2]), len(nx) == 4 and all(x[0] in names for x in nx) and all(x[1] and "not known" not in x[1] and "not in this build" not in x[1] for x in nx[:2]) and all(x[1].startswith("Invented objective") for x in nx[:2]), nx)
-        pg.click(".qscard >> nth=0"); d1 = E("document.getElementById('qsDetail').textContent"); cur = E("[...document.querySelectorAll('.qscur li')].map(x=>x.textContent)")
+        check("%s [%s]: Next up leads with the quests that fail at the next gate the save has not passed, each labelled 'Fails at Isle of Mists' (%s)" % (label, sub, nx[:2]), len(nx) == 4 and all(x[1] == "Fails at Isle of Mists" for x in nx), nx)
+        isle = E("QS.data.quests.find(q=>q.id==='Q402 Isle of Mists').g"); E("qsMark('%s','done')" % isle); nx = E("[...document.querySelectorAll('#qsNext .qscard')].map(c=>[c.querySelector('b').textContent,c.querySelector('em').textContent])")
+        act = [x for x in nx if not x[1].startswith("Fails at")]
+        check("%s [%s]: once Isle of Mists counts as passed the next gate is the Battle of Kaer Morhen, and after its quests Next up goes on with the active quests and their current objective (%s)" % (label, sub, nx), nx[0][1] == "Fails at Battle of Kaer Morhen" and act and all(x[0] in names and x[1].startswith("Invented objective") for x in act), nx)
+        E("qsMark('%s',null)" % isle)
+        E("qsSelect(QS.data.quests.find(q=>q.id==='Q107 Swamps').g)"); d1 = E("document.getElementById('qsDetail').textContent"); cur = E("[...document.querySelectorAll('.qscur li')].map(x=>x.textContent)")
         check("%s [%s]: the detail of an active quest names its current objective(s) and says 'In your save: Active' (%s)" % (label, sub, cur), "In your save: Active" in d1 and len(cur) >= 1, d1[:120])
         pr = E("document.querySelectorAll('.qsobjs li.active').length+document.querySelectorAll('.qsobjs li.done').length")
         pg.fill("#qsQ", "") if E("!!document.getElementById('qsQ')") else None
@@ -381,4 +403,210 @@ def banddone(b, base, check, label):
     check("%s: the toggle is remembered after a reload, and separate from the List's Hide done (list: Hide done %s, %s done rows; turning it on leaves Show done %s)" % (label, hd[0], hd[1], sd), pr == ["band", True, "true"] and hd[0] == "false" and hd[1] >= 0 and sd is True, [pr, hd, sd])
     pg.click("#qsHide"); pg.click("#qsVBand"); pg.click("#qsShowDone"); off2 = E("[document.querySelectorAll('.qsdot.done').length,localStorage.getItem('w3p.quests.banddone')]")
     check("%s: Show done off again hides them and stores 0 (%s)" % (label, off2), off2 == [0, "0"], off2)
+    check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
+
+
+def timeline(b, base, check, label):
+    """v34: the Timeline without a save: columns, lanes, gates, rings, unknown placement, Show done, drawer, view memory."""
+    pg, errs, _ = newpage(b, base); E = pg.evaluate; opened(pg); h0 = E("location.hash"); pg.click("#qsVTime"); until(pg, "!!document.getElementById('qsTL')"); pg.wait_for_timeout(200)
+    cols = E("[...document.querySelectorAll('.qstc')].map(e=>e.textContent)"); rows = E("[...document.querySelectorAll('#qsTL .qsblabel')].map(e=>e.textContent)")
+    check("%s: Timeline: columns Prologue, Act I, Isle of Mists, Battle of Kaer Morhen, Act III, Epilogue; rows by region (the Hearts of Stone and Blood and Wine lanes are the two other scopes); the region tabs are not shown (%s)" % (label, rows),
+          cols == ["Prologue", "Act I", "Isle of Mists", "Battle of Kaer Morhen", "Act III", "Epilogue"] and rows == ["White Orchard", "Vizima", "Velen", "Novigrad", "Skellige", "Kaer Morhen", "Other & epilogue"] and E("getComputedStyle(document.querySelector('.qsregnav')).display") == "none", [cols, rows])
+    gk = E("[...document.querySelectorAll('#qsTL ~ .qsgkey .qsgk, .qsgkey .qsgk')].map(e=>e.textContent)")
+    check("%s: Timeline: the gates are numbered (8 in the base game; bars only on the 3 column edges); the names are in the key above the chart, not inside it (%s)" % (label, gk[:3]),
+          len(gk) == 8 and gk[1].startswith("2Isle of Mists") and gk[2].startswith("3Battle of Kaer Morhen") and E("document.querySelectorAll('#qsTL .qstlhead .qsgate').length") == 3 and E("[...document.querySelectorAll('#qsTL .qstlhead .qsgb')].map(e=>e.textContent).join('')") == "12345678" and True
+          and E("document.querySelectorAll('#qsTL .qsgl').length") == 0, gk)
+    check("%s: Timeline: no 'You' marker without a save; the view is not in the link and is remembered (%s)" % (label, E("QS.view")), E("document.querySelectorAll('#qsTL .qsme').length") == 0 and E("location.hash") == h0 and E("localStorage.getItem('w3p.quests.view')") == "time", h0)
+    st = E("""(()=>{const known=q=>QS.R.quests[q.g]&&QS.R.quests[q.g].s,open=QS.data.quests.filter(q=>known(q)&&'pai b3e'.includes(known(q))&&QS.timeDone===false&&qsState(q.g)!=='done');const dots=[...document.querySelectorAll('#qsTL .qsdot')],more=[...document.querySelectorAll('#qsTL .qsmore')].reduce((a,b)=>a+(b.textContent[0]==='+'?+b.textContent.slice(1):0),0);
+      const unk=new Set(QS.data.quests.filter(q=>!known(q)).map(q=>q.g));return{dots:dots.length,more:more,want:open.length,unkDrawn:dots.filter(d=>unk.has(d.dataset.g)).length,unkN:unk.size,summary:document.querySelector('#qsUnk summary').textContent,items:document.querySelectorAll('#qsUnk .qsunkl .qsrow').length,
+      rings:document.querySelectorAll('#qsTL .qsfb').length,wantRings:document.querySelectorAll('#qsTL .qsfl').length,ringOnFails:document.querySelectorAll('#qsTL .qsfd,#qsTL .qsring').length===0,anyFail:open.filter(q=>qsFailsAt(q)).length}})()""")
+    check("%s: Timeline: every quest with a known story point is drawn once (%d dots + %d in '+n' chips of %d), none of the %d quests without one; they are in the collapsed row '%s' (%d listed)" % (label, st["dots"], st["more"], st["want"], st["unkN"], st["summary"], st["items"]),
+          st["dots"] + st["more"] >= st["want"] and st["unkDrawn"] == 0 and st["summary"] == "Placement not computed yet (%d)" % st["unkN"] and st["items"] == st["unkN"] == 191 and not E("document.getElementById('qsUnk').open"), st)
+    check("%s: Timeline: a quest with a confirmed cutoff the save has not passed has no orange dot or ring; its tooltip says 'Fails at <gate>' (%d such quests; %d brackets, %d labels)" % (label, st["anyFail"], st["rings"], st["wantRings"]), st["rings"] == st["wantRings"] and st["ringOnFails"] and st["anyFail"] > 15, st)
+    pg.hover('#qsTL .qsdot.fails >> nth=0'); tip = E("document.getElementById('qsTip').textContent"); pg.mouse.move(5, 5)
+    check("%s: Timeline: tooltip of a ringed dot (%s)" % (label, tip[:80]), "Fails at " in tip and "·" in tip, tip)
+    g = E("document.querySelector('#qsTL .qsdot.fails').dataset.g"); pg.click('#qsTL .qsdot.fails >> nth=0'); pg.wait_for_timeout(350)
+    dr = E("(()=>{const d=document.getElementById('qsDetail');return{open:document.getElementById('screenQ').classList.contains('qs-open'),txt:d.textContent,sel:QS.sel}})()")
+    check("%s: Timeline: a click opens the drawer, which says the story point and 'Fails at <gate>' (%s)" % (label, dr["txt"][:100]), dr["open"] and "Story point:" in dr["txt"] and "Fails at " in dr["txt"] and dr["sel"] == g, dr["txt"][:200])
+    pg.keyboard.press("Escape"); pg.wait_for_timeout(250)
+    k0 = E("localStorage.getItem('w3p.quests.banddone')"); n0 = E("document.querySelectorAll('#qsTL .qsdot.done').length")
+    E("qsMark(QS.data.quests.find(q=>QS.R.quests[q.g]&&QS.R.quests[q.g].s==='a'&&q.r==='ve').g,'done')"); pg.wait_for_timeout(200); n1 = E("document.querySelectorAll('#qsTL .qsdot.done').length")
+    pg.click("#qsShowDoneT"); pg.wait_for_timeout(250); n2 = E("document.querySelectorAll('#qsTL .qsdot.done').length"); ls = [E("localStorage.getItem('w3p.quests.timedone')"), E("localStorage.getItem('w3p.quests.banddone')")]
+    check("%s: Timeline: Show done is its own toggle (off: %d done dots; on: %d; kept in w3p.quests.timedone, the band's key stays %s) and the footnote follows it" % (label, n1, n2, ls[1]), n0 == 0 == n1 and n2 == 1 and ls == ["1", k0] and "shown faintly" in E("document.querySelector('#qsView .qsbnote:last-child').textContent"), [n0, n1, n2, ls])
+    pg.reload(); until(pg, READY); opened(pg); pv = E("[QS.view,QS.timeDone,document.getElementById('qsVTime').getAttribute('aria-pressed'),location.hash===%s]" % json.dumps(h0))
+    check("%s: Timeline: the view and Show done are remembered after a reload (%s)" % (label, pv), pv == ["time", True, "true", True], pv)
+    check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
+
+
+def timelinesave(b, base, check, label):
+    """v34: Timeline, Missable panel, Next up and drawer with the two fixture saves."""
+    for sub in ("stats-l9b", "stats-l9"):
+        d = FIXD / sub; sav = sorted(d.glob("*.sav")) if d.is_dir() else []
+        if not sav: print("  SKIP  %s: Timeline against the %s save (fixture not present)" % (label, sub)); continue
+        pg, errs, _ = newpage(b, base); E = pg.evaluate; pg.click("#savebtn"); pg.set_input_files("#impfile", [str(sav[0])]); until(pg, "!document.getElementById('impStep2').hidden"); pg.click("#impApply"); until(pg, "document.getElementById('impov').hidden")
+        opened(pg); until(pg, "!!QS.R&&!!QS.desc"); h0 = E("location.hash"); pg.click("#qsVTime"); until(pg, "!!document.getElementById('qsTL')"); pg.wait_for_timeout(200)
+        you = E("(()=>{const m=document.querySelector('#qsTL .qstfoot .qsyou'),i=document.querySelector('#qsTL .qstlhead .qsme'),c=[...document.querySelectorAll('.qstc')].map(e=>e.getBoundingClientRect()),x=i.getBoundingClientRect().left;return{t:m.textContent,col:c.findIndex(r=>x>=r.left-6&&x<=r.right+6),on:document.querySelector('.qstc.on').textContent}})()")
+        passed = E("[...document.querySelectorAll('#qsTL .qstlhead .qsgate')].map((e,i)=>e.classList.contains('passed')?QS.R.gates.filter(g=>g.lane==='b').sort((a,b)=>a.x-b.x)[i].id:null).filter(Boolean)")
+        check("%s [%s]: Timeline: 'You' stands at Act I; no cutoff after Leaving White Orchard is passed (Isle of Mists, the Battle ... are not): passed = %s" % (label, sub, passed), you["t"] == "You are here" and you["col"] == 1 and you["on"] == "Act I" and passed == ["prologue"], [you, passed])
+        miss = E("(()=>{const m=document.getElementById('qsMiss');return{vis:!m.hidden,h:m.querySelector('h3').textContent.trim(),n:+m.querySelector('.qsmn').textContent,names:[...m.querySelectorAll('.qsmissec>.qsmis .qsmi b')].map(e=>e.textContent),foot:m.querySelector('.qsmfoot').textContent,obj:(m.querySelector('.qsmobj summary')||{}).textContent}})()")
+        check("%s [%s]: Missable panel above Next up: '%s', %d open quests that fail at Isle of Mists, among them Q106 and Q107 (An Invitation from Keira Metz, Return to Crookback Bog); footnote %r" % (label, sub, miss["h"], miss["n"], miss["foot"]),
+              miss["vis"] and miss["h"].startswith("MISSABLE BEFORE ISLE OF MISTS".title().replace("Of", "of")) or miss["h"].lower().startswith("missable before isle of mists"), miss)
+        check("%s [%s]: Missable: the count is the list, it holds Q106 and Q107 and no quest that is Done or Failed in the save, the footnote is 'From the game's quest graphs'" % (label, sub), miss["n"] == len(miss["names"]) >= 8 and "An Invitation from Keira Metz" in miss["names"] and "Return to Crookback Bog" in miss["names"] and miss["foot"] == "From the game's quest graphs"
+              and E("[...document.querySelectorAll('#qsMiss .qsmi')].every(b=>['none','active','inactive'].includes(qsState(b.dataset.g)))") and E("document.getElementById('qsMiss').compareDocumentPosition(document.getElementById('qsNext'))&Node.DOCUMENT_POSITION_FOLLOWING") != 0, miss)
+        pg.click("#qsMiss .qsmi >> nth=0"); pg.wait_for_timeout(300); dtx = E("document.getElementById('qsDetail').textContent")
+        check("%s [%s]: a Missable item opens the drawer (%s)" % (label, sub, dtx[:60]), E("document.getElementById('screenQ').classList.contains('qs-open')") and "Fails at Isle of Mists" in dtx, dtx[:200]); pg.keyboard.press("Escape")
+        for qid in ("Q106 Keira's bussiness", "Q107 Swamps"):
+            E("qsSelect(QS.data.quests.find(q=>q.id===%s).g)" % json.dumps(qid)); pg.wait_for_timeout(250); t = E("document.getElementById('qsDetail').textContent")
+            check("%s [%s]: the drawer of %s says 'Fails at Isle of Mists' and its story point (%s)" % (label, sub, qid, t[t.find("Story point"):t.find("Story point") + 40]), "Fails at Isle of Mists" in t and "Story point:" in t and "Not missable" not in t, t[:200])
+        pg.keyboard.press("Escape")
+        E("qsSelect(QS.data.quests.find(q=>q.id==='Card Game Meta: Gather All').g)"); pg.wait_for_timeout(250); t = E("document.getElementById('qsDetail').textContent"); cg = E("qsState(QS.data.quests.find(q=>q.id==='Card Game Meta: Gather All').g)")
+        check("%s [%s]: Collect 'Em All stays Failed (the save's state is never changed by a rule) and is not missable as far as computed" % (label, sub), cg == "failed" and "Not missable as far as computed" in t and "In your save: <b>" not in t and "Failed" in t, [cg, t[:160]]); pg.keyboard.press("Escape")
+        E("qsSelect(QS.data.quests.find(q=>q.id==='Q105 Witches').g)"); pg.wait_for_timeout(250); aft = E("[...document.querySelectorAll('#qsDetail .qsafter .qslink')].map(b=>b.textContent)")
+        check("%s [%s]: the drawer of Ladies of the Wood says 'Opens after' with links to the previous quest first (%s)" % (label, sub, aft), aft[:1] == ["The Nilfgaardian Connection"] and 1 <= len(aft) <= 4, aft)
+        E("document.querySelector('#qsDetail .qsafter .qslink').click()"); pg.wait_for_timeout(250); check("%s [%s]: the link opens that quest (%s)" % (label, sub, E("QS.byG.get(QS.sel).n")), E("QS.byG.get(QS.sel).n") == "The Nilfgaardian Connection"); pg.keyboard.press("Escape")
+        un = E("(()=>{const k=g=>QS.R.quests[g]&&QS.R.quests[g].s,u=new Set(QS.data.quests.filter(q=>!k(q.g)).map(q=>q.g));return[[...document.querySelectorAll('#qsTL .qsdot')].filter(d=>u.has(d.dataset.g)).length,u.size]})()")
+        check("%s [%s]: Timeline: no quest with an unknown story point is drawn (%d of them, all in the collapsed row)" % (label, sub, un[1]), un[0] == 0 and un[1] == 191, un)
+        check("%s [%s]: the link is unchanged (view, gates and progress are not in it)" % (label, sub), E("location.hash") == h0 and not re.search(r"[0-9a-f]{32}|time", E("location.hash")), E("location.hash"))
+        # passing a gate by the main quests' states
+        isle = E("QS.data.quests.find(q=>q.id==='Q402 Isle of Mists').g"); E("qsMark('%s','done')" % isle); pg.wait_for_timeout(250)
+        miss2 = E("(()=>{const m=document.getElementById('qsMiss');return{h:m.querySelector('h3').textContent.trim().toLowerCase(),names:[...m.querySelectorAll('.qsmissec>.qsmis .qsmi b')].map(e=>e.textContent)}})()")
+        check("%s [%s]: once Q402 Isle of Mists is Done the Isle of Mists gate counts as passed: the panel moves on to the Battle of Kaer Morhen (%s) and Q106 is no longer listed" % (label, sub, miss2["names"]), miss2["h"].startswith("missable before battle of kaer morhen") and "An Invitation from Keira Metz" not in miss2["names"], miss2)
+        E("qsMark('%s',null)" % isle); check("%s [%s]: no script errors" % (label, sub), not errs, errs[:1]); pg.close()
+
+
+def timelinephone(b, base, check, label):
+    pg, errs, _ = newpage(b, base, w=390, h=844, mobile=True); E = pg.evaluate; opened(pg); pg.click("#qsVTime"); until(pg, "!!document.getElementById('qsTL')"); pg.wait_for_timeout(250)
+    sw = E("document.documentElement.scrollWidth-innerWidth"); inner = E("(()=>{const e=document.getElementById('qsTL');return[e.scrollWidth>e.clientWidth,getComputedStyle(e).overflowX]})()"); small = E("[...document.querySelectorAll('.qsv:not(:disabled),#qsShowDoneT,.qsunk summary')].filter(e=>e.getBoundingClientRect().height<43.5).length")
+    pg.click('#qsTL .qsdot >> nth=0'); pg.wait_for_timeout(350); dr = E("(()=>{const d=document.getElementById('qsDetail').getBoundingClientRect();return[Math.round(d.width),innerWidth,Math.round(d.top)]})()")
+    check("%s: 390 px: the Timeline scrolls sideways inside its own box (%s), the page does not (%d), the controls are 44 px (%d too small), a dot opens the full-screen drawer (%s)" % (label, inner, sw, small, dr), sw <= 1 and inner == [True, "auto"] and small == 0 and dr[0] == dr[1] and dr[2] == 0, [sw, inner, small, dr])
+    check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
+
+
+
+BARJS = """(()=>{const out=[];document.querySelectorAll('#qsTL .qsbrow .qsbplot').forEach(p=>{const bars=[...p.querySelectorAll('.qsgate')].map(b=>b.getBoundingClientRect()),ms=[...p.querySelectorAll('.qsdot,.qsmore')].map(m=>m.getBoundingClientRect());
+  bars.forEach(b=>ms.forEach(m=>{if(!(b.right<=m.left+.5||b.left>=m.right-.5))out.push([Math.round(b.left),Math.round(m.left),Math.round(m.right)])}))});
+  return{crossings:out,bars:document.querySelectorAll('#qsTL .qsbrow .qsbplot .qsgate').length,markers:document.querySelectorAll('#qsTL .qsbrow .qsdot,#qsTL .qsbrow .qsmore').length}})()"""
+
+
+def nobar(pg, check, label):
+    r = pg.evaluate(BARJS)
+    check("%s: v34.2 (c) no gate bar crosses a marker: %d bars, %d markers, %d crossings %s" % (label, r["bars"], r["markers"], len(r["crossings"]), r["crossings"][:3]), r["bars"] > 0 and r["markers"] > 0 and not r["crossings"], r)
+
+
+def timeline2(b, base, check, label):
+    """v34.2 without a save: pure functions (column width, leftover share, cell layout, order), the width filled, bars on edges only, spacing, key on one line, scopes and their memory."""
+    pg, errs, _ = newpage(b, base); E = pg.evaluate; opened(pg); pg.click("#qsVTime"); until(pg, "!!document.getElementById('qsTL')"); pg.wait_for_timeout(250)
+    u = E("""({w:[0,1,5,6,11,25,40].map(n=>qsColW(n)),m:qsColW(1,148),sh:[qsShare([100,200],600),qsShare([100,200],250)],
+      pl:[[0,6,100,false],[0,7,100,false],[0,7,100,true],[3,10,274,false],[3,20,274,false],[25,0,274,false],[2,3,100,false]].map(a=>{const p=qsCellPlace(...a);return[p.per,p.over,p.fS,p.rS,p.chip&&p.chip.blk+p.chip.idx,p.lines,p.more]})})""")
+    check("%s: v34.2 column width: 100 px at least, else the longer of two lines of 20 px markers with a 6 px gap and 10 px padding, 10 a line at most: %s, with a header minimum %s" % (label, u["w"], u["m"]), u["w"] == [100, 100, 100, 100, 170, 274, 274] and u["m"] == 148, u)
+    check("%s: v34.2 the leftover is shared in proportion to the content (100+200 in 600 -> 200+400); no leftover, no change (%s)" % (label, u["sh"]), u["sh"] == [[200, 400], [100, 200]], u["sh"])
+    check("%s: v34.2 cell layout (per line, over, shown F, shown R, chip, lines, more): 3 a line in 100 px; 6 fit; 7 give 5 + a '+2' chip; expanded the chip follows on a third line; 3 failing + 10 fit in 274 px; 3 + 20 give 3 + 9 and '+11'; 25 failing give 19 and '+6'; 2 failing + 3 others in 100 px fit in two lines (%s)" % (label, u["pl"]),
+          u["pl"] == [[3, False, 0, 6, None, 2, 0], [3, True, 0, 5, "r5", 2, 2], [3, True, 0, 7, "r7", 3, 0], [10, False, 3, 10, None, 2, 0], [10, True, 3, 9, "r9", 2, 11], [10, True, 19, 0, "f19", 2, 6], [3, False, 2, 3, None, 2, 0]], u["pl"])
+    ordr = E("""(()=>{const g=QS.R.gmap.get('isle'),l=QS.data.quests.filter(q=>QS.R.quests[q.g]&&QS.R.quests[q.g].s==='a'&&q.r==='no'),o=qsCellOrder(l,g),f=q=>qsFailsAtGate(q,g)?0:1,ty=q=>QS_KINDS.findIndex(k=>k[0]===q.t);
+      let ok=true;for(let i=1;i<o.length;i++){if(f(o[i])<f(o[i-1])||(f(o[i])===f(o[i-1])&&ty(o[i])<ty(o[i-1])))ok=false}return{n:o.length,same:o.length===l.length,ok,fails:o.filter(q=>f(q)===0).length,firstMain:o.findIndex(q=>q.t==='main'),lastFail:o.map(f).lastIndexOf(0),firstOther:o.findIndex(q=>f(q)===1)}})()""")
+    check("%s: v34.2 cell order: the quests that fail at the next gate first, then by type in legend order (%s)" % (label, ordr), ordr["ok"] and ordr["same"] and ordr["n"] == 25 and ordr["fails"] > 0 and ordr["firstOther"] == ordr["lastFail"] + 1, ordr)
+    # the width is filled, and shared in proportion to the content
+    wd = E("""(()=>{const t=document.getElementById('qsTL'),p=t.querySelector('.qsbplot.head'),c=[...t.querySelectorAll('.qstc')].map(e=>e.getBoundingClientRect().width+12),secs=['p','a','i','b','3','e'],
+      cnt=secs.map(s=>Math.max(0,...QS_TROWS.map(r=>QS.data.quests.filter(q=>q.r===r&&QS.R.quests[q.g]&&QS.R.quests[q.g].s===s&&qsState(q.g)!=='done').length))),raw=cnt.map(n=>qsColW(n));
+      return{plot:Math.round(p.getBoundingClientRect().width),box:t.clientWidth,scroll:t.scrollWidth>t.clientWidth+1,c:c.map(Math.round),cnt,ratio:c.map((w,i)=>w/raw[i]),tabs:[...document.querySelectorAll('#qsScope .qssc')].map(e=>[e.textContent,e.getAttribute('aria-pressed')]),vis:!document.getElementById('qsScope').hidden}})()""")
+    rr = wd["ratio"]
+    check("%s: v34.2 the chart fills the box (plot %d px, box %d, no sideways scroll) and the columns share the leftover in proportion to their content (width / content = %s); scope tabs: %s" % (label, wd["plot"], wd["box"], [round(x, 2) for x in rr], wd["tabs"]),
+          abs(wd["plot"] - (wd["box"] - 114)) <= 3 and not wd["scroll"] and max(rr) - min(rr) < .02 and rr[0] > 1.2 and wd["vis"] and wd["tabs"] == [["Base game", "true"], ["Hearts of Stone", "false"], ["Blood and Wine", "false"]], wd)
+    bar = E("""(()=>{const t=document.getElementById('qsTL'),cl=[...t.querySelectorAll('.qstc')].map(e=>e.getBoundingClientRect().left-6),cw=[...t.querySelectorAll('.qstc')].map(e=>e.getBoundingClientRect().width+12),bars=[...t.querySelectorAll('.qstlhead .qsgate')].map(e=>[e.dataset.gates,e.getBoundingClientRect().left]),
+      bd=[...t.querySelectorAll('.qstlhead .qsgb')].map(e=>{const r=e.getBoundingClientRect();return[e.textContent,r.left+r.width/2]}),colOf=x=>cl.findIndex((l,i)=>x>=l&&x<=l+cw[i]+.5),rowbars=[...t.querySelectorAll('.qsbrow')].map(r=>r.querySelectorAll('.qsgate').length);
+      return{bars:bars.map(b=>b[0]),onEdge:bars.every(b=>cl.some(l=>Math.abs(l-b[1])<1.5)),cols:bd.map(x=>colOf(x[1])),lefts:bd.map(x=>Math.round(x[1])),rowbars:[...new Set(rowbars)],none:!bars.some(b=>cl.every((l,i)=>Math.abs(l-b[1])>1.5&&b[1]>l&&b[1]<l+cw[i]))}})()""")
+    check("%s: v34.2 bars only on column edges: gates 1, 2, 3 (%s); gates 4, 5, 6 in Act III and 7, 8 in the Epilogue are badges only, side by side %s, no line through the cells (%d bars in each row)" % (label, bar["bars"], bar["lefts"][3:], bar["rowbars"][0]),
+          bar["bars"] == ["1", "2", "3"] and bar["onEdge"] and bar["none"] and bar["cols"][3:] == [4, 4, 4, 5, 5] and bar["lefts"][4] - bar["lefts"][3] == 24 and bar["lefts"][5] - bar["lefts"][4] == 24 and bar["lefts"][7] - bar["lefts"][6] == 24 and bar["rowbars"] == [3], bar)
+    nobar(pg, check, label)
+    gk = E("""(()=>{const li=[...document.querySelectorAll('.qsgkey .qsgk')];return{n:li.length,tops:[...new Set(li.map(e=>Math.round(e.getBoundingClientRect().top)))],txt:li.map(e=>e.textContent),title:li.map(e=>e.title),badge:li.map(e=>e.querySelector('.qsgb').title),w:innerWidth}})()""")
+    check("%s: v34.2 gate key on one line at %d px: badge and short name ('%s'), the quest code is in the tooltip ('%s')" % (label, gk["w"], gk["txt"][1], gk["badge"][1]), gk["n"] == 8 and len(gk["tops"]) == 1 and gk["txt"][1] == "2Isle of Mists" and not any("(Q" in t for t in gk["txt"]) and gk["badge"][1] == "Isle of Mists (Q402)" and gk["title"][1] == "Isle of Mists (Q402)" and gk["txt"][7] == "8Game finished", gk)
+    lg = E("document.querySelector('#qsView .qslegend').textContent")
+    check("%s: v34.2 legend: 'Fails at the next gate you haven't passed' with a sample bracket, the '+N More in this cell' chip, no orange dot" % label, "Fails at the next gate you haven't passed" in lg and "+NMore in this cell" in lg and "Orange dot" not in lg and E("document.querySelectorAll('.qslegend .qsl-fb .qsfb').length") == 1 and E("document.querySelectorAll('#qsTL .qsfd, .qsring').length") == 0, lg)
+    sp = E("""(()=>{const t=document.getElementById('qsTL'),cl=[...t.querySelectorAll('.qstc')].map(e=>e.getBoundingClientRect().left-6),cw=[...t.querySelectorAll('.qstc')].map(e=>e.getBoundingClientRect().width+12),res={dx:[],dy:[],size:new Set(),padl:[],lines:0,per:0,rowh:[]};
+      t.querySelectorAll('.qsbrow').forEach(row=>{res.rowh.push(Math.round(row.getBoundingClientRect().height));const cells=new Map();row.querySelectorAll('.qsdot').forEach(d=>{const r=d.getBoundingClientRect();res.size.add(r.width+'x'+r.height);const i=cl.findIndex((l,k)=>r.left>=l-.5&&r.left<l+cw[k]);if(!cells.has(i))cells.set(i,[]);cells.get(i).push(r)});
+       cells.forEach((rs,i)=>{const tops=[...new Set(rs.map(r=>Math.round(r.top)))].sort((a,b)=>a-b);res.lines=Math.max(res.lines,tops.length);tops.forEach(tp=>{const line=rs.filter(r=>Math.round(r.top)===tp).sort((a,b)=>a.left-b.left);res.per=Math.max(res.per,line.length);line.slice(1).forEach((r,k)=>res.dx.push(Math.round(r.left-line[k].left)));});res.padl.push(Math.round(Math.min(...rs.map(r=>r.left))-cl[i]))})});
+      return{dx:[...new Set(res.dx)],size:[...res.size],padl:[...new Set(res.padl)],lines:res.lines,per:res.per,rowh:Math.min(...res.rowh)}})()""")
+    check("%s: v34.2 spacing: markers 20 px (%s) every 26 px (a 6 px gap: %s), 10 px from the cell's edge (%s), at most 10 a line (%d) and 2 lines a cell (%d), rows 56 px at least (%d)" % (label, sp["size"], sp["dx"], sp["padl"], sp["per"], sp["lines"], sp["rowh"]),
+          sp["size"] == ["20x20"] and sp["dx"] == [26] and sp["padl"] == [10] and sp["per"] <= 10 and sp["lines"] <= 2 and sp["rowh"] >= 56, sp)
+    # the +N chip: Act I / Novigrad: 25 quests, per 10, two lines: 19 + '+6'
+    row = "#qsTL .qsbrow >> nth=3"; k = 't:base:no:a'; ch = E("(()=>{const b=document.querySelector('.qsmore[data-cell=\"%s\"]');return b&&b.textContent})()" % k)
+    h0 = pg.locator(row).bounding_box()["height"]; n0 = E("document.querySelectorAll('#qsTL .qsdot').length")
+    pg.click('.qsmore[data-cell="%s"]' % k); pg.wait_for_timeout(200); h1 = pg.locator(row).bounding_box()["height"]; n1 = E("document.querySelectorAll('#qsTL .qsdot').length"); t1 = E("document.querySelector('.qsmore[data-cell=\"%s\"]').textContent" % k); foc = E("document.activeElement.dataset.cell")
+    nobar(pg, check, label + " (cell expanded)")
+    pg.click('.qsmore[data-cell="%s"]' % k); pg.wait_for_timeout(200); h2 = pg.locator(row).bounding_box()["height"]; t2 = E("document.querySelector('.qsmore[data-cell=\"%s\"]').textContent" % k)
+    pg.click('.qsmore[data-cell="%s"]' % k); pg.reload(); until(pg, READY); opened(pg); pg.click("#qsVTime"); until(pg, "!!document.getElementById('qsTL')"); pg.wait_for_timeout(200)
+    check("%s: v34.2 a '+N' chip (%s) expands its cell in place (row %d -> %d px, %d -> %d markers, chip '%s', focus kept), a second click collapses it (%d px, '%s'); a reload forgets it" % (label, ch, h0, h1, n0, n1, t1, h2, t2),
+          ch == "+6" and h1 > h0 and n1 == n0 + 6 and t1 == "−" and foc == k and h2 == h0 and t2 == "+6" and E("document.querySelector('#qsTL .qsmore').textContent") == "+6" and not E("Object.keys(localStorage).some(k=>/cell|more|expand/i.test(k))"), [ch, h0, h1, n0, n1, t1, foc, h2, t2])
+    # scopes
+    hs = {}
+    for sc, tab, pack, ng, rowname in (("hos", "Hearts of Stone", "Hearts of Stone", 1, "Hearts of Stone"), ("bob", "Blood and Wine", "Blood and Wine", 6, "Blood and Wine")):
+        pg.click('#qsScope [data-scope="%s"]' % sc); pg.wait_for_timeout(250)
+        hs[sc] = E("""(()=>{const t=document.getElementById('qsTL'),cl=[...t.querySelectorAll('.qsbaxis span')].map(e=>e.getBoundingClientRect()),cw=cl.map(r=>r.left+r.width/2),lefts=[...t.querySelectorAll('.qscol')].map(e=>e.getBoundingClientRect().left),bars=[...t.querySelectorAll('.qstlhead .qsgate')].map(e=>[e.dataset.gates,e.getBoundingClientRect().left]),
+          bd=[...t.querySelectorAll('.qstlhead .qsgb')].map(e=>{const r=e.getBoundingClientRect();return[e.textContent,Math.round(r.left+r.width/2)]}),w=[...t.querySelectorAll('.qsbaxis span')].map((e,i,a)=>i?parseFloat(e.style.left)-parseFloat(a[i-1].style.left):null).filter(Boolean),plot=t.querySelector('.qsbplot.head').getBoundingClientRect().width;
+          return{key:[...document.querySelectorAll('.qsgkey .qsgk')].map(e=>e.textContent),note:(document.querySelector('.qsscnote')||{}).textContent,rows:[...t.querySelectorAll('.qsblabel')].map(e=>e.textContent),badges:bd.map(x=>x[0]).join(''),bd,bars:bars.map(b=>b[0]),barsOnEdge:bars.every(b=>lefts.some(l=>Math.abs(l-b[1])<1.5)),
+          real:[...document.querySelectorAll('.qsgk.real')].map(e=>e.textContent),realBar:t.querySelectorAll('.qsgb.real').length,minstep:Math.min(...w),plot:Math.round(plot),box:t.clientWidth,unk:document.querySelector('#qsUnk summary').textContent,pressed:[...document.querySelectorAll('#qsScope .qssc')].map(e=>e.getAttribute('aria-pressed')).join(),mem:localStorage.getItem('w3p.quests.timescope'),cols:t.querySelectorAll('.qstc').length,hash:location.hash}})()""")
+        x = hs[sc]
+        check("%s: v34.2 scope %s: one lane by level, the note, %d numbered gate%s (bars %s on the edge before their level's column, badges side by side), 'Placement not computed yet (191)' kept, remembered" % (label, tab, ng, "s" if ng > 1 else "", x["bars"]),
+              x["rows"] == [rowname] and x["note"] == "Laid out by quest level: every %s quest shares one story point in the game's quest graphs." % pack and len(x["key"]) == ng and x["badges"] == "".join(str(i + 1) for i in range(ng)) and x["barsOnEdge"] and x["minstep"] >= 100 and x["unk"] == "Placement not computed yet (191)" and x["mem"] == sc and x["cols"] == 0
+              and (x["bars"] == ["1", "2", "3,4", "5,6"] and x["bd"][3][1] - x["bd"][2][1] == 24 and x["bd"][5][1] - x["bd"][4][1] == 24 if sc == "bob" else x["bars"] == ["1"])
+              and (x["real"] == ["4The Night of Long Fangs real cutoff"] if sc == "bob" else not x["real"]) and (x["realBar"] == 1 if sc == "bob" else x["realBar"] == 0) and x["pressed"] == ",".join("true" if k == sc else "false" for k in ("base", "hos", "bob")), x)
+        check("%s: v34.2 scope %s: the chart fills the box when its columns are narrower than it (plot %d px, box %d)" % (label, tab, x["plot"], x["box"]), x["plot"] >= x["box"] - 117, x)
+        nobar(pg, check, label + " " + tab)
+    check("%s: v34.2 Blood and Wine key: six gates, the Night of Long Fangs is the real cutoff with a gold outlined badge (%s)" % (label, hs["bob"]["key"]), len(hs["bob"]["key"]) == 6 and hs["bob"]["key"][3] == "4The Night of Long Fangs real cutoff" and E("getComputedStyle(document.querySelector('.qsgkey .qsgb.real')).borderTopColor") == "rgb(240, 212, 138)" and E("document.querySelector('.qsgkey .qsgk.real').title") == "The Night of Long Fangs (Q704)", hs["bob"]["key"])
+    check("%s: v34.2 the scope is not in the link" % label, hs["bob"]["hash"] == E("location.hash") and "timescope" not in E("location.hash"), hs["bob"]["hash"])
+    pg.reload(); until(pg, READY); opened(pg); sc2 = E("[QS.tscope,QS.view]"); pg.click("#qsVTime") if sc2[1] != "time" else None; until(pg, "!!document.getElementById('qsTL')"); pg.wait_for_timeout(200)
+    check("%s: v34.2 the scope is remembered after a reload (%s)" % (label, sc2), sc2[0] == "bob" and E("[...document.querySelectorAll('#qsTL .qsblabel')].map(e=>e.textContent)") == ["Blood and Wine"], sc2)
+    pg.evaluate("localStorage.setItem('w3p.quests.timescope','nonsense')"); pg.reload(); until(pg, READY); opened(pg); pg.click("#qsVTime") if E("QS.view") != "time" else None; until(pg, "!!document.getElementById('qsTL')")
+    check("%s: v34.2 a stored scope that is not one of the three falls back to the base game" % label, E("QS.tscope") == "base" and E("document.querySelectorAll('#qsTL .qstc').length") == 6, E("QS.tscope"))
+    pg.click('#qsVList'); pg.wait_for_timeout(150); check("%s: v34.2 the scope tabs show only in the Timeline" % label, E("document.getElementById('qsScope').hidden"), None)
+    check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
+
+
+def timeline2save(b, base, check, label):
+    """v34.2 with the level-9 save: 6a gate 1 grey, 6b You are here, fail groups, 6c no bar crosses a marker."""
+    for sub in ("stats-l9b", "stats-l9"):
+        d = FIXD / sub; sav = sorted(d.glob("*.sav")) if d.is_dir() else []
+        if not sav: print("  SKIP  %s: v34.2 Timeline against the %s save (fixture not present)" % (label, sub)); continue
+        pg, errs, _ = newpage(b, base); E = pg.evaluate; pg.click("#savebtn"); pg.set_input_files("#impfile", [str(sav[0])]); until(pg, "!document.getElementById('impStep2').hidden"); pg.click("#impApply"); until(pg, "document.getElementById('impov').hidden")
+        opened(pg); until(pg, "!!QS.R&&!!QS.desc"); pg.click("#qsVTime"); until(pg, "!!document.getElementById('qsTL')"); pg.wait_for_timeout(250)
+        gk = E("qsGateKey('b').map(k=>[k.n,k.g.id,k.passed,k.name,k.code])"); dom = E("[...document.querySelectorAll('.qsgkey .qsgk')].map(e=>[e.querySelector('.qsgb').classList.contains('passed'),e.textContent])")
+        check("%s [%s]: v34.2 gate numbering: 1 Leaving White Orchard is passed, 2..8 are not (%s); the key marks only gate 1 '· passed'" % (label, sub, [(k[0], k[2]) for k in gk]), [(k[0], k[2]) for k in gk] == [(i + 1, i == 0) for i in range(8)] and gk[1][3:] == ["Isle of Mists", "Q402"]
+              and dom[0][0] and dom[0][1] == "1Leaving White Orchard · passed" and not any(x[0] or "passed" in x[1] for x in dom[1:]), [gk, dom])
+        g6 = E("""(()=>{const c=e=>getComputedStyle(e),b1=document.querySelector('#qsTL .qstlhead .qsgate[data-gates="1"]'),b2=document.querySelector('#qsTL .qstlhead .qsgate[data-gates="2"]'),bg=[...document.querySelectorAll('#qsTL .qstlhead .qsgb')],kb=[...document.querySelectorAll('.qsgkey .qsgb')];
+          return{bar1:[c(b1).borderLeftColor,c(b1).borderLeftStyle],bar2:[c(b2).borderLeftColor,c(b2).borderLeftStyle],badge1:c(bg[0]).backgroundColor,badge2:c(bg[1]).backgroundColor,key1:c(kb[0]).backgroundColor,rows:[...document.querySelectorAll('#qsTL .qsbrow .qsgate[data-gates="1"]')].map(e=>c(e).borderLeftColor)}})()""")
+        check("%s [%s]: v34.2 (a) gate 1 is passed, so its bar (%s) and badge (%s) are grey, in the key too (%s); gate 2 stays orange (%s, %s)" % (label, sub, g6["bar1"], g6["badge1"], g6["key1"], g6["bar2"][0], g6["badge2"]),
+              g6["bar1"] == ["rgb(143, 133, 117)", "dashed"] and g6["badge1"] == "rgb(107, 99, 85)" and g6["key1"] == "rgb(107, 99, 85)" and g6["bar2"][0] == "rgb(240, 138, 36)" and g6["badge2"] == "rgb(240, 138, 36)" and set(g6["rows"]) == {"rgb(143, 133, 117)"}, g6)
+        ym = E("""(()=>{const l=document.querySelector('#qsTL .qstfoot .qsyou'),i=document.querySelector('#qsTL .qstlhead .qsme'),gz=Math.max(...[...document.querySelectorAll('#qsTL .qsgate')].map(g=>+getComputedStyle(g).zIndex)),c=[...document.querySelectorAll('#qsTL .qstlhead .qstc')].map(e=>e.getBoundingClientRect()),on=document.querySelector('#qsTL .qstlhead .qstc.on'),tint=document.querySelector('#qsTL .qstlhead .qscolbg'),
+          x=i.getBoundingClientRect().left,t=l.getBoundingClientRect(),box=document.getElementById('qsTL').getBoundingClientRect(),ci=getComputedStyle(i),cl=getComputedStyle(l),bx=[...document.querySelectorAll('#qsTL .qstlhead .qsgate')].map(g=>g.getBoundingClientRect().left);
+          return{n:document.querySelectorAll('#qsTL .qsme').length,col:c.findIndex(r=>x>=r.left-6&&x<=r.right+6),on:on.textContent,line:ci.borderLeftColor,w:ci.borderLeftWidth,z:+ci.zIndex,gz,label:l.textContent,tr:cl.textTransform,lbg:cl.backgroundColor,clear:bx.every(b=>Math.abs(b-x)>4),
+          inBox:t.left>=box.left&&t.right<=box.right&&t.bottom<=box.bottom+1,vis:cl.visibility,tintOn:!!tint&&Math.abs(tint.getBoundingClientRect().left-c[1].left+6)<2,bottom:t.top>=[...document.querySelectorAll('#qsTL .qsbrow')].pop().getBoundingClientRect().bottom-1}})()""")
+        check("%s [%s]: v34.2 (b) 'You are here': a pale-gold #f0d48a 2 px line (%s) above every bar (z %d > %d) and clear of them, in the Act I column (%s), in the head and the rows (%d lines), the label '%s' at the bottom inside the chart, the Act I column tinted" % (label, sub, ym["line"], ym["z"], ym["gz"], ym["on"], ym["n"] - 2, ym["label"]),
+              ym["line"] == "rgb(240, 212, 138)" and ym["w"] == "2px" and ym["z"] > ym["gz"] and ym["clear"] and ym["col"] == 1 and ym["on"] == "Act I" and ym["n"] == 9 and ym["label"] == "You are here" and ym["tr"] == "uppercase" and ym["lbg"] == "rgb(240, 212, 138)" and ym["inBox"] and ym["vis"] == "visible" and ym["tintOn"] and ym["bottom"], ym)
+        fg = E("""(()=>{const g=QS.R.gmap.get('isle'),t=document.getElementById('qsTL'),br=[...t.querySelectorAll('.qsfb')].map(e=>e.getBoundingClientRect()),dots=[...t.querySelectorAll('.qsdot')].map(d=>({r:d.getBoundingClientRect(),f:qsFailsAtGate(QS.byG.get(d.dataset.g),g),cls:d.className,col:getComputedStyle(d).color})),
+          inside=(r,b)=>{const cx=r.left+r.width/2,cy=r.top+r.height/2;return cx>=b.left&&cx<=b.right&&cy>=b.top&&cy<=b.bottom+4},lab=[...t.querySelectorAll('.qsfl')].map(e=>e.textContent);
+          return{brackets:br.length,labels:[...new Set(lab)],failing:dots.filter(d=>d.f).length,failOut:dots.filter(d=>d.f&&!br.some(b=>inside(d.r,b))).length,otherIn:dots.filter(d=>!d.f&&br.some(b=>inside(d.r,b))).length,orange:dots.filter(d=>d.col==='rgb(240, 138, 36)').length,types:dots.every(d=>/ t-(main|side|contract|treasure|gwent|race|fist) /.test(d.cls+' ')),fd:t.querySelectorAll('.qsfd,.qsring').length,
+          badge:[...t.querySelectorAll('.qsfl .qsgb')].every(b=>b.textContent==='2')}})()""")
+        check("%s [%s]: v34.2 fail groups: %d quests that fail at gate 2 (Isle of Mists) each sit in one of %d orange brackets labelled %s, nothing else is in a bracket, the markers keep their type shape and colour, no orange dot" % (label, sub, fg["failing"], fg["brackets"], fg["labels"]),
+              fg["brackets"] > 0 and fg["labels"] == ["fails at 2"] and fg["failing"] > 5 and fg["failOut"] == 0 and fg["otherIn"] == 0 and fg["orange"] == 0 and fg["types"] and fg["fd"] == 0 and fg["badge"], fg)
+        fo = E("""(()=>{const g=QS.R.gmap.get('isle'),t=document.getElementById('qsTL'),res=[];t.querySelectorAll('.qsbrow').forEach(row=>{const cl=[...t.querySelectorAll('.qstc')].map(e=>e.getBoundingClientRect().left-6),cw=[...t.querySelectorAll('.qstc')].map(e=>e.getBoundingClientRect().width+12),m=new Map();
+          row.querySelectorAll('.qsdot').forEach(d=>{const r=d.getBoundingClientRect(),i=cl.findIndex((l,k)=>r.left>=l-.5&&r.left<l+cw[k]);if(!m.has(i))m.set(i,[]);m.get(i).push([r.top,qsFailsAtGate(QS.byG.get(d.dataset.g),g)])});
+          m.forEach(a=>{const f=a.filter(x=>x[1]).map(x=>x[0]),o=a.filter(x=>!x[1]).map(x=>x[0]);if(f.length&&o.length)res.push(Math.max(...f)<Math.min(...o))})});return{cells:res.length,ok:res.every(Boolean)}})()""")
+        check("%s [%s]: v34.2 in a cell the group that fails comes first, above the others (%d cells with both)" % (label, sub, fo["cells"]), fo["cells"] > 0 and fo["ok"], fo)
+        nobar(pg, check, label + " [%s]" % sub)
+        for sc in ("hos", "bob"):
+            pg.click('#qsScope [data-scope="%s"]' % sc); pg.wait_for_timeout(200)
+            kp = E("[...document.querySelectorAll('.qsgkey .qsgk')].map(e=>e.classList.contains('passed'))"); lane = {"hos": "h", "bob": "w"}[sc]
+            st = E("QS.data.quests.some(q=>QS.R.quests[q.g]&&QS.R.quests[q.g].s==='%s'&&qsState(q.g)!=='none'&&q.lv!=null)" % lane); n = E("document.querySelectorAll('#qsTL .qsyou').length")
+            check("%s [%s]: v34.2 scope %s: no gate passed; 'You are here' only if the save has started a quest of that pack (%s -> %d label)" % (label, sub, sc, st, n), not any(kp) and n == (1 if st else 0), [kp, st, n])
+            nobar(pg, check, label + " [%s] %s" % (sub, sc))
+        check("%s [%s]: no script errors" % (label, sub), not errs, errs[:1]); pg.close()
+
+
+def timeline2phone(b, base, check, label):
+    pg, errs, _ = newpage(b, base, w=390, h=844, mobile=True); E = pg.evaluate; opened(pg); pg.click("#qsVTime"); until(pg, "!!document.getElementById('qsTL')"); pg.wait_for_timeout(250)
+    for sc in ("base", "hos", "bob"):
+        pg.click('#qsScope [data-scope="%s"]' % sc); pg.wait_for_timeout(250)
+        m = E("""(()=>{const t=document.getElementById('qsTL'),s=document.getElementById('qsScope').getBoundingClientRect(),k=document.querySelector('.qsgkey').getBoundingClientRect(),sc=[...document.querySelectorAll('#qsScope .qssc')].map(e=>e.getBoundingClientRect()),li=[...document.querySelectorAll('.qsgkey .qsgk')].map(e=>Math.round(e.getBoundingClientRect().top));
+          return{page:document.documentElement.scrollWidth-innerWidth,box:[t.scrollWidth>t.clientWidth,getComputedStyle(t).overflowX],keyIn:k.right<=innerWidth,wraps:new Set(li).size>1||li.length<2,tabsIn:s.right<=innerWidth&&s.left>=0,h:Math.round(Math.min(...sc.map(r=>r.height)))}})()""")
+        check("%s: v34.2 390 px, scope %s: the chart scrolls inside its own box, the page does not (%d), the key and the tabs wrap inside the screen, the tabs are 44 px (%s)" % (label, sc, m["page"], m), m["page"] <= 1 and m["box"] == [True, "auto"] and m["keyIn"] and m["wraps"] and m["tabsIn"] and m["h"] >= 44, m)
     check("%s: no script errors" % label, not errs, errs[:1]); pg.close()

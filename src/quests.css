@@ -103,3 +103,51 @@
  .qsprog .qsmark{flex:1 1 calc(50% - 6px);justify-content:center}.qscards{grid-template-columns:minmax(0,1fr)}.qscard{min-height:64px}.qsreg{min-height:44px}.qsv,.qschip,.qsmark{min-height:44px}.qsrow{min-height:44px}.qschip.hide{margin-left:0}.qssearch{flex:1 1 100%}
  .qsmenu{position:fixed;left:12px;right:12px;top:auto;bottom:12px;width:auto;z-index:70}
 }
+
+/* ---- v34: the Timeline, the Missable panel, "fails at" ---- */
+:root{--fail:#f08a24}
+.qsscreen.qs-time .qsregnav{display:none}
+.qscol{position:absolute;top:0;bottom:0;width:0;border-left:1px solid #2a2219;pointer-events:none}
+.qstc{position:absolute;top:4px;font-weight:500;font-size:17px;letter-spacing:.8px;text-transform:uppercase;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}.qstc.on{color:#fff}
+.qsgate{position:absolute;top:0;bottom:0;width:0;border-left:2px solid var(--fail);pointer-events:none;z-index:1}.qsgate.passed{border-left:2px dashed #8f8575}
+.qslane .qsbplot{min-height:96px}
+.qsunk{margin:10px 0 0;border:1px solid #3a3025;background:#0d0b09}.qsunk summary{cursor:pointer;padding:8px 12px;font-size:18px;color:var(--gold);min-height:44px;display:flex;align-items:center}.qsunk summary:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.qsunk .qsbnote{margin:0 12px 8px}.qsunkl{max-height:360px;overflow:auto;border-top:1px solid #2a2219}
+.qsmiss{margin:0 0 14px;border:1px solid var(--fail);background:linear-gradient(180deg,#1c140b,#0d0b09);padding:8px 12px 10px}
+.qsmiss h3{margin:0 0 6px;font-weight:500;font-size:17px;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}.qsmiss h3 b{color:var(--fail);font-weight:500}.qsmn{display:inline-block;min-width:24px;text-align:center;margin-left:6px;padding:0 6px;border-radius:12px;background:var(--fail);color:#17120a;font-weight:600}
+.qsmis{display:flex;flex-wrap:wrap;gap:6px}
+.qsmi{font:inherit;display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:3px 10px;min-height:38px;background:#17130e;border:1px solid #4a3d2c;color:var(--tc);cursor:pointer}.qsmi b{font-weight:500;font-size:17px}.qsmi small{color:var(--dim);font-size:14px}.qsmi:hover,.qsmi.on{border-color:var(--fail)}.qsmi:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.qsmobj{margin-top:8px}.qsmobj summary{cursor:pointer;color:#cdbf9e;font-size:16px;min-height:32px;display:flex;align-items:center}.qsmobj summary:focus-visible{outline:2px solid var(--gold)}
+.qsmfoot{display:block;margin-top:8px;color:var(--dim);font-size:14px}
+.qscard.fails{border-color:var(--fail)}.qsfail{color:var(--fail)!important;font-weight:500}.qstip .qsfail{color:var(--fail)}
+.qsrules{margin:8px 0 0}.qsrule{margin:3px 0;font-size:17px;color:#cdbf9e;line-height:1.25}.qsrule b{color:#fff;font-weight:500}.qsfailsat,.qsloses{color:#f3b878}.qsfailsat b,.qsloses b{color:var(--fail)}.qsnomiss{color:var(--dim)}
+.qslink{font:inherit;font-size:17px;background:none;border:0;border-bottom:1px dotted var(--tc,var(--gold));color:var(--tc,var(--gold));padding:2px 0;cursor:pointer;min-height:32px}.qslink:hover{color:#fff}.qslink:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media (max-width:600px){.qsmi,.qslink{min-height:44px}.qsunk summary{min-height:44px}}
+/* ---- v34.1: the decluttered Timeline: scope tabs, gate key, numbered bars, wrapped cells, orange dot, You are here ---- */
+.qsviews{flex-wrap:wrap;align-items:flex-start}
+.qsscope{display:flex;flex-wrap:wrap;gap:6px;margin-left:14px}.qsscope[hidden]{display:none}
+.qstl .qsbplot.head{height:70px}
+.qstc{white-space:normal;line-height:1.05;font-size:15px;top:30px;text-overflow:clip}
+.qsgb{position:absolute;top:4px;transform:translateX(-50%);z-index:3;min-width:20px;height:20px;padding:0 4px;box-sizing:border-box;border-radius:10px;background:var(--fail);color:#17120a;font-weight:600;font-size:14px;line-height:20px;text-align:center;cursor:default}
+.qsgb.passed{background:#6b6355;color:#d6ccb8}
+.qsgb.real{background:#17120a;color:#f0d48a;border:1.5px solid #f0d48a;line-height:17px}
+.qstbar{display:flex;justify-content:flex-end;margin:0 0 8px}.qstbar .qsbtools{margin:0}
+.qsscnote{margin:0 2px 8px}
+.qscolbg{position:absolute;top:0;bottom:0;background:#f0d48a14;pointer-events:none}
+.qsyou{position:absolute;transform:translateX(-50%);z-index:5;background:#f0d48a;color:#17120a;font-weight:600;font-size:13px;letter-spacing:.8px;text-transform:uppercase;padding:0 7px;line-height:18px;white-space:nowrap;pointer-events:none}.qsyou.lft{transform:none;margin-left:-1px}.qsyou.rgt{transform:translateX(-100%);margin-left:1px}
+.qstfoot{border-top:1px solid #2a2219}
+@media (max-width:600px){.qsscope{margin-left:0;width:100%}.qsscope .qsv{flex:1 1 auto}.qsgkey{gap:6px 12px}.qstbar{justify-content:stretch}.qstbar .qsbtools{width:100%}.qstbar .qschip{width:100%}}
+/* ---- v34.2: markers 20 px with a 6 px gap, fail groups under an orange bracket, bars on column edges only, one-line gate key ---- */
+.qsgate{z-index:1}.qsgate.passed{border-left:2px dashed #8f8575}
+.qstl .qsdot{width:20px;height:20px;display:flex;align-items:center;justify-content:center}.qstl .qsshape{width:18px;height:18px}
+.qstl .qsmore{height:20px;min-width:20px;border-radius:10px;line-height:18px}
+.qsfb{position:absolute;box-sizing:border-box;border:1.5px solid var(--fail);border-bottom:0;border-radius:3px 3px 0 0;pointer-events:none;z-index:0}
+.qsfl{position:absolute;display:flex;align-items:center;gap:4px;height:14px;font-size:12px;line-height:14px;color:var(--fail);white-space:nowrap;pointer-events:none}
+.qsgb.mini{position:static;transform:none;min-width:14px;height:14px;padding:0 3px;border-radius:7px;font-size:11px;line-height:14px;display:inline-block}.qsgb.mini.passed{background:#6b6355}
+.qsgkh{margin:0 2px 4px;font-weight:500;font-size:15px;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}
+.qsgkey{list-style:none;display:flex;flex-wrap:wrap;gap:6px 16px;margin:0 2px 10px;padding:0;align-items:center}
+@media (min-width:1200px){.qsgkey{flex-wrap:nowrap;gap:6px 14px}.qsgkey li{white-space:nowrap}}
+.qsgkey li{display:flex;align-items:center;gap:6px;font-size:16px;color:var(--ink);min-width:0}.qsgkey .qsgb{position:static;transform:none;flex:0 0 auto}
+.qsgk.passed span{color:#8f8575}
+.qsl-fb,.qsl-more{display:flex;align-items:center;gap:7px;font-size:17px;color:var(--ink)}.qsl-fb .qsfb{position:static;width:22px;height:12px;flex:0 0 auto}.qsl-more .qsmore{position:static;cursor:default;display:inline-block}
+.qsme{border-left:2px solid #f0d48a;z-index:4}

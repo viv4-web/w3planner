@@ -93,7 +93,7 @@ def main():
     def lazy(match):
         name = match.group(1); p = ROOT / "data" / ("%s.json" % name)
         if not p.is_file(): sys.exit("missing data file for @file:%s" % name)
-        blob = ('(window.W3DATA=window.W3DATA||{}).%s=%s;\n' % (name, tokens(read(p)).strip())).encode("utf-8")
+        blob = ('(window.W3DATA=window.W3DATA||{}).%s=%s;\n' % (name.replace("-", "_"), tokens(read(p)).strip())).encode("utf-8")
         fname = "data/%s.%s.js" % (name, hashlib.sha1(blob).hexdigest()[:12]); files[fname] = blob
         return json.dumps(fname)
 
@@ -123,7 +123,7 @@ def main():
     src = Path(a.src)
     extra = lambda *names: "".join(("\n" + read(src / n)) for n in names if (src / n).is_file())   # screens.css, equipment.js, consumables.js, screens.js: more source of the same page (one scope), in this order
     css = tokens(read(src / "app.css") + extra("screens.css", "glossary.css", "quests.css", "importsave.css"))
-    js = re.sub(r"/\*@lazyjs:([a-z0-9_]+)\*/", lazyjs, re.sub(r"/\*@file:([A-Za-z0-9_]+)\*/", lazy, tokens(re.sub(r"/\*@data:([A-Z_]+)\*/", data, read(src / "app.js") + extra("equipment.js", "consumables.js", "screens.js", "glossary.js", "quests.js", "importsave.js", "stats.js")))))
+    js = re.sub(r"/\*@lazyjs:([a-z0-9_]+)\*/", lazyjs, re.sub(r"/\*@file:([A-Za-z0-9_-]+)\*/", lazy, tokens(re.sub(r"/\*@data:([A-Z_]+)\*/", data, read(src / "app.js") + extra("equipment.js", "consumables.js", "screens.js", "glossary.js", "quests.js", "importsave.js", "stats.js")))))
     if gloss: js = js.replace("/*@glossary*/null", json.dumps(gloss, separators=(",", ":")))
     if quests: js = js.replace("/*@quests*/null", json.dumps(quests, separators=(",", ":")))
     html = tokens(read(src / "index.html")).replace("{{css}}", css).replace("{{js}}", js)
