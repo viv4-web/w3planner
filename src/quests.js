@@ -149,56 +149,81 @@ function qsRenderBand(host){const my=qsMy(),reg=qsInRegion(QS.region),vis=reg.fi
  bind();host.querySelectorAll('.qsdot').forEach(d=>{d.onclick=()=>qsSelect(d.dataset.g,true);d.onmouseenter=d.onfocus=()=>qsTip(d);d.onmouseleave=d.onblur=()=>qsTipHide()});
  host.querySelectorAll('.qsmore').forEach(b=>{b.onclick=()=>{const k=b.dataset.cell;if(QS.cells.has(k))QS.cells.delete(k);else QS.cells.add(k);qsRenderBand(host);const n=host.querySelector('.qsmore[data-cell="'+k+'"]');if(n)n.focus()}});
  QS.place=null}
-// ---- the Timeline (v34, decluttered in v34.1): columns = the story sections, rows = regions; three scopes (Base game, Hearts of Stone, Blood and Wine: a single lane laid out by quest level); gates are vertical bars numbered like the key above ----
+// ---- the Timeline (v34, decluttered in v34.1 and v34.2): columns = the story sections, rows = regions; three scopes (Base game, Hearts of Stone, Blood and Wine: a single lane laid out by quest level); the points of no return are numbered, bars only on column edges ----
 const QS_TCOLS=[['p','Prologue'],['a','Act I'],['i','Isle of Mists'],['b','Battle of Kaer Morhen'],['3','Act III'],['e','Epilogue']],QS_TROWS=['wo','vz','ve','no','sk','km','oth'];
-const QS_TSCOPES=[['base','Base game',null],['hos','Hearts of Stone','h'],['bob','Blood and Wine','w']],QS_TSTEP=18,QS_TMIN=100,QS_TPX=9,QS_TLINES=2;   // [scope, tab, lane key]; a marker's footprint is 18 px; a column is 9 px per marker of its fullest cell (two lines of 18 px), 100 px at least; a cell wraps to two lines
-// the width of a column from the marker count of its fullest cell (across the regions)
-const qsColW=n=>Math.max(QS_TMIN,QS_TPX*n+8);
-// how a cell of n markers in a column w px wide lays out: per line, two lines at most; over that the last place is a "+N" chip (all of them, and a "−" chip, when the cell is expanded)
-function qsCellLay(n,w,open){const per=Math.max(1,Math.floor((w-8)/QS_TSTEP)),cap=per*QS_TLINES,over=n>cap,shown=over&&!open?cap-1:n;return{per,cap,over,shown,more:n-shown,lines:Math.max(n?1:0,Math.ceil((shown+(over?1:0))/per))}}
-// a cell's order: quests that will fail at the next gate first, then Main, then the other types in the legend's order; then the open ones, active first, done last, by name
-function qsCellOrder(list){const ty=q=>QS_KINDS.findIndex(k=>k[0]===q.t),fl=q=>qsOpenState(qsState(q.g))&&qsFailsAt(q)?0:1,
+const QS_TSCOPES=[['base','Base game',null],['hos','Hearts of Stone','h'],['bob','Blood and Wine','w']];   // [scope, tab, lane key]
+// v34.2 measures (px): a marker is 20, the gap 6, a cell has 10 px at the sides and 8 above and below, at most 10 markers a line and 2 lines a cell; a column is 100 px at least; a badge in the header is 24
+const QS_TM=20,QS_TGAP=6,QS_TSTEP=QS_TM+QS_TGAP,QS_TPADX=10,QS_TPADY=8,QS_TPER=10,QS_TLINES=2,QS_TMIN=100,QS_TBADGE=24,QS_TGROUP=19;
+// the width of a column from the marker count of its fullest cell (across the regions): the markers of its longer line (two lines, 10 at most), the cell padding, 100 px at least (min: what its header badges need)
+const qsColW=(n,min)=>Math.max(min||QS_TMIN,QS_TMIN,Math.min(QS_TPER,Math.ceil(n/QS_TLINES))*QS_TSTEP-QS_TGAP+2*QS_TPADX);
+// the leftover width of the box is shared among the columns in proportion to their content width: -> new widths (the same when there is no leftover: a phone scrolls)
+function qsShare(ws,avail){const sum=ws.reduce((a,b)=>a+b,0),left=avail-sum;return left>0&&sum>0?ws.map(w=>w+left*w/sum):ws.slice()}
+// how a cell of nF markers that fail at the next gate (their own group, first) and nR others lays out in a column w px wide: markers per line, two lines at most over both groups; over that the last place is a "+N" chip ("−" once expanded)
+function qsCellPlace(nF,nR,w,open){const per=Math.max(1,Math.min(QS_TPER,Math.floor((w-2*QS_TPADX+QS_TGAP)/QS_TSTEP))),cap=(f,r,b)=>{const fs=Math.min(f,per*b),rem=b-Math.ceil(fs/per);return[fs,Math.min(r,per*rem),rem]};
+ const[f0,r0]=cap(nF,nR,QS_TLINES),over=nF+nR>f0+r0;let fS,rS,rem;if(open||!over){fS=nF;rS=nR;rem=1}else{[fS,rS,rem]=cap(nF,nR,QS_TLINES);if(rS>0)rS--;else fS--}
+ const chipR=nR>0&&rem>0,chip=!over?null:chipR?{blk:'r',idx:rS}:{blk:'f',idx:fS},fLines=Math.ceil((fS+(chip&&chip.blk==='f'?1:0))/per),rLines=Math.ceil((rS+(chip&&chip.blk==='r'?1:0))/per);   // the chip is the next place after the last marker shown, in the group it follows
+ return{per,over,fS,rS,chip,fLines,rLines,lines:fLines+rLines,more:nF+nR-fS-rS}}
+// does a quest fail at this gate (a whole-quest cutoff on it) and is it still open
+const qsFailsAtGate=(q,gt)=>!!gt&&qsOpenState(qsState(q.g))&&qsCuts(q).some(x=>x.whole&&x.gate===gt);
+// a cell's order: quests that fail at the next gate first, then Main, then the other types in the legend's order; then active first, done last, by name
+function qsCellOrder(list,gt){const ty=q=>QS_KINDS.findIndex(k=>k[0]===q.t),fl=q=>qsFailsAtGate(q,gt)?0:1,
  ord=(a,b)=>(qsState(a.g)==='done')-(qsState(b.g)==='done')||(qsState(b.g)==='active')-(qsState(a.g)==='active')||a.n.localeCompare(b.n);
  return list.slice().sort((a,b)=>fl(a)-fl(b)||ty(a)-ty(b)||ord(a,b))}
-// the gates of a lane in story order, numbered 1..n, with the name and the quest code the key shows and whether the save has passed each
+// the gates of a lane in story order, numbered 1..n, with the short name and the quest code (the badge's tooltip) and whether the save has passed each
 function qsGateKey(lane){return qsGates(lane).map((g,i)=>({g,n:i+1,passed:qsPassed(g),name:g.name.replace(/\s*\(Q\d{3}\)$/,''),code:g.code||'',real:!!g.real}))}
+// where a gate stands: on the edge between two columns (base game: a whole number; the expansions: the edge before its level's column), or inside a column (base game, a fraction)
+function qsGatePlace(k,lane,lo,ncol){const x=k.g.x;if(lane)return{edge:Math.max(0,Math.min(ncol,Math.ceil(x-1e-9)-lo))};return Math.abs(x-Math.round(x))<1e-9?{edge:Math.round(x)}:{col:Math.floor(x)}}
 function qsSetScope(s){if(QS_TSCOPES.some(x=>x[0]===s)){QS.tscope=s;try{localStorage.setItem(QS_TSCOPE_KEY,s)}catch(e){}}}
 function qsDotHtml(q,pos){const st=qsState(q.g),fg=qsOpenState(st)?qsFailsAt(q):null;
- return`<button type="button" class="qsdot t-${q.t} ${st}${fg?' fails':''}${QS.sel===q.g?' on':''}" data-g="${q.g}" style="${pos}" aria-label="${qsEsc(q.n)}, ${qsKindName(q.t)}, ${QS_NAMES[st]}, level ${qsLevelText(q)}${fg?', fails at '+qsEsc(fg.name):''}">${qsShape(q.t,st)}${fg?'<i class="qsfd"></i>':''}</button>`}
-function qsSwarm(list,x0,w,key,top0){   // markers side by side in a cell of width w, two lines at most, the rest behind a "+N" chip -> {html, lines}
- const L=qsCellLay(list.length,w,QS.cells.has(key)),open=QS.cells.has(key),pos=i=>'left:'+(x0+4+(i%L.per)*QS_TSTEP).toFixed(1)+'px;top:'+(top0+Math.floor(i/L.per)*QS_TSTEP)+'px';
- let h=list.slice(0,L.shown).map((q,i)=>qsDotHtml(q,pos(i))).join('');
- if(L.over)h+=`<button type="button" class="qsmore" data-cell="${key}" style="${pos(L.shown)}" aria-expanded="${open}" aria-label="${open?'Show fewer quests':L.more+' more quests'}">${open?'−':'+'+L.more}</button>`;
- return{html:h,lines:L.lines}}
-// the key above the chart: a numbered badge, the name and quest code, "· passed" for a gate the save is past; the real cutoff has a gold outlined badge
-const qsGateBadge=(k,style)=>`<b class="qsgb${k.passed?' passed':''}${k.real?' real':''}"${style?` style="${style}"`:''} title="${qsEsc(k.name+(k.code?' ('+k.code+')':''))}${k.passed?' · passed':''}${k.real?' · real cutoff':''}">${k.n}</b>`;
-function qsGateKeyHtml(keys){return`<ol class="qsgkey" aria-label="Points of no return"><li class="qsgkh">Points of no return</li>${keys.map(k=>`<li class="qsgk${k.passed?' passed':''}${k.real?' real':''}">${qsGateBadge(k)}<span>${qsEsc(k.name)}${k.code?` <small>(${qsEsc(k.code)})</small>`:''}${k.real?' <em>real cutoff</em>':''}${k.passed?' <small>· passed</small>':''}</span></li>`).join('')}</ol>`}
+ return`<button type="button" class="qsdot t-${q.t} ${st}${fg?' fails':''}${QS.sel===q.g?' on':''}" data-g="${q.g}" style="${pos}" aria-label="${qsEsc(q.n)}, ${qsKindName(q.t)}, ${QS_NAMES[st]}, level ${qsLevelText(q)}${fg?', fails at '+qsEsc(fg.name):''}">${qsShape(q.t,st)}</button>`}
+// the badge of a gate: its number (the key and the chart); grey once passed, a gold outline for the real cutoff; the tooltip has the name and the quest code
+const qsGateBadge=(k,style,cls)=>`<b class="qsgb${k.passed?' passed':''}${k.real?' real':''}${cls?' '+cls:''}"${style?` style="${style}"`:''} title="${qsEsc(k.name+(k.code?' ('+k.code+')':''))}${k.passed?' · passed':''}${k.real?' · real cutoff':''}">${k.n}</b>`;
+function qsGateKeyHtml(keys){return`<h3 class="qsgkh">Points of no return</h3><ol class="qsgkey" aria-label="Points of no return">${keys.map(k=>`<li class="qsgk${k.passed?' passed':''}${k.real?' real':''}" title="${qsEsc(k.name+(k.code?' ('+k.code+')':''))}">${qsGateBadge(k)}<span>${qsEsc(k.name)}${k.real?' <em>real cutoff</em>':''}${k.passed?' <small>· passed</small>':''}</span></li>`).join('')}</ol>`}
+// the markers of a cell in a column starting at x0, w wide: the group that fails at the next gate (gt) under a thin orange bracket "fails at <n>", then the others; -> {html, h} (h: the height the cell needs)
+function qsSwarm(list,x0,w,key,gt,gn){
+ const open=QS.cells.has(key),F=list.filter(q=>qsFailsAtGate(q,gt)),R=list.filter(q=>!qsFailsAtGate(q,gt)),P=qsCellPlace(F.length,R.length,w,open),px=i=>x0+QS_TPADX+(i%P.per)*QS_TSTEP;
+ const fy=QS_TPADY+(F.length?QS_TGROUP:0),ry=fy+P.fLines*QS_TSTEP+(F.length?2:0),fpos=i=>`left:${px(i).toFixed(1)}px;top:${fy+Math.floor(i/P.per)*QS_TSTEP}px`,rpos=i=>`left:${px(i).toFixed(1)}px;top:${ry+Math.floor(i/P.per)*QS_TSTEP}px`;
+ let h='';
+ if(F.length&&P.fS>0){const bw=Math.min(P.fS,P.per)*QS_TSTEP-QS_TGAP+8,gl=P.fLines*QS_TSTEP-QS_TGAP+4;
+  h+=`<span class="qsfl" style="left:${(x0+QS_TPADX-4).toFixed(1)}px;top:${QS_TPADY-1}px" aria-hidden="true">fails at <b class="qsgb mini">${gn}</b></span><i class="qsfb" style="left:${(x0+QS_TPADX-4).toFixed(1)}px;top:${QS_TPADY+14}px;width:${bw}px;height:${gl+5}px" aria-hidden="true"></i>`}
+ h+=F.slice(0,P.fS).map((q,i)=>qsDotHtml(q,fpos(i))).join('')+R.slice(0,P.rS).map((q,i)=>qsDotHtml(q,rpos(i))).join('');
+ if(P.chip)h+=`<button type="button" class="qsmore" data-cell="${key}" style="${P.chip.blk==='f'?fpos(P.chip.idx):rpos(P.chip.idx)}" aria-expanded="${open}" aria-label="${open?'Show fewer quests':P.more+' more quests'}">${open?'−':'+'+P.more}</button>`;
+ const bottom=P.rLines?ry+P.rLines*QS_TSTEP-QS_TGAP:(P.fLines?fy+P.fLines*QS_TSTEP-QS_TGAP:0);
+ return{html:h,h:bottom?bottom+QS_TPADY:0}}
 function qsRenderTime(host){
  const scope=QS.tscope,lane=(QS_TSCOPES.find(x=>x[0]===scope)||[])[2]||null;
  const tools=`<div class="qsbtools"><button type="button" class="qschip${QS.timeDone?' on':''}" id="qsShowDoneT" aria-pressed="${QS.timeDone}" title="Show the quests you have done as faint dots with a check">Show done</button></div>`;
  if(!QS.R){host.innerHTML=tools+'<p class="qshint">The timeline data could not be loaded.</p>';qsEl('qsShowDoneT').onclick=()=>{qsSetTimeDone(!QS.timeDone);qsRenderView()};return}
- const R=QS.R,Qs=QS.data.quests,known=q=>qsRule(q.g)&&qsRule(q.g).s,drawn=q=>known(q)&&(QS.timeDone||qsState(q.g)!=='done'),sec=qsSection(),keys=qsGateKey(lane||'b');
- // columns: base game = the story sections, expansions = the quest levels; a column is as wide as the fullest cell in it
- let cols,cells=new Map(),lo=0,rows=[];   // cols: [{label,w,k}]; cells: row|col -> [quests]
+ const R=QS.R,Qs=QS.data.quests,known=q=>qsRule(q.g)&&qsRule(q.g).s,drawn=q=>known(q)&&(QS.timeDone||qsState(q.g)!=='done'),sec=qsSection(),keys=qsGateKey(lane||'b'),avail=(host.clientWidth||900)-QS_LABEL-22,
+  next=keys.find(k=>!k.passed)||null;   // the next gate the save has not passed: the quests that fail there are grouped in their cells
+ // columns: base game = the story sections, expansions = the quest levels; a column is as wide as the fullest cell in it (and its header badges), then the leftover width is shared
+ let cols,cells=new Map(),lo=0,rows=[];   // cols: [{k,n}]; cells: row|col -> [quests]
  if(!lane){rows=QS_TROWS.map(r=>({k:r,name:QS.regions.get(r)}));cols=QS_TCOLS.map(([k,n])=>({k,n}));
   Qs.filter(q=>known(q)&&drawn(q)&&QS_TCOLS.some(c=>c[0]===qsRule(q.g).s)).forEach(q=>{const key=q.r+'|'+qsRule(q.g).s;if(!cells.has(key))cells.set(key,[]);cells.get(key).push(q)})}
  else{const all=Qs.filter(q=>known(q)&&qsRule(q.g).s===lane),lvs=all.map(q=>q.lv).filter(v=>v!=null).sort((a,b)=>a-b),gx=keys.map(k=>k.g.x);
   lo=Math.floor(Math.min(lvs[Math.min(3,lvs.length-1)],...gx));const hi=Math.ceil(Math.max(lvs[lvs.length-1],...gx));   // the axis starts at the 4th lowest level: a stray level-1 quest is drawn at the left edge, its level is in the tooltip
   cols=Array.from({length:hi-lo+1},(_,i)=>({k:lo+i,n:String(lo+i)}));rows=[{k:'lane',name:R.pts.get(lane)}];
   all.filter(drawn).forEach(q=>{const key='lane|'+(q.lv==null?lo:Math.max(lo,q.lv));if(!cells.has(key))cells.set(key,[]);cells.get(key).push(q)})}
- cols.forEach(c=>{c.max=Math.max(0,...rows.map(r=>(cells.get(r.k+'|'+c.k)||[]).length));c.w=qsColW(c.max)});
-  let acc=0;cols.forEach(c=>{c.x=acc;acc+=c.w});const W=Math.round(acc),at=u=>{const i=Math.max(0,Math.min(cols.length-1,Math.floor(u)));return cols[i].x+(u-i)*cols[i].w};   // u in column units
- const gu=x=>lane?x-lo+.5:x,gx=k=>at(gu(k.g.x)).toFixed(1);   // base-game gates are in column units, expansion gates in levels (a level's marker stands at the middle of its column)
+ const place=keys.map(k=>qsGatePlace(k,lane,lo,cols.length)),inCol=cols.map(()=>0),onEdge=cols.map(()=>0).concat(0);   // badges inside a column, badges on the edge before a column
+ place.forEach(p=>{if(p.col!=null)inCol[p.col]++;else onEdge[p.edge]++});
+ cols.forEach((c,i)=>{c.max=Math.max(0,...rows.map(r=>(cells.get(r.k+'|'+c.k)||[]).length));c.w=qsColW(c.max,Math.max(inCol[i]*QS_TBADGE+12,onEdge[i]?onEdge[i]*QS_TBADGE+4:0))});
+ qsShare(cols.map(c=>c.w),avail).forEach((w,i)=>{cols[i].w=w});
+ let acc=0;cols.forEach(c=>{c.x=acc;acc+=c.w});const W=Math.round(acc),at=u=>{const i=Math.max(0,Math.min(cols.length-1,Math.floor(u)));return cols[i].x+(u-i)*cols[i].w},edgeX=e=>e>=cols.length?acc:cols[e].x;
  // where "You" are: the middle of the current section (Act III follows the gates passed there); in an expansion, the highest level the save has started
  let youU=null;if(!lane&&sec>=0){youU=sec+.5;if(sec===4){const p=keys.filter(k=>k.g.x>=4&&k.g.x<5&&k.passed);youU=(p.length?p[p.length-1].g.x:4)+.12}}
  if(lane){const st=Qs.filter(q=>known(q)&&qsRule(q.g).s===lane&&qsState(q.g)!=='none'&&q.lv!=null).map(q=>Math.max(lo,q.lv));if(st.length)youU=Math.max(...st)-lo+.5}
  const youX=youU==null?null:at(youU),you=youX==null?'':`<i class="qsme" style="left:${youX.toFixed(1)}px"></i>`,
-  bg=cols.map((c,i)=>(!lane&&i===sec?`<i class="qscolbg" style="left:${c.x.toFixed(1)}px;width:${c.w.toFixed(1)}px"></i>`:'')+(i?`<i class="qscol" style="left:${c.x.toFixed(1)}px"></i>`:'')).join(''),
-  bars=keys.map(k=>`<i class="qsgate${k.passed?' passed':''}" style="left:${gx(k)}px"></i>`).join('');
- const head=`<div class="qsbhead qstlhead"><span></span><div class="qsbplot head" style="width:${W}px">${bg}${bars}${!lane?cols.map((c,i)=>`<b class="qstc${i===sec?' on':''}" style="left:${(c.x+6).toFixed(1)}px;width:${(c.w-12).toFixed(1)}px">${qsEsc(c.n)}</b>`).join(''):''}${keys.map(k=>qsGateBadge(k,'left:'+gx(k)+'px')).join('')}${you}</div></div>`;
+  bg=cols.map((c,i)=>(!lane&&i===sec?`<i class="qscolbg" style="left:${c.x.toFixed(1)}px;width:${c.w.toFixed(1)}px"></i>`:'')+(i?`<i class="qscol" style="left:${c.x.toFixed(1)}px"></i>`:'')).join('');
+ // bars: only on an edge (one bar for all the gates there, grey when every one of them is passed)
+ const edges=new Map();keys.forEach((k,i)=>{const p=place[i];if(p.edge!=null){if(!edges.has(p.edge))edges.set(p.edge,[]);edges.get(p.edge).push(k)}});
+ const bars=[...edges].map(([e,ks])=>`<i class="qsgate${ks.every(k=>k.passed)?' passed':''}" data-gates="${ks.map(k=>k.n).join(',')}" style="left:${edgeX(e).toFixed(1)}px"></i>`).join('');
+ // badges in the header: on an edge, side by side from the bar; inside a column, side by side from its left
+ const seen=new Map(),badges=keys.map((k,i)=>{const p=place[i],id=p.edge!=null?'e'+p.edge:'c'+p.col,j=seen.get(id)||0;seen.set(id,j+1);
+  const left=p.edge!=null?edgeX(p.edge)+j*QS_TBADGE:cols[p.col].x+6+12+j*QS_TBADGE;return qsGateBadge(k,'left:'+left.toFixed(1)+'px')}).join('');
+ const head=`<div class="qsbhead qstlhead"><span></span><div class="qsbplot head" style="width:${W}px">${bg}${bars}${!lane?cols.map((c,i)=>`<b class="qstc${i===sec?' on':''}" style="left:${(c.x+6).toFixed(1)}px;width:${(c.w-12).toFixed(1)}px">${qsEsc(c.n)}</b>`).join(''):''}${badges}${you}</div></div>`;
  let body='';
- rows.forEach(r=>{let dots='',lines=1;cols.forEach(c=>{const l=cells.get(r.k+'|'+c.k);if(!l)return;const o=qsSwarm(qsCellOrder(l),c.x,c.w,'t:'+scope+':'+r.k+':'+c.k,8);dots+=o.html;lines=Math.max(lines,o.lines)});
-  body+=`<div class="qsbrow${lane?' qslane':''}" style="min-height:${Math.max(lane?96:48,lines*QS_TSTEP+16)}px"><div class="qsblabel">${qsEsc(r.name)}</div><div class="qsbplot" style="width:${W}px">${bg}${bars}${you}${dots}</div></div>`});
+ rows.forEach(r=>{let dots='',hh=0;cols.forEach(c=>{const l=cells.get(r.k+'|'+c.k);if(!l)return;const o=qsSwarm(qsCellOrder(l,next&&next.g),c.x,c.w,'t:'+scope+':'+r.k+':'+c.k,next&&next.g,next?next.n:0);dots+=o.html;hh=Math.max(hh,o.h)});
+  body+=`<div class="qsbrow${lane?' qslane':''}" style="min-height:${Math.max(56,hh)}px"><div class="qsblabel">${qsEsc(r.name)}</div><div class="qsbplot" style="width:${W}px">${bg}${bars}${you}${dots}</div></div>`});
  const axis=lane?cols.map(c=>`<span style="left:${(c.x+c.w/2).toFixed(1)}px">${c.n}</span>`).join(''):'',
   lab=youX==null?'':`<b class="qsyou${youX<64?' lft':youX>W-70?' rgt':''}" style="left:${youX.toFixed(1)}px;top:${lane?24:4}px">You are here</b>`;
  body+=`<div class="qsbaxis qstfoot"><span></span><div class="qsbplot axis" style="width:${W}px;height:${lane?46:28}px">${bg}${bars}${you}${axis}${lab}</div></div>`;
@@ -206,9 +231,9 @@ function qsRenderTime(host){
  host.innerHTML=`<div class="qstbar">${tools}</div>
   ${qsGateKeyHtml(keys)}${lane?`<p class="qsbnote qsscnote">Laid out by quest level: every ${qsEsc(R.pts.get(lane))} quest shares one story point in the game's quest graphs.</p>`:''}
   <div class="qsband qstl" id="qsTL"><div class="qsbinner" style="width:${QS_LABEL+W}px">${head}${body}</div></div>
-  <ul class="qslegend" aria-label="Quest types">${QS_KINDS.map(([k,n])=>`<li class="t-${k}">${qsShape(k,'none',true)}<span>${n}</span></li>`).join('')}<li class="qsl-fd"><i class="qsfd"></i><span>Orange dot: fails at the next gate you haven't passed</span></li><li class="qsl-more"><span class="qsmore">+N</span><span>More in this cell</span></li></ul>
+  <ul class="qslegend" aria-label="Quest types">${QS_KINDS.map(([k,n])=>`<li class="t-${k}">${qsShape(k,'none',true)}<span>${n}</span></li>`).join('')}<li class="qsl-fb"><i class="qsfb"></i><span>Fails at the next gate you haven't passed</span></li><li class="qsl-more"><span class="qsmore">+N</span><span>More in this cell</span></li></ul>
   <details class="qsunk" id="qsUnk"${QS.unkOpen?' open':''}><summary>Placement not computed yet (${unk.length})</summary><p class="qsbnote">The game's graphs give no story point for these quests (nothing gates them before the first act); they are only in the List and the Level band.</p><div class="qsunkl">${unk.map(q=>{const st=qsState(q.g);return`<button type="button" class="qsrow t-${q.t} st-${st}" data-g="${q.g}">${qsIcon(st,q.t)}<span class="qsrn2"><b>${qsEsc(q.n)}</b><small>${qsEsc(QS.regions.get(q.r))}</small></span>${qsLvSpan(q)}</button>`}).join('')}</div></details>
-  <p class="qsbnote">${QS.timeDone?'Done quests are shown faintly, with a check.':'Done quests are hidden: turn on Show done to see them.'} ${lane?'Quests are laid out by their level.':'Columns are the story sections the game\'s quest graphs place a quest in.'} The numbered bars are the points of no return, and an orange dot marks a quest that fails at a bar your save has not passed. From the game's quest graphs.</p>`;
+  <p class="qsbnote">${QS.timeDone?'Done quests are shown faintly, with a check.':'Done quests are hidden: turn on Show done to see them.'} ${lane?'Quests are laid out by their level.':'Columns are the story sections the game\'s quest graphs place a quest in.'} The numbered gates are the points of no return; quests that fail at the next one you have not passed are grouped first in their cell, under an orange bracket. From the game's quest graphs.</p>`;
  qsEl('qsShowDoneT').onclick=()=>{qsSetTimeDone(!QS.timeDone);qsRenderView();const n=qsEl('qsShowDoneT');if(n)n.focus()};
  qsEl('qsUnk').ontoggle=e=>{QS.unkOpen=e.target.open};
  host.querySelectorAll('.qsdot').forEach(d=>{d.onclick=()=>qsSelect(d.dataset.g,true);d.onmouseenter=d.onfocus=()=>qsTip(d);d.onmouseleave=d.onblur=()=>qsTipHide()});
