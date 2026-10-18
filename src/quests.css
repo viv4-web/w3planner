@@ -111,8 +111,6 @@
 .qstc{position:absolute;top:4px;font-weight:500;font-size:17px;letter-spacing:.8px;text-transform:uppercase;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}.qstc.on{color:#fff}
 .qsgate{position:absolute;top:0;bottom:0;width:0;border-left:2px solid var(--fail);pointer-events:none;z-index:1}.qsgate.passed{border-left:2px dashed #8f8575}
 .qslane .qsbplot{min-height:96px}
-.qsunk{margin:10px 0 0;border:1px solid #3a3025;background:#0d0b09}.qsunk summary{cursor:pointer;padding:8px 12px;font-size:18px;color:var(--gold);min-height:44px;display:flex;align-items:center}.qsunk summary:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
-.qsunk .qsbnote{margin:0 12px 8px}.qsunkl{max-height:360px;overflow:auto;border-top:1px solid #2a2219}
 .qsmiss{margin:0 0 14px;border:1px solid var(--fail);background:linear-gradient(180deg,#1c140b,#0d0b09);padding:8px 12px 10px}
 .qsmiss h3{margin:0 0 6px;font-weight:500;font-size:17px;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}.qsmiss h3 b{color:var(--fail);font-weight:500}.qsmn{display:inline-block;min-width:24px;text-align:center;margin-left:6px;padding:0 6px;border-radius:12px;background:var(--fail);color:#17120a;font-weight:600}
 .qsmis{display:flex;flex-wrap:wrap;gap:6px}
@@ -122,7 +120,7 @@
 .qscard.fails{border-color:var(--fail)}.qsfail{color:var(--fail)!important;font-weight:500}.qstip .qsfail{color:var(--fail)}
 .qsrules{margin:8px 0 0}.qsrule{margin:3px 0;font-size:17px;color:#cdbf9e;line-height:1.25}.qsrule b{color:#fff;font-weight:500}.qsfailsat,.qsloses{color:#f3b878}.qsfailsat b,.qsloses b{color:var(--fail)}.qsnomiss{color:var(--dim)}
 .qslink{font:inherit;font-size:17px;background:none;border:0;border-bottom:1px dotted var(--tc,var(--gold));color:var(--tc,var(--gold));padding:2px 0;cursor:pointer;min-height:32px}.qslink:hover{color:#fff}.qslink:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-@media (max-width:600px){.qsmi,.qslink{min-height:44px}.qsunk summary{min-height:44px}}
+@media (max-width:600px){.qsmi,.qslink{min-height:44px}.qsug summary{min-height:44px}}
 /* ---- v34.1: the decluttered Timeline: scope tabs, gate key, numbered bars, wrapped cells, orange dot, You are here ---- */
 .qsviews{flex-wrap:wrap;align-items:flex-start}
 .qsscope{display:flex;flex-wrap:wrap;gap:6px;margin-left:14px}.qsscope[hidden]{display:none}
@@ -158,3 +156,13 @@
 .qsmug .qsfl{position:static;height:auto;margin:0 0 5px;flex-wrap:wrap}.qsmug .qsfl em{font-style:normal;color:var(--ink)}.qsmug.passed .qsfl{color:#8f8575}.qsmug.passed .qsfl em{color:#8f8575}
 .qsmud{display:flex;flex-wrap:wrap;gap:6px}
 .qsmu .qsdot{position:relative;width:20px;height:20px;display:flex;align-items:center;justify-content:center}.qsmu .qsshape{width:18px;height:18px}
+
+/* ---- v35: the quests with no story point in two sections (grouped by region like the grid rows); "can fail by a choice": a cream ring at the bottom right of the marker ---- */
+.qsug{margin:10px 0 0;border:1px solid #3a3025;background:#0d0b09}.qsug summary{cursor:pointer;padding:8px 12px;font-size:18px;color:var(--gold);min-height:44px;display:flex;align-items:center}.qsug summary:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.qsug .qsbnote{margin:0 12px 8px}.qsugl{border-top:1px solid #2a2219;overflow:hidden}.qsugrow:first-child{border-top:0}
+.qsdot.choice::after{content:"";position:absolute;right:-2px;bottom:-2px;box-sizing:border-box;width:8px;height:8px;border-radius:50%;border:1.5px solid #f4ead2;box-shadow:0 0 0 1px #0d0b09;pointer-events:none}
+.qsrow{position:relative}.qsrow.choice::after{content:"";position:absolute;left:19px;top:calc(50% + 2px);box-sizing:border-box;width:8px;height:8px;border-radius:50%;border:1.5px solid #f4ead2;box-shadow:0 0 0 1px #0d0b09;pointer-events:none}
+.qsbych{flex:0 0 auto;font-size:13px;line-height:18px;padding:0 7px;border:1px solid #cfc3a6;border-radius:9px;color:#f4ead2;white-space:nowrap}
+.qsl-ch{display:flex;align-items:center;gap:7px;font-size:17px;color:var(--ink)}.qsl-ch .qsch{display:inline-block;box-sizing:border-box;width:10px;height:10px;border-radius:50%;border:1.5px solid #f4ead2}
+.qschoice{margin:10px 0 0;padding:6px 10px 8px;border-left:3px solid #f4ead2;background:#17130e}.qschoice .qsh3{margin:0 0 4px}.qschrow{color:#efe5cc}.qschoice .qsmfoot{margin-top:4px}
+.qschoicet{color:#f4ead2}.qsnogate{color:#cdbf9e}
