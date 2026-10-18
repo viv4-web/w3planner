@@ -41,7 +41,7 @@ class GateTests(unittest.TestCase):
         self.env = mock.patch.dict("os.environ", {"CLOUDFLARE_API_TOKEN": "t", "CLOUDFLARE_ACCOUNT_ID": "a"})
         self.sleeps = []; self.sleep = mock.patch.object(deploy.time, "sleep", lambda s: self.sleeps.append(s))
         self.live = ["v99"]; self.live_calls = []     # what the live site answers to the version poll: each look takes the next one, the last one repeats
-        self.args = Namespace(art_dir="art", project="w3planner", dry_run=False, yes=True)
+        self.args = Namespace(art_dir="art", project="w3planner", dry_run=False, yes=True, no_size_compare=True)
         self.git_out = {("rev-parse", "HEAD"): "c" * 40, ("rev-parse", "--short", "HEAD"): "ccccccc", ("status", "--porcelain"): ""}
 
     def patched(self, fake):

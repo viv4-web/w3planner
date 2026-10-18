@@ -9,6 +9,8 @@ and only then, when told to, put it into production.
                                                                   live site; if they fail, roll back to the previous deployment
 
 The gate, in order:
+  0. the deploy guard (tools/art_guard.py): every art input the live build reads is there and not empty (art slots, glossary/, quests text), before the build; the built dist/game has
+     the Glossary, the quest text and the art; its data files are at least 80 % of the size of the ones production serves now (--no-size-compare skips only that last check)
   1. no game art in the repo, the full test suite on the game build (never --quick), build dist/game
   2. preview deployment to the branch "preview" (never production), then tests/smoke.py against the preview URL
      (page loads, no console errors, every link fixture opens, a new link can be created and reopened)
@@ -28,6 +30,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tests"))
+sys.path.insert(0, str(ROOT / "tools"))
 PREVIEW_BRANCH = "preview"
 # After an upload Cloudflare's edge can answer different clients differently for several minutes (seen on the v25 and v26 promotes: the page
 # was right and the check saw the old version). Failures of only these checks get RECHECKS more looks, RECHECK_WAIT seconds apart, before
@@ -130,10 +133,23 @@ def app_version():
     m = re.search(r'APP_VERSION="([^"]*)"', (ROOT / "dist/game/index.html").read_text(encoding="utf-8")); return m.group(1) if m else None
 
 
-def build(art_dir, full_tests=True):
+def guard(problems, what):
+    """Stop hard, with every problem listed, when the live build would lose game content (tools/art_guard.py)."""
+    if problems: sys.exit("DEPLOY GUARD: %s\n  - %s\nNothing was deployed." % (what, "\n  - ".join(problems)))
+
+
+def build(art_dir, full_tests=True, compare=None):
+    import art_guard
+    guard(art_guard.check_inputs(art_dir, ROOT), "a required art input is missing or empty in %s (the live build would ship without it)" % art_dir)
+    print("deploy guard: art inputs present (art slots, glossary, quests text)", flush=True)
     if run([sys.executable, "tools/check_no_game_art.py"]).returncode: sys.exit("the public repo contains game art; fix that first")
     if full_tests and run([sys.executable, "tests/run_all.py", "--variant", "game", "--art-dir", art_dir]).returncode: sys.exit("the full test suite failed; nothing was deployed")
     if run([sys.executable, "tools/build.py", "--variant", "game", "--art-dir", art_dir, "--out", "dist/game"]).returncode: sys.exit("build failed")
+    guard(art_guard.check_dist(ROOT / "dist/game", art_dir), "the built dist/game lacks game content")
+    if compare:
+        bad, rep = art_guard.check_sizes(ROOT / "dist/game", compare); print("deploy guard: data files against production %s\n  %s" % (compare, "\n  ".join(rep)), flush=True)
+        guard(bad, "the built data files are much smaller than production's (under %d%%)" % round(100 * art_guard.MIN_RATIO))
+    print("deploy guard: dist/game has the Glossary, the quest text and the art", flush=True)
 
 
 def need_env():
@@ -156,7 +172,7 @@ def do_gate(a):
     if not a.dry_run: need_env()
     dirty = git("status", "--porcelain")
     if dirty: print("WARNING: uncommitted changes in the working tree (they are in this build):\n" + dirty)
-    build(a.art_dir)
+    build(a.art_dir, compare=None if a.no_size_compare else "https://%s.pages.dev/" % a.project)
     if a.dry_run: print("dry run finished: dist/game is ready, nothing was uploaded"); return 0
     version, started = app_version(), time.time()
     print("\nUploading dist/game as a PREVIEW (branch '%s') of project '%s'; production is not touched." % (PREVIEW_BRANCH, a.project), flush=True)
@@ -228,6 +244,7 @@ def main():
     ap.add_argument("--port", type=int, default=8080, help="port for --serve")
     ap.add_argument("--dry-run", action="store_true", help="checks and build only; upload nothing")
     ap.add_argument("--promote", action="store_true", help="PRODUCTION: deploy the build that passed on preview, smoke-test it, roll back on failure")
+    ap.add_argument("--no-size-compare", action="store_true", help="skip the check that the data files are not much smaller than production's (a first deploy, or a deliberate cut)")
     ap.add_argument("--yes", action="store_true", help="skip the confirmation question for --promote")
     a = ap.parse_args()
     if sum([a.serve, a.dry_run, a.promote]) > 1: sys.exit("use only one of --serve, --dry-run, --promote")
