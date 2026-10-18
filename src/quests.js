@@ -10,8 +10,9 @@ const QS_ICON={none:'<circle cx="8" cy="8" r="5.2" fill="none" stroke="currentCo
  inactive:'<circle cx="8" cy="8" r="5.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2.2 2.2"/>'};
 const QS_DONE_KEY='w3p.quests.banddone';   // '1' | '0': the Level band's own "Show done" toggle, off by default (v33d)
 const QS_TDONE_KEY='w3p.quests.timedone';   // '1' | '0': the Timeline's own "Show done" toggle, off by default (v34)
+const QS_TSCOPE_KEY='w3p.quests.timescope';   // 'base' | 'hos' | 'bob': the Timeline's scope last chosen in this browser (v34.1); the default is the base game
 const QS_VIEW_KEY='w3p.quests.view';   // 'list' | 'band': the view last chosen in this browser (v33b); the default is the List
-const QS={showDone:false,timeDone:false,R:null,data:null,byG:null,byObj:null,byDesc:null,load:null,err:false,region:'ve',view:'list',kind:'all',hide:false,q:'',sel:null,descP:null,desc:null,init:false,shown:false,lv:0,open:false,reveal:new Set(),cells:new Set(),
+const QS={showDone:false,timeDone:false,tscope:'base',R:null,data:null,byG:null,byObj:null,byDesc:null,load:null,err:false,region:'ve',view:'list',kind:'all',hide:false,q:'',sel:null,descP:null,desc:null,init:false,shown:false,lv:0,open:false,reveal:new Set(),cells:new Set(),
  store:{manual:{},save:null,changed:0},ok:true,confirm:false};
 // the Level band's dot shapes, one per type (14 px, inline SVG; status = fill: outline for not started, filled for active, outline with a small x for failed, dashed for inactive); the colours are CSS tokens (--t-main ...) in quests.css
 const QS_STAR=Array.from({length:10},(_,i)=>{const a=-Math.PI/2+i*Math.PI/5,r=i%2?2.9:6.6;return(7+r*Math.cos(a)).toFixed(2)+','+(7+r*Math.sin(a)).toFixed(2)}).join(' ');
@@ -32,7 +33,7 @@ function qsClean(o){   // untrusted (the file the user loads, or another version
   q:take(o.save.q,['done','active','failed','inactive'],6000),o:take(o.save.o,['done','active','failed','inactive'],12000),e:take(o.save.e,['done','active','failed','inactive'],12000)};
  return out}
 function qsStoreInit(){if(QS.read)return;QS.read=true;qsRead()}
-function qsRead(){try{const v=localStorage.getItem(QS_VIEW_KEY);if(v==='list'||v==='band'||v==='time')QS.view=v;QS.showDone=localStorage.getItem(QS_DONE_KEY)==='1';QS.timeDone=localStorage.getItem(QS_TDONE_KEY)==='1'}catch(e){}   // the view first: it must win on load whether or not any progress is stored (v33c; v33b skipped it when nothing was stored)
+function qsRead(){try{const v=localStorage.getItem(QS_VIEW_KEY);if(v==='list'||v==='band'||v==='time')QS.view=v;QS.showDone=localStorage.getItem(QS_DONE_KEY)==='1';QS.timeDone=localStorage.getItem(QS_TDONE_KEY)==='1';const sc=localStorage.getItem(QS_TSCOPE_KEY);if(sc==='base'||sc==='hos'||sc==='bob')QS.tscope=sc}catch(e){}   // the view first: it must win on load whether or not any progress is stored (v33c; v33b skipped it when nothing was stored)
  try{const raw=localStorage.getItem(QS_KEY);QS.ok=true;if(!raw)return;const c=qsClean(JSON.parse(raw));if(c)QS.store=c}catch(e){QS.ok=false}}
 function qsSetDone(on){QS.showDone=on;try{localStorage.setItem(QS_DONE_KEY,on?'1':'0')}catch(e){}}
 function qsSetTimeDone(on){QS.timeDone=on;try{localStorage.setItem(QS_TDONE_KEY,on?'1':'0')}catch(e){}}
@@ -148,51 +149,71 @@ function qsRenderBand(host){const my=qsMy(),reg=qsInRegion(QS.region),vis=reg.fi
  bind();host.querySelectorAll('.qsdot').forEach(d=>{d.onclick=()=>qsSelect(d.dataset.g,true);d.onmouseenter=d.onfocus=()=>qsTip(d);d.onmouseleave=d.onblur=()=>qsTipHide()});
  host.querySelectorAll('.qsmore').forEach(b=>{b.onclick=()=>{const k=b.dataset.cell;if(QS.cells.has(k))QS.cells.delete(k);else QS.cells.add(k);qsRenderBand(host);const n=host.querySelector('.qsmore[data-cell="'+k+'"]');if(n)n.focus()}});
  QS.place=null}
-// ---- the Timeline (v34): columns = the story sections, rows = regions, the Hearts of Stone and Blood and Wine as lanes laid out by quest level; gates are vertical bars ----
+// ---- the Timeline (v34, decluttered in v34.1): columns = the story sections, rows = regions; three scopes (Base game, Hearts of Stone, Blood and Wine: a single lane laid out by quest level); gates are vertical bars numbered like the key above ----
 const QS_TCOLS=[['p','Prologue'],['a','Act I'],['i','Isle of Mists'],['b','Battle of Kaer Morhen'],['3','Act III'],['e','Epilogue']],QS_TROWS=['wo','vz','ve','no','sk','km','oth'];
+const QS_TSCOPES=[['base','Base game',null],['hos','Hearts of Stone','h'],['bob','Blood and Wine','w']],QS_TSTEP=18,QS_TMIN=100,QS_TPX=9,QS_TLINES=2;   // [scope, tab, lane key]; a marker's footprint is 18 px; a column is 9 px per marker of its fullest cell (two lines of 18 px), 100 px at least; a cell wraps to two lines
+// the width of a column from the marker count of its fullest cell (across the regions)
+const qsColW=n=>Math.max(QS_TMIN,QS_TPX*n+8);
+// how a cell of n markers in a column w px wide lays out: per line, two lines at most; over that the last place is a "+N" chip (all of them, and a "−" chip, when the cell is expanded)
+function qsCellLay(n,w,open){const per=Math.max(1,Math.floor((w-8)/QS_TSTEP)),cap=per*QS_TLINES,over=n>cap,shown=over&&!open?cap-1:n;return{per,cap,over,shown,more:n-shown,lines:Math.max(n?1:0,Math.ceil((shown+(over?1:0))/per))}}
+// a cell's order: quests that will fail at the next gate first, then Main, then the other types in the legend's order; then the open ones, active first, done last, by name
+function qsCellOrder(list){const ty=q=>QS_KINDS.findIndex(k=>k[0]===q.t),fl=q=>qsOpenState(qsState(q.g))&&qsFailsAt(q)?0:1,
+ ord=(a,b)=>(qsState(a.g)==='done')-(qsState(b.g)==='done')||(qsState(b.g)==='active')-(qsState(a.g)==='active')||a.n.localeCompare(b.n);
+ return list.slice().sort((a,b)=>fl(a)-fl(b)||ty(a)-ty(b)||ord(a,b))}
+// the gates of a lane in story order, numbered 1..n, with the name and the quest code the key shows and whether the save has passed each
+function qsGateKey(lane){return qsGates(lane).map((g,i)=>({g,n:i+1,passed:qsPassed(g),name:g.name.replace(/\s*\(Q\d{3}\)$/,''),code:g.code||'',real:!!g.real}))}
+function qsSetScope(s){if(QS_TSCOPES.some(x=>x[0]===s)){QS.tscope=s;try{localStorage.setItem(QS_TSCOPE_KEY,s)}catch(e){}}}
 function qsDotHtml(q,pos){const st=qsState(q.g),fg=qsOpenState(st)?qsFailsAt(q):null;
- return`<button type="button" class="qsdot t-${q.t} ${st}${fg?' fails':''}${QS.sel===q.g?' on':''}" data-g="${q.g}" style="${pos}" aria-label="${qsEsc(q.n)}, ${qsKindName(q.t)}, ${QS_NAMES[st]}, level ${qsLevelText(q)}${fg?', fails at '+qsEsc(fg.name):''}">${qsShape(q.t,st)}${fg?'<i class="qsring"></i>':''}</button>`}
-function qsSwarm(list,x0,w,key,top0){   // dots side by side in a cell of width w, wrapping, four lines at most ("+n" opens the rest) -> {html, lines}
- const per=Math.max(1,Math.floor((w-6)/QS_STEP)),cap=per*4,open=QS.cells.has(key),over=list.length>cap,shown=over&&!open?list.slice(0,cap-1):list,total=shown.length+(over?1:0),lines=Math.ceil(total/per);
- const pos=i=>'left:'+(x0+4+(i%per)*QS_STEP).toFixed(1)+'px;top:'+(top0+Math.floor(i/per)*QS_STEP)+'px';
- let h=shown.map((q,i)=>qsDotHtml(q,pos(i))).join('');
- if(over)h+=`<button type="button" class="qsmore" data-cell="${key}" style="${pos(shown.length)}" aria-expanded="${open}" aria-label="${open?'Show fewer quests':(list.length-shown.length)+' more quests'}">${open?'−':'+'+(list.length-shown.length)}</button>`;
- return{html:h,lines:Math.max(lines,list.length?1:0)}}
+ return`<button type="button" class="qsdot t-${q.t} ${st}${fg?' fails':''}${QS.sel===q.g?' on':''}" data-g="${q.g}" style="${pos}" aria-label="${qsEsc(q.n)}, ${qsKindName(q.t)}, ${QS_NAMES[st]}, level ${qsLevelText(q)}${fg?', fails at '+qsEsc(fg.name):''}">${qsShape(q.t,st)}${fg?'<i class="qsfd"></i>':''}</button>`}
+function qsSwarm(list,x0,w,key,top0){   // markers side by side in a cell of width w, two lines at most, the rest behind a "+N" chip -> {html, lines}
+ const L=qsCellLay(list.length,w,QS.cells.has(key)),open=QS.cells.has(key),pos=i=>'left:'+(x0+4+(i%L.per)*QS_TSTEP).toFixed(1)+'px;top:'+(top0+Math.floor(i/L.per)*QS_TSTEP)+'px';
+ let h=list.slice(0,L.shown).map((q,i)=>qsDotHtml(q,pos(i))).join('');
+ if(L.over)h+=`<button type="button" class="qsmore" data-cell="${key}" style="${pos(L.shown)}" aria-expanded="${open}" aria-label="${open?'Show fewer quests':L.more+' more quests'}">${open?'−':'+'+L.more}</button>`;
+ return{html:h,lines:L.lines}}
+// the key above the chart: a numbered badge, the name and quest code, "· passed" for a gate the save is past; the real cutoff has a gold outlined badge
+const qsGateBadge=(k,style)=>`<b class="qsgb${k.passed?' passed':''}${k.real?' real':''}"${style?` style="${style}"`:''} title="${qsEsc(k.name+(k.code?' ('+k.code+')':''))}${k.passed?' · passed':''}${k.real?' · real cutoff':''}">${k.n}</b>`;
+function qsGateKeyHtml(keys){return`<ol class="qsgkey" aria-label="Points of no return"><li class="qsgkh">Points of no return</li>${keys.map(k=>`<li class="qsgk${k.passed?' passed':''}${k.real?' real':''}">${qsGateBadge(k)}<span>${qsEsc(k.name)}${k.code?` <small>(${qsEsc(k.code)})</small>`:''}${k.real?' <em>real cutoff</em>':''}${k.passed?' <small>· passed</small>':''}</span></li>`).join('')}</ol>`}
 function qsRenderTime(host){
+ const scope=QS.tscope,lane=(QS_TSCOPES.find(x=>x[0]===scope)||[])[2]||null;
  const tools=`<div class="qsbtools"><button type="button" class="qschip${QS.timeDone?' on':''}" id="qsShowDoneT" aria-pressed="${QS.timeDone}" title="Show the quests you have done as faint dots with a check">Show done</button></div>`;
  if(!QS.R){host.innerHTML=tools+'<p class="qshint">The timeline data could not be loaded.</p>';qsEl('qsShowDoneT').onclick=()=>{qsSetTimeDone(!QS.timeDone);qsRenderView()};return}
- const R=QS.R,Qs=QS.data.quests,known=q=>qsRule(q.g)&&qsRule(q.g).s,drawn=q=>known(q)&&(QS.timeDone||qsState(q.g)!=='done'),sec=qsSection(),ord=(a,b)=>(qsState(a.g)==='done')-(qsState(b.g)==='done')||(qsState(b.g)==='active')-(qsState(a.g)==='active')||a.n.localeCompare(b.n);
- const avail=(host.clientWidth||900)-QS_LABEL-22,cw=Math.max(130,avail/6),W=Math.round(cw*6),H=116;
- const bars=(gs,xf,passedCls)=>gs.map(g=>`<i class="qsgate ${qsPassed(g)?'passed':''}" style="left:${xf(g.x)}px"></i>`).join('');
- const cols=Array.from({length:7},(_,i)=>`<i class="qscol" style="left:${(i*cw).toFixed(1)}px"></i>`).join('');
- const gl=(gs,xf,top,lim)=>gs.map((g,k)=>`<b class="qsgl${qsPassed(g)?' passed':''}${+xf(g.x)>lim-170?' flip':''}" style="left:${xf(g.x)}px;top:${top+(k%4)*17}px" title="${qsEsc(g.name)}${qsPassed(g)?' (passed in this save)':''}">${qsEsc(g.name)}</b>`).join('');
- // where "You" are: the middle of the current section; Act III follows the gates passed there
- let youX=null,youTxt='';if(sec>=0){youX=(sec+.5)*cw;if(sec===4){const p=qsGates('b').filter(g=>g.x>=4&&g.x<5&&qsPassed(g));youX=((p.length?p[p.length-1].x:4)+.12)*cw}youTxt='You · '+R.pts.get(QS_SECTIONS[sec])}
- const you=youX==null?'':`<i class="qsme" style="left:${youX.toFixed(1)}px"></i>`;
- const bx=x=>(x*cw).toFixed(1);
- let rows=`<div class="qsbhead qstlhead"><span></span><div class="qsbplot head" style="width:${W}px;height:${H}px">${cols}${QS_TCOLS.map((c,i)=>`<b class="qstc${i===sec?' on':''}" style="left:${(i*cw+6).toFixed(1)}px;width:${(cw-12).toFixed(1)}px">${c[1]}</b>`).join('')}${bars(qsGates('b'),bx)}${gl(qsGates('b'),bx,48,W)}${you}${youX==null?'':`<b class="qsml${youX>W-90?' flip':''}" style="left:${youX.toFixed(1)}px;top:26px">${qsEsc(youTxt)}</b>`}</div></div>`;
- QS_TROWS.forEach(r=>{const cells=QS_TCOLS.map(([k],ci)=>({k,ci,list:Qs.filter(q=>q.r===r&&drawn(q)&&qsRule(q.g).s===k).sort(ord)}));
-  let dots='',lines=1;cells.forEach(c=>{const o=qsSwarm(c.list,c.ci*cw,cw,'t:'+r+':'+c.k,8);dots+=o.html;lines=Math.max(lines,o.lines)});
-  rows+=`<div class="qsbrow" style="min-height:${Math.max(56,lines*QS_STEP+16)}px"><div class="qsblabel">${qsEsc(QS.regions.get(r))}</div><div class="qsbplot" style="width:${W}px">${cols}${bars(qsGates('b'),bx)}${you}${dots}</div></div>`});
- [['h','Hearts of Stone'],['w','Blood and Wine']].forEach(([k,name])=>{   // the expansions: laid out by quest level
-  const lane=Qs.filter(q=>known(q)&&qsRule(q.g).s===k),gs=qsGates(k),lvs=lane.map(q=>q.lv).filter(v=>v!=null).sort((a,b)=>a-b);
-  if(!lane.length)return;const lo=Math.floor(Math.min(lvs[Math.min(3,lvs.length-1)],...gs.map(g=>g.x))),hi=Math.ceil(Math.max(lvs[lvs.length-1],...gs.map(g=>g.x))),   // the axis starts at the 4th lowest level: a stray level-1 quest is drawn at the left edge, its level is in the tooltip
-   span=hi-lo+1,slot=Math.max(QS_SLOT,W/span),LW=Math.round(slot*span),lx=v=>((v-lo+.5)*slot).toFixed(1);
-  const by=new Map();lane.filter(drawn).forEach(q=>{const l=q.lv==null?lo:Math.max(lo,q.lv);if(!by.has(l))by.set(l,[]);by.get(l).push(q)});let dots='',lines=1;
-  by.forEach((l,v)=>{const o=qsSwarm(l.sort(ord),(v-lo)*slot,slot,'t:'+k+':'+v,78);dots+=o.html;lines=Math.max(lines,o.lines)});
-  const started=lane.filter(q=>qsState(q.g)!=='none'&&q.lv!=null).map(q=>Math.max(lo,q.lv)),yl=started.length?lx(Math.max(...started)):null;
-  const axis=Array.from({length:span},(_,i)=>`<span style="left:${((i+.5)*slot).toFixed(1)}px">${lo+i}</span>`).join('');
-  rows+=`<div class="qsbrow qslane" style="min-height:${Math.max(110,78+lines*QS_STEP+14)}px"><div class="qsblabel">${name}</div><div class="qsbplot" style="width:${LW}px">${gs.map(g=>`<i class="qsgate ${qsPassed(g)?'passed':''}" style="left:${lx(g.x)}px"></i>`).join('')}${gl(gs,x=>lx(x),2,LW)}${yl==null?'':`<i class="qsme" style="left:${yl}px"></i><b class="qsml" style="left:${yl}px;top:70px">You</b>`}${dots}</div></div><div class="qsbaxis"><span></span><div class="qsbplot axis" style="width:${LW}px">${axis}</div></div>`});
+ const R=QS.R,Qs=QS.data.quests,known=q=>qsRule(q.g)&&qsRule(q.g).s,drawn=q=>known(q)&&(QS.timeDone||qsState(q.g)!=='done'),sec=qsSection(),keys=qsGateKey(lane||'b');
+ // columns: base game = the story sections, expansions = the quest levels; a column is as wide as the fullest cell in it
+ let cols,cells=new Map(),lo=0,rows=[];   // cols: [{label,w,k}]; cells: row|col -> [quests]
+ if(!lane){rows=QS_TROWS.map(r=>({k:r,name:QS.regions.get(r)}));cols=QS_TCOLS.map(([k,n])=>({k,n}));
+  Qs.filter(q=>known(q)&&drawn(q)&&QS_TCOLS.some(c=>c[0]===qsRule(q.g).s)).forEach(q=>{const key=q.r+'|'+qsRule(q.g).s;if(!cells.has(key))cells.set(key,[]);cells.get(key).push(q)})}
+ else{const all=Qs.filter(q=>known(q)&&qsRule(q.g).s===lane),lvs=all.map(q=>q.lv).filter(v=>v!=null).sort((a,b)=>a-b),gx=keys.map(k=>k.g.x);
+  lo=Math.floor(Math.min(lvs[Math.min(3,lvs.length-1)],...gx));const hi=Math.ceil(Math.max(lvs[lvs.length-1],...gx));   // the axis starts at the 4th lowest level: a stray level-1 quest is drawn at the left edge, its level is in the tooltip
+  cols=Array.from({length:hi-lo+1},(_,i)=>({k:lo+i,n:String(lo+i)}));rows=[{k:'lane',name:R.pts.get(lane)}];
+  all.filter(drawn).forEach(q=>{const key='lane|'+(q.lv==null?lo:Math.max(lo,q.lv));if(!cells.has(key))cells.set(key,[]);cells.get(key).push(q)})}
+ cols.forEach(c=>{c.max=Math.max(0,...rows.map(r=>(cells.get(r.k+'|'+c.k)||[]).length));c.w=qsColW(c.max)});
+  let acc=0;cols.forEach(c=>{c.x=acc;acc+=c.w});const W=Math.round(acc),at=u=>{const i=Math.max(0,Math.min(cols.length-1,Math.floor(u)));return cols[i].x+(u-i)*cols[i].w};   // u in column units
+ const gu=x=>lane?x-lo+.5:x,gx=k=>at(gu(k.g.x)).toFixed(1);   // base-game gates are in column units, expansion gates in levels (a level's marker stands at the middle of its column)
+ // where "You" are: the middle of the current section (Act III follows the gates passed there); in an expansion, the highest level the save has started
+ let youU=null;if(!lane&&sec>=0){youU=sec+.5;if(sec===4){const p=keys.filter(k=>k.g.x>=4&&k.g.x<5&&k.passed);youU=(p.length?p[p.length-1].g.x:4)+.12}}
+ if(lane){const st=Qs.filter(q=>known(q)&&qsRule(q.g).s===lane&&qsState(q.g)!=='none'&&q.lv!=null).map(q=>Math.max(lo,q.lv));if(st.length)youU=Math.max(...st)-lo+.5}
+ const youX=youU==null?null:at(youU),you=youX==null?'':`<i class="qsme" style="left:${youX.toFixed(1)}px"></i>`,
+  bg=cols.map((c,i)=>(!lane&&i===sec?`<i class="qscolbg" style="left:${c.x.toFixed(1)}px;width:${c.w.toFixed(1)}px"></i>`:'')+(i?`<i class="qscol" style="left:${c.x.toFixed(1)}px"></i>`:'')).join(''),
+  bars=keys.map(k=>`<i class="qsgate${k.passed?' passed':''}" style="left:${gx(k)}px"></i>`).join('');
+ const head=`<div class="qsbhead qstlhead"><span></span><div class="qsbplot head" style="width:${W}px">${bg}${bars}${!lane?cols.map((c,i)=>`<b class="qstc${i===sec?' on':''}" style="left:${(c.x+6).toFixed(1)}px;width:${(c.w-12).toFixed(1)}px">${qsEsc(c.n)}</b>`).join(''):''}${keys.map(k=>qsGateBadge(k,'left:'+gx(k)+'px')).join('')}${you}</div></div>`;
+ let body='';
+ rows.forEach(r=>{let dots='',lines=1;cols.forEach(c=>{const l=cells.get(r.k+'|'+c.k);if(!l)return;const o=qsSwarm(qsCellOrder(l),c.x,c.w,'t:'+scope+':'+r.k+':'+c.k,8);dots+=o.html;lines=Math.max(lines,o.lines)});
+  body+=`<div class="qsbrow${lane?' qslane':''}" style="min-height:${Math.max(lane?96:48,lines*QS_TSTEP+16)}px"><div class="qsblabel">${qsEsc(r.name)}</div><div class="qsbplot" style="width:${W}px">${bg}${bars}${you}${dots}</div></div>`});
+ const axis=lane?cols.map(c=>`<span style="left:${(c.x+c.w/2).toFixed(1)}px">${c.n}</span>`).join(''):'',
+  lab=youX==null?'':`<b class="qsyou${youX<64?' lft':youX>W-70?' rgt':''}" style="left:${youX.toFixed(1)}px;top:${lane?24:4}px">You are here</b>`;
+ body+=`<div class="qsbaxis qstfoot"><span></span><div class="qsbplot axis" style="width:${W}px;height:${lane?46:28}px">${bg}${bars}${you}${axis}${lab}</div></div>`;
  const unk=Qs.filter(q=>!known(q)).sort((a,b)=>(a.lv==null)-(b.lv==null)||a.lv-b.lv||a.n.localeCompare(b.n));
- host.innerHTML=tools+`<div class="qsband qstl" id="qsTL"><div class="qsbinner" style="width:${QS_LABEL+W}px">${rows}</div></div>
-  <ul class="qslegend" aria-label="Quest types">${QS_KINDS.map(([k,n])=>`<li class="t-${k}">${qsShape(k,'none',true)}<span>${n}</span></li>`).join('')}<li class="qsl-ring"><i class="qsring"></i><span>fails at the next gate</span></li></ul>
+ host.innerHTML=`<div class="qstbar">${tools}</div>
+  ${qsGateKeyHtml(keys)}${lane?`<p class="qsbnote qsscnote">Laid out by quest level: every ${qsEsc(R.pts.get(lane))} quest shares one story point in the game's quest graphs.</p>`:''}
+  <div class="qsband qstl" id="qsTL"><div class="qsbinner" style="width:${QS_LABEL+W}px">${head}${body}</div></div>
+  <ul class="qslegend" aria-label="Quest types">${QS_KINDS.map(([k,n])=>`<li class="t-${k}">${qsShape(k,'none',true)}<span>${n}</span></li>`).join('')}<li class="qsl-fd"><i class="qsfd"></i><span>Orange dot: fails at the next gate you haven't passed</span></li><li class="qsl-more"><span class="qsmore">+N</span><span>More in this cell</span></li></ul>
   <details class="qsunk" id="qsUnk"${QS.unkOpen?' open':''}><summary>Placement not computed yet (${unk.length})</summary><p class="qsbnote">The game's graphs give no story point for these quests (nothing gates them before the first act); they are only in the List and the Level band.</p><div class="qsunkl">${unk.map(q=>{const st=qsState(q.g);return`<button type="button" class="qsrow t-${q.t} st-${st}" data-g="${q.g}">${qsIcon(st,q.t)}<span class="qsrn2"><b>${qsEsc(q.n)}</b><small>${qsEsc(QS.regions.get(q.r))}</small></span>${qsLvSpan(q)}</button>`}).join('')}</div></details>
-  <p class="qsbnote">${QS.timeDone?'Done quests are shown faintly, with a check.':'Done quests are hidden: turn on Show done to see them.'} Columns are the story sections the game's quest graphs place a quest in; the bars are the points of no return, and a ring marks a quest that fails at a bar your save has not passed. The lanes are laid out by quest level. From the game's quest graphs.</p>`;
+  <p class="qsbnote">${QS.timeDone?'Done quests are shown faintly, with a check.':'Done quests are hidden: turn on Show done to see them.'} ${lane?'Quests are laid out by their level.':'Columns are the story sections the game\'s quest graphs place a quest in.'} The numbered bars are the points of no return, and an orange dot marks a quest that fails at a bar your save has not passed. From the game's quest graphs.</p>`;
  qsEl('qsShowDoneT').onclick=()=>{qsSetTimeDone(!QS.timeDone);qsRenderView();const n=qsEl('qsShowDoneT');if(n)n.focus()};
  qsEl('qsUnk').ontoggle=e=>{QS.unkOpen=e.target.open};
  host.querySelectorAll('.qsdot').forEach(d=>{d.onclick=()=>qsSelect(d.dataset.g,true);d.onmouseenter=d.onfocus=()=>qsTip(d);d.onmouseleave=d.onblur=()=>qsTipHide()});
  host.querySelectorAll('.qsunkl .qsrow').forEach(b=>{b.onclick=()=>qsSelect(b.dataset.g,true)});
- host.querySelectorAll('.qsmore').forEach(b=>{b.onclick=()=>{const k=b.dataset.cell;if(QS.cells.has(k))QS.cells.delete(k);else QS.cells.add(k);qsRenderTime(host);const n=host.querySelector('.qsmore[data-cell="'+k+'"]');if(n)n.focus()}})}
+ host.querySelectorAll('#qsTL .qsmore').forEach(b=>{b.onclick=()=>{const k=b.dataset.cell;if(QS.cells.has(k))QS.cells.delete(k);else QS.cells.add(k);qsRenderTime(host);const n=host.querySelector('.qsmore[data-cell="'+k+'"]');if(n)n.focus()}})}
 // one tooltip for dots: name, type · region · level, status (on hover and on keyboard focus)
 function qsTip(d){const q=QS.byG.get(d.dataset.g),t=qsEl('qsTip');if(!q)return;const st=qsState(q.g),m=qsXp(q,qsMy());
  t.innerHTML=`<b class="t-${q.t}">${qsEsc(q.n)}</b><span>${qsEsc(qsKindName(q.t))} · ${qsEsc(QS.regions.get(q.r))} · level ${qsLevelText(q)}</span><span>${QS_NAMES[st]}${q.hs?' · Hearts of Stone XP '+qsPct(m):m<1?' · 5% XP':''}</span>${(qsOpenState(st)&&qsFailsAt(q))?'<span class="qsfail">Fails at '+qsEsc(qsFailsAt(q).name)+'</span>':''}`;t.hidden=false;
@@ -200,7 +221,7 @@ function qsTip(d){const q=QS.byG.get(d.dataset.g),t=qsEl('qsTip');if(!q)return;c
 function qsTipHide(){const t=qsEl('qsTip');if(t)t.hidden=true}
 function qsRenderView(){const host=qsEl('qsView'),sc=qsEl('screenQ');qsTipHide();
  [['qsVTime','time'],['qsVBand','band'],['qsVList','list']].forEach(([id,v])=>{qsEl(id).classList.toggle('on',QS.view===v);qsEl(id).setAttribute('aria-pressed',String(QS.view===v))});
- sc.classList.toggle('qs-band',QS.view!=='list');sc.classList.toggle('qs-time',QS.view==='time');sc.classList.toggle('qs-open',QS.view!=='list'&&QS.open);   // Level band and Timeline: the detail is a drawer
+ sc.classList.toggle('qs-band',QS.view!=='list');sc.classList.toggle('qs-time',QS.view==='time');qsEl('qsScope').hidden=QS.view!=='time';qsEl('qsScope').querySelectorAll('.qssc').forEach(b=>{const on=b.dataset.scope===QS.tscope;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on))});sc.classList.toggle('qs-open',QS.view!=='list'&&QS.open);   // Level band and Timeline: the detail is a drawer
  if(QS.view==='time')qsRenderTime(host);else if(QS.view==='band')qsRenderBand(host);else qsRenderList(host)}
 
 // ---- the detail panel (a column beside the list; in the Level band a drawer from the right) ----
@@ -289,6 +310,7 @@ function qsApplyJournal(J,name,mode){QS.store.save={at:Date.now(),file:String(na
 // ---- screen ----
 function qsBind(){
  const sw=v=>{qsSetView(v);qsEl('screenQ').classList.remove('qs-detail');qsRenderView();qsRenderDetail()};qsEl('qsVTime').onclick=()=>sw('time');qsEl('qsVBand').onclick=()=>sw('band');qsEl('qsVList').onclick=()=>sw('list');
+ qsEl('qsScope').querySelectorAll('.qssc').forEach(b=>{b.onclick=()=>{qsSetScope(b.dataset.scope);QS.open=false;qsEl('screenQ').classList.remove('qs-detail');qsRenderView();qsRenderDetail()}});
  const chip=qsEl('qsChip');chip.onclick=e=>{e.stopPropagation();qsMenu(qsEl('qsMenu').hidden)};
  document.addEventListener('click',e=>{const m=qsEl('qsMenu');if(!m.hidden&&!e.composedPath().includes(qsEl('qsChipWrap')))qsMenu(false)});   // composedPath: a click on a button the menu has just re-drawn is still inside it
  document.addEventListener('keydown',e=>{const m=qsEl('qsMenu');if(!m.hidden&&e.key==='Escape'){e.preventDefault();qsMenu(false);chip.focus()}});

@@ -107,15 +107,9 @@
 /* ---- v34: the Timeline, the Missable panel, "fails at" ---- */
 :root{--fail:#f08a24}
 .qsscreen.qs-time .qsregnav{display:none}
-.qstlhead .qsbplot.head{height:116px}
 .qscol{position:absolute;top:0;bottom:0;width:0;border-left:1px solid #2a2219;pointer-events:none}
 .qstc{position:absolute;top:4px;font-weight:500;font-size:17px;letter-spacing:.8px;text-transform:uppercase;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}.qstc.on{color:#fff}
 .qsgate{position:absolute;top:0;bottom:0;width:0;border-left:2px solid var(--fail);pointer-events:none;z-index:1}.qsgate.passed{border-left:2px dashed #5a4a36}
-.qsgl{position:absolute;margin-left:4px;padding:0 4px;font-weight:500;font-size:14px;color:var(--fail);background:#0d0b09d9;white-space:nowrap;z-index:3;line-height:16px}.qsgl.passed{color:#8f8575}.qsgl.flip{transform:translateX(-100%);margin-left:-4px;text-align:right}
-.qstlhead .qsml{z-index:4}
-.qsring{position:absolute;left:-4px;top:-4px;width:20px;height:20px;border:2px solid var(--fail);border-radius:50%;pointer-events:none;box-sizing:border-box}
-.qsdot .qsring{left:-5px;top:-5px}
-.qsl-ring{display:flex;align-items:center;gap:7px;color:var(--fail);font-size:17px}.qsl-ring .qsring{position:static;width:16px;height:16px}
 .qslane .qsbplot{min-height:96px}
 .qsunk{margin:10px 0 0;border:1px solid #3a3025;background:#0d0b09}.qsunk summary{cursor:pointer;padding:8px 12px;font-size:18px;color:var(--gold);min-height:44px;display:flex;align-items:center}.qsunk summary:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
 .qsunk .qsbnote{margin:0 12px 8px}.qsunkl{max-height:360px;overflow:auto;border-top:1px solid #2a2219}
@@ -129,3 +123,26 @@
 .qsrules{margin:8px 0 0}.qsrule{margin:3px 0;font-size:17px;color:#cdbf9e;line-height:1.25}.qsrule b{color:#fff;font-weight:500}.qsfailsat,.qsloses{color:#f3b878}.qsfailsat b,.qsloses b{color:var(--fail)}.qsnomiss{color:var(--dim)}
 .qslink{font:inherit;font-size:17px;background:none;border:0;border-bottom:1px dotted var(--tc,var(--gold));color:var(--tc,var(--gold));padding:2px 0;cursor:pointer;min-height:32px}.qslink:hover{color:#fff}.qslink:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 @media (max-width:600px){.qsmi,.qslink{min-height:44px}.qsunk summary{min-height:44px}}
+/* ---- v34.1: the decluttered Timeline: scope tabs, gate key, numbered bars, wrapped cells, orange dot, You are here ---- */
+.qsviews{flex-wrap:wrap;align-items:flex-start}
+.qsscope{display:flex;flex-wrap:wrap;gap:6px;margin-left:14px}.qsscope[hidden]{display:none}
+.qstl .qsbplot.head{height:70px}
+.qstc{white-space:normal;line-height:1.05;font-size:15px;top:30px;text-overflow:clip}
+.qsgb{position:absolute;top:4px;transform:translateX(-50%);z-index:3;min-width:20px;height:20px;padding:0 4px;box-sizing:border-box;border-radius:10px;background:var(--fail);color:#17120a;font-weight:600;font-size:14px;line-height:20px;text-align:center;cursor:default}
+.qsgb.passed{background:#6b6355;color:#d6ccb8}
+.qsgb.real{background:#17120a;color:#f0d48a;border:1.5px solid #f0d48a;line-height:17px}
+.qsgkey{list-style:none;display:flex;flex-wrap:wrap;gap:6px 18px;margin:0 2px 10px;padding:0;align-items:center}
+.qsgkey li{display:flex;align-items:center;gap:6px;font-size:16px;color:var(--ink)}.qsgkey .qsgb{position:static;transform:none;flex:0 0 auto}
+.qsgkey .qsgkh{color:var(--gold);text-transform:uppercase;letter-spacing:1px;font-size:15px}
+.qsgk.passed span{color:#8f8575}.qsgk small{color:var(--dim);font-size:14px}.qsgk em{font-style:normal;color:#f0d48a;font-size:14px;border:1px solid #f0d48a;border-radius:9px;padding:0 6px}
+.qstbar{display:flex;justify-content:flex-end;margin:0 0 8px}.qstbar .qsbtools{margin:0}
+.qsscnote{margin:0 2px 8px}
+.qscolbg{position:absolute;top:0;bottom:0;background:#f0d48a14;pointer-events:none}
+.qsgate{z-index:1}.qsme{border-left:2px solid #f0d48a;z-index:4}
+.qsyou{position:absolute;transform:translateX(-50%);z-index:5;background:#f0d48a;color:#17120a;font-weight:600;font-size:13px;letter-spacing:.8px;text-transform:uppercase;padding:0 7px;line-height:18px;white-space:nowrap;pointer-events:none}.qsyou.lft{transform:none;margin-left:-1px}.qsyou.rgt{transform:translateX(-100%);margin-left:1px}
+.qstl .qsdot{width:18px;height:18px;display:flex;align-items:center;justify-content:center}
+.qstl .qsmore{height:18px;min-width:18px;border-radius:9px;line-height:16px}
+.qsfd{position:absolute;right:0;top:0;width:7px;height:7px;border-radius:50%;background:var(--fail);border:1.5px solid #17120a;box-sizing:content-box;pointer-events:none}
+.qsl-fd,.qsl-more{display:flex;align-items:center;gap:7px;font-size:17px;color:var(--ink)}.qsl-fd .qsfd{position:relative;flex:0 0 auto}.qsl-more .qsmore{position:static;cursor:default;display:inline-block}
+.qstfoot{border-top:1px solid #2a2219}
+@media (max-width:600px){.qsscope{margin-left:0;width:100%}.qsscope .qsv{flex:1 1 auto}.qsgkey{gap:6px 12px}.qstbar{justify-content:stretch}.qstbar .qsbtools{width:100%}.qstbar .qschip{width:100%}}

@@ -36,7 +36,7 @@ GATES = [
     dict(id="baw701", name="The Beast of Toussaint (Q701)", lane="w", x=35.9, cuts=["Blood and Wine: Q701 The Beast of Toussaint (q701_done)", "Blood and Wine: Q701 The Beast of Toussaint (q701_opening_done)"], done=["Q701_Festival"], next=["Q702 Dettlaff"]),
     dict(id="baw702", name="Blood Run (Q702)", lane="w", x=36.9, cuts=["Blood and Wine: Q702 Blood Run (q702_play_buttler_scene)", "Blood and Wine: Q702 Blood Run (q702_wight_killed)"], done=["Q702 Dettlaff"], next=["Q703 All for one"]),
     dict(id="baw703", name="Capture the Castle done (Q703)", lane="w", x=47.2, cuts=["Blood and Wine: Capture the Castle, Q703 (q703_done)"], done=["Q703 All for one"], next=["Q704 Starting"]),
-    dict(id="bawnight", name="The Night of Long Fangs (Q704)", lane="w", x=47.6, cuts=["Blood and Wine: The Night of Long Fangs starts (Q704)"], done=[], next=["Q704 Starting"]),
+    dict(id="bawnight", name="The Night of Long Fangs (Q704)", lane="w", x=47.6, cuts=["Blood and Wine: The Night of Long Fangs starts (Q704)"], done=[], next=["Q704 Starting"], real=True),
     dict(id="baw704", name="Tesham Mutna done (Q704)", lane="w", x=49.1, cuts=["Blood and Wine: Q704 Tesham Mutna (q704_done)"], done=["Q704 Dettlaff"], next=["Q705 Home"]),
     dict(id="baw705", name="The epilogue (Q705)", lane="w", x=49.6, cuts=["Blood and Wine: Q705 epilogue (q705_catacombs_active)", "Blood and Wine: Q705 epilogue (q705_completed)"], done=["Q705 Home"], next=[]),
     dict(id="hos", name="Dead Man's Party done (Q602)", lane="h", x=33.5, cuts=["Hearts of Stone: main quest result"], done=["q602wedding"], next=["q603bank"]),
@@ -96,7 +96,12 @@ def build(spike=SPIKE):
     gates = []
     for gt in GATES:
         if gt["id"] not in used: dropped.append(("gate with no confirmed effect left", gt["name"])); continue
-        gates.append(dict(id=gt["id"], name=gt["name"], lane=gt["lane"], x=gt["x"], done=[id2g[i] for i in gt["done"]], next=[id2g[i] for i in gt["next"]]))
+        # `code`: the quest code the gate is named by: in its name, else the code of the one quest whose Success passes it (v34.1: the gate key shows it); `real`: the one cutoff that is real (not a level of a rule)
+        m = re.search(r"\((Q\d{3})\)", gt["name"]) or (re.match(r"(Q\d{3})", gt["done"][0]) if len(gt["done"]) == 1 else None)
+        gate = dict(id=gt["id"], name=gt["name"], lane=gt["lane"], x=gt["x"], done=[id2g[i] for i in gt["done"]], next=[id2g[i] for i in gt["next"]])
+        if m: gate["code"] = m.group(1)
+        if gt.get("real"): gate["real"] = 1
+        gates.append(gate)
     data = dict(v=1, points=[list(p) for p in POINTS], gates=gates, enter={k: [id2g[i] for i in v] for k, v in ENTER.items()}, quests=out)
     return data, dropped, unknown
 
