@@ -385,3 +385,28 @@ function qsOpen(){if(QS.shown)return;QS.shown=true;if(!QS.init){QS.init=true;qsB
    if(QS_DESC&&!QS.desc)qsDescLoad().then(D=>{QS.desc=D;if(QS.shown){qsRenderNext();qsRenderDetail()}},()=>{})},
   ()=>{body.hidden=true;qsEl('qsLoadMsg').hidden=false;qsEl('qsLoadMsg').textContent='The quest list could not be loaded. Check your connection and try again.'})}
 function qsSync(){if(QS.shown&&QS.data&&QS.lv!==qsMy()){QS.lv=qsMy();qsRenderAll()}}   // the Level field changed: zones, Next up and tooltips follow it
+
+// ---- Handoff from the old address (v37): merge what it sent (HANDOFF, app.js) into localStorage. Only the five keys of this screen; every value is checked; nothing newer is overwritten ----
+const HO_KEYS=[QS_KEY,QS_VIEW_KEY,QS_DONE_KEY,QS_TDONE_KEY,QS_TSCOPE_KEY],HO_PREF={[QS_VIEW_KEY]:/^(list|band|time)$/,[QS_DONE_KEY]:/^[01]$/,[QS_TDONE_KEY]:/^[01]$/,[QS_TSCOPE_KEY]:/^(base|hos|bob)$/};
+function hoParse(b64){const b=b64.replace(/-/g,'+').replace(/_/g,'/'),bin=atob(b+'='.repeat((4-b.length%4)%4)),o=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(bin,c=>c.charCodeAt(0))));
+ if(!o||typeof o!=='object'||Array.isArray(o))return null;const out={};
+ for(const k of HO_KEYS)if(Object.prototype.hasOwnProperty.call(o,k)&&typeof o[k]==='string'&&o[k].length<=800000)out[k]=o[k];return out}
+function hoMerge(){const H=HANDOFF;if(!H.data&&!H.bad&&!H.big&&!H.stash)return;const msg=[];
+ if(H.big)msg.push('Your quest progress was too large to bring over automatically from the old address.');
+ if(H.data||H.bad){let ok=false,n=0;
+  try{const o=H.data?hoParse(H.data):null;
+   if(o){ok=true;
+    for(const k of HO_KEYS){if(!(k in o))continue;const have=localStorage.getItem(k);
+     if(k===QS_KEY){const c=qsClean(JSON.parse(o[k]));if(!c)continue;let m=c;
+      if(have!==null){const cur=qsClean(JSON.parse(have));if(!cur)continue;   // data of a version we cannot read stays as it is
+       const newer=cur.changed>=c.changed;m={manual:Object.assign({},newer?c.manual:cur.manual,newer?cur.manual:c.manual),
+        save:!cur.save?c.save:!c.save?cur.save:(c.save.at>cur.save.at?c.save:cur.save),changed:Math.max(c.changed,cur.changed)}}
+      localStorage.setItem(k,JSON.stringify(Object.assign({v:1},m)));n++}
+     else if(have===null&&HO_PREF[k].test(o[k])){localStorage.setItem(k,o[k]);n++}}
+    QS.read=false}}
+  catch(e){ok=false}
+  if(!ok)msg.push('Your quest progress could not be brought over from the old address (the data was unreadable, or this browser blocks storage for the site).');
+  else if(n)msg.push('Your quest progress was brought over from the old address.')}
+ if(H.stash)msg.push('Re-import your save to restore your stash.');
+ if(msg.length)notify(msg.join(' '))}
+hoMerge();

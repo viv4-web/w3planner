@@ -5,7 +5,7 @@ Read this first. It is the source of truth for how to work in this repository.
 ## What this is
 A free, unofficial, fan-made build planner for the new skill system of The Witcher 3: skills, ability slots, mutagens and mutations.
 A static website: no backend, no accounts, no cookies, no analytics. A build lives entirely in the URL hash.
-Live at https://w3planner.pages.dev (Cloudflare Pages). Repo: viv4-web/w3planner (public, MIT).
+Live at https://buildplanner.net/witcher-3/ (Hostinger, deployed by `~/work/deploy/`, see ~/work/CLAUDE.md; `build.py` takes the canonical address from `siteUrl` in `static/config.js`). The old address https://w3planner.pages.dev (Cloudflare Pages, `tools/deploy.py`) is being retired: a final version there redirects to the new one (`tools/make_pages_redirect.py`, handoff below). Repo: viv4-web/w3planner (public, MIT).
 Not affiliated with or endorsed by CD PROJEKT RED. Game names, text, data and art belong to CD PROJEKT S.A.
 Never add ads, tracking, accounts, payments or anything that earns money.
 
@@ -32,7 +32,7 @@ Never add ads, tracking, accounts, payments or anything that earns money.
 | Release gate: full tests, preview deploy, smoke tests, report (stops before production) | `python tools/deploy.py --art-dir ~/work/w3planner-art` |
 | Look at the live build locally (127.0.0.1 only, for a port forward) | `python tools/deploy.py --art-dir ~/work/w3planner-art --serve` |
 | Put the build that passed the gate into production (only after Vivek says yes) | `python tools/deploy.py --art-dir ~/work/w3planner-art --promote` |
-| Smoke-test any running site | `python tests/smoke.py --url https://w3planner.pages.dev/` |
+| Smoke-test any running site | `python tests/smoke.py --url https://buildplanner.net/witcher-3/` |
 
 First-time setup: `pip install -r requirements.txt && python -m playwright install chromium && sh tools/install_hooks.sh`.
 Deploy history: the first production deployment was a manual zip upload on 2026-09-30 (deployment `7e9cb23f`). The first `tools/deploy.py` run was on 2026-10-01 (deployment `1004b920`, v24). wrangler 4.145.0 accepts the flags the script uses (`--project-name`, `--branch`). Before changing them, check `npx wrangler pages deploy --help`.
@@ -73,6 +73,9 @@ Globals you will use: `TREES`, `MUT` (mutations), `MUTS` (36 mutagens: 9 regular
 - mutagens: 4 sockets, `-` for empty or the mutagen index in base 36 (36 mutagens fill one character exactly: a bigger catalogue needs a new format segment)
 - level 1-100, bonus points 0-100, researched mutations as a base-36 bitmask, active mutation plus one
 - alphabet `A-Za-z0-9-_`; total length at most 400
+
+## Handoff from the old address (v37)
+`https://w3planner.pages.dev` is replaced by a page that redirects every request to `https://buildplanner.net/witcher-3/<same path and query>#<same hash>` (`python tools/make_pages_redirect.py --out dist/pages-redirect`; the output has `index.html`, `_headers` and `_redirects`). localStorage does not cross origins, so before leaving it reads the five quest keys (`w3p.quests.v1`, `.view`, `.banddone`, `.timedone`, `.timescope`) and puts them in the hash as `&import=<base64url of a JSON object {key: string}>`; if the data is over 1,000,000 characters it sends `&import=toolarge` instead and the new site says the progress was too large to bring over; if `w3planner.stash` exists it adds `&stash=1` (the stash is never copied; the new site says "Re-import your save to restore your stash."). `src/app.js` (`HANDOFF`) strips those two tokens from the hash before the build is decoded and cleans the address with `history.replaceState`; `hoMerge` at the end of `src/quests.js` merges the data: only the five keys, values must be strings, `w3p.quests.v1` goes through `qsClean`, the newer progress wins on a conflict (`changed`), the preference keys are set only when absent, and nothing is ever written to a key that holds data the planner cannot read. An unknown token in the hash leaves it untouched (the build decoder stays strict). `_redirects` has path-level 301s for the four static pages only: a rule on `/*` would answer before the page can run, and the quest data would be lost. Tests: `tests/handoffcheck.py`.
 
 ## Link compatibility
 - Fixtures: `tests/fixtures/legacy_links.json` (links made by v7 to v23) and `tests/fixtures/links/<version>.txt` + `.json` (links made by that version's code, with the build each must open as). `tests/linkcheck.py` opens every one of them in the current build, online and in the offline package, and `tests/run_all.py` fails if any opens differently.

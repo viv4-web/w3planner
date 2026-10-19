@@ -19,6 +19,7 @@ import linkcheck
 import eqcheck
 import glcheck
 import qscheck
+import handoffcheck
 import importcheck
 import statscheck
 import sockcheck
@@ -174,6 +175,8 @@ def main():
         statscheck.run(b, base, check, "online"); statscheck.fixture(b, base, check, "online"); statscheck.rulesets(b, base, check, "online"); statscheck.signs(b, base, check, "online")
         rulesetcheck.run(b, base, check, "online")
         print("\n== Quests ==")
+        print("\n== Canonical address and the handoff from the old address (v37) ==")
+        handoffcheck.canonical(check, site); handoffcheck.run(b, site, tmp, check)
         qscheck.data(check); qscheck.rules(check); qscheck.run(b, gbase, check, "online"); qscheck.text(b, gbase, check, "online (fake text)", False)
         if a.variant == "game": qscheck.text(b, base, check, "online (live build)", True)
         else: qscheck.publicbuild(b, base, check, "online (public build)")
@@ -237,6 +240,7 @@ def main():
                 glcheck.publicbuild(b, off, None, glcheck.GLINK, check, "offline")
                 importcheck.offline(b, off, check, "offline"); statscheck.run(b, off, check, "offline"); qscheck.publicbuild(b, off, check, "offline")
                 rulesetcheck.run(b, off, check, "offline")
+                handoffcheck.offline_canonical(check, {n: zipfile.ZipFile(zp).read(n).decode('utf-8', 'replace') for n in zipfile.ZipFile(zp).namelist() if n.endswith('.html')})
                 check("the offline package contains no glossary", not any("glossary" in n.lower() for n in zipfile.ZipFile(zp).namelist()))
                 o.fill("#imp", "https://w3planner.pages.dev/#" + code); o.click("#impbtn"); o.wait_for_timeout(300)
                 check("a link from the website opens in the offline copy", OE(FULLSTATE) == link_state)
