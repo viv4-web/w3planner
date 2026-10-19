@@ -1,6 +1,15 @@
 
-const APP_VERSION="v36";
+const APP_VERSION="v37";
 const CFG=Object.assign({mode:"online",shareBase:""},window.PLANNER_CONFIG||{});
+// ---- Handoff from the old address, w3planner.pages.dev (v37; CLAUDE.md, "Handoff"): it redirects here with #<build>&import=<base64url JSON>&stash=1. This part only reads the two extra
+// tokens and removes them from the address, before the build is decoded; the data is merged into localStorage by hoMerge() at the end of quests.js. Any other token: not ours, the hash stays as it is.
+const HANDOFF=(()=>{const r={data:null,bad:false,stash:false};try{const h=location.hash.slice(1);if(!/(^|&)(import|stash)=/.test(h))return r;
+ const keep=[];let imp=false,st=false,data=null;
+ for(const x of h.split('&')){if(/^import=[A-Za-z0-9_-]*$/.test(x)&&!imp){imp=true;data=x.slice(7)}else if(x==='stash=1'&&!st)st=true;else keep.push(x)}
+ if(keep.length>1)return r;
+ if(imp){if(data&&data.length<=1000000)r.data=data;else r.bad=true}
+ r.stash=st;history.replaceState(null,'',location.pathname+location.search+(keep[0]?'#'+keep[0]:''))}catch(e){}
+ return r})();
 const DATA=/*@data:DATA*/;
 
 // ---- skill tooltip engine: ported from the game's own menu scripts ----

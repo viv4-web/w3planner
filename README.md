@@ -1,6 +1,6 @@
 # Build Planner (unofficial)
 
-A free, open-source skill, mutation and build planner for the new skill system of The Witcher 3. Live at **https://w3planner.pages.dev**.
+A free, open-source skill, mutation and build planner for the new skill system of The Witcher 3. Live at **https://buildplanner.net/witcher-3/**.
 
 - Skill trees with the game's own prerequisites, values and tooltip formulas
 - Ability slots, mutagen sockets and mutation slots that unlock like in the game

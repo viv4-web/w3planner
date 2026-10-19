@@ -15,6 +15,8 @@ Big data (the equipment lists) never goes into index.html. The output is a plain
 Standard library only.
 """
 import argparse, hashlib, json, re, shutil, sys
+
+CANON_PAGES = ["index.html", "help.html", "about.html", "privacy.html", "support.html"]
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -132,6 +134,13 @@ def main():
         (out / name).parent.mkdir(parents=True, exist_ok=True)
         (out / name).write_bytes(blob)
     shutil.copytree(ROOT / "static", out, dirs_exist_ok=True)
+    # <link rel="canonical"> on the five pages, from siteUrl in static/config.js (the online address, no hash); the offline package strips them again (tools/make_offline.py)
+    m = re.search(r'siteUrl:\s*"(https://[^"#?]+/)"', read(ROOT / "static" / "config.js"))
+    if m:
+        for page in CANON_PAGES:
+            p = out / page; t = p.read_text(encoding="utf-8")
+            assert "rel=\"canonical\"" not in t and t.count('<link rel="icon"') == 1, page
+            p.write_text(t.replace('<link rel="icon"', '<link rel="canonical" href="%s">\n<link rel="icon"' % (m.group(1) + ("" if page == "index.html" else page)), 1), encoding="utf-8")
     print("Built %s variant into %s (%d files, index.html %d KB%s)" % (a.variant, out, len(files), len(html) // 1024, (", Glossary included" if gloss else "") + (", Quest text included" if quests else "")))
 
 

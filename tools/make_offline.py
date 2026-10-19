@@ -4,7 +4,7 @@
     python tools/make_offline.py                      run from a checkout of the repository
     python tools/make_offline.py --site DIR --out DIR
 
-The package contains the website's index.html UNCHANGED. What differs offline:
+The package contains the website's index.html UNCHANGED (apart from the <link rel="canonical"> the website's pages carry). What differs offline:
   * config.js           mode "offline" instead of "online", plus the address of the website
   * privacy.html        the hosting paragraph
   * README-OFFLINE.txt  instructions
@@ -14,7 +14,9 @@ Standard library only.
 import argparse, hashlib, re, sys, zipfile
 from pathlib import Path
 
-ONLINE_URL = "https://w3planner.pages.dev/"
+ONLINE_URL = "https://buildplanner.net/witcher-3/"
+CANONICAL = re.compile(r'<link rel="canonical" href="[^"]*">\n')   # the website's pages have one (tools/build.py); the offline copy is not that address
+
 FIXED_TIME = (2026, 1, 1, 0, 0, 0)  # fixed timestamps, so the same input gives the same file contents
 PAGES = ["index.html", "help.html", "about.html", "privacy.html", "support.html", "pages.css"]
 IMG_REF = re.compile(r"\b((?:art|assets)/[0-9a-f]{12}\.(?:png|jpg))")
@@ -85,8 +87,8 @@ def main():
     a = ap.parse_args()
 
     site = Path(a.site)
-    idx_bytes = (site / "index.html").read_bytes()
-    idx = idx_bytes.decode("utf-8")
+    idx = CANONICAL.sub("", (site / "index.html").read_text(encoding="utf-8"))
+    idx_bytes = idx.encode("utf-8")
     m = re.search(r'const APP_VERSION="([^"]+)"', idx)
     if not m:
         sys.exit("index.html has no APP_VERSION")
@@ -111,14 +113,14 @@ def main():
     if not fonts:
         sys.exit("missing fonts/")
 
-    privacy = (site / "privacy.html").read_text(encoding="utf-8")
+    privacy = CANONICAL.sub("", (site / "privacy.html").read_text(encoding="utf-8"))
     privacy, n = re.subn(r"<h2>Hosting</h2><p>.*?</p>", lambda _m: OFFLINE_HOSTING, privacy, count=1, flags=re.S)
     if n != 1:
         sys.exit("privacy.html: the hosting paragraph was not found (was the page wording changed?)")
 
     entries = []
     for f in PAGES:
-        entries.append((f, privacy.encode("utf-8") if f == "privacy.html" else (site / f).read_bytes()))
+        entries.append((f, privacy.encode("utf-8") if f == "privacy.html" else CANONICAL.sub("", (site / f).read_text(encoding="utf-8")).encode("utf-8") if f.endswith(".html") else (site / f).read_bytes()))
     if a.allow_share:
         config = 'window.PLANNER_CONFIG = { mode: "offline", siteUrl: "%s", shareBase: "%s" };\n' % (a.online_url, a.online_url)
     else:
