@@ -391,7 +391,8 @@ const HO_KEYS=[QS_KEY,QS_VIEW_KEY,QS_DONE_KEY,QS_TDONE_KEY,QS_TSCOPE_KEY],HO_PRE
 function hoParse(b64){const b=b64.replace(/-/g,'+').replace(/_/g,'/'),bin=atob(b+'='.repeat((4-b.length%4)%4)),o=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(bin,c=>c.charCodeAt(0))));
  if(!o||typeof o!=='object'||Array.isArray(o))return null;const out={};
  for(const k of HO_KEYS)if(Object.prototype.hasOwnProperty.call(o,k)&&typeof o[k]==='string'&&o[k].length<=800000)out[k]=o[k];return out}
-function hoMerge(){const H=HANDOFF;if(!H.data&&!H.bad&&!H.stash)return;const msg=[];
+function hoMerge(){const H=HANDOFF;if(!H.data&&!H.bad&&!H.big&&!H.stash)return;const msg=[];
+ if(H.big)msg.push('Your quest progress was too large to bring over automatically from the old address.');
  if(H.data||H.bad){let ok=false,n=0;
   try{const o=H.data?hoParse(H.data):null;
    if(o){ok=true;

@@ -4,7 +4,7 @@
     python tools/make_pages_redirect.py --out dist/pages-redirect [--target https://buildplanner.net/witcher-3/]
 
 Output: index.html (Cloudflare Pages answers every path that is not a file with it, because there is no 404.html), _headers (the planner's own) and _redirects.
-Why a page and not only a rule: localStorage does not cross addresses, so before leaving, the page reads the quest keys and puts them in the hash for the new site
+Why a page and not only a rule: localStorage does not cross addresses, so before leaving, the page reads the quest keys and puts them in the hash for the new site (import=toolarge when they do not fit: the new site shows a notice)
 (src/app.js HANDOFF, src/quests.js hoMerge; CLAUDE.md "Handoff"). A `/* ... 301` rule in _redirects would answer before the page runs and the quest data would be lost,
 so _redirects only has the four static pages, which hold no data. Standard library only. Nothing is uploaded by this tool."""
 import argparse, json, shutil, sys
@@ -40,7 +40,7 @@ PAGE = """<!doctype html>
         var bytes = new TextEncoder().encode(JSON.stringify(o)), s = "";
         for (i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
         var e = btoa(s).replace(/\\+/g, "-").replace(/\\//g, "_").replace(/=+$/, "");
-        if (e.length <= LIMIT) extra.push("import=" + e);
+        extra.push("import=" + (e.length <= LIMIT ? e : "toolarge"));   // too big for a URL: the new site says so instead of skipping silently
       }
       if (localStorage.getItem(STASH) !== null) extra.push("stash=1");
     }

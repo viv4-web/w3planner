@@ -112,6 +112,11 @@ def run(b, site, tmp, check):
     hostile("a second import= token: nothing is imported or stored", "#" + LINK + "&import=" + b64({"w3p.quests.view": "band"}) + "&import=" + b64({"w3p.quests.view": "list"}), none, keep_hash=None)
     hostile("data of a version this one cannot read (existing key with v:2) is never overwritten", "#" + LINK + "&import=" + b64({"w3p.quests.v1": store({G1: "done"}, 1)}),
             lambda pg, keys: ls(pg, "w3p.quests.v1") == '{"v":2,"future":true}', seed_new={"w3p.quests.v1": '{"v":2,"future":true}'})
+    # 6b. too large to carry: a notice, never silence
+    hostile("import=toolarge shows the 'too large' notice and stores nothing", "#" + LINK + "&import=toolarge", none, notice="too large to bring over")
+    ctx, pg, errs, dlg = visit(OLD + "#" + LINK, seed_old={"w3p.quests.v1": "x" * 800000, "w3planner.stash": "{}"})
+    check("handoff: a quest store too big for the address makes the old page send import=toolarge: the new site says so (and the stash flag still works), nothing is stored, no import left",
+          "too large to bring over" in toast(pg) and "restore your stash" in toast(pg) and pg.evaluate("Object.keys(localStorage)") == [] and "import" not in pg.url and not errs, (toast(pg)[:120], errs)); ctx.close()
     # 7. the same hash on the OLD address with hostile storage does not break the redirect
     ctx, pg, errs, dlg = visit(OLD + "#" + LINK, seed_old={"w3p.quests.v1": "not json at all {{{", "w3p.quests.view": "<b>x</b>"})
     check("handoff: unreadable or hostile values on the old address still redirect; the new site rejects them without errors (nothing stored beyond what is valid)", not errs and not dlg and ls(pg, "w3p.quests.v1") is None and ls(pg, "w3p.quests.view") is None, (errs, dlg, toast(pg))); ctx.close()
