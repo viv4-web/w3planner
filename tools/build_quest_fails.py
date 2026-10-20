@@ -7,7 +7,7 @@
 
 The candidates file (never committed: it is the output of the quest-graph spike, `status` per record) holds every link the game files seem to show. Only a record whose status is exactly
 "verified_gamefiles" gets in; every other record is refused (listed, never copied). The tool stops when nothing is verified, when a verified record has no human wording in HUMAN below,
-or when a GUID is not a quest of data/QUESTS.json. No game text: GUIDs, a fact name, a comparison, block numbers and short labels of our own.
+or when a GUID is not a quest of data/QUESTS.json. `candidates` is the number of refused records (the Quest failures tab says how many are still being checked), a number and nothing else. No game text: GUIDs, a fact name, a comparison, block numbers and short labels of our own.
 """
 import argparse, json, re, sys
 from pathlib import Path
@@ -64,7 +64,7 @@ def build(cand, quests, include=()):
         sys.exit("nothing is verified_gamefiles: nothing to write")
     links = [convert(r, quests) for r in ok]
     refused = [r for r in recs if r.get("status") != "verified_gamefiles"]
-    return dict(v=1, links=links), refused
+    return dict(v=1, links=links, candidates=len(refused)), refused      # candidates = how many records are still being checked: a number only, no names or details
 
 
 def main():

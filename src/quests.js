@@ -33,7 +33,7 @@ function qsClean(o){   // untrusted (the file the user loads, or another version
   q:take(o.save.q,['done','active','failed','inactive'],6000),o:take(o.save.o,['done','active','failed','inactive'],12000),e:take(o.save.e,['done','active','failed','inactive'],12000)};
  return out}
 function qsStoreInit(){if(QS.read)return;QS.read=true;qsRead()}
-function qsRead(){try{const v=localStorage.getItem(QS_VIEW_KEY);if(v==='list'||v==='band'||v==='time')QS.view=v;QS.showDone=localStorage.getItem(QS_DONE_KEY)==='1';QS.timeDone=localStorage.getItem(QS_TDONE_KEY)==='1';const sc=localStorage.getItem(QS_TSCOPE_KEY);if(sc==='base'||sc==='hos'||sc==='bob')QS.tscope=sc}catch(e){}   // the view first: it must win on load whether or not any progress is stored (v33c; v33b skipped it when nothing was stored)
+function qsRead(){try{const v=localStorage.getItem(QS_VIEW_KEY);if(v==='list'||v==='band'||v==='time'||v==='fails')QS.view=v;QS.showDone=localStorage.getItem(QS_DONE_KEY)==='1';QS.timeDone=localStorage.getItem(QS_TDONE_KEY)==='1';const sc=localStorage.getItem(QS_TSCOPE_KEY);if(sc==='base'||sc==='hos'||sc==='bob')QS.tscope=sc}catch(e){}   // the view first: it must win on load whether or not any progress is stored (v33c; v33b skipped it when nothing was stored)
  try{const raw=localStorage.getItem(QS_KEY);QS.ok=true;if(!raw)return;const c=qsClean(JSON.parse(raw));if(c)QS.store=c}catch(e){QS.ok=false}}
 function qsSetDone(on){QS.showDone=on;try{localStorage.setItem(QS_DONE_KEY,on?'1':'0')}catch(e){}}
 function qsSetTimeDone(on){QS.timeDone=on;try{localStorage.setItem(QS_TDONE_KEY,on?'1':'0')}catch(e){}}
@@ -274,9 +274,9 @@ function qsTip(d){const q=QS.byG.get(d.dataset.g),t=qsEl('qsTip');if(!q)return;c
  const r=d.getBoundingClientRect(),w=t.offsetWidth,h=t.offsetHeight;t.style.left=Math.max(6,Math.min(innerWidth-w-6,r.left+r.width/2-w/2))+'px';t.style.top=(r.top-h-8>6?r.top-h-8:r.bottom+8)+'px'}
 function qsTipHide(){const t=qsEl('qsTip');if(t)t.hidden=true}
 function qsRenderView(){const host=qsEl('qsView'),sc=qsEl('screenQ');qsTipHide();
- [['qsVTime','time'],['qsVBand','band'],['qsVList','list']].forEach(([id,v])=>{qsEl(id).classList.toggle('on',QS.view===v);qsEl(id).setAttribute('aria-pressed',String(QS.view===v))});
- sc.classList.toggle('qs-band',QS.view!=='list');sc.classList.toggle('qs-time',QS.view==='time');qsEl('qsScope').hidden=QS.view!=='time';qsEl('qsScope').querySelectorAll('.qssc').forEach(b=>{const on=b.dataset.scope===QS.tscope;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on))});sc.classList.toggle('qs-open',QS.view!=='list'&&QS.open);   // Level band and Timeline: the detail is a drawer
- if(QS.view==='time')qsRenderTime(host);else if(QS.view==='band')qsRenderBand(host);else qsRenderList(host)}
+ [['qsVTime','time'],['qsVBand','band'],['qsVList','list'],['qsVFails','fails']].forEach(([id,v])=>{qsEl(id).classList.toggle('on',QS.view===v);qsEl(id).setAttribute('aria-pressed',String(QS.view===v))});
+ sc.classList.toggle('qs-band',QS.view!=='list');sc.classList.toggle('qs-fails',QS.view==='fails'&&!!window.QF);sc.classList.toggle('qs-time',QS.view==='time');qsEl('qsScope').hidden=QS.view!=='time';qsEl('qsScope').querySelectorAll('.qssc').forEach(b=>{const on=b.dataset.scope===QS.tscope;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on))});sc.classList.toggle('qs-open',QS.view!=='list'&&QS.open);   // Level band and Timeline: the detail is a drawer
+ if(QS.view==='time')qsRenderTime(host);else if(QS.view==='band')qsRenderBand(host);else if(QS.view==='fails'&&window.QF)QF.fails(host);else qsRenderList(host)}
 
 // ---- the detail panel (a column beside the list; in the Level band a drawer from the right) ----
 function qsJournal(q,el){   // the spoiler gate: with a save only the entries the save has shown, otherwise nothing, until the player asks for the whole journal
@@ -373,7 +373,7 @@ function qsApplyJournal(J,name,mode){QS.store.save={at:Date.now(),file:String(na
 
 // ---- screen ----
 function qsBind(){
- const sw=v=>{qsSetView(v);qsEl('screenQ').classList.remove('qs-detail');qsRenderView();qsRenderDetail()};qsEl('qsVTime').onclick=()=>sw('time');qsEl('qsVBand').onclick=()=>sw('band');qsEl('qsVList').onclick=()=>sw('list');
+ const sw=v=>{qsSetView(v);qsEl('screenQ').classList.remove('qs-detail');qsRenderView();qsRenderDetail()};qsEl('qsVTime').onclick=()=>sw('time');qsEl('qsVBand').onclick=()=>sw('band');qsEl('qsVList').onclick=()=>sw('list');qsEl('qsVFails').onclick=()=>sw('fails');
  qsEl('qsScope').querySelectorAll('.qssc').forEach(b=>{b.onclick=()=>{qsSetScope(b.dataset.scope);QS.open=false;qsEl('screenQ').classList.remove('qs-detail');qsRenderView();qsRenderDetail()}});
  const chip=qsEl('qsChip');chip.onclick=e=>{e.stopPropagation();qsMenu(qsEl('qsMenu').hidden)};
  document.addEventListener('click',e=>{const m=qsEl('qsMenu');if(!m.hidden&&!e.composedPath().includes(qsEl('qsChipWrap')))qsMenu(false)});   // composedPath: a click on a button the menu has just re-drawn is still inside it
@@ -390,7 +390,7 @@ function qsOpen(){if(QS.shown)return;QS.shown=true;if(!QS.init){QS.init=true;qsB
 function qsSync(){if(QS.shown&&QS.data&&QS.lv!==qsMy()){QS.lv=qsMy();qsRenderAll()}}   // the Level field changed: zones, Next up and tooltips follow it
 
 // ---- Handoff from the old address (v37): merge what it sent (HANDOFF, app.js) into localStorage. Only the five keys of this screen; every value is checked; nothing newer is overwritten ----
-const HO_KEYS=[QS_KEY,QS_VIEW_KEY,QS_DONE_KEY,QS_TDONE_KEY,QS_TSCOPE_KEY],HO_PREF={[QS_VIEW_KEY]:/^(list|band|time)$/,[QS_DONE_KEY]:/^[01]$/,[QS_TDONE_KEY]:/^[01]$/,[QS_TSCOPE_KEY]:/^(base|hos|bob)$/};
+const HO_KEYS=[QS_KEY,QS_VIEW_KEY,QS_DONE_KEY,QS_TDONE_KEY,QS_TSCOPE_KEY],HO_PREF={[QS_VIEW_KEY]:/^(list|band|time|fails)$/,[QS_DONE_KEY]:/^[01]$/,[QS_TDONE_KEY]:/^[01]$/,[QS_TSCOPE_KEY]:/^(base|hos|bob)$/};
 function hoParse(b64){const b=b64.replace(/-/g,'+').replace(/_/g,'/'),bin=atob(b+'='.repeat((4-b.length%4)%4)),o=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(bin,c=>c.charCodeAt(0))));
  if(!o||typeof o!=='object'||Array.isArray(o))return null;const out={};
  for(const k of HO_KEYS)if(Object.prototype.hasOwnProperty.call(o,k)&&typeof o[k]==='string'&&o[k].length<=800000)out[k]=o[k];return out}

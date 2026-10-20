@@ -1,6 +1,6 @@
 /* ---- v33c: the quest type colours, defined once; a type is also named in text (tooltip, drawer, detail), so colour is never the only cue ---- */
 :root{--t-main:#d8b45a;--t-side:#9fb7d9;--t-contract:#e0707a;--t-treasure:#6fc29a;--t-gwent:#b79be6;--t-race:#5ccfd0;--t-fist:#d2955f}
-:root{--qf-red-bg:#3b1512;--qf-red:#e5534b;--qf-red-chip:#ff8a80;--qf-amber-bg:#2b2010;--qf-amber:#f0b452;--qf-ink-red:#ffe1dc;--qf-ink-amber:#f3e0b8;--qf-chip-ink:#15120e}   /* v39: the fail safeguard, red = continuing this quest fails another, amber = at risk; text on them is checked for 4.5:1 (tests/qfcheck.py) */
+:root{--qf-red-bg:#3b1512;--qf-red:#e5534b;--qf-red-chip:#ff8a80;--qf-amber-bg:#2b2010;--qf-amber:#f0b452;--qf-ink-red:#ffe1dc;--qf-ink-amber:#f3e0b8;--qf-chip-ink:#15120e;--qf-btn:#c0392b}   /* v39: the fail safeguard, red = continuing this quest fails another, amber = at risk; text on them is checked for 4.5:1 (tests/qfcheck.py) */
 .t-main{--tc:var(--t-main)}.t-side{--tc:var(--t-side)}.t-contract{--tc:var(--t-contract)}.t-treasure{--tc:var(--t-treasure)}.t-gwent{--tc:var(--t-gwent)}.t-race{--tc:var(--t-race)}.t-fist{--tc:var(--t-fist)}
 /* ---- v33: the Quests screen (regions, Next up, Level band | List, detail), the progress chip ---- */
 .qsscreen{max-width:1500px;margin:0 auto;padding:4px 32px 24px}
