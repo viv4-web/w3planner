@@ -34,11 +34,14 @@ function qsClean(o){   // untrusted (the file the user loads, or another version
  return out}
 function qsStoreInit(){if(QS.read)return;QS.read=true;qsRead()}
 function qsRead(){try{const v=localStorage.getItem(QS_VIEW_KEY);if(v==='list'||v==='band'||v==='time'||v==='fails')QS.view=v;QS.showDone=localStorage.getItem(QS_DONE_KEY)==='1';QS.timeDone=localStorage.getItem(QS_TDONE_KEY)==='1';const sc=localStorage.getItem(QS_TSCOPE_KEY);if(sc==='base'||sc==='hos'||sc==='bob')QS.tscope=sc}catch(e){}   // the view first: it must win on load whether or not any progress is stored (v33c; v33b skipped it when nothing was stored)
- try{const raw=localStorage.getItem(QS_KEY);QS.ok=true;if(!raw)return;const c=qsClean(JSON.parse(raw));if(c)QS.store=c}catch(e){QS.ok=false}}
+ QS.ok=qsProbe();   // v39.3: storage is "blocked" only when a probe key cannot be written, read back and removed right now; reading or parsing our own data says nothing about it
+ let raw=null;try{raw=localStorage.getItem(QS_KEY)}catch(e){}
+ if(!raw)return;try{const c=qsClean(JSON.parse(raw));if(c)QS.store=c}catch(e){QS.bad=true}}   // unreadable data (not JSON, damaged): start empty, the next save replaces it
+function qsProbe(){try{const k=QS_KEY+'.probe';localStorage.setItem(k,'1');const ok=localStorage.getItem(k)==='1';localStorage.removeItem(k);return ok}catch(e){return false}}
 function qsSetDone(on){QS.showDone=on;try{localStorage.setItem(QS_DONE_KEY,on?'1':'0')}catch(e){}}
 function qsSetTimeDone(on){QS.timeDone=on;try{localStorage.setItem(QS_TDONE_KEY,on?'1':'0')}catch(e){}}
 function qsSetView(v){QS.view=v;QS.open=false;try{localStorage.setItem(QS_VIEW_KEY,v)}catch(e){}}
-function qsWrite(){try{localStorage.setItem(QS_KEY,JSON.stringify(Object.assign({v:1},QS.store)));QS.ok=true}catch(e){QS.ok=false}qsChip()}
+function qsWrite(){try{localStorage.setItem(QS_KEY,JSON.stringify(Object.assign({v:1},QS.store)));QS.ok=true;QS.bad=false}catch(e){QS.ok=qsProbe()}qsChip()}   // a real save clears a stuck 'blocked'; a failed one asks the probe (a one-off failure, a full quota: storage still works)
 function qsTouch(){QS.store.changed=Date.now();qsWrite()}
 const qsSaveState=g=>QS.store.save&&QS.store.save.q[g]||'none';
 const qsState=g=>QS.store.manual[g]||qsSaveState(g);
@@ -340,19 +343,19 @@ function qsRenderAll(){if(!QS.data)return;qsRenderRegs();qsRenderMiss();qsRender
 
 // ---- the chip: Saved in this browser | export | load | reset ----
 const qsWhen=t=>t?new Date(t).toLocaleString([],{dateStyle:'medium',timeStyle:'short'}):'never';
-function qsChip(){const b=qsEl('qsChip');if(!b)return;b.textContent=(QS.ok?'Saved in this browser':'Not saved in this browser')+' ▾';b.classList.toggle('warn',!QS.ok);
+function qsChip(){const b=qsEl('qsChip');if(!b)return;if(!QS.ok)QS.ok=qsProbe();b.textContent=(QS.ok?(qsHasProgress()?'Saved in this browser':'No progress yet'):'Not saved in this browser')+' ▾';b.classList.toggle('warn',!QS.ok);
  const m=qsEl('qsMenu');if(m.hidden)return;qsMenuFill()}
 function qsMenuFill(){const m=qsEl('qsMenu'),n=QS.data?qsMarked():0,h=qsHand(),s=QS.store.save;
  m.innerHTML=`<p class="qsmeta2"><b>${n}</b> quest${n===1?'':'s'} marked${h?' · '+h+' by hand':''}${s?' · save: '+qsEsc(s.file||'imported')+' ('+qsEsc(qsWhen(s.at))+')':''}</p><p class="qsmeta2">Last change: ${qsEsc(qsWhen(QS.store.changed))}</p>
-  ${QS.ok?'':'<p class="qsmeta2 bad">This browser blocks storage for the site: your marks work until you close the page. Export them to keep them.</p>'}
+  ${QS.ok?'':'<p class="qsmeta2 bad">This browser blocks storage for the site: your marks work until you close the page. Export them to keep them.</p>'}${QS.bad?'<p class="qsmeta2">The progress saved earlier could not be read. It is replaced when you mark a quest.</p>':''}
   <button type="button" class="btn" id="qsExport" role="menuitem">Export progress (.json)</button>
   <label class="btn" role="menuitem" tabindex="0" id="qsLoadLbl" for="qsLoadFile">Load progress file</label><input class="vh" id="qsLoadFile" type="file" accept=".json,application/json" aria-label="Load a progress file">
   ${QS.confirm?'<p class="qsmeta2 bad">Remove all your quest progress from this browser?</p><div class="qsrow2"><button type="button" class="btn qsdanger" id="qsResetYes">Reset</button><button type="button" class="btn" id="qsResetNo">Keep it</button></div>':'<button type="button" class="btn" id="qsReset" role="menuitem">Reset</button>'}
   <p class="qsmsg" id="qsMsg2" role="status"></p>`;
  qsEl('qsExport').onclick=qsExport;qsEl('qsLoadFile').onchange=e=>{if(e.target.files[0])qsLoadFile(e.target.files[0]);e.target.value=''};const lb=qsEl('qsLoadLbl');lb.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();qsEl('qsLoadFile').click()}};
  const r=qsEl('qsReset');if(r)r.onclick=()=>{QS.confirm=true;qsMenuFill();qsEl('qsResetNo').focus()};
- const y=qsEl('qsResetYes');if(y){y.onclick=()=>{QS.store={manual:{},save:null,changed:Date.now()};QS.confirm=false;try{localStorage.removeItem(QS_KEY)}catch(e){QS.ok=false}qsMenuFill();qsRenderAll();qsEl('qsMsg2').textContent='Your quest progress was removed.'};qsEl('qsResetNo').onclick=()=>{QS.confirm=false;qsMenuFill();qsEl('qsReset').focus()}}}
-function qsMenu(open){const m=qsEl('qsMenu'),b=qsEl('qsChip');m.hidden=!open;b.setAttribute('aria-expanded',String(open));QS.confirm=false;if(open)qsMenuFill()}
+ const y=qsEl('qsResetYes');if(y){y.onclick=()=>{QS.store={manual:{},save:null,changed:Date.now()};QS.confirm=false;try{localStorage.removeItem(QS_KEY)}catch(e){QS.ok=qsProbe()}qsMenuFill();qsRenderAll();qsEl('qsMsg2').textContent='Your quest progress was removed.'};qsEl('qsResetNo').onclick=()=>{QS.confirm=false;qsMenuFill();qsEl('qsReset').focus()}}}
+function qsMenu(open){const m=qsEl('qsMenu'),b=qsEl('qsChip');if(open){QS.ok=qsProbe();qsChip()}m.hidden=!open;b.setAttribute('aria-expanded',String(open));QS.confirm=false;if(open)qsMenuFill()}
 function qsExport(){const o=Object.assign({app:'w3planner',kind:'quest-progress',exported:new Date().toISOString()},{v:1,manual:QS.store.manual,save:QS.store.save,changed:QS.store.changed});
  const url=URL.createObjectURL(new Blob([JSON.stringify(o)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='w3planner-quests.json';qsEl('qsChipWrap').appendChild(a);a.click();a.remove();   // inside the chip's box, so its own click does not count as a click outside the menu
  setTimeout(()=>URL.revokeObjectURL(url),2000);
@@ -408,7 +411,7 @@ function hoMerge(){const H=HANDOFF;if(!H.data&&!H.bad&&!H.big&&!H.stash)return;c
      else if(have===null&&HO_PREF[k].test(o[k])){localStorage.setItem(k,o[k]);n++}}
     QS.read=false}}
   catch(e){ok=false}
-  if(!ok)msg.push('Your quest progress could not be brought over from the old address (the data was unreadable, or this browser blocks storage for the site).');
+  if(!ok)msg.push('Your quest progress could not be brought over from the old address ('+(qsProbe()?'the data was unreadable':'this browser blocks storage for the site')+').');
   else if(n)msg.push('Your quest progress was brought over from the old address.')}
  if(msg.length||H.stash)hoShow(msg,H.stash)}
 // v38: the notices stay on screen until the user closes them (x, or Esc); an ordinary notify() toast is not touched and does not hide them. The stash sentence keeps its text; "Re-import your save" opens the Import save dialog
@@ -423,3 +426,6 @@ document.getElementById('hoX').onclick=hoClose;
 document.addEventListener('keydown',e=>{const n=document.getElementById('hoNotice');if(e.key!=='Escape'||n.hidden)return;
  if(n.contains(document.activeElement)||!document.querySelector('.impov:not([hidden]),.igov:not([hidden]),.skov:not([hidden]),#mutov:not([hidden])'))hoClose()});   // an open dialog takes its own Esc first
 hoMerge();
+// v39.3: a file dropped anywhere but on the Import dialog's drop zone would make the browser try to open it (Firefox answers with a security error: content may not load or link to a local file). Stop that and say where files go.
+['dragover','drop'].forEach(t=>document.addEventListener(t,e=>{const d=e.dataTransfer;if(!d||![...(d.types||[])].includes('Files')||(e.target.closest&&e.target.closest('#impdrop')))return;e.preventDefault();
+ if(t==='drop')notify('Files are not opened here. Use Import save for a save, or the Saved in this browser menu on the Quests tab to load a progress file.')}));
