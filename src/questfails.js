@@ -75,29 +75,34 @@ const inF=l=>l.trigger_label.includes(qq(l.failer).n)?'':' in '+nm(l.failer);
 const riskLine=l=>`Fails at › ${qsEsc(cap(l.trigger_label))}${inF(l)}${unl(l)}.`;
 const chipF=n=>`<span class="qfchip red">Fails ${n} quest${n>1?'s':''}</span>`,chipR=ls=>`<span class="qfchip amber">Do before ${[...new Set(ls.map(l=>nm(l.failer)))].join(', ')}</span>`;
 const nq=f=>new Set(f.map(l=>l.failed)).size;
-const why=l=>{const ev=`<details class="qfev"><summary>Evidence in the game files</summary><ul>${l.evidence.map(e=>`<li><code>${qsEsc(e.file.split('/').pop())}${e.block==null?'':' #'+e.block}</code> ${qsEsc(e.note)}</li>`).join('')}</ul>
- <p>Whether the game ${wd(l)} a quest you have not started yet is unconfirmed.</p></details><p class="qfsrc">Source: remaster game files</p></details>`;
- const t=l.trigger_label,F=nm(l.failed),R=nm(l.failer);
- const body=l.kind==='journal_status'?`<li>In ${R} (${qsEsc(l.trigger_phase)}): ${t}.</li><li>${qsEsc(l.journal.charAt(0).toUpperCase()+l.journal.slice(1))}.</li><li>The game then ${wd(l)} ${F}.</li>`
-  :l.kind==='flow'?`<li>In ${R} (${qsEsc(l.trigger_phase)}): ${t}.</li><li>${qsEsc(l.flow.charAt(0).toUpperCase()+l.flow.slice(1))}.</li>`
-  :l.kind==='fails_unless_set'?`<li>In ${R} (${qsEsc(l.trigger_phase)}): ${t}.</li><li>${F} is checked once, at that moment.</li><li>It ${wd(l)} unless you've ${qsEsc(l.condition)} first (<code>${qsEsc(l.fact)}</code> is not set).</li>`
-  :l.kind==='choice'?`<li>In ${R} (${qsEsc(l.trigger_phase)}): choosing ${qsEsc(l.choice)}.</li><li>That sets the story fact <code>${qsEsc(l.fact)}</code>.</li><li>${F} waits for <code>${qsEsc(l.fact)} ${op(l)}</code> and fails as soon as it is true.</li>`
-  :`<li>In ${R} (${qsEsc(l.trigger_phase)}): ${t}.</li><li>That sets the story fact <code>${qsEsc(l.fact)}</code>.</li><li>${F} waits for <code>${qsEsc(l.fact)} ${op(l)}</code> and ${wd(l)} as soon as it is true.</li>`;
- return`<details class="qfwhy"><summary>Why?</summary><ol>${body}</ol>${ev}`};
-const bline=l=>{const none=qsState(l.failed)==='none';
- if(isC(l))return`Choosing ${qsEsc(l.choice)} in ${cn(l.failer,'red')} <span class="qfreg">(${rg(l.failer)})</span> fails ${cn(l.failed,'amber')} <span class="qfreg">(${rg(l.failed)})</span>. To keep ${nm(l.failed)}, ${qsEsc(l.safe)}.`;
- if(isU(l))return`${cn(l.failed,'amber')} fails at ${qsEsc(l.trigger_label)} unless you've ${qsEsc(l.condition)} first.`;
- return`${cn(l.failer,'red')} <span class="qfreg">(${rg(l.failer)})</span> ${l.effect==='Deactivate'?'closes':'fails'+(none?' or closes':'')} ${cn(l.failed,'amber')} <span class="qfreg">(${rg(l.failed)})</span> at ${qsEsc(l.trigger_label)}. Do ${nm(l.failed)} first.`};
+const dd=t=>t.replace(/\.{4,}/g,'...');                          // a name that ends in "..." followed by a full stop keeps three dots
+const evData=l=>`<details class="qfev"><summary>Game data (remaster files, full trace)</summary><p>Where this happens in the quest files: ${qsEsc(l.trigger_phase)}</p><ul>${evList(l.evidence)}</ul>${l.fact?`<p>Story fact: <code>${qsEsc(l.fact)}</code>${l.op?' '+op(l):''}</p>`:''}${l.premise?`<p>Reading used: ${qsEsc(l.premise)}.</p>`:''}<p>Whether the game ${wd(l)} a quest you have not started yet is unconfirmed.</p></details>`;
+const why=l=>{const t=l.trigger_label,F=nm(l.failed),R=nm(l.failer);
+ const body=l.kind==='journal_status'?`<li>In ${R}, at ${t}.</li><li>${qsEsc(cap(l.journal))}.</li><li>The game then ${wd(l)} ${F}.</li>`
+  :l.kind==='flow'?`<li>In ${R}, at ${t}.</li><li>${qsEsc(cap(l.flow))}.</li>`
+  :l.kind==='fails_unless_set'?`<li>In ${R}, at ${t}.</li><li>${F} is checked once, at that moment.</li><li>It ${wd(l)} unless you've ${qsEsc(l.condition)} first.</li>`
+  :l.kind==='choice'?`<li>In ${R}, choosing ${qsEsc(l.choice)}.</li><li>The game then fails ${F} as soon as it notices.</li>`
+  :`<li>In ${R}, at ${t}.</li><li>The game then ${wd(l)} ${F} as soon as it notices.</li>`;
+ return dd(`<details class="qfwhy"><summary>Why?</summary><ol>${body}</ol>${evData(l)}<p class="qfsrc">Source: remaster game files</p></details>`)};
+const regs=l=>rg(l.failer)===rg(l.failed)?['','']:[` <span class="qfreg">(${rg(l.failer)})</span>`,` <span class="qfreg">(${rg(l.failed)})</span>`];   // no region after a name when both quests are in the same one
+const tk=(t,l,c)=>t.replace(/\{failed\}/g,c?cn(l.failed,'amber'):nm(l.failed)).replace(/\{failer\}/g,c?cn(l.failer,'red'):nm(l.failer));
+const bline=l=>{const none=qsState(l.failed)==='none',[a,b]=regs(l);
+ if(l.banner_text)return dd(tk(qsEsc(l.banner_text),l,true));
+ if(isC(l))return dd(`Choosing ${qsEsc(l.choice)} in ${cn(l.failer,'red')}${a} fails ${cn(l.failed,'amber')}${b}. To keep ${nm(l.failed)}, ${qsEsc(l.safe)}.`);
+ if(isU(l))return dd(`${cn(l.failed,'amber')} fails at ${qsEsc(l.trigger_label)} unless you've ${qsEsc(l.condition)} first.`);
+ return dd(`${cn(l.failer,'red')}${a} ${l.effect==='Deactivate'?'closes':'fails'+(none?' or closes':'')} ${cn(l.failed,'amber')}${b} at ${qsEsc(l.trigger_label)}. ${l.advice?qsEsc(l.advice):'Do '+nm(l.failed)+' first.'}`)};
 const gline=ls=>{const[m,u]=sp(ls),h=qsEsc(ls[0].trigger_gerund||cap(ls[0].trigger_label));return h+(m.length?` fails ${plural(nf(m),'open quest')}`+(u.length?`, and ${nf(u)} more unless you've ${qsEsc(ug(u))}.`:'.'):` fails ${plural(nf(u),'open quest')} unless you've ${qsEsc(ug(u))}.`)};
 const meta=g=>`${qsEsc(qsKindName(qq(g).t))} · ${rg(g)} · level ${qsLevelText(qq(g))} · ${QS_NAMES[qsState(g)]}`;
-const stepTxt=l=>qsEsc(l.trigger_phase.split(' > ').concat(isC(l)?'Choosing '+l.choice:cap(l.trigger_label)).join(' › '));
+const stepTxt=l=>qsEsc(isC(l)?'Choosing '+l.choice:cap(l.trigger_label));   // only the trigger; the phase path is in the Game data section
 const evList=ev=>ev.map(e=>`<li><code>${qsEsc(e.file.split('/').pop())}${e.block==null?'':' #'+e.block}</code> ${qsEsc(e.note)}</li>`).join('');
-const dep=l=>`<section class="qfdep" aria-label="${isC(l)?'Choosing '+qsEsc(l.choice)+' in '+nm(l.failer):nm(l.failer)} fails ${nm(l.failed)}">
-  <div class="qfcards"><div class="qfcard red"><div class="qflab">${isC(l)?'IF YOU CHOOSE':'IF YOU DO THIS'}</div><div class="qfbig">${isC(l)?qsEsc(l.choice.charAt(0).toUpperCase()+l.choice.slice(1)):nm(l.failer)}</div><div class="qfmeta">${isC(l)?'in '+nm(l.failer)+' · ':''}${meta(l.failer)}</div><button type="button" class="qfgo" data-go="${l.failer}">Go to quest ›</button></div>
+const gdata=(l,extra)=>`<details class="qfdata"><summary>Game data (remaster files, full trace)</summary>${extra||''}<p>Where this happens in the quest files: ${qsEsc(l.trigger_phase)}</p><ul>${evList(l.evidence)}</ul>${l.fact?`<p>Story fact: <code>${qsEsc(l.fact)}</code>${l.op?' '+op(l):''}</p>`:''}${l.premise?`<p>Reading used: ${qsEsc(l.premise)}.</p>`:''}<p>Whether the game ${wd(l)} a quest you have not started yet is unconfirmed.</p></details>`;
+const safeOf=l=>l.safe_text?tk(qsEsc(l.safe_text),l):isC(l)?`This is a choice, not an order: no quest can be done first to avoid it. To keep ${nm(l.failed)}, ${qsEsc(l.safe)}.`:isU(l)?`${uS(l)} To keep it, do this before ${qsEsc(l.trigger_label)}.`:`Safe order: finish ${nm(l.failed)}, then continue ${nm(l.failer)}.${qsState(l.failed)==='none'?' If you haven\'t started it, the game may close it at this step instead.':''}`;
+const dep=l=>dd(`<section class="qfdep" aria-label="${isC(l)?'Choosing '+qsEsc(l.choice)+' in '+nm(l.failer):nm(l.failer)} fails ${nm(l.failed)}">
+  <div class="qfcards"><div class="qfcard red"><div class="qflab">${isC(l)?'IF YOU CHOOSE':'IF YOU DO THIS'}</div><div class="qfbig">${isC(l)?qsEsc(cap(l.choice)):nm(l.failer)}</div><div class="qfmeta">${isC(l)?'in '+nm(l.failer)+' · ':''}${meta(l.failer)}</div><button type="button" class="qfgo" data-go="${l.failer}">Go to quest ›</button></div>
   <div class="qfmid"><div class="qflab">AT THIS STEP</div><div class="qfstepn">${stepTxt(l)}</div><div class="qfarrow" aria-hidden="true">→</div></div>
   <div class="qfcard amber"><div class="qflab">THIS QUEST ${l.effect==='Deactivate'?'CLOSES':'FAILS'}</div><div class="qfbig">${nm(l.failed)}</div><div class="qfmeta">${meta(l.failed)}</div><button type="button" class="qfgo" data-go="${l.failed}">Go to quest ›</button></div></div>
-  <div class="qfsafe"><p>${isC(l)?`This is a choice, not an order: no quest can be done first to avoid it. To keep ${nm(l.failed)}, ${qsEsc(l.safe)}.`:l.kind==='fails_unless_set'?`${uS(l)} To keep ${nm(l.failed)}, make sure you've ${qsEsc(l.condition)} before this step.`:`Safe order: finish ${nm(l.failed)}, then continue ${nm(l.failer)}.`}${qsState(l.failed)==='none'&&!isC(l)&&!isU(l)?' If you haven\'t started it, the game may close it at this step instead.':''}${l.window?' '+qsEsc(l.window):''}</p>${isC(l)?'':`<button type="button" class="btn qffin" data-fin="${l.failed}">I finished it already</button>`}</div>
-  <details class="qfdata"><summary>Game data (remaster files, full trace)</summary><ul>${evList(l.evidence)}</ul>${l.premise?`<p>Reading used: ${qsEsc(l.premise)}.</p>`:''}<p>Whether the game ${wd(l)} a quest you have not started yet is unconfirmed.</p></details></section>`;
+  <div class="qfsafe"><p>${safeOf(l)}</p>${l.window?`<p class="qfwin">${qsEsc(l.window)}</p>`:''}${isC(l)?'':`<button type="button" class="btn qffin" data-fin="${l.failed}">I finished it already</button>`}</div>
+  ${gdata(l)}</section>`);
 // a group: the failer and the step once, the failed quests as a list
 function depG(ls){const l0=ls[0],sh=l0.evidence.filter(e=>e.s!=null),[m,u]=sp(ls),li=l=>`<li><b>${nm(l.failed)}</b><span class="qfmeta">${meta(l.failed)}</span>${isU(l)?`<span class="qfunl">${uS(l)}</span>`:''}<button type="button" class="qfgo" data-go="${l.failed}">Go to quest ›</button><button type="button" class="btn qffin" data-fin="${l.failed}">I finished it already</button></li>`;
  return`<section class="qfdep qfdepg" aria-label="${qsEsc(cap(l0.trigger_label))} fails ${plural(nf(ls),'open quest')}">
@@ -106,7 +111,7 @@ function depG(ls){const l0=ls[0],sh=l0.evidence.filter(e=>e.s!=null),[m,u]=sp(ls
   ${m.length?`<div class="qflab">THESE ${nf(m)} QUESTS ${m.some(l=>l.effect==='Deactivate')?'FAIL OR CLOSE':'FAIL'}</div><ul class="qfgl">${m.slice().sort(byLv).map(li).join('')}</ul>`:''}
   ${u.length?`<div class="qflab qfsubh">Fail unless done first (${nf(u)})</div><ul class="qfgl qfgu">${u.slice().sort(byLv).map(li).join('')}</ul>`:''}
   <div class="qfsafe"><p>Safe order: finish these quests, then continue ${nm(l0.failer)}.</p></div>
-  <details class="qfdata"><summary>Game data (remaster files, full trace)</summary><p>The step itself (shared by every quest above):</p><ul>${evList(sh)}</ul>${ls.map(l=>`<p><b>${nm(l.failed)}</b></p><ul>${evList(l.evidence.filter(e=>e.s==null))}</ul>`).join('')}${l0.premise?`<p>Reading used by some links: ${qsEsc(l0.premise)}.</p>`:''}<p>Whether the game fails a quest you have not started yet is unconfirmed.</p></details></section>`}
+  <details class="qfdata"><summary>Game data (remaster files, full trace)</summary><p>Where this happens in the quest files: ${qsEsc(l0.trigger_phase)}</p><p>The step itself (shared by every quest above):</p><ul>${evList(sh)}</ul>${ls.map(l=>`<p><b>${nm(l.failed)}</b></p><ul>${evList(l.evidence.filter(e=>e.s==null))}</ul>`).join('')}${l0.premise?`<p>Reading used by some links: ${qsEsc(l0.premise)}.</p>`:''}<p>Whether the game fails a quest you have not started yet is unconfirmed.</p></details></section>`}
 const lvk=q=>q.lv==null?1e9:q.lv,byLv=(a,b)=>lvk(qq(a.failed))-lvk(qq(b.failed))||qq(a.failed).n.localeCompare(qq(b.failed).n);
 function banner(L){const Lb=L.filter(l=>!isC(l)||qsState(l.failer)==='active'),E=groups(Lb),fl=nf(Lb);if(!E.length)return'';   // a choice shows on the banner only while its failer is active
  const msg=E.length===1?(E[0].length>=GROUP_MIN?gline(E[0]):bline(E[0][0])):`${fl} quest${fl>1?'s':''} will fail if you continue the quests marked red. Open the details to see what to do first.`;
@@ -154,7 +159,8 @@ function paint(){if(!A.links.length||!QS.data)return;obs.disconnect();try{
  let box=qsEl('qfPrompts'),bn=qsEl('qfBanner');if(!bn){bn=mk('div','qfbbox','');bn.id='qfBanner';qsEl('qsMiss').before(bn)}if(!box){box=mk('div','qfprompts','');box.id='qfPrompts';qsEl('qsMiss').before(box)}
  box.innerHTML=due().map(prompt).join('');wire(box);
  // the banner above Next up (so on every region tab and every view): one line, or a summary, and the details panel
- const bh=L.length?banner(L):'';if(bn.dataset.h!==bh){bn.dataset.h=bh;bn.innerHTML=bh;wireBanner(bn)}
+ const nu=new Set(qsNextUp().filter(q=>q.t==='main').map(q=>q.g)),LB=L.filter(l=>qsState(l.failer)==='active'||nu.has(l.failer)),bh=LB.length?banner(LB):'';/* v39.8: the banner and its panel only for a failer that is active or a main quest shown in Next up; every link stays in the tab and the rows */
+ if(bn.dataset.h!==bh){bn.dataset.h=bh;bn.innerHTML=bh;wireBanner(bn)}
  // region tabs: a red dot when the tab holds a quest that fails another, an amber one when it holds a quest at risk
  qsEl('qsRegs').querySelectorAll('.qsreg[data-r]').forEach(t=>{t.querySelectorAll('.qfdots').forEach(e=>e.remove());const k=t.dataset.r,r=L.some(l=>qq(l.failer).r===k),a=L.some(l=>qq(l.failed).r===k&&!isC(l));if(!r&&!a)return;
   const w=(r?'has a quest that fails another':'')+(r&&a?' and ':'')+(a?'has a quest at risk of failing':''),n=t.querySelector('.qsrn').textContent;

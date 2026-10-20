@@ -17,6 +17,7 @@ Every link has a `kind`:
   choice            a choice outcome in the failer; there is no "do it first"; needs `choice` (the option in plain words) and `safe` (the option that keeps the quest)
   journal_status    the failed quest fails on a journal state of the failer (no fact); needs `journal`
   flow              a Failure / Deactivate placed in the failer's own flow (no fact needed); needs `flow`
+`window`, `advice`, `safe_text` and `banner_text` (optional) are plain-English copy that replaces the generic "Do <failed> first" / safe-order / banner sentence ({failed} and {failer} stand for the quest names). Every user-facing string is checked: an id with an underscore, "phase" or a quest code (sq209, q504) is refused.
 `premise` (optional) is an evidence note: the comparison reads an absent value as 0 ("> 0" / "== 0"), see docs/QUESTS.md. `effect` is Failure or Deactivate (closes). Evidence items that
 three or more links share (the Isle of Mists setter) are stored once in `ev` and referenced by their index.
 """
@@ -67,7 +68,15 @@ def evidence_of(rec, who):
     return ev
 
 
+# every string a player reads: no fact id, quest-graph label or internal id in it (those belong to the Game data section: trigger_phase, evidence, premise)
+USER_FACING = ("trigger_label", "trigger_short", "trigger_gerund", "condition", "unless_group", "choice", "safe", "journal", "flow", "window", "advice", "safe_text", "banner_text")
+INTERNAL = re.compile(r"[A-Za-z0-9]+_[A-Za-z0-9_]+|\bphase\b|\b(?:sq|mq|mh|cg|q)\d+\b|\bw2\w*|\b\w+\.w2\w+", re.I)
+
+
 def check_wording(l, who):
+    for k in USER_FACING:
+        m = INTERNAL.search(str(l.get(k, "")))
+        if m: sys.exit("refusing %s: %s shows an internal name (%r): %r" % (who, k, m.group(0), l[k]))
     for k in ("trigger_label", "trigger_short", "trigger_phase"):
         if not str(l.get(k, "")).strip(): sys.exit("refusing %s: %s is empty" % (who, k))
     first = l["trigger_label"].split(" ")[0]
@@ -97,7 +106,8 @@ def convert(rec, quests):
     if op.get("query"): o["query"] = op["query"]
     link = dict(kind="fact", effect="Failure", failed_guid=rec["failed_guid"], failer_guid=rec["failer_guid"], fact=rec["fact"], op=o,
                 trigger_phase=rec.get("trigger_phase") or phases(rec), trigger_label=h["trigger_label"], trigger_short=h["trigger_short"], evidence=ev, engine_effect=eff)
-    if rec.get("window"): link["window"] = rec["window"]
+    for k in ("window", "advice", "safe_text", "banner_text"):
+        if rec.get(k): link[k] = rec[k]
     check_wording(link, who)
     return link
 
@@ -127,7 +137,8 @@ def convert_cov(rec, quests):
     for k in ("trigger_gerund", "condition", "unless_group", "choice", "safe", "journal", "flow"):
         if rec.get(k): link[k] = rec[k]
     if rec.get("premise"): link["premise"] = "; ".join(rec["premise"]) if isinstance(rec["premise"], list) else str(rec["premise"])
-    if rec.get("window") and kind == "fact" and rec.get("shipped"): link["window"] = rec["window"]
+    for k in ("advice", "safe_text", "banner_text"):                 # `window` of a coverage record is a technical note (when the wait is armed): not shipped
+        if rec.get(k): link[k] = rec[k]
     link["evidence"] = evidence_of(rec, who)
     link["engine_effect"] = "unconfirmed" if str(rec.get("engine_effect", "")).startswith("unconfirmed") else str(rec.get("engine_effect") or "unconfirmed")
     check_wording(link, who)
