@@ -13,8 +13,8 @@ answered, not counted). The tool stops when nothing is verified, when a verified
 
 Every link has a `kind`:
   fact              the failer's step sets a story fact; the failed quest waits for it and fails ("Do <failed> first")
-  fails_unless_set  the failed quest is tested once at the trigger and fails unless its own fact is already set (Brothers In Arms at the Isle of Mists portal prompt); needs `condition`
-  choice            a choice outcome in the failer; there is no "do it first"; needs `choice` (the option in plain words)
+  fails_unless_set  the failed quest is tested once at the trigger and fails unless its own fact is already set (Brothers In Arms at the Isle of Mists portal prompt); needs `condition` (what saves it, from its evidence) and `unless_group` (the shared phrase for the banner: "gathered allies")
+  choice            a choice outcome in the failer; there is no "do it first"; needs `choice` (the option in plain words) and `safe` (the option that keeps the quest)
   journal_status    the failed quest fails on a journal state of the failer (no fact); needs `journal`
   flow              a Failure / Deactivate placed in the failer's own flow (no fact needed); needs `flow`
 `premise` (optional) is an evidence note: the comparison reads an absent value as 0 ("> 0" / "== 0"), see docs/QUESTS.md. `effect` is Failure or Deactivate (closes). Evidence items that
@@ -29,12 +29,12 @@ OUT = ROOT / "data" / "QUEST_FAILS.json"
 GUID = re.compile(r"[0-9a-f]{32}")
 # our own wording per (failer guid, fact) for the records of the first list (`pairs`): what the player does, and a short name for it. A verified `pairs` record without a row here is refused.
 HUMAN = {
-    ("307d9fcade274740b37341fa6a6a76c7", "q401_gotten_uma"): dict(trigger_label="Talk to the stable guard at Crow's Perch", trigger_short="stable guard"),
-    ("e10a13b571218a46b0d37b0b9954be3f", "q206_party_started"): dict(trigger_label="Go through the gate of Kaer Trolde Keep to report to Crach", trigger_short="gates of Kaer Trolde Keep"),
+    ("307d9fcade274740b37341fa6a6a76c7", "q401_gotten_uma"): dict(trigger_label="talking to the stable guard at Crow's Perch", trigger_short="stable guard"),
+    ("e10a13b571218a46b0d37b0b9954be3f", "q206_party_started"): dict(trigger_label="going through the gate of Kaer Trolde Keep to report to Crach", trigger_short="gates of Kaer Trolde Keep"),
 }
 STATUSES = ("verified_gamefiles", "rejected", "candidate", "not_a_fail", "not_found")
 KINDS = ("fact", "fails_unless_set", "choice", "journal_status", "flow")
-KIND_NEEDS = {"fact": ("fact", "op"), "fails_unless_set": ("fact", "op", "condition"), "choice": ("fact", "op", "choice"), "journal_status": ("journal",), "flow": ("flow",)}
+KIND_NEEDS = {"fact": ("fact", "op"), "fails_unless_set": ("fact", "op", "condition", "unless_group"), "choice": ("fact", "op", "choice", "safe"), "journal_status": ("journal",), "flow": ("flow",)}
 EFFECTS = ("Failure", "Deactivate")
 SHARE_MIN = 3        # an evidence item used by this many links goes to the shared table
 
@@ -70,7 +70,7 @@ def evidence_of(rec, who):
 def check_wording(l, who):
     for k in ("trigger_label", "trigger_short", "trigger_phase"):
         if not str(l.get(k, "")).strip(): sys.exit("refusing %s: %s is empty" % (who, k))
-    if not l["trigger_label"][:1].isupper() or (l["trigger_label"].endswith(".") and not l["trigger_label"].endswith("...")): sys.exit("refusing %s: the trigger label is not a plain capitalised phrase without a full stop: %r" % (who, l["trigger_label"]))
+    if not l["trigger_label"][:1].islower() or (l["trigger_label"].endswith(".") and not l["trigger_label"].endswith("...")): sys.exit("refusing %s: the trigger label is not a lowercase noun phrase that reads after 'at', without a full stop: %r" % (who, l["trigger_label"]))
 
 
 def convert(rec, quests):
@@ -122,7 +122,7 @@ def convert_cov(rec, quests):
         link["fact"] = rec["fact"]; link["op"], used = norm_op(rec["op_original"], kind, who)
     if used and not rec.get("premise"): sys.exit("refusing %s: the comparison value is absent in the file and the record has no premise" % who)
     link.update(trigger_phase=rec.get("trigger_phase") or "", trigger_label=rec.get("trigger_label") or "", trigger_short=rec.get("trigger_short") or "")
-    for k in ("trigger_gerund", "condition", "choice", "journal", "flow"):
+    for k in ("trigger_gerund", "condition", "unless_group", "choice", "safe", "journal", "flow"):
         if rec.get(k): link[k] = rec[k]
     if rec.get("premise"): link["premise"] = "; ".join(rec["premise"]) if isinstance(rec["premise"], list) else str(rec["premise"])
     if rec.get("window") and kind == "fact" and rec.get("shipped"): link["window"] = rec["window"]
