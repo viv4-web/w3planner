@@ -1,0 +1,24 @@
+{
+ "link": "flow: q704_ft_goose_done fails Duck, Duck, Goosed!",
+ "kind": "flow",
+ "failed_guid": "d1e2e4dd1563e34c8bf3e6011176740f",
+ "failed_name": "Duck, Duck, Goosed!",
+ "failed_id": "q704_ft_goose",
+ "failer_guid": "c7aa58e42b11804c94661e0cb1603e11",
+ "failer_name": "Beyond Hill and Dale...",
+ "failer_id": "Q704B Fairy Land",
+ "fact": "q704_ft_goose_done",
+ "op": {
+  "func": "CF_GreaterEqual",
+  "value": 1
+ },
+ "effect": "Deactivate",
+ "setter_file": "dlc/bob/data/quests/main_quests/quest_files/q704b_fairy_tale/phases/q704_02_fairy_tale.w2phase",
+ "setter_block": 19,
+ "fail_file": "dlc/bob/data/quests/main_quests/quest_files/q704b_fairy_tale/phases/q704_02_fairy_tale.w2phase",
+ "fail_block": 23,
+ "trigger_phase": "Fairyland > Fountain",
+ "trigger_scene": null,
+ "status": "verified_gamefiles",
+ "engine_effect": "unconfirmed"
+}

@@ -9,6 +9,7 @@ journal block's Failure or Deactivate input fires. This tool keeps only what tha
   * a cutoff is kept only when a Failure / Deactivate input of a journal block is reachable from the test (that is how the spike finds them), and its fact is not a temporary
     toggle: facts with "pause", "unpause" or "failsafe" in the name are dropped (mq3026_race_pause, q602_pants_failsafe ...)
   * a story point that the spike derived "by default (no gate found)" is stored as unknown (no `s`)
+  * a gate may also be passed by an objective (`obj`: the objective guids, done in the save): the Isle of Mists portal prompt, v39.5
   * the cutoffs of the spike are merged into the gates of GATES below (the confirmed story points of no return) and each gate says when a save has passed it
 v35 adds two things, each from a file of the v35 spike (game files only, never committed), and stops when the file is missing or does not add up:
   * `u` on every quest with no story point: "ungated" (the v35 placement found no story gate for it: 157) or "unknown" (a gate exists that we cannot read yet: 34, the 3 "likely" ones included,
@@ -27,12 +28,19 @@ POINTS = [("p", "Prologue"), ("a", "Act I"), ("i", "Isle of Mists"), ("b", "Batt
 SP = {"Prologue": "p", "Act I free roam": "a", "Isle of Mists": "i", "Battle of Kaer Morhen": "b", "Act III": "3", "Epilogue": "e", "Hearts of Stone start": "h", "Blood and Wine start": "w"}
 TOGGLE = re.compile(r"pause|failsafe", re.I)
 # facts left out although a Failure / Deactivate input follows them: a state of the game, not a point of no return
-EXCLUDE = {"q601_geralt_has_demon_mark": "a Hearts of Stone state flag (the demon mark): it fails an objective of Q310, it is not a story gate"}
+EXCLUDE = {"q601_geralt_has_demon_mark": "a Hearts of Stone state flag (the demon mark): it fails an objective of Q310, it is not a story gate",
+           # v39.5: the only cutoff that rests on q310_yen_novigrad is mq3041 (Out On Your Arse!) at novigrad3. File evidence: its wait 199 (mq3041_showing_presence.w2phase) reads "q310_yen_novigrad == 0"
+           # (compare and value both absent: the designers' label says 0, and an absent value is 0), which the spike counted as "fires when set"; its other test (194) needs >= 1, but all three setters of the
+           # fact (patch_signal_phase_01.w2phase 404, q310_pregeels_new.w2phase 3283 and 3317) are exact resets to 0 (setExactValue, value absent) and no scene or script sets it: nothing in the files sets it to 1
+           "q310_yen_novigrad": "no setter sets it above 0 (patch_signal_phase_01 404, q310_pregeels_new 3283 and 3317 are exact resets) and the wait that reads it is '== 0': the novigrad3 cutoff of mq3041 has no support in the files"}
 # the gates: the spike's cutoff names -> one gate. lane b = the base game columns (x: 0 = left edge of Prologue, 1 = Act I, 2 = Isle of Mists, 3 = Battle, 4 = Act III, 5 = Epilogue, 6 = right edge),
 # lane w / h = the expansions, laid out by quest level (x = a level). `done`: the quests whose Success passes the gate; `next`: the quests that exist once it is passed (rule: docs/QUESTS.md).
 GATES = [
     dict(id="prologue", name="Leaving White Orchard", lane="b", x=1.0, cuts=["Prologue: White Orchard"], done=["Q002 Griffin hunt"], next=["Q101 Agent"]),
-    dict(id="isle", name="Isle of Mists", lane="b", x=2.0, cuts=["Isle of Mists: leaving for the Isle (q402_escort_completed)", "Isle of Mists: Brothers in Arms / Isle (internal facts)"], done=["Q402 Isle of Mists"], next=["Q403 Battle of Kaer Morhen"]),
+    dict(id="isle", name="Isle of Mists", lane="b", x=2.0, cuts=["Isle of Mists: leaving for the Isle (q402_escort_completed)", "Isle of Mists: Brothers in Arms / Isle (internal facts)"], done=["Q402 Isle of Mists"], next=["Q403 Battle of Kaer Morhen"],
+         # v39.5: the game fails the quests at the portal prompt (q402_escort_completed is set at q402_ciri.w2phase block 1047, after the objective "reach the Isle" is done), not when Q402 is done: the gate is
+         # passed as soon as that objective (guid below, an objective of Q402 Isle of Mists) is done in the save
+         obj=[("Q402 Isle of Mists", "d8eb33cf1cd71341a7b1bca458e99483")]),
     dict(id="battle", name="Battle of Kaer Morhen", lane="b", x=3.0, cuts=["Battle of Kaer Morhen"], done=["Q403 Battle of Kaer Morhen"], next=["Q110 Postbattle"]),
     dict(id="novigrad3", name="Act III: Novigrad (Q310)", lane="b", x=4.3, cuts=["Act III: Novigrad (Q310)"], done=["Q310 Ciri's Night Out"], next=["Q311 The Spiral"]),
     dict(id="skellige3", name="Act III: Skellige (Q210)", lane="b", x=4.55, cuts=["Act III: Skellige (Q210 starts)"], done=["Q210 Pre Canaris"], next=["Q501 Eredin"]),
@@ -159,6 +167,9 @@ def build(spike=SPIKE, placements=None, choices=None):
         # `code`: the quest code the gate is named by: in its name, else the code of the one quest whose Success passes it (v34.1: the gate key shows it); `real`: the one cutoff that is real (not a level of a rule)
         m = re.search(r"\((Q\d{3})\)", gt["name"]) or (re.match(r"(Q\d{3})", gt["done"][0]) if len(gt["done"]) == 1 else None)
         gate = dict(id=gt["id"], name=gt["name"], lane=gt["lane"], x=gt["x"], done=[id2g[i] for i in gt["done"]], next=[id2g[i] for i in gt["next"]])
+        for qid, og in gt.get("obj", []):
+            if og not in qinfo[id2g[qid]]["o"]: sys.exit("GATES %s: %s is not an objective of %s" % (gt["id"], og, qid))
+            gate.setdefault("obj", []).append(og)
         if m: gate["code"] = m.group(1)
         if gt.get("real"): gate["real"] = 1
         gates.append(gate)

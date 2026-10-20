@@ -1,0 +1,21 @@
+{
+ "link": "flow: toy storage conversation fails Amidst the Mill's Grist",
+ "kind": "flow",
+ "failed_guid": "0616dcea00b4144b97d66d56520fdc8a",
+ "failed_name": "Amidst the Mill's Grist",
+ "failed_id": "Q702 Water Mill",
+ "failer_guid": "9c1ad1b449b8de4d8159842367e88718",
+ "failer_name": "Where Children Toil, Toys Waste Away",
+ "failer_id": "Q702 Lair Of The Beast",
+ "fact": null,
+ "op": null,
+ "effect": "Failure",
+ "setter_file": "dlc/bob/data/quests/main_quests/q702_hunt.w2phase",
+ "setter_block": 75,
+ "fail_file": "dlc/bob/data/quests/main_quests/q702_hunt.w2phase",
+ "fail_block": 33,
+ "trigger_phase": "q702 - Hunt > Toy Storage",
+ "trigger_scene": null,
+ "status": "verified_gamefiles",
+ "engine_effect": "unconfirmed"
+}

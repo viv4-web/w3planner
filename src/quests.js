@@ -82,10 +82,10 @@ function qsRenderRegs(){const el=qsEl('qsRegs');
 const qsTitles=q=>QS.desc&&QS.desc[q.id]?QS.desc[q.id].o:null;   // objective titles are game text: in the lazy file, live build only
 function qsCurrent(q){const out=[];if(!QS.store.save)return out;const T=qsTitles(q);q.o.forEach((g,i)=>{if(QS.store.save.o[g]==='active')out.push(T?T[i]:null)});return out}   // null = an active objective whose title is not in this build
 // ---- story rules (v34: data/QUEST-RULES.json from the game's quest graphs): story point, gates ("fails at"), predecessors ----
-// A gate is a story point of no return. A save has PASSED a gate when a quest the gate names as "done" is Done or a quest it names as "next" exists (any state): docs/QUESTS.md.
+// A gate is a story point of no return. A save has PASSED a gate when a quest the gate names as "done" is Done, an objective it names as `obj` is done, or a quest it names as "next" exists (any state): docs/QUESTS.md.
 const qsRule=g=>QS.R&&QS.R.quests[g]||null;
 const qsGates=lane=>QS.R?QS.R.gates.filter(x=>x.lane===lane).sort((a,b)=>a.x-b.x):[];
-const qsPassed=gt=>gt.done.some(g=>qsState(g)==='done')||gt.next.some(g=>qsState(g)!=='none');
+const qsPassed=gt=>gt.done.some(g=>qsState(g)==='done')||(gt.obj||[]).some(g=>!!QS.store.save&&QS.store.save.o[g]==='done')||gt.next.some(g=>qsState(g)!=='none');   // v39.5: the Isle of Mists gate is passed at the portal prompt, which the save shows as one done objective of Q402
 const qsOpenState=s=>s==='none'||s==='active'||s==='inactive';
 const QS_SECTIONS=['p','a','i','b','3','e'];
 function qsSection(){if(!QS.R)return -1;let best=-1;QS_SECTIONS.forEach((k,i)=>{if((QS.R.enter[k]||[]).some(g=>qsState(g)!=='none'))best=i});return best}   // the highest story section with a quest in the save

@@ -1,0 +1,24 @@
+{
+ "link": "fact: q402_escort_completed fails For the Advancement of Learning",
+ "kind": "fact",
+ "failed_guid": "ddd5713ddef70240beecc5f8d026e213",
+ "failed_name": "For the Advancement of Learning",
+ "failed_id": "Q109 Wrapup",
+ "failer_guid": "5ce1c21a55b9cb4bb99706bfd11fa286",
+ "failer_name": "The Isle of Mists",
+ "failer_id": "Q402 Isle of Mists",
+ "fact": "q402_escort_completed",
+ "op": {
+  "func": "CF_Greater",
+  "value": 0
+ },
+ "effect": "Failure",
+ "setter_file": "quests/part_2/q402_ciri.w2phase",
+ "setter_block": 1047,
+ "fail_file": "quests/part_2/q109_wrapup.w2phase",
+ "fail_block": 234,
+ "trigger_phase": "before isle",
+ "trigger_scene": null,
+ "status": "verified_gamefiles",
+ "engine_effect": "unconfirmed"
+}

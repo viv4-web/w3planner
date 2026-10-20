@@ -1,0 +1,25 @@
+{
+ "link": "fact: q402_escort_completed fails A Matter of Life and Death",
+ "kind": "fact",
+ "failed_guid": "32105cdf52d0cf43b1426705b0578c5e",
+ "failed_name": "A Matter of Life and Death",
+ "failed_id": "SQ301 Triss",
+ "failer_guid": "5ce1c21a55b9cb4bb99706bfd11fa286",
+ "failer_name": "The Isle of Mists",
+ "failer_id": "Q402 Isle of Mists",
+ "fact": "q402_escort_completed",
+ "op": {
+  "func": "CF_GreaterEqual",
+  "value": 1,
+  "query": "QF_DoesExist"
+ },
+ "effect": "Failure",
+ "setter_file": "quests/part_2/q402_ciri.w2phase",
+ "setter_block": 1047,
+ "fail_file": "quests/sidequests/novigrad/sq301_triss.w2phase",
+ "fail_block": 5,
+ "trigger_phase": "before isle",
+ "trigger_scene": null,
+ "status": "verified_gamefiles",
+ "engine_effect": "unconfirmed"
+}
