@@ -407,6 +407,16 @@ function hoMerge(){const H=HANDOFF;if(!H.data&&!H.bad&&!H.big&&!H.stash)return;c
   catch(e){ok=false}
   if(!ok)msg.push('Your quest progress could not be brought over from the old address (the data was unreadable, or this browser blocks storage for the site).');
   else if(n)msg.push('Your quest progress was brought over from the old address.')}
- if(H.stash)msg.push('Re-import your save to restore your stash.');
- if(msg.length)notify(msg.join(' '))}
+ if(msg.length||H.stash)hoShow(msg,H.stash)}
+// v38: the notices stay on screen until the user closes them (x, or Esc); an ordinary notify() toast is not touched and does not hide them. The stash sentence keeps its text; "Re-import your save" opens the Import save dialog
+// (no button in the offline package, which hides Import save: the plain sentence is shown there).
+function hoShow(msg,stash){const n=document.getElementById('hoNotice'),m=document.getElementById('hoMsg');m.textContent=msg.join(' ');
+ if(stash){if(msg.length)m.append(' ');const sb=document.getElementById('savebtn');
+  if(sb&&!sb.hidden&&CFG.share!==false&&typeof impOpen==='function'){const a=document.createElement('button');a.type='button';a.className='holink';a.textContent='Re-import your save';a.onclick=()=>impOpen(a);m.append(a,' to restore your stash.')}
+  else m.append('Re-import your save to restore your stash.')}
+ n.hidden=false;document.body.classList.add('ho-open');document.documentElement.style.setProperty('--hoh',n.offsetHeight+'px')}
+function hoClose(){document.getElementById('hoNotice').hidden=true;document.body.classList.remove('ho-open')}
+document.getElementById('hoX').onclick=hoClose;
+document.addEventListener('keydown',e=>{const n=document.getElementById('hoNotice');if(e.key!=='Escape'||n.hidden)return;
+ if(n.contains(document.activeElement)||!document.querySelector('.impov:not([hidden]),.igov:not([hidden]),.skov:not([hidden]),#mutov:not([hidden])'))hoClose()});   // an open dialog takes its own Esc first
 hoMerge();

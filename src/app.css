@@ -98,3 +98,8 @@ header{justify-content:space-between}nav.site{margin-left:auto;gap:22px!importan
 .mfoot .btn{margin-left:14px;font-size:16px;padding:2px 12px}
 .share[hidden]{display:none}#imp{color:var(--ink)}.impmsg{width:100%;color:var(--dim);font-size:16px;min-height:1em}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:60;width:max-content;max-width:min(580px,calc(100vw - 24px));background:#0d0c0bf7;border:1px solid #8a6a36;box-shadow:0 10px 30px #000c;padding:10px 14px;display:flex;gap:12px;align-items:center;font-size:17px;line-height:1.3;color:#f1e8d6}.toast[hidden]{display:none}.toast .btn{flex:none;font-size:16px;padding:2px 12px}
+/* v38: the notices of the handoff from the old address stay until closed; above every overlay (z 85) and the Import save dialog; an ordinary toast moves up to make room */
+.honotice{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:88;width:max-content;max-width:min(580px,calc(100vw - 24px));box-sizing:border-box;background:#0d0c0bf7;border:1px solid #8a6a36;box-shadow:0 10px 30px #000c;padding:10px 8px 10px 14px;display:flex;gap:10px;align-items:flex-start;font-size:17px;line-height:1.3;color:#f1e8d6}.honotice[hidden]{display:none}
+.honotice .hox{flex:none;width:32px;height:32px;margin-top:-4px;padding:0;background:none;border:1px solid transparent;color:inherit;font:inherit;font-size:24px;line-height:1;cursor:pointer}.honotice .hox:hover{border-color:#8a6a36}.honotice .hox:focus-visible,.honotice .holink:focus-visible{outline:2px solid #d9b45a;outline-offset:2px}
+.honotice .holink{background:none;border:0;padding:0;font:inherit;color:#d9b45a;text-decoration:underline;cursor:pointer}
+body.ho-open .toast{bottom:calc(32px + var(--hoh,64px))}
