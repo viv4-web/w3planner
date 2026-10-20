@@ -1,0 +1,21 @@
+{
+ "link": "flow: the Empress ending fails Faithful Friend",
+ "kind": "flow",
+ "failed_guid": "59d91651fca6b74394519b36ec15f1a9",
+ "failed_name": "Faithful Friend",
+ "failed_id": "mq5004horse",
+ "failer_guid": "412b3b056ddbe141a6ecf4d658324494",
+ "failer_name": "Something Ends, Something Begins",
+ "failer_id": "Q505 Ciri Free",
+ "fact": null,
+ "op": null,
+ "effect": "Failure",
+ "setter_file": "quests/epilogues/q504_ciri_empress.w2phase",
+ "setter_block": 33,
+ "fail_file": "quests/epilogues/q504_ciri_empress.w2phase",
+ "fail_block": 58,
+ "trigger_phase": "go back",
+ "trigger_scene": null,
+ "status": "verified_gamefiles",
+ "engine_effect": "unconfirmed"
+}

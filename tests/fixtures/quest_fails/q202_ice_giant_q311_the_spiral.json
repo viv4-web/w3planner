@@ -1,0 +1,24 @@
+{
+ "link": "fact: q210_quest_start fails The Lord of Undvik",
+ "kind": "fact",
+ "failed_guid": "5c17378f52d9ff4d96c86b3fab4ae995",
+ "failed_name": "The Lord of Undvik",
+ "failed_id": "Q202 Ice Giant",
+ "failer_guid": "e7db086ad4dd7541bb018d543ecab021",
+ "failer_name": "Through Time and Space",
+ "failer_id": "Q311 The Spiral",
+ "fact": "q210_quest_start",
+ "op": {
+  "func": "CF_Equal",
+  "value": 1
+ },
+ "effect": "Failure",
+ "setter_file": "quests/part_3/quest_files/q210_precanaris/phases/q210_depart_novigrad.w2phase",
+ "setter_block": 7,
+ "fail_file": "quests/part_1/q202_giant.w2phase",
+ "fail_block": 2936,
+ "trigger_phase": "Hideout > Q210",
+ "trigger_scene": null,
+ "status": "verified_gamefiles",
+ "engine_effect": "unconfirmed"
+}

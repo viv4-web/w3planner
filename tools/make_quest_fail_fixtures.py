@@ -50,6 +50,10 @@ T = {
     ("Amidst the Mill's Grist", "Where Children Toil, Toys Waste Away", None): ("q702_hunt.w2phase", 75, "q702_hunt.w2phase", 33),
     ("The Warble of a Smitten Knight", "The Night of Long Fangs", "q704_long_night_starts"): ("q704_01_beginning.w2phase", 42, "sq701_tournament.w2phase", 4399),
     ("The Perks of Being a Jailbird", "Burlap is the New Stripe", "q705_stash_disabled"): ("q705_epilog.w2phase", 1204, "q705_epilog.w2phase", 1836),
+    ("A Frying Pan, Spick and Span", "On Thin Ice", "q501_naglfar_arrived"): ("q501_eredin.w2phase", 1268, "mq0004_locked_shed.w2phase", 191),
+    ("Precious Cargo", "On Thin Ice", "q501_naglfar_arrived"): ("q501_eredin.w2phase", 1268, "mq0002_missing_goods.w2phase", 508),
+    ("Faithful Friend", "Something Ends, Something Begins", None): ("q504_ciri_empress.w2phase", 33, "q504_ciri_empress.w2phase", 58),
+    ("The Lord of Undvik", "Through Time and Space", "q210_quest_start"): ("q210_depart_novigrad.w2phase", 7, "q202_giant.w2phase", 2936),
     ("Duck, Duck, Goosed!", "Beyond Hill and Dale...", "q704_ft_goose_done"): ("q704_02_fairy_tale.w2phase", 19, "q704_02_fairy_tale.w2phase", 23),
 }
 

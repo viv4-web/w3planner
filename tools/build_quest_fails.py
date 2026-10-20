@@ -29,8 +29,8 @@ OUT = ROOT / "data" / "QUEST_FAILS.json"
 GUID = re.compile(r"[0-9a-f]{32}")
 # our own wording per (failer guid, fact) for the records of the first list (`pairs`): what the player does, and a short name for it. A verified `pairs` record without a row here is refused.
 HUMAN = {
-    ("307d9fcade274740b37341fa6a6a76c7", "q401_gotten_uma"): dict(trigger_label="talking to the stable guard at Crow's Perch", trigger_short="stable guard"),
-    ("e10a13b571218a46b0d37b0b9954be3f", "q206_party_started"): dict(trigger_label="going through the gate of Kaer Trolde Keep to report to Crach", trigger_short="gates of Kaer Trolde Keep"),
+    ("307d9fcade274740b37341fa6a6a76c7", "q401_gotten_uma"): dict(trigger_label="the talk with the stable guard at Crow's Perch", trigger_short="stable guard"),
+    ("e10a13b571218a46b0d37b0b9954be3f", "q206_party_started"): dict(trigger_label="the gate of Kaer Trolde Keep, on the way to report to Crach", trigger_short="gates of Kaer Trolde Keep"),
 }
 STATUSES = ("verified_gamefiles", "rejected", "candidate", "not_a_fail", "not_found")
 KINDS = ("fact", "fails_unless_set", "choice", "journal_status", "flow")
@@ -70,7 +70,9 @@ def evidence_of(rec, who):
 def check_wording(l, who):
     for k in ("trigger_label", "trigger_short", "trigger_phase"):
         if not str(l.get(k, "")).strip(): sys.exit("refusing %s: %s is empty" % (who, k))
-    if not l["trigger_label"][:1].islower() or (l["trigger_label"].endswith(".") and not l["trigger_label"].endswith("...")): sys.exit("refusing %s: the trigger label is not a lowercase noun phrase that reads after 'at', without a full stop: %r" % (who, l["trigger_label"]))
+    first = l["trigger_label"].split(" ")[0]
+    if first.lower().endswith("ing"): sys.exit("refusing %s: the trigger label must be a noun phrase (it reads after 'at'), not start with an -ing verb: %r" % (who, l["trigger_label"]))
+    if l["trigger_label"].endswith(".") and not l["trigger_label"].endswith("..."): sys.exit("refusing %s: the trigger label has a full stop: %r" % (who, l["trigger_label"]))
 
 
 def convert(rec, quests):

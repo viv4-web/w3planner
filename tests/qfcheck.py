@@ -43,7 +43,7 @@ def data(check):
     FXD = ROOT / "tests" / "fixtures" / "quest_fails"; fxs = {f.name: json.loads(f.read_text(encoding="utf-8")) for f in sorted(FXD.glob("*.json"))}
     d = json.loads((ROOT / "data" / "QUEST_FAILS.json").read_text(encoding="utf-8")); L = expand(d)
     qs = {q["g"]: q for q in json.loads((ROOT / "data" / "QUESTS.json").read_text(encoding="utf-8"))["quests"]}
-    check("QUEST_FAILS.json: version 1, the keys v / links / candidates (/ ev), and %d links, one fixture each" % len(L), d["v"] == 1 and set(d) <= {"v", "links", "candidates", "ev"} and {"v", "links", "candidates"} <= set(d) and isinstance(d["candidates"], int) and d["candidates"] >= 0 and len(L) == len(fxs) == 39, [list(d), len(L), len(fxs)])
+    check("QUEST_FAILS.json: version 1, the keys v / links / candidates (/ ev), and %d links, one fixture each" % len(L), d["v"] == 1 and set(d) <= {"v", "links", "candidates", "ev"} and {"v", "links", "candidates"} <= set(d) and isinstance(d["candidates"], int) and d["candidates"] >= 0 and len(L) == len(fxs) == 43, [list(d), len(L), len(fxs)])
     key = lambda x: (x.get("failer_guid"), x.get("failed_guid"), x.get("fact"))
     check("every link of QUEST_FAILS.json has a fixture in tests/fixtures/quest_fails (and every fixture a link): %d of each" % len(fxs), {key(l) for l in L} == {key(x) for x in fxs.values()} and len({key(l) for l in L}) == len(L), sorted(fxs)[:3])
     check("QUEST_FAILS.json: shared evidence (`ev`): every index a link holds is an item of `ev`, every item of `ev` is used by 3 or more links, each is {file, block, note}", all(isinstance(e, dict) for l in L for e in l["evidence"]) and all(set(e) == {"file", "block", "note"} for e in d.get("ev", []))
@@ -56,17 +56,19 @@ def data(check):
               and qs[fx["failed_guid"]]["n"] == fx["failed_name"] and qs[fx["failer_guid"]]["n"] == fx["failer_name"], l.get("trigger_phase"))
         ev = l.get("evidence", [])
         lab = l.get("trigger_label", "")
-        check("%s: evidence has the fail block %d and the step block %d, every item is {file, block, note}, engine effect 'unconfirmed', a lowercase noun-phrase trigger label (reads after 'at') and a short name" % (name, fx["fail_block"], fx["setter_block"]),
-              {(e["file"], e["block"]) for e in ev} >= {(fx["fail_file"], fx["fail_block"]), (fx["setter_file"], fx["setter_block"])} and all(set(e) == {"file", "block", "note"} for e in ev) and l["engine_effect"] == "unconfirmed" and lab[:1].islower()
+        check("%s: evidence has the fail block %d and the step block %d, every item is {file, block, note}, engine effect 'unconfirmed', a noun-phrase trigger label that reads after 'at' (its first word does not end in -ing) and a short name" % (name, fx["fail_block"], fx["setter_block"]),
+              {(e["file"], e["block"]) for e in ev} >= {(fx["fail_file"], fx["fail_block"]), (fx["setter_file"], fx["setter_block"])} and all(set(e) == {"file", "block", "note"} for e in ev) and l["engine_effect"] == "unconfirmed" and not lab.split(' ')[0].lower().endswith('ing')
               and (not lab.endswith(".") or lab.endswith("...")) and l.get("trigger_short", "").strip() != "", [lab, len(ev)])
         need = {"fact": ("fact", "op"), "fails_unless_set": ("fact", "op", "condition"), "choice": ("fact", "op", "choice"), "journal_status": ("journal",), "flow": ("flow",)}[kind]
         check("%s: kind %s carries what it needs (%s) and an explicit comparison value" % (name, kind, ", ".join(need)), all(l.get(k) for k in need) and (not l.get("op") or isinstance(l["op"]["value"], int)), [kind, [k for k in need if not l.get(k)]])
         if fx.get("trigger_scene"): check("%s: the trigger scene %s is in the evidence" % (name, fx["trigger_scene"].split("/")[-1]), any(e["file"] == fx["trigger_scene"] for e in ev))
     from collections import Counter
     kc = Counter(l["kind"] for l in L)
-    check("QUEST_FAILS.json: the kinds (fact 29, fails_unless_set 4, choice 3, journal_status 1, flow 2), one Deactivate link (the others fail), 6 links with a premise note (an absent value read as 0), the three first links unchanged",
-          dict(kc) == {"fact": 29, "fails_unless_set": 4, "choice": 3, "journal_status": 1, "flow": 2} and [l["trigger_short"] for l in L if l["effect"] == "Deactivate"] == ["end of the fairy-tale quest"] and sum(bool(l.get("premise")) for l in L) == 6
+    check("QUEST_FAILS.json: the kinds (fact 32, fails_unless_set 4, choice 3, journal_status 1, flow 3), one Deactivate link (the others fail), 8 links with a premise note (an absent value read as 0), the three first links unchanged",
+          dict(kc) == {"fact": 32, "fails_unless_set": 4, "choice": 3, "journal_status": 1, "flow": 3} and [l["trigger_short"] for l in L if l["effect"] == "Deactivate"] == ["end of the fairy-tale quest"] and sum(bool(l.get("premise")) for l in L) == 8
           and {l["failer_guid"] + l["failed_guid"] for l in L} >= LEGACY, dict(kc))
+    check("QUEST_FAILS.json: all 3 choice links carry the one traced safe option 'send Keira to Kaer Morhen in For the Advancement of Learning' (the pause's success output), and no label starts with an -ing verb",
+          {l["safe"] for l in L if l["kind"] == "choice"} == {"send Keira to Kaer Morhen in For the Advancement of Learning"} and not any(l["trigger_label"].split(" ")[0].lower().endswith("ing") for l in L), [l.get("safe") for l in L if l["kind"] == "choice"])
     check("QUEST_FAILS.json: the wording is plain text, no game text (no quotation marks in the labels, conditions, choices, journal and flow sentences), and the failer of a choice is not the Isle of Mists",
           all(not re.search(r'["]', " ".join(str(l.get(k, "")) for k in ("trigger_label", "trigger_short", "condition", "choice", "journal", "flow", "premise"))) for l in L) and all(l["failer_guid"] != "5ce1c21a55b9cb4bb99706bfd11fa286" for l in L if l["kind"] == "choice"))
     cf = ROOT / "data" / "QUEST_FAILS.candidates.json"
@@ -74,10 +76,10 @@ def data(check):
         C = json.loads(cf.read_text(encoding="utf-8")); P = C["pairs"]; V = C["coverage"]
         left_p = sum(p["status"] == "candidate" for p in P); left_c = sum(p["status"] == "candidate" for p in V)
         check("QUEST_FAILS.json: `candidates` (%d) is what is left in the candidates file (%d pairs still candidates + %d coverage candidates; not_a_fail / not_found / rejected do not count)" % (d["candidates"], left_p, left_c),
-              d["candidates"] == left_p + left_c == 9 and all(p["status"] in ("verified_gamefiles", "rejected", "candidate") for p in P) and sum(p["status"] == "verified_gamefiles" for p in P) == 3
+              d["candidates"] == left_p + left_c == 8 and all(p["status"] in ("verified_gamefiles", "rejected", "candidate") for p in P) and sum(p["status"] == "verified_gamefiles" for p in P) == 3
               and all(str(p.get("rejection", "")).strip() for p in P if p["status"] == "rejected") and all(str(p.get("missing", "")).strip() for p in P if p["status"] == "candidate") and all(not p["gaps"] for p in P if p["status"] == "verified_gamefiles")
               and all(p["status"] in ("verified_gamefiles", "candidate", "not_a_fail", "not_found") for p in V) and all(not p.get("gaps") for p in V if p["status"] == "verified_gamefiles")
-              and sum(1 for p in V if p["status"] == "verified_gamefiles") == len(L) == 39 and len({p["checklist_entry"] for p in V}) == len(V))
+              and sum(1 for p in V if p["status"] == "verified_gamefiles") == len(L) == 43 and len({p["checklist_entry"] for p in V}) == len(V))
     check("the candidates file is not tracked (.gitignore)", "QUEST_FAILS.candidates.json" in (ROOT / ".gitignore").read_text())
 
 
@@ -119,7 +121,7 @@ def tool(check):
         check("build_quest_fails (CLI): a file with no verified record stops and writes nothing", r.returncode != 0 and not o.exists(), r.stderr[-200:])
     # --- v39.5: the kinds of the coverage list (`coverage`): validated per kind, unknown kinds refused, gaps and candidates stay out
     cov = {"checklist_entry": "x", "status": "verified_gamefiles", "failed_guid": THREAD, "found_failer": {"guid": UGLY}, "kind": "fact", "effect": "Failure", "fact": "q401_gotten_uma", "op_original": {"func": "CF_GreaterEqual", "value": 1},
-           "trigger_phase": "p", "trigger_label": "talking to somebody", "trigger_short": "somebody", "evidence": [{"file": "a.w2phase", "block": 1, "note": "n"}], "engine_effect": "unconfirmed: x", "gaps": []}
+           "trigger_phase": "p", "trigger_label": "the talk with somebody", "trigger_short": "somebody", "evidence": [{"file": "a.w2phase", "block": 1, "note": "n"}], "engine_effect": "unconfirmed: x", "gaps": []}
     ok = lambda r: (lambda: T.convert_cov(r, quests))
     def run(f):
         try: return f()
@@ -129,7 +131,7 @@ def tool(check):
         good = dict(cov, kind=kind, **extra); bad = {k: v for k, v in good.items() if k != missing}
         check("build_quest_fails: kind %s is accepted with its %s and refused without it" % (kind, missing), isinstance(run(ok(good)), dict) and run(ok(good))["kind"] == kind and isinstance(run(ok(good)).get(missing), str) and "needs %s" % missing in str(run(ok(bad))), [run(ok(bad))])
     for name, rec, word in (("an unknown kind", dict(cov, kind="magic"), "unknown kind"), ("an effect that is neither Failure nor Deactivate", dict(cov, effect="Success"), "effect"), ("a gap", dict(cov, gaps=["x"]), "gaps are not empty"), ("a candidate status", dict(cov, status="candidate"), "status"),
-                            ("an unknown GUID", dict(cov, found_failer={"guid": "0" * 32}), "not a quest"), ("no evidence", dict(cov, evidence=[]), "no evidence"), ("a label with a full stop", dict(cov, trigger_label="talking to somebody."), "trigger label"), ("a capitalised label (it must read after 'at')", dict(cov, trigger_label="Talking to somebody"), "lowercase noun phrase"),
+                            ("an unknown GUID", dict(cov, found_failer={"guid": "0" * 32}), "not a quest"), ("no evidence", dict(cov, evidence=[]), "no evidence"), ("a label with a full stop", dict(cov, trigger_label="the talk with somebody."), "full stop"), ("a label that starts with an -ing verb (it must read after 'at')", dict(cov, trigger_label="talking to somebody"), "noun phrase"),
                             ("no short name", dict(cov, trigger_short=""), "trigger_short"), ("an absent value and no premise", dict(cov, op_original={"func": "CF_Greater", "value": None}), "no premise")):
         r = run(ok(rec)); check("build_quest_fails: a coverage record with %s is refused (%s)" % (name, word), isinstance(r, str) and word in r, r)
     p = run(ok(dict(cov, op_original={"func": "CF_Greater", "value": None}, premise=["absent value reads 0"])))
@@ -171,25 +173,25 @@ def run(b, base, check, label):
     Q.until(pg, "!!document.querySelector('.qfbanner')")
     # --- state 1: both open -> red + amber
     ban = E("[...document.querySelectorAll('.qfbrow p')].map(p=>p.textContent.trim().replace(/\\s+/g,' '))")
-    check("%s: Ugly Baby active and Following the Thread NOT started: the banner reads '... fails or closes Following the Thread (Novigrad) at talking to the stable guard at Crow's Perch. Do Following the Thread first.' (%s)" % (label, ban),
-          ban == ["Ugly Baby (Kaer Morhen) fails or closes Following the Thread (Novigrad) at talking to the stable guard at Crow's Perch. Do Following the Thread first."], ban)
+    check("%s: Ugly Baby active and Following the Thread NOT started: the banner reads '... fails or closes Following the Thread (Novigrad) at the talk with the stable guard at Crow's Perch. Do Following the Thread first.' (%s)" % (label, ban),
+          ban == ["Ugly Baby (Kaer Morhen) fails or closes Following the Thread (Novigrad) at the talk with the stable guard at Crow's Perch. Do Following the Thread first."], ban)
     col = E("[getComputedStyle(document.querySelector('.qfbanner .qfn.red')).color,getComputedStyle(document.querySelector('.qfbanner .qfn.amber')).color,document.querySelector('.qfbanner .qfn.red').textContent,document.querySelector('.qfbanner .qfn.amber').textContent]")
     check("%s: the quest names in the banner are in the red and amber colours (%s)" % (label, col), col == ["rgb(255, 138, 128)", "rgb(240, 180, 82)", "Ugly Baby", "Following the Thread"], col)
     row = E("""(()=>{const w=document.querySelector('.qsrow[data-g="%s"]').closest('.qfrow');return w&&{cls:w.className,chip:w.querySelector('.qfchip').textContent,step:w.querySelector('.qfstep').textContent,aria:w.querySelector('.qsrow').getAttribute('aria-label')}})()""" % UGLY)
     check("%s: List: the failer row is red (qf-fail) with the chip 'Fails 1 quest' and the line naming the step (%s)" % (label, row), row and "qf-fail" in row["cls"] and row["chip"] == "Fails 1 quest"
-          and row["step"] == "› Talking to the stable guard at Crow's Perch — Following the Thread fails here" and "fails 1 open quest" in row["aria"], row)
+          and row["step"] == "› The talk with the stable guard at Crow's Perch — Following the Thread fails here" and "fails 1 open quest" in row["aria"], row)
     pg.click('.qsreg[data-r="no"]'); pg.wait_for_timeout(150)
     row = E("""(()=>{const w=document.querySelector('.qsrow[data-g="%s"]').closest('.qfrow');return w&&{cls:w.className,chip:w.querySelector('.qfchip').textContent,step:w.querySelector('.qfstep').textContent,
       sum:w.querySelector('details.qfwhy>summary').textContent,open:w.querySelector('details.qfwhy').open,evopen:w.querySelector('details.qfev').open,h:w.querySelector('details.qfwhy>summary').getBoundingClientRect().height,
       src:w.querySelector('.qfsrc').textContent,chain:w.querySelector('details.qfwhy ol').textContent}})()""" % THREAD)
     check("%s: List: the at-risk row is amber (qf-risk) with the chip 'Do before Ugly Baby', the trigger line and a real <details> 'Why?' (closed, 44 px summary) (%s)" % (label, {k: row[k] for k in ("cls", "chip", "step", "sum", "open")}),
-          row and "qf-risk" in row["cls"] and row["chip"] == "Do before Ugly Baby" and row["step"] == "Fails at › Talking to the stable guard at Crow's Perch in Ugly Baby." and row["sum"] == "Why?" and not row["open"] and row["h"] >= 44, row)
+          row and "qf-risk" in row["cls"] and row["chip"] == "Do before Ugly Baby" and row["step"] == "Fails at › The talk with the stable guard at Crow's Perch in Ugly Baby." and row["sum"] == "Why?" and not row["open"] and row["h"] >= 44, row)
     check("%s: 'Why?' holds a plain-language chain, the evidence collapsed inside it and 'Source: remaster game files' (%s)" % (label, row["chain"][:60]), "q401_gotten_uma" in row["chain"] and not row["evopen"] and row["src"] == "Source: remaster game files", row)
     E("document.querySelector('details.qfwhy>summary').click()"); pg.wait_for_timeout(100)
     check("%s: the disclosure opens by click and the evidence list lists the files and blocks (458, 456, 3582)" % label, E("(()=>{const d=document.querySelector('details.qfwhy');d.querySelector('.qfev>summary').click();const t=d.querySelector('.qfev').textContent;return d.open&&['#458','#456','#3582'].every(x=>t.includes(x))})()"))
     # --- Next up
     nx = E("""(()=>{const r={};document.querySelectorAll('#qsNext .qscard').forEach(c=>{r[c.dataset.g]={cls:c.className,txt:c.textContent}});return r})()""")
-    check("%s: Next up: a red caution box on the Ugly Baby card and an amber chip on the Following the Thread card (%s)" % (label, [k[:6] for k in nx]), UGLY in nx and THREAD in nx and "qf-fail" in nx[UGLY]["cls"] and "Careful: talking to the stable guard at Crow's Perch fails Following the Thread." in nx[UGLY]["txt"]
+    check("%s: Next up: a red caution box on the Ugly Baby card and an amber chip on the Following the Thread card (%s)" % (label, [k[:6] for k in nx]), UGLY in nx and THREAD in nx and "qf-fail" in nx[UGLY]["cls"] and "Careful: the talk with the stable guard at Crow's Perch fails Following the Thread." in nx[UGLY]["txt"]
           and "qf-risk" in nx[THREAD]["cls"] and "Do before Ugly Baby" in nx[THREAD]["txt"], nx)
     check("%s: Next up puts the amber quest before the quest that would fail it (%s)" % (label, list(nx)[:2]), list(nx).index(THREAD) < list(nx).index(UGLY))
     # Next up only pushes the amber quest once the failer is active: a fresh player (Ugly Baby not started) keeps the usual Next up, the red and amber marks still show in the List
@@ -209,7 +211,7 @@ def run(b, base, check, label):
     check("%s: Timeline: the Ugly Baby marker has the red ring (qf-fail) and says 'fails 1 open quest' in its label (%s)" % (label, dot), dot and "qf-fail" in dot["cls"] and "fails 1 open quest" in dot["aria"], dot)
     pg.hover('.qsdot[data-g="%s"]' % UGLY); pg.wait_for_timeout(150)
     tip = E("(()=>{const t=document.getElementById('qsTip');return !t.hidden&&t.textContent})()")
-    check("%s: Timeline: the tooltip of the failer shows the sub-line '› Talking to the stable guard at Crow's Perch — Following the Thread fails here' (%s)" % (label, tip), tip and "› Talking to the stable guard at Crow's Perch — Following the Thread fails here" in tip, tip)
+    check("%s: Timeline: the tooltip of the failer shows the sub-line '› The talk with the stable guard at Crow's Perch — Following the Thread fails here' (%s)" % (label, tip), tip and "› The talk with the stable guard at Crow's Perch — Following the Thread fails here" in tip, tip)
     ratio(pg, '#qsTip .qfsub', "tooltip sub-line", check, label + " contrast")
     pg.mouse.move(2, 2)
     unp = E("""(()=>{const d=document.querySelector('.qsdot[data-g="%s"]');return d?{cls:d.className,aria:d.getAttribute('aria-label')}:null})()""" % THREAD)
@@ -302,7 +304,7 @@ def banner(b, base, check, label):
       go:[...p.querySelectorAll('.qfgo')].map(x=>[x.textContent,Math.round(x.getBoundingClientRect().height)]),fin:p.querySelector('.qffin').textContent,fh:Math.round(p.querySelector('.qffin').getBoundingClientRect().height),dd:p.querySelector('details.qfdata').open,
       red:p.querySelector('.qfcard.red .qflab').textContent,amber:p.querySelector('.qfcard.amber .qflab').textContent,n:p.querySelectorAll('.qfdep').length,ev:p.querySelector('details.qfdata li').textContent.length>10}})()""")
     check("%s: 'More details' opens the panel inline: the button reads 'Hide details' (aria-expanded=true), the red card IF YOU DO THIS, AT THIS STEP with the arrow, the amber card THIS QUEST FAILS (%s)" % (label, pn["lab"]), pn["lab"] == "Hide details" and pn["exp"] == "true" and pn["vis"] and pn["red"] == "IF YOU DO THIS"
-          and pn["amber"] == "THIS QUEST FAILS" and "AT THIS STEP" in pn["t"] and "Collect UMA › Stable Master › Talking to the stable guard at Crow's Perch" in pn["t"] and "→" in pn["t"], pn)
+          and pn["amber"] == "THIS QUEST FAILS" and "AT THIS STEP" in pn["t"] and "Collect UMA › Stable Master › The talk with the stable guard at Crow's Perch" in pn["t"] and "→" in pn["t"], pn)
     check("%s: the cards say 'type · region · level · state' and have a 44 px 'Go to quest ›' each (%s)" % (label, pn["go"]), "Main · Kaer Morhen · level 19 · Active" in pn["t"] and "Secondary · Novigrad · level 11 · Not started" in pn["t"] and pn["go"] == [["Go to quest ›", pn["go"][0][1]]] * 2 and pn["go"][0][1] >= 44, pn["go"])
     check("%s: under the cards: the safe-order sentence (with the not-started line), 'I finished it already' (44 px) and the collapsed 'Game data (remaster files, full trace)' with the evidence (%s)" % (label, pn["fin"]),
           "Safe order: finish Following the Thread, then continue Ugly Baby. If you haven't started it, the game may close it at this step instead." in pn["t"] and pn["fin"] == "I finished it already" and pn["fh"] >= 44 and not pn["dd"]
@@ -338,7 +340,7 @@ def banner(b, base, check, label):
     pg.close()
     pg, errs, reqs = Q.newpage(b, base, init=seed({UGLY: "active", THREAD: "active"})); E = pg.evaluate; Q.opened(pg, "km"); Q.until(pg, "!!document.querySelector('.qfbanner')")
     ban = E("document.querySelector('.qfbanner p').textContent.trim().replace(/\\s+/g,' ')")
-    check("%s: Following the Thread already started: no 'or closes' (%s)" % (label, ban), ban == "Ugly Baby (Kaer Morhen) fails Following the Thread (Novigrad) at talking to the stable guard at Crow's Perch. Do Following the Thread first.", ban)
+    check("%s: Following the Thread already started: no 'or closes' (%s)" % (label, ban), ban == "Ugly Baby (Kaer Morhen) fails Following the Thread (Novigrad) at the talk with the stable guard at Crow's Perch. Do Following the Thread first.", ban)
     # several links: one summary line, the panel lists them all
     E("""(()=>{const x=QS.data.quests.find(q=>q.id==='Q103 The Race'),d=JSON.parse(JSON.stringify(W3DATA.QUEST_FAILS)),l=d.links.find(l=>l.failer_guid==='%s'&&l.failed_guid==='%s');d.links=[l,Object.assign({},l,{failed_guid:x.g,fact:'other_fact'})];QF.init(d);qsRenderAll()})()""" % (UGLY, THREAD)); pg.wait_for_timeout(200)
     ml = E("[document.querySelector('.qfbanner p').textContent.trim(),document.querySelectorAll('#qfPanel .qfdep').length,document.querySelectorAll('#qsRegs .qfd.amber').length>0]")
@@ -358,21 +360,21 @@ def failures(b, base, check, label):
     cands = json.loads((ROOT / "data" / "QUEST_FAILS.json").read_text(encoding="utf-8"))["candidates"]
     pg, errs, reqs = Q.newpage(b, base, init=seed({}, quiet=False)); E = pg.evaluate; Q.opened(pg, "wo"); pg.fill("#lvl", "1"); E("pointsChanged()"); pg.wait_for_timeout(200)
     btn = E("(()=>{const x=document.getElementById('qsVFails'),l=document.getElementById('qsVList');return{t:x.textContent,hid:x.hidden,txt:x.innerText,after:l.nextElementSibling===x,h:Math.round(x.getBoundingClientRect().height)}})()")
-    check("%s: a fourth view button after List reads 'QUEST FAILURES · 39' (the number of verified links), 44 px (%s)" % (label, btn), not btn["hid"] and btn["t"] == "Quest failures · 39" and btn["txt"] == "QUEST FAILURES · 39" and btn["after"] and btn["h"] >= 40, btn)
+    check("%s: a fourth view button after List reads 'QUEST FAILURES · 43' (the number of verified links), 44 px (%s)" % (label, btn), not btn["hid"] and btn["t"] == "Quest failures · 43" and btn["txt"] == "QUEST FAILURES · 43" and btn["after"] and btn["h"] >= 40, btn)
     ratio(pg, "#qsVFails", "Quest failures button (not pressed)", check, label + " contrast")
     pg.click("#qsVFails"); pg.wait_for_timeout(250)
     ratio(pg, "#qsVFails", "Quest failures button (pressed)", check, label + " contrast")
     st = E("[document.getElementById('qsVFails').getAttribute('aria-pressed'),document.getElementById('qsVList').getAttribute('aria-pressed'),localStorage.getItem('w3p.quests.view'),QS.view,document.querySelectorAll('.qfrowx').length,getComputedStyle(document.querySelector('.qsregnav')).display]")
-    check("%s: the button stores its view in w3p.quests.view as 'fails', the region tabs are out of the way and the 39 links are listed (%s)" % (label, st), st[:5] == ["true", "false", "fails", "fails", 39] and st[5] == "none", st)
+    check("%s: the button stores its view in w3p.quests.view as 'fails', the region tabs are out of the way and the 43 links are listed (%s)" % (label, st), st[:5] == ["true", "false", "fails", "fails", 43] and st[5] == "none", st)
     row = E("""(()=>{const r=document.querySelector(__ROW),t=e=>r.querySelector(e).innerText.replace(/\\s+/g,' ').trim();return{h:document.querySelector('.qfht h2').textContent,p:document.querySelector('.qfht p').textContent,red:t('.qfblk.red'),mid:t('.qfblk.mid'),amber:t('.qfblk.amber'),st:t('.qfst'),stc:r.querySelector('.qfst').className,det:t('.qfdetb'),hide:document.querySelector('.qfhide').textContent.trim(),cb:document.getElementById('qfHide').checked}})()""")
     check("%s: level 1, nothing started: the row is there (the tab ignores region and level); header text and the four blocks (%s)" % (label, row["red"]), row["h"] == "Every quest that fails another" and row["p"] == "All regions, whatever your level or progress, sorted by the level of the quest that causes the fail. Only links confirmed from the remaster's game files."
-          and row["red"] == "IF YOU DO Ugly Baby Main · Kaer Morhen · level 19" and row["mid"] == "AT THIS STEP Collect UMA › Stable Master › Talking to the stable guard at Crow's Perch" and row["amber"] == "THIS FAILS Following the Thread Secondary · Novigrad"
+          and row["red"] == "IF YOU DO Ugly Baby Main · Kaer Morhen · level 19" and row["mid"] == "AT THIS STEP Collect UMA › Stable Master › The talk with the stable guard at Crow's Perch" and row["amber"] == "THIS FAILS Following the Thread Secondary · Novigrad"
           and row["st"] == "Open · plan for it" and "open" in row["stc"] and row["det"] == "Details ›" and row["hide"] == "Hide ones I've dealt with" and not row["cb"], row)
     for sel, what in (('.qfht h2, .qfht p, .qfhide', "header"), ('.qfblk.red, .qfblk.red .qflab, .qfblk.red .qfbig', "red block"), ('.qfblk.amber, .qfblk.amber .qflab, .qfblk.amber .qfbig', "amber block"), ('.qfblk.mid .qfstepn, .qfblk.mid .qflab, .qfdetb', "step block and Details"),
                       ('.qfst', "status chip"), ('.qfnote, .qfnote b', "footnotes")):
         ratio(pg, sel, what, check, label + " contrast")
     E("QS.region='sk';qsRenderView()"); pg.wait_for_timeout(100)
-    check("%s: the region tab makes no difference (Skellige selected: the row is still listed)" % label, E("document.querySelectorAll('.qfrowx').length") == 39)
+    check("%s: the region tab makes no difference (Skellige selected: the row is still listed)" % label, E("document.querySelectorAll('.qfrowx').length") == 43)
     # order across regions: failer level, then name (synthetic links, drawn from real quests of other regions and levels)
     order = E("""(()=>{const Q=QS.data.quests.filter(q=>q.lv!=null&&q.g!=='%s'&&q.g!=='%s'),by={};Q.forEach(q=>{(by[q.lv]=by[q.lv]||[]).push(q)});
       const lv=Object.keys(by).map(Number).sort((a,b)=>a-b).find(l=>l<19&&new Set(by[l].map(q=>q.r)).size>1&&by[l].length>=2);const same=by[lv].sort((a,b)=>a.n.localeCompare(b.n)),hi=Q.find(q=>q.lv>30&&q.r!==same[0].r),d=JSON.parse(JSON.stringify(W3DATA.QUEST_FAILS)),l0=d.links.find(l=>l.failer_guid==='%s'&&l.failed_guid==='%s');
@@ -387,7 +389,7 @@ def failures(b, base, check, label):
         got = E("[document.querySelector(__ROW+' .qfst').textContent,document.querySelector(__ROW+' .qfst').className.split(' ')[1],document.querySelectorAll('.qfrowx').length]"); keys = E("Object.keys(localStorage).sort().join()")
         pg.click("#qfHide"); pg.wait_for_timeout(150)
         n = E("[document.querySelectorAll('.qfrowx').length,document.getElementById('qfHide').checked,!!document.querySelector('.qfrowsx .qfnote'),document.activeElement.id]"); keys2 = E("Object.keys(localStorage).sort().join()")
-        check("%s: status %s: the chip says '%s'; 'Hide ones I've dealt with' %s the row (%s), visit-only: no storage key added" % (label, name, chip, "keeps" if vis else "hides", n), got == [chip, cls, 39] and n[0] == (1 if vis else 0) and n[1] and n[3] == "qfHide" and (vis or n[2]) and keys == keys2, [got, n, keys, keys2])
+        check("%s: status %s: the chip says '%s'; 'Hide ones I've dealt with' %s the row (%s), visit-only: no storage key added" % (label, name, chip, "keeps" if vis else "hides", n), got == [chip, cls, 43] and n[0] == (1 if vis else 0) and n[1] and n[3] == "qfHide" and (vis or n[2]) and keys == keys2, [got, n, keys, keys2])
         pg.close()
     # Details opens the dependency panel; Go to quest from it leaves the failures view for the List
     pg, errs, reqs = Q.newpage(b, base, init=seed({})); E = pg.evaluate; Q.opened(pg); pg.click("#qsVFails"); pg.wait_for_timeout(200)
@@ -429,8 +431,8 @@ def multi(b, base, check, label):
     pg.click(".qfmore"); pg.wait_for_timeout(100)
     pn = E("""(()=>{const p=document.getElementById('qfPanel');return{n:p.querySelectorAll('.qfdep').length,fails:[...p.querySelectorAll('.qfdep .qfcard.amber .qfbig')].map(e=>e.textContent).sort(),by:[...p.querySelectorAll('.qfdep .qfcard.red .qfbig')].map(e=>e.textContent),t:p.innerText.replace(/\\s+/g,' ')}})()""")
     check("%s: the panel lists every link (%s)" % (label, pn["fails"]), pn["n"] == 3 and pn["fails"] == ["Following the Thread", "The Cave of Dreams", "The Last Wish"] and sorted(pn["by"]) == ["King's Gambit", "Ugly Baby", "Ugly Baby"], pn)
-    check("%s: the Cave of Dreams block names the step and its time limit; the Last Wish block its limit (%s)" % (label, "Kaer Trolde"), "AT THIS STEP To Kaer Trolde Keep › Spawn Party › Going through the gate of Kaer Trolde Keep to report to Crach" in pn["t"]
-          and "Until part 2 of The Cave of Dreams is done (sq209_part_2_done)." in pn["t"] and "Until The Last Wish reaches its ending scenes (sq202_turn_off_security)." in pn["t"] and "AT THIS STEP Collect UMA › Stable Master › Talking to the stable guard at Crow's Perch" in pn["t"], pn["t"][:200])
+    check("%s: the Cave of Dreams block names the step and its time limit; the Last Wish block its limit (%s)" % (label, "Kaer Trolde"), "AT THIS STEP To Kaer Trolde Keep › Spawn Party › The gate of Kaer Trolde Keep, on the way to report to Crach" in pn["t"]
+          and "Until part 2 of The Cave of Dreams is done (sq209_part_2_done)." in pn["t"] and "Until The Last Wish reaches its ending scenes (sq202_turn_off_security)." in pn["t"] and "AT THIS STEP Collect UMA › Stable Master › The talk with the stable guard at Crow's Perch" in pn["t"], pn["t"][:200])
     dots = E("""(()=>{const o={};document.querySelectorAll('#qsRegs .qsreg').forEach(t=>{o[t.dataset.r]=[[...t.querySelectorAll('.qfd')].map(d=>d.className.replace('qfd ','')),t.getAttribute('aria-label')]});return o})()""")
     check("%s: region tabs with the real data: Kaer Morhen red, Novigrad amber, Skellige both (the failer King's Gambit and the at-risk Last Wish and Cave of Dreams), nothing else (%s)" % (label, {k: v[0] for k, v in dots.items() if v[0]}),
           dots["km"][0] == ["red"] and dots["no"][0] == ["amber"] and dots["sk"][0] == ["red", "amber"] and all(not v[0] for k, v in dots.items() if k not in ("km", "no", "sk"))
@@ -442,7 +444,7 @@ def multi(b, base, check, label):
     # one Skellige link
     pg, errs, _ = Q.newpage(b, base, init=seed({UGLY: "done", Q206: "active", SQ202: "done"}, quiet=False)); E = pg.evaluate; Q.opened(pg, "sk"); Q.until(pg, "!!document.querySelector('.qfbanner')"); E(ONLY3); pg.wait_for_timeout(250)
     t = E("document.querySelector('.qfbrow p').textContent.trim().replace(/\\s+/g,' ')")
-    check("%s: one link left (King's Gambit): %s" % (label, t), t == "King's Gambit (Skellige) fails or closes The Cave of Dreams (Skellige) at going through the gate of Kaer Trolde Keep to report to Crach. Do The Cave of Dreams first.", t)
+    check("%s: one link left (King's Gambit): %s" % (label, t), t == "King's Gambit (Skellige) fails or closes The Cave of Dreams (Skellige) at the gate of Kaer Trolde Keep, on the way to report to Crach. Do The Cave of Dreams first.", t)
     pr = E("[...document.querySelectorAll('.qfprompt p')].map(p=>p.textContent)")
     check("%s: Ugly Baby done with Following the Thread still open: its prompt shows (%s)" % (label, pr), pr == ["Ugly Baby is done. Following the Thread would have failed along the way."], pr)
     pg.close()
@@ -486,31 +488,32 @@ def kinds(b, base, check, label):
       lab:g.innerText.replace(/\\s+/g,' '),names:[...g.querySelectorAll('.qfgl li b')].map(e=>e.textContent),unl:[...g.querySelectorAll('.qfunl')].map(e=>e.textContent),go:[...g.querySelectorAll('.qfgl .qfgo')].length,fin:[...g.querySelectorAll('.qfgl .qffin')].length}})()""")
     want = sorted(qs[g]["n"] for g in isle_failed)
     check("%s: the panel lists the group once (the failer card, the step, THESE 12 QUESTS FAIL, then 'Fail unless done first (4)', one line per quest with Go to quest and I finished it already), and the three choices on their own (IF YOU CHOOSE) (%s)" % (label, pn["lab"][:80]),
-          pn["groups"] == 1 and pn["li"] == 16 and sorted(pn["names"]) == want and pn["go"] == 16 and pn["fin"] == 16 and pn["singles"] == ["IF YOU CHOOSE"] * 3 and "THESE 12 QUESTS FAIL" in pn["lab"] and "Fail unless done first (4)" in pn["lab"] and pn["main"] == 12 and pn["sub"] == 4 and pn["lab"].index("THESE 12 QUESTS FAIL") < pn["lab"].index("Fail unless done first (4)") and "Accepting the portal prompt in The Isle of Mists" in pn["lab"]
+          pn["groups"] == 1 and pn["li"] == 16 and sorted(pn["names"]) == want and pn["go"] == 16 and pn["fin"] == 16 and pn["singles"] == ["IF YOU CHOOSE"] * 3 and "THESE 12 QUESTS FAIL" in pn["lab"] and "Fail unless done first (4)" in pn["lab"] and pn["main"] == 12 and pn["sub"] == 4 and pn["lab"].index("THESE 12 QUESTS FAIL") < pn["lab"].index("Fail unless done first (4)") and "The portal prompt in The Isle of Mists" in pn["lab"]
           and "Safe order: finish these quests, then continue The Isle of Mists." in pn["lab"], pn)
-    check("%s: the four Brothers In Arms lines each say their own condition ('Fails unless you've recruited allies in Skellige first.', Novigrad, 'got Emhyr's help in Nilfgaard', 'recruited Keira in Velen') (%s)" % (label, pn["unl"]), sorted(pn["unl"]) == sorted("Fails unless you've %s first." % c for c in ("recruited allies in Skellige", "recruited allies in Novigrad", "got Emhyr's help in Nilfgaard", "recruited Keira in Velen")), pn["unl"])
+    check("%s: the four Brothers In Arms lines start with the full quest name and give their own condition ('Brothers In Arms: Skellige fails at the portal prompt in The Isle of Mists unless you've recruited allies in Skellige first.', Novigrad, Nilfgaard 'got Emhyr's help in Nilfgaard', Velen 'recruited Keira in Velen') (%s)" % (label, pn["unl"]), sorted(pn["unl"]) == sorted("%s fails at the portal prompt in The Isle of Mists unless you've %s first." % (n_, c) for n_, c in (("Brothers In Arms: Skellige", "recruited allies in Skellige"), ("Brothers In Arms: Novigrad", "recruited allies in Novigrad"), ("Brothers In Arms: Nilfgaard", "got Emhyr's help in Nilfgaard"), ("Brothers In Arms: Velen", "recruited Keira in Velen"))), pn["unl"])
     ratio(pg, '.qfdepg, .qfdepg .qfgl li, .qfdepg .qfgl li b, .qfdepg .qfunl, .qfdepg .qfmeta', "grouped panel", check, label + " contrast")
     row = E("""(()=>{const w=document.querySelector('.qsrow[data-g="%s"]').closest('.qfrow');return w&&{chip:w.querySelector('.qfchip').textContent,steps:[...w.querySelectorAll('.qfstep')].map(x=>x.textContent)}})()""" % ISLE)
     check("%s: the Isle of Mists row: the chip 'Fails 16 quests' and ONE step line, not sixteen (split in the two parts) (%s)" % (label, row), row and row["chip"] == "Fails 16 quests" and row["steps"] == ["› Accepting the portal prompt in The Isle of Mists — 12 open quests fail here, and 4 more unless you've gathered allies"], row)
     pg.click("#qsVFails"); pg.wait_for_timeout(250)
     tb = E("""(()=>{const gs=[...document.querySelectorAll('.qfgrp')];return{n:document.querySelectorAll('.qfrowx').length,heads:gs.map(g=>g.querySelector('.qfgh').innerText.replace(/\\s+/g,' ')),rows:gs.map(g=>g.querySelectorAll('.qfrowx').length),
       isle:[...gs[1].querySelectorAll('.qfrowx .qfblk.amber .qfbig')].map(e=>e.textContent),sub:gs[1].querySelectorAll('.qfgsub').length,subtxt:(gs[1].querySelector('.qfgsub')||{}).textContent,subpos:[...gs[1].children].findIndex(c=>c.classList.contains('qfgsub')),lv:[...gs[1].querySelectorAll('.qfrowx .qfblk.amber .qfmeta')].map(e=>e.textContent.split('level ')[1]),choice:[...document.querySelectorAll('.qfrowx:not(.qfgrp .qfrowx) .qfblk.red .qflab')].map(e=>e.textContent).filter(t=>t==='IF YOU CHOOSE').length,
-      unl:gs[1].querySelectorAll('.qfblk.mid .qflab').length}})()""")
+      unl:gs[1].querySelectorAll('.qfblk.mid .qflab').length,sent:[...gs[1].querySelectorAll('.qfblk.mid .qfunl')].map(e=>e.textContent)}})()""")
     lv = lambda g: qs[g]["lv"] if qs[g]["lv"] is not None else 1e9
     unl = {l["failed_guid"] for l in LINKS if l["kind"] == "fails_unless_set"}
     exp = [qs[g]["n"] for g in sorted((g for g in isle_failed if g not in unl), key=lambda g: (lv(g), qs[g]["n"]))] + [qs[g]["n"] for g in sorted(unl, key=lambda g: (lv(g), qs[g]["n"]))]
-    check("%s: Quest failures: 39 rows, three shared-trigger headers (White Orchard 3, the Isle of Mists 16, Battle Preparations 3), each group's rows sorted by the failed quest's level then name (the Isle of Mists: 12 rows, then the sub-group 'Fail unless done first' with its 4); three choice rows stand on their own (%s)" % (label, tb["heads"]),
-          tb["n"] == 39 and len(tb["heads"]) == 3 and tb["rows"] == [3, 16, 3] and "The Incident at White Orchard" in tb["heads"][0] and "3 quests fail here" in tb["heads"][0] and "Accepting the portal prompt in The Isle of Mists" in tb["heads"][1] and "12 quests fail here, 4 more unless done first" in tb["heads"][1] and tb["sub"] == 1 and tb["subtxt"] == "Fail unless done first" and tb["subpos"] == 1 + 12
+    check("%s: Quest failures: 43 rows, four shared-trigger headers (White Orchard 3, the Isle of Mists 16, Battle Preparations 3, On Thin Ice 4), each group's rows sorted by the failed quest's level then name (the Isle of Mists: 12 rows, then the sub-group 'Fail unless done first' with its 4); three choice rows stand on their own (%s)" % (label, tb["heads"]),
+          tb["n"] == 43 and len(tb["heads"]) == 4 and tb["rows"] == [3, 16, 3, 4] and "The Incident at White Orchard" in tb["heads"][0] and "3 quests fail here" in tb["heads"][0] and "The portal prompt in The Isle of Mists" in tb["heads"][1] and "12 quests fail here, 4 more unless done first" in tb["heads"][1] and tb["sub"] == 1 and tb["subtxt"] == "Fail unless done first" and tb["subpos"] == 1 + 12
           and "The start of Act III in Skellige" in tb["heads"][2] and tb["isle"] == exp and tb["choice"] == 3 and tb["unl"] == 4, tb)
+    check("%s: Quest failures: the four Brothers In Arms rows of the sub-group carry the full sentence, starting with the quest name (%s)" % (label, tb["sent"]), sorted(tb["sent"]) == sorted("%s fails at the portal prompt in The Isle of Mists unless you've %s first." % (n_, c) for n_, c in (("Brothers In Arms: Skellige", "recruited allies in Skellige"), ("Brothers In Arms: Novigrad", "recruited allies in Novigrad"), ("Brothers In Arms: Nilfgaard", "got Emhyr's help in Nilfgaard"), ("Brothers In Arms: Velen", "recruited Keira in Velen"))), tb["sent"])
     ratio(pg, '.qfgh, .qfgh .qfbig, .qfgh .qfmeta, .qfgh .qfstepn, .qfgn', "group header", check, label + " contrast")
     ratio(pg, '.qfgrp .qfblk.amber, .qfgrp .qfblk.amber .qfbig, .qfgrp .qfblk.amber .qfmeta, .qfgrp .qfunl', "group rows", check, label + " contrast")
     check("%s: no page error" % label, not errs, errs[:1])
     pg.close()
-    # --- phone: about 39 rows
+    # --- phone: about 43 rows
     pg, errs, _ = Q.newpage(b, base, w=390, h=844, mobile=True, init=seed({}, quiet=False)); E = pg.evaluate; Q.opened(pg); pg.tap("#qsVFails"); pg.wait_for_timeout(300)
     ph = E("""(()=>{const R=e=>e.getBoundingClientRect(),rows=[...document.querySelectorAll('.qfrowx')];return{n:rows.length,sx:document.documentElement.scrollWidth-innerWidth,out:rows.filter(r=>R(r).right>innerWidth+1).length,det:Math.min(...[...document.querySelectorAll('.qfdetb')].map(e=>Math.round(R(e).height))),
       heads:[...document.querySelectorAll('.qfgh')].every(h=>R(h).right<=innerWidth+1),h:Math.round(document.querySelector('.qfall').getBoundingClientRect().height)}})()""")
-    check("%s: phone (390 px), 39 rows with the three group headers: no sideways scroll, every row and header inside the screen, the Details buttons 44 px (%s)" % (label, ph), ph["n"] == 39 and ph["sx"] <= 1 and ph["out"] == 0 and ph["heads"] and ph["det"] >= 44, ph)
+    check("%s: phone (390 px), 43 rows with the four group headers: no sideways scroll, every row and header inside the screen, the Details buttons 44 px (%s)" % (label, ph), ph["n"] == 43 and ph["sx"] <= 1 and ph["out"] == 0 and ph["heads"] and ph["det"] >= 44, ph)
     pg.tap(".qfgrp .qfdetb"); pg.wait_for_timeout(150)
     ph = E("document.documentElement.scrollWidth-innerWidth")
     check("%s: phone: a grouped row's Details opens without a sideways scroll (%s)" % (label, ph), ph <= 1)
@@ -522,14 +525,14 @@ def kinds(b, base, check, label):
     pg, errs, _ = Q.newpage(b, base, init=seed({THREAD: "done"}, keep=[VELEN])); E = pg.evaluate; Q.opened(pg, "km"); Q.until(pg, "!!document.querySelector('.qfbanner')")
     ban = E("document.querySelector('.qfbrow p').textContent.trim().replace(/\\s+/g,' ')")
     check("%s: fails_unless_set, one link: '<Failed> (<region>) fails at the portal prompt in <failer> (<region>) unless you've <condition> first.' and no 'Do ... first' (%s)" % (label, ban),
-          re.fullmatch(r"Brothers In Arms: Velen \([^)]+\) fails at accepting the portal prompt in The Isle of Mists unless you've recruited Keira in Velen first\.", ban) is not None and "Do " not in ban, ban)
+          re.fullmatch(r"Brothers In Arms: Velen fails at the portal prompt in The Isle of Mists unless you've recruited Keira in Velen first\.", ban) is not None and "Do " not in ban, ban)
     pg.click(".qfmore"); pg.wait_for_timeout(100)
     t = E("[...document.querySelectorAll('#qfPanel .qfdep')].map(d=>d.innerText.replace(/\\s+/g,' '))")
     check("%s: its panel block: 'To keep Brothers In Arms: Velen, make sure you've recruited Keira in Velen before this step.' (and no choice blocks: their failers are not open) (%s)" % (label, len(t)),
           len(t) == 1 and "To keep Brothers In Arms: Velen, make sure you've recruited Keira in Velen before this step." in t[0] and "IF YOU DO THIS" in t[0], t)
     vel = rowinfo(pg, VELEN)
-    check("%s: the failed quest's row says 'Do before The Isle of Mists' and 'Fails at › Accepting the portal prompt in The Isle of Mists unless you've recruited Keira in Velen.' (%s)" % (label, vel and vel["chips"]),
-          vel and vel["chips"] == ["Do before The Isle of Mists"] and "Fails at › Accepting the portal prompt in The Isle of Mists unless you've recruited Keira in Velen." in vel["txt"], vel)
+    check("%s: the failed quest's row says 'Do before The Isle of Mists' and 'Fails at › The portal prompt in The Isle of Mists unless you've recruited Keira in Velen.' (%s)" % (label, vel and vel["chips"]),
+          vel and vel["chips"] == ["Do before The Isle of Mists"] and "Fails at › The portal prompt in The Isle of Mists unless you've recruited Keira in Velen." in vel["txt"], vel)
     check("%s: no page error" % label, not errs, errs[:1]); pg.close()
     # three choices live with the Isle group: the banner has the group only, the panel the group and the three choices, no 'do first' anywhere for them
     pg, errs, _ = Q.newpage(b, base, init=seed({THREAD: "done"}, keep=[VELEN, SQ101, Q109])); E = pg.evaluate; Q.opened(pg, "km"); Q.until(pg, "!!document.querySelector('.qfbanner')")
@@ -539,7 +542,7 @@ def kinds(b, base, check, label):
     t = E("[...document.querySelectorAll('#qfPanel .qfdep:not(.qfdepg)')].map(d=>d.innerText.replace(/\\s+/g,' '))")
     check("%s: but the panel has the three choice blocks: IF YOU CHOOSE, 'This is a choice, not an order: no quest can be done first to avoid it. To keep Brothers In Arms: Velen, <the safe option>.' (send Keira to Kaer Morhen in For the Advancement of Learning / don't fail the date with Keira in A Favor for a Friend), no 'Safe order', no 'I finished it already' (%s)" % (label, [c[:40] for c in t]),
           len(t) == 3 and all("IF YOU CHOOSE" in c and "This is a choice, not an order: no quest can be done first to avoid it. To keep Brothers In Arms: Velen, " in c and "make the other choice" not in c and "Safe order" not in c and "I finished it already" not in c and "first." not in c.replace("avoid it.", "") for c in t)
-          and sum("IF YOU CHOOSE To defeat Keira" in c and "send Keira to Kaer Morhen in For the Advancement of Learning." in c for c in t) == 1 and sum("IF YOU CHOOSE To fail the date with Keira" in c and "don't fail the date with Keira in A Favor for a Friend." in c for c in t) == 1
+          and sum("IF YOU CHOOSE To defeat Keira" in c and "send Keira to Kaer Morhen in For the Advancement of Learning." in c for c in t) == 1 and sum("IF YOU CHOOSE To fail the date with Keira" in c and "send Keira to Kaer Morhen in For the Advancement of Learning." in c for c in t) == 1
           and sum("IF YOU CHOOSE To let Keira leave for Radovid" in c and "send Keira to Kaer Morhen in For the Advancement of Learning." in c for c in t) == 1, t)
     vel = rowinfo(pg, VELEN)
     check("%s: Velen's row: the amber chip names only The Isle of Mists (a choice never says 'Do before'), and no line mentions the choices (%s)" % (label, vel and vel["chips"]), vel and vel["chips"] == ["Do before The Isle of Mists"] and "Choosing" not in vel["txt"], vel)
@@ -552,8 +555,8 @@ def kinds(b, base, check, label):
     # a choice is on the banner only while its failer is active: the Isle done, A Favor for a Friend active
     pg, errs, _ = Q.newpage(b, base, init=seed({THREAD: "done", ISLE: "done", SQ101: "active"}, keep=[VELEN, SQ101])); E = pg.evaluate; Q.opened(pg, "km"); Q.until(pg, "!!document.querySelector('.qfbanner')")
     ban = E("document.querySelector('.qfbrow p').textContent.trim().replace(/\\s+/g,' ')")
-    check("%s: choice, failer active: the banner says 'Choosing to fail the date with Keira in A Favor for a Friend (<region>) fails Brothers In Arms: Velen (<region>). To keep Brothers In Arms: Velen, don't fail the date with Keira in A Favor for a Friend.' with no 'Do ... first' (%s)" % (label, ban),
-          re.fullmatch(r"Choosing to fail the date with Keira in A Favor for a Friend \([^)]+\) fails Brothers In Arms: Velen \([^)]+\)\. To keep Brothers In Arms: Velen, don't fail the date with Keira in A Favor for a Friend\.", ban) is not None and "first" not in ban, ban)
+    check("%s: choice, failer active: the banner says 'Choosing to fail the date with Keira in A Favor for a Friend (<region>) fails Brothers In Arms: Velen (<region>). To keep Brothers In Arms: Velen, send Keira to Kaer Morhen in For the Advancement of Learning.' with no 'Do ... first' (%s)" % (label, ban),
+          re.fullmatch(r"Choosing to fail the date with Keira in A Favor for a Friend \([^)]+\) fails Brothers In Arms: Velen \([^)]+\)\. To keep Brothers In Arms: Velen, send Keira to Kaer Morhen in For the Advancement of Learning\.", ban) is not None and "first" not in ban, ban)
     row = rowinfo(pg, SQ101); v = rowinfo(pg, VELEN)
     check("%s: choice: the failer's row is red with the chip 'Fails 1 quest' and '› Choosing to fail the date with Keira — Brothers In Arms: Velen fails' (%s); Velen's row has no amber class" % (label, row and row["steps"]),
           row and "qf-fail" in row["cls"] and row["steps"] == ["› Choosing to fail the date with Keira — Brothers In Arms: Velen fails"] and row["chips"] == ["Fails 1 quest"] and (v is None or "qf-risk" not in v["cls"]), [row, v])
@@ -562,13 +565,13 @@ def kinds(b, base, check, label):
     check("%s: no page error" % label, not errs, errs[:1]); pg.close()
     pg, errs, _ = Q.newpage(b, base, init=seed({THREAD: "done", ISLE: "done"}, keep=[VELEN, SQ101])); E = pg.evaluate; Q.opened(pg, "km"); pg.wait_for_timeout(300)
     nb = E("!document.querySelector('.qfbanner')"); E("qsSetView('fails');qsRenderAll()"); pg.wait_for_timeout(200)
-    check("%s: choice, failer not started: no banner, but the Quest failures tab has its row" % label, nb and E("document.querySelectorAll('.qfrowx').length") == 39 and E("document.querySelectorAll('.qfrowx .qflab').length") > 0)
+    check("%s: choice, failer not started: no banner, but the Quest failures tab has its row" % label, nb and E("document.querySelectorAll('.qfrowx').length") == 43 and E("document.querySelectorAll('.qfrowx .qflab').length") > 0)
     pg.close()
     # --- journal_status, flow, a Deactivate link, a single fails_unless_set link: the existing sentence ('Do ... first') or 'closes'
-    for name, keep, rx in (("journal_status (The Soldier Statuette)", "The Soldier Statuette", r"Battle Preparations \([^)]+\) fails or closes The Soldier Statuette \([^)]+\) at meeting Avallac'h on the ship in Battle Preparations\. Do The Soldier Statuette first\."),
+    for name, keep, rx in (("journal_status (The Soldier Statuette)", "The Soldier Statuette", r"Battle Preparations \([^)]+\) fails or closes The Soldier Statuette \([^)]+\) at the meeting with Avallac'h on the ship in Battle Preparations\. Do The Soldier Statuette first\."),
                            ("flow (Amidst the Mill's Grist)", "Amidst the Mill's Grist", r"Where Children Toil, Toys Waste Away \([^)]+\) fails or closes Amidst the Mill's Grist \([^)]+\) at the toy storage conversation in Where Children Toil, Toys Waste Away\. Do Amidst the Mill's Grist first\."),
                            ("flow, Deactivate (Duck, Duck, Goosed!)", "Duck, Duck, Goosed!", r"Beyond Hill and Dale\.\.\. \([^)]+\) closes Duck, Duck, Goosed! \([^)]+\) at the end of the Beyond Hill and Dale\.\.\. quest\. Do Duck, Duck, Goosed! first\."),
-                           ("fact (Cabaret)", "Cabaret", r"The Isle of Mists \([^)]+\) fails or closes Cabaret \([^)]+\) at accepting the portal prompt in The Isle of Mists\. Do Cabaret first\.")):
+                           ("fact (Cabaret)", "Cabaret", r"The Isle of Mists \([^)]+\) fails or closes Cabaret \([^)]+\) at the portal prompt in The Isle of Mists\. Do Cabaret first\.")):
         pg, errs, _ = Q.newpage(b, base, init=seed({THREAD: "done"}, keep=[nm[keep]])); E = pg.evaluate; Q.opened(pg, "km"); Q.until(pg, "!!document.querySelector('.qfbanner')")
         ban = E("[...document.querySelectorAll('.qfbrow p')].map(p=>p.textContent.trim().replace(/\\s+/g,' '))")
         check("%s: %s: one banner line with the kind's sentence (%s)" % (label, name, ban), len(ban) == 1 and re.fullmatch(rx, ban[0]) is not None, ban)
@@ -578,7 +581,7 @@ def kinds(b, base, check, label):
         check("%s: %s: no page error" % (label, name), not errs, errs[:1]); pg.close()
     pg, errs, _ = Q.newpage(b, base, init=seed({THREAD: "done"}, keep=[nm["Brothers In Arms: Skellige"]])); E = pg.evaluate; Q.opened(pg, "km"); Q.until(pg, "!!document.querySelector('.qfbanner')")
     ban = E("document.querySelector('.qfbrow p').textContent.trim().replace(/\\s+/g,' ')")
-    check("%s: fails_unless_set (Skellige): '... fails at accepting the portal prompt in The Isle of Mists unless you've recruited allies in Skellige first.' (%s)" % (label, ban), "unless you've recruited allies in Skellige first." in ban and "Do " not in ban and ban.startswith("Brothers In Arms: Skellige ("), ban)
+    check("%s: fails_unless_set (Skellige): '... fails at accepting the portal prompt in The Isle of Mists unless you've recruited allies in Skellige first.' (%s)" % (label, ban), "unless you've recruited allies in Skellige first." in ban and "Do " not in ban and ban.startswith("Brothers In Arms: Skellige fails at the portal prompt in The Isle of Mists unless"), ban)
     pg.close()
 
 
@@ -609,5 +612,5 @@ def offline(b, off, check, label):
     pg.close()
     pg, errs, reqs = Q.newpage(b, off, init=seed({})); E = pg.evaluate; Q.opened(pg); pg.click("#qsVFails"); pg.wait_for_timeout(250)
     o = E("[document.getElementById('qsVFails').textContent,document.querySelectorAll('.qfrowx').length,document.querySelector(__ROW+' .qfst').textContent,localStorage.getItem('w3p.quests.view')]")
-    check("%s: offline: the Quest failures tab works (button count, the row, its status, the view stored) (%s)" % (label, o), o == ["Quest failures · 39", 39, "Open · plan for it", "fails"] and not errs, o)
+    check("%s: offline: the Quest failures tab works (button count, the row, its status, the view stored) (%s)" % (label, o), o == ["Quest failures · 43", 43, "Open · plan for it", "fails"] and not errs, o)
     pg.close()
