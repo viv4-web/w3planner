@@ -12,7 +12,7 @@ const css=`
 .qfwhy ol,.qfev ul{margin:0 0 6px;padding-left:22px}.qfwhy code{font-size:14px;color:inherit;background:#0006;padding:0 4px}.qfev{margin:0 0 6px}.qfev li{margin:3px 0;font-size:14px;word-break:break-word}.qfsrc{margin:0 0 6px;font-size:14px;opacity:.85}
 .qfcaution{display:block;margin-top:5px;padding:4px 8px;background:var(--qf-red-bg);border:1px solid var(--qf-red);border-radius:4px;color:var(--qf-ink-red);font-size:15px!important;font-style:normal!important;line-height:1.25}
 .qscard.qf-fail{border-color:var(--qf-red)}.qscard.qf-risk{border-color:var(--qf-amber)}.qscard .qfchip{margin-top:5px;align-self:flex-start;font-size:13px}
-.qsdot.qf-fail{box-shadow:0 0 0 2px var(--qf-red);border-radius:50%}.qsdot.qf-risk{outline:2px dashed var(--qf-amber);outline-offset:2px;border-radius:50%}
+.qfrow.qf-fail.qf-risk{background:var(--qf-red-bg);border-color:var(--qf-red);box-shadow:0 0 0 2px var(--qf-amber)}.qfrow.qf-fail.qf-risk>.qfextra{color:var(--qf-ink-red)}.qscard.qf-fail.qf-risk{box-shadow:0 0 0 2px var(--qf-amber)}.qsdot.qf-fail{box-shadow:0 0 0 2px var(--qf-red);border-radius:50%}.qsdot.qf-risk{outline:2px dashed var(--qf-amber);outline-offset:2px;border-radius:50%}
 .qfsub{display:block;font-size:15px}.qfsub.red{color:var(--qf-red-chip)}.qfsub.amber{color:var(--qf-amber)}
 .qfdet{display:flex;flex-direction:column;gap:8px;margin:8px 0}.qfbox{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 12px;border:2px solid;border-radius:6px;font-size:16px;line-height:1.3}.qfbox.red{background:var(--qf-red-bg);border-color:var(--qf-red);color:var(--qf-ink-red)}.qfbox.amber{background:var(--qf-amber-bg);border-color:var(--qf-amber);color:var(--qf-ink-amber)}
 .qfprompts:empty{display:none}.qfprompts{display:flex;flex-direction:column;gap:8px;margin:0 0 10px}
@@ -51,6 +51,7 @@ const op=l=>l.op.func.replace('CF_','').replace('GreaterEqual','≥').replace('G
 const live=()=>A.links.filter(l=>OPEN(qsState(l.failed))&&OPEN(qsState(l.failer)));           // both quests still open: red + amber
 const due=()=>A.links.filter(l=>qsState(l.failer)==='done'&&OPEN(qsState(l.failed))&&!A.gone.has(l.failer+l.failed));   // A is done, B was left open: ask
 const fails=g=>live().filter(l=>l.failer===g),risks=g=>live().filter(l=>l.failed===g);
+const say=(f,k)=>(f.length?', fails '+f.length+' open quest'+(f.length>1?'s':''):'')+(k.length?', at risk: do before '+k.map(l=>QS.byG.get(l.failer).n).join(', '):'');   // a quest can be both: it fails one quest and is at risk from another
 const by=g=>A.links.find(l=>l.failed===g&&qsState(g)==='failed'&&qsState(l.failer)==='done');   // B is failed and A is done: say who did it
 const step=l=>`› ${qsEsc(l.trigger_label)} — ${nm(l.failed)} fails here`;
 const chipF=n=>`<span class="qfchip red">Fails ${n} quest${n>1?'s':''}</span>`,chipR=ls=>`<span class="qfchip amber">Do before ${ls.map(l=>nm(l.failer)).join(', ')}</span>`;
@@ -65,7 +66,7 @@ const dep=l=>`<section class="qfdep" aria-label="${nm(l.failer)} fails ${nm(l.fa
   <div class="qfcards"><div class="qfcard red"><div class="qflab">IF YOU DO THIS</div><div class="qfbig">${nm(l.failer)}</div><div class="qfmeta">${meta(l.failer)}</div><button type="button" class="qfgo" data-go="${l.failer}">Go to quest ›</button></div>
   <div class="qfmid"><div class="qflab">AT THIS STEP</div><div class="qfstepn">${qsEsc(l.trigger_phase.split(' > ').concat(l.trigger_label).join(' › '))}</div><div class="qfarrow" aria-hidden="true">→</div></div>
   <div class="qfcard amber"><div class="qflab">THIS QUEST FAILS</div><div class="qfbig">${nm(l.failed)}</div><div class="qfmeta">${meta(l.failed)}</div><button type="button" class="qfgo" data-go="${l.failed}">Go to quest ›</button></div></div>
-  <div class="qfsafe"><p>Safe order: finish ${nm(l.failed)}, then continue ${nm(l.failer)}.${qsState(l.failed)==='none'?' If you haven\'t started it, the game may close it at this step instead.':''}</p><button type="button" class="btn qffin" data-fin="${l.failed}">I finished it already</button></div>
+  <div class="qfsafe"><p>Safe order: finish ${nm(l.failed)}, then continue ${nm(l.failer)}.${qsState(l.failed)==='none'?' If you haven\'t started it, the game may close it at this step instead.':''}${l.window?' '+qsEsc(l.window):''}</p><button type="button" class="btn qffin" data-fin="${l.failed}">I finished it already</button></div>
   <details class="qfdata"><summary>Game data (remaster files, full trace)</summary><ul>${l.evidence.map(e=>`<li><code>${qsEsc(e.file.split('/').pop())}${e.block==null?'':' #'+e.block}</code> ${qsEsc(e.note)}</li>`).join('')}</ul><p>Whether the game fails a quest you have not started yet is unconfirmed.</p></details></section>`;
 function banner(L){const fl=[...new Set(L.map(l=>l.failed))].length;
  const msg=L.length===1?bline(L[0]):`${fl} quest${fl>1?'s':''} will fail if you continue the quests marked red. Open the details to see what to do first.`;
@@ -115,15 +116,16 @@ function paint(){if(!A.links.length||!QS.data)return;obs.disconnect();try{
   t.append(mk('span','qfdots',(r?'<i class="qfd red"></i>':'')+(a?'<i class="qfd amber"></i>':'')));const o=t.dataset.t||(t.dataset.t=t.title);t.setAttribute('aria-label',n+', '+w.replace(' and has',' and')+', '+t.querySelector('small').textContent);t.title=o+' · '+w});
  // List rows: a card around the row with the chip, the step and the Why? disclosure
  view.querySelectorAll('.qsrow[data-g]').forEach(r=>{const g=r.dataset.g,f=fails(g),k=risks(g),b=by(g);if(!f.length&&!k.length&&!b)return;
-  const w=mk('div','qfrow'+(f.length?' qf-fail':k.length?' qf-risk':''),'');r.before(w);w.append(r);
-  const x=mk('div','qfextra',f.length?chipF(f.length)+f.map(l=>`<span class="qfstep">${step(l)}</span>`).join(''):k.length?chipR(k)+k.map(l=>`<span class="qfstep">Fails at › ${qsEsc(l.trigger_label)} in ${nm(l.failer)}.</span>`).join('')+k.map(why).join(''):`<span class="qfby">by ${nm(b.failer)} (${qsEsc(b.trigger_short)})</span>`);
-  w.append(x);if(f.length||k.length)r.setAttribute('aria-label',r.getAttribute('aria-label')+(f.length?', fails '+f.length+' open quest':', at risk: do before '+k.map(l=>QS.byG.get(l.failer).n).join(', ')))});
+  const w=mk('div','qfrow'+(f.length?' qf-fail':'')+(k.length?' qf-risk':''),'');r.before(w);w.append(r);
+  const x=mk('div','qfextra',(f.length?chipF(f.length)+f.map(l=>`<span class="qfstep">${step(l)}</span>`).join(''):'')+(k.length?chipR(k)+k.map(l=>`<span class="qfstep">Fails at › ${qsEsc(l.trigger_label)} in ${nm(l.failer)}.</span>`).join('')+k.map(why).join(''):'')+(!f.length&&!k.length?`<span class="qfby">by ${nm(b.failer)} (${qsEsc(b.trigger_short)})</span>`:''));
+  w.append(x);if(f.length||k.length)r.setAttribute('aria-label',r.getAttribute('aria-label')+say(f,k))});
  // dots (Level band, Timeline): a ring and the words in the label and the tooltip
  view.querySelectorAll('.qsdot[data-g]').forEach(d=>{const g=d.dataset.g,f=fails(g),k=risks(g);if(!f.length&&!k.length)return;
-  d.classList.add(f.length?'qf-fail':'qf-risk');d.setAttribute('aria-label',d.getAttribute('aria-label')+(f.length?', fails '+f.length+' open quest':', at risk: do before '+k.map(l=>QS.byG.get(l.failer).n).join(', ')))});
+  if(f.length)d.classList.add('qf-fail');if(k.length)d.classList.add('qf-risk');d.setAttribute('aria-label',d.getAttribute('aria-label')+say(f,k))});
  // Next up cards
  qsEl('qsNext').querySelectorAll('.qscard[data-g]').forEach(c=>{const g=c.dataset.g,f=fails(g),k=risks(g),s=c.querySelector('.qscn');if(!s||(!f.length&&!k.length))return;
-  c.classList.add(f.length?'qf-fail':'qf-risk');s.append(mk('span',f.length?'qfcaution':'qfchip amber',f.length?f.map(l=>`Careful: ${qsEsc(l.trigger_label)} fails ${nm(l.failed)}.`).join(' '):'Do before '+k.map(l=>nm(l.failer)).join(', ')))});
+  if(f.length)c.classList.add('qf-fail');if(k.length)c.classList.add('qf-risk');
+  if(f.length)s.append(mk('span','qfcaution',f.map(l=>`Careful: ${qsEsc(l.trigger_label)} fails ${nm(l.failed)}.`).join(' ')));if(k.length)s.append(mk('span','qfchip amber','Do before '+k.map(l=>nm(l.failer)).join(', ')))});
  // the detail panel of the selected quest
  const dt=qsEl('qsDetail'),g=QS.sel,m=dt.querySelector('.qsmeta');
  if(g&&m){const f=fails(g),k=risks(g),b=by(g),p=due().filter(l=>l.failed===g);

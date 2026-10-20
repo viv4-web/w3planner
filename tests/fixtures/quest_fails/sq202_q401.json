@@ -1,0 +1,24 @@
+{
+ "link": "q401_gotten_uma fails The Last Wish",
+ "failed_guid": "e19d8c03b676ce499748598b876ba7da",
+ "failed_name": "The Last Wish",
+ "failed_id": "SQ202 Yen",
+ "failer_guid": "307d9fcade274740b37341fa6a6a76c7",
+ "failer_name": "Ugly Baby",
+ "failer_id": "Q401 Konsylium",
+ "fact": "q401_gotten_uma",
+ "op": {
+  "func": "CF_GreaterEqual",
+  "value": 1,
+  "query": "QF_DoesExist"
+ },
+ "effect": "Failure",
+ "fail_file": "quests/sidequests/skellige/sq202_yen.w2phase",
+ "fail_block": 1213,
+ "setter_file": "quests/part_1/q401_konsylium.w2phase",
+ "setter_block": 3582,
+ "trigger_phase": "Collect UMA > Stable Master",
+ "trigger_scene": "quests/part_1/quest_files/q401_konsylium/scenes/q401_01_02_stablemaster_about_uma.w2scene",
+ "status": "verified_gamefiles",
+ "engine_effect": "unconfirmed"
+}

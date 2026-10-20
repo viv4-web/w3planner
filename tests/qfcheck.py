@@ -16,8 +16,14 @@ UGLY, THREAD = "307d9fcade274740b37341fa6a6a76c7", "9cf4eb23b5bfd24c94fbd8a2a640
 FX = ROOT / "tests" / "fixtures" / "quest_fails" / "sq106_q401.json"
 
 
-def seed(manual):
-    return "localStorage.setItem('w3p.quests.v1',JSON.stringify({v:1,manual:%s,save:null,changed:1}))" % json.dumps(manual)
+SQ202, Q206, SQ209 = "e19d8c03b676ce499748598b876ba7da", "e10a13b571218a46b0d37b0b9954be3f", "41135ec1f20a1d4aad85cabcea5a1c00"
+QUIET = {SQ202: "done", SQ209: "done"}      # the tests of the first link (SQ106 <- Q401) keep the other two links out of the way: their failed quests are done (nothing to warn, no prompt)
+
+
+def seed(manual, quiet=True):
+    m = dict(QUIET) if quiet else {}
+    m.update(manual)
+    return "window.__ROW=%s;localStorage.setItem('w3p.quests.v1',JSON.stringify({v:1,manual:%s,save:null,changed:1}))" % (json.dumps('.qfrowx[data-k="%s%s"]' % (UGLY, THREAD)), json.dumps(m))
 
 
 def tool_run(*args):
@@ -25,17 +31,27 @@ def tool_run(*args):
 
 
 def data(check):
-    fx = json.loads(FX.read_text(encoding="utf-8")); d = json.loads((ROOT / "data" / "QUEST_FAILS.json").read_text(encoding="utf-8")); L = d["links"]
+    FXD = ROOT / "tests" / "fixtures" / "quest_fails"; fxs = {f.name: json.loads(f.read_text(encoding="utf-8")) for f in sorted(FXD.glob("*.json"))}
+    d = json.loads((ROOT / "data" / "QUEST_FAILS.json").read_text(encoding="utf-8")); L = d["links"]
     qs = {q["g"]: q for q in json.loads((ROOT / "data" / "QUESTS.json").read_text(encoding="utf-8"))["quests"]}
-    l = L[0] if L else {}
-    check("QUEST_FAILS.json: version 1 and exactly one link, the verified SQ106 <- Q401 one of the fixture", d["v"] == 1 and len(L) == 1 and set(d) == {"v", "links", "candidates"} and isinstance(d["candidates"], int) and d["candidates"] >= 0, [x.get("fact") for x in L])
-    check("QUEST_FAILS.json: the link is the fixture's (failed and failer GUID, fact, comparison, trigger phase)", all(l.get(k) == fx[k] for k in ("failed_guid", "failer_guid", "fact", "op", "trigger_phase")) and fx["trigger_phase"] == "Collect UMA > Stable Master", l)
-    check("QUEST_FAILS.json: both GUIDs are quests of QUESTS.json (Following the Thread, Ugly Baby)", qs[l["failed_guid"]]["n"] == "Following the Thread" and qs[l["failer_guid"]]["n"] == "Ugly Baby", l)
-    ev = l["evidence"]
-    check("QUEST_FAILS.json: the evidence holds the fail block 458, the pause 456, the setter 3582 and the trigger scene of the fixture; the engine effect stays 'unconfirmed'",
-          {(e["file"].split("/")[-1], e["block"]) for e in ev} >= {("sq106_killbill.w2phase", 458), ("sq106_killbill.w2phase", 456), ("q401_konsylium.w2phase", 3582)} and any(e["file"] == fx["trigger_scene"] for e in ev)
-          and l["engine_effect"] == "unconfirmed" and all(set(e) == {"file", "block", "note"} for e in ev) and l["trigger_label"] == "Talk to the stable guard at Crow's Perch", l.get("engine_effect"))
-    check("QUEST_FAILS.json: the candidates file is not tracked (.gitignore) and the fixture says verified_gamefiles", "QUEST_FAILS.candidates.json" in (ROOT / ".gitignore").read_text() and fx["status"] == "verified_gamefiles")
+    check("QUEST_FAILS.json: version 1, the keys v / links / candidates, and %d links" % len(L), d["v"] == 1 and set(d) == {"v", "links", "candidates"} and isinstance(d["candidates"], int) and d["candidates"] >= 0 and len(L) == len(fxs) == 3, [list(d), len(L), list(fxs)])
+    key = lambda x: (x.get("failer_guid"), x.get("failed_guid"))
+    check("every link of QUEST_FAILS.json has a fixture in tests/fixtures/quest_fails (and every fixture a link): %s" % sorted(fxs), {key(l) for l in L} == {key(x) for x in fxs.values()} and len({key(l) for l in L}) == len(L), sorted(fxs))
+    for name, fx in fxs.items():
+        l = next((x for x in L if key(x) == key(fx)), {})
+        check("%s: the link is the fixture's (GUIDs, fact, comparison, trigger phase) and both GUIDs are quests of QUESTS.json (%s <- %s)" % (name, qs.get(fx["failed_guid"], {}).get("n"), qs.get(fx["failer_guid"], {}).get("n")),
+              all(l.get(k) == fx[k] for k in ("failed_guid", "failer_guid", "fact", "op", "trigger_phase")) and fx["failed_guid"] in qs and fx["failer_guid"] in qs and fx["status"] == "verified_gamefiles" and qs[fx["failed_guid"]]["n"] == fx["failed_name"] and qs[fx["failer_guid"]]["n"] == fx["failer_name"], l.get("trigger_phase"))
+        ev = l.get("evidence", [])
+        check("%s: evidence has the fail block %d, the setter block %d, every item is {file, block, note}, engine effect 'unconfirmed', a plain-English trigger label" % (name, fx["fail_block"], fx["setter_block"]),
+              {(e["file"], e["block"]) for e in ev} >= {(fx["fail_file"], fx["fail_block"]), (fx["setter_file"], fx["setter_block"])} and all(set(e) == {"file", "block", "note"} for e in ev) and l["engine_effect"] == "unconfirmed" and l["trigger_label"][:1].isupper() and not l["trigger_label"].endswith("."), [l.get("trigger_label"), len(ev)])
+        if fx["trigger_scene"]: check("%s: the trigger scene %s is in the evidence" % (name, fx["trigger_scene"].split("/")[-1]), any(e["file"] == fx["trigger_scene"] for e in ev))
+    cf = ROOT / "data" / "QUEST_FAILS.candidates.json"
+    if cf.exists():
+        P = json.loads(cf.read_text(encoding="utf-8"))["pairs"]; left = sum(p["status"] == "candidate" for p in P)
+        check("QUEST_FAILS.json: `candidates` (%d) is what is left in the candidates file (%d verified, %d rejected, %d candidate: every record has one of the three, a rejected one a reason, a candidate what is missing)" % (d["candidates"], len(L), sum(p["status"] == "rejected" for p in P), left),
+              d["candidates"] == left and len(P) == len(L) + sum(p["status"] == "rejected" for p in P) + left and all(p["status"] in ("verified_gamefiles", "rejected", "candidate") for p in P)
+              and all(str(p.get("rejection", "")).strip() for p in P if p["status"] == "rejected") and all(str(p.get("missing", "")).strip() for p in P if p["status"] == "candidate") and all(not p["gaps"] for p in P if p["status"] == "verified_gamefiles"))
+    check("the candidates file is not tracked (.gitignore)", "QUEST_FAILS.candidates.json" in (ROOT / ".gitignore").read_text())
 
 
 def tool(check):
@@ -63,6 +79,15 @@ def tool(check):
         check("build_quest_fails (CLI): two records, one verified and one candidate: only the verified one is written, and `candidates` is the number 1 (no names)", r.returncode == 0 and len(w.get("links", [])) == 1 and w["links"][0]["failed_guid"] == THREAD and w.get("candidates") == 1 and "1" * 32 not in o.read_text(), r.stderr[-200:])
         o.unlink(); r = tool_run("--candidates", str(c), "--out", str(o), "--include", "1" * 32)
         check("build_quest_fails (CLI): --include naming the candidate record stops and writes nothing", r.returncode != 0 and not o.exists() and "candidate" in r.stderr, r.stderr[-200:])
+        c.write_text(json.dumps({"pairs": [good, dict(cand, failed_guid="1" * 32), dict(cand, failed_guid="2" * 32, status="rejected", rejection="not a cause")]})); o.unlink(missing_ok=True); r = tool_run("--candidates", str(c), "--out", str(o))
+        w = json.loads(o.read_text()) if o.exists() else {}
+        check("build_quest_fails (CLI): verified + candidate + rejected: only the verified one is written; `candidates` counts only the one still being checked (a rejected record is not 'still being checked')", r.returncode == 0 and len(w.get("links", [])) == 1 and w.get("candidates") == 1, r.stderr[-200:])
+        c.write_text(json.dumps({"pairs": [good, dict(cand, status="rejected")]})); o.unlink(missing_ok=True); r = tool_run("--candidates", str(c), "--out", str(o))
+        check("build_quest_fails (CLI): a rejected record without a reason stops and writes nothing", r.returncode != 0 and not o.exists() and "without a reason" in r.stderr, r.stderr[-200:])
+        c.write_text(json.dumps({"pairs": [good, dict(cand, status="maybe")]})); r = tool_run("--candidates", str(c), "--out", str(o))
+        check("build_quest_fails (CLI): an unknown status stops", r.returncode != 0 and "unknown status" in r.stderr, r.stderr[-200:])
+        c.write_text(json.dumps({"pairs": [dict(good, gaps=["x"])]})); r = tool_run("--candidates", str(c), "--out", str(o))
+        check("build_quest_fails (CLI): a verified record whose gaps are not empty stops", r.returncode != 0 and "gaps are not empty" in r.stderr, r.stderr[-200:])
         c.write_text(json.dumps({"pairs": [cand]})); r = tool_run("--candidates", str(c), "--out", str(o))
         check("build_quest_fails (CLI): a file with no verified record stops and writes nothing", r.returncode != 0 and not o.exists(), r.stderr[-200:])
     cf = ROOT / "data" / "QUEST_FAILS.candidates.json"
@@ -268,18 +293,21 @@ def banner(b, base, check, label):
     pg.close()
 
 
+ROW = '.qfrowx[data-k="%s%s"]' % (UGLY, THREAD)
+
+
 def failures(b, base, check, label):
     """v39.2: the Quest failures tab (mockup v4): the button and its count, every link whatever the region or level, the order, the four statuses, the hide filter, Details, the K footer, phone"""
     cands = json.loads((ROOT / "data" / "QUEST_FAILS.json").read_text(encoding="utf-8"))["candidates"]
-    pg, errs, reqs = Q.newpage(b, base, init=seed({})); E = pg.evaluate; Q.opened(pg, "wo"); pg.fill("#lvl", "1"); E("pointsChanged()"); pg.wait_for_timeout(200)
+    pg, errs, reqs = Q.newpage(b, base, init=seed({}, quiet=False)); E = pg.evaluate; Q.opened(pg, "wo"); pg.fill("#lvl", "1"); E("pointsChanged()"); pg.wait_for_timeout(200)
     btn = E("(()=>{const x=document.getElementById('qsVFails'),l=document.getElementById('qsVList');return{t:x.textContent,hid:x.hidden,txt:x.innerText,after:l.nextElementSibling===x,h:Math.round(x.getBoundingClientRect().height)}})()")
-    check("%s: a fourth view button after List reads 'QUEST FAILURES · 1' (the number of verified links), 44 px (%s)" % (label, btn), not btn["hid"] and btn["t"] == "Quest failures · 1" and btn["txt"] == "QUEST FAILURES · 1" and btn["after"] and btn["h"] >= 40, btn)
+    check("%s: a fourth view button after List reads 'QUEST FAILURES · 3' (the number of verified links), 44 px (%s)" % (label, btn), not btn["hid"] and btn["t"] == "Quest failures · 3" and btn["txt"] == "QUEST FAILURES · 3" and btn["after"] and btn["h"] >= 40, btn)
     ratio(pg, "#qsVFails", "Quest failures button (not pressed)", check, label + " contrast")
     pg.click("#qsVFails"); pg.wait_for_timeout(250)
     ratio(pg, "#qsVFails", "Quest failures button (pressed)", check, label + " contrast")
     st = E("[document.getElementById('qsVFails').getAttribute('aria-pressed'),document.getElementById('qsVList').getAttribute('aria-pressed'),localStorage.getItem('w3p.quests.view'),QS.view,document.querySelectorAll('.qfrowx').length,getComputedStyle(document.querySelector('.qsregnav')).display]")
-    check("%s: the button stores its view in w3p.quests.view as 'fails', the region tabs are out of the way and one row is listed (%s)" % (label, st), st[:5] == ["true", "false", "fails", "fails", 1] and st[5] == "none", st)
-    row = E("""(()=>{const r=document.querySelector('.qfrowx'),t=e=>r.querySelector(e).innerText.replace(/\\s+/g,' ').trim();return{h:document.querySelector('.qfht h2').textContent,p:document.querySelector('.qfht p').textContent,red:t('.qfblk.red'),mid:t('.qfblk.mid'),amber:t('.qfblk.amber'),st:t('.qfst'),stc:r.querySelector('.qfst').className,det:t('.qfdetb'),hide:document.querySelector('.qfhide').textContent.trim(),cb:document.getElementById('qfHide').checked}})()""")
+    check("%s: the button stores its view in w3p.quests.view as 'fails', the region tabs are out of the way and the three links are listed (%s)" % (label, st), st[:5] == ["true", "false", "fails", "fails", 3] and st[5] == "none", st)
+    row = E("""(()=>{const r=document.querySelector(__ROW),t=e=>r.querySelector(e).innerText.replace(/\\s+/g,' ').trim();return{h:document.querySelector('.qfht h2').textContent,p:document.querySelector('.qfht p').textContent,red:t('.qfblk.red'),mid:t('.qfblk.mid'),amber:t('.qfblk.amber'),st:t('.qfst'),stc:r.querySelector('.qfst').className,det:t('.qfdetb'),hide:document.querySelector('.qfhide').textContent.trim(),cb:document.getElementById('qfHide').checked}})()""")
     check("%s: level 1, nothing started: the row is there (the tab ignores region and level); header text and the four blocks (%s)" % (label, row["red"]), row["h"] == "Every quest that fails another" and row["p"] == "All regions, whatever your level or progress, sorted by the level of the quest that causes the fail. Only links confirmed from the remaster's game files."
           and row["red"] == "IF YOU DO Ugly Baby Main · Kaer Morhen · level 19" and row["mid"] == "AT THIS STEP Collect UMA › Stable Master › Talk to the stable guard at Crow's Perch" and row["amber"] == "THIS FAILS Following the Thread Secondary · Novigrad"
           and row["st"] == "Open · plan for it" and "open" in row["stc"] and row["det"] == "Details ›" and row["hide"] == "Hide ones I've dealt with" and not row["cb"], row)
@@ -287,7 +315,7 @@ def failures(b, base, check, label):
                       ('.qfst', "status chip"), ('.qfnote, .qfnote b', "footnotes")):
         ratio(pg, sel, what, check, label + " contrast")
     E("QS.region='sk';qsRenderView()"); pg.wait_for_timeout(100)
-    check("%s: the region tab makes no difference (Skellige selected: the row is still listed)" % label, E("document.querySelectorAll('.qfrowx').length") == 1)
+    check("%s: the region tab makes no difference (Skellige selected: the row is still listed)" % label, E("document.querySelectorAll('.qfrowx').length") == 3)
     # order across regions: failer level, then name (synthetic links, drawn from real quests of other regions and levels)
     order = E("""(()=>{const Q=QS.data.quests.filter(q=>q.lv!=null&&q.g!=='%s'&&q.g!=='%s'),by={};Q.forEach(q=>{(by[q.lv]=by[q.lv]||[]).push(q)});
       const lv=Object.keys(by).map(Number).sort((a,b)=>a-b).find(l=>l<19&&new Set(by[l].map(q=>q.r)).size>1&&by[l].length>=2);const same=by[lv].sort((a,b)=>a.n.localeCompare(b.n)),hi=Q.find(q=>q.lv>30&&q.r!==same[0].r),d=JSON.parse(JSON.stringify(W3DATA.QUEST_FAILS)),l0=d.links[0];
@@ -299,39 +327,82 @@ def failures(b, base, check, label):
     for name, man, chip, cls, vis in (("Open", {}, "Open · plan for it", "open", True), ("Safe (the failed quest is done)", {THREAD: "done"}, "Safe · you finished it", "safe", False), ("Failed", {THREAD: "failed"}, "Failed", "failed", False),
                                      ("Missed (the causing quest is done)", {UGLY: "done"}, "Missed · the causing quest is done", "missed", False), ("Safe (the causing quest failed)", {UGLY: "failed"}, "Safe · the causing quest failed", "safe", False)):
         pg, errs, reqs = Q.newpage(b, base, init=seed(man)); E = pg.evaluate; Q.opened(pg); pg.click("#qsVFails"); pg.wait_for_timeout(200)
-        got = E("[document.querySelector('.qfst').textContent,document.querySelector('.qfst').className.split(' ')[1],document.querySelectorAll('.qfrowx').length]"); keys = E("Object.keys(localStorage).sort().join()")
+        got = E("[document.querySelector(__ROW+' .qfst').textContent,document.querySelector(__ROW+' .qfst').className.split(' ')[1],document.querySelectorAll('.qfrowx').length]"); keys = E("Object.keys(localStorage).sort().join()")
         pg.click("#qfHide"); pg.wait_for_timeout(150)
         n = E("[document.querySelectorAll('.qfrowx').length,document.getElementById('qfHide').checked,!!document.querySelector('.qfrowsx .qfnote'),document.activeElement.id]"); keys2 = E("Object.keys(localStorage).sort().join()")
-        check("%s: status %s: the chip says '%s'; 'Hide ones I've dealt with' %s the row (%s), visit-only: no storage key added" % (label, name, chip, "keeps" if vis else "hides", n), got == [chip, cls, 1] and n[0] == (1 if vis else 0) and n[1] and n[3] == "qfHide" and (vis or n[2]) and keys == keys2, [got, n, keys, keys2])
+        check("%s: status %s: the chip says '%s'; 'Hide ones I've dealt with' %s the row (%s), visit-only: no storage key added" % (label, name, chip, "keeps" if vis else "hides", n), got == [chip, cls, 3] and n[0] == (1 if vis else 0) and n[1] and n[3] == "qfHide" and (vis or n[2]) and keys == keys2, [got, n, keys, keys2])
         pg.close()
     # Details opens the dependency panel; Go to quest from it leaves the failures view for the List
     pg, errs, reqs = Q.newpage(b, base, init=seed({})); E = pg.evaluate; Q.opened(pg); pg.click("#qsVFails"); pg.wait_for_timeout(200)
-    h = E("[document.querySelector('.qfrdep').hidden,document.querySelector('.qfdetb').getAttribute('aria-expanded'),Math.round(document.querySelector('.qfdetb').getBoundingClientRect().height)]")
-    pg.click(".qfdetb"); pg.wait_for_timeout(100)
-    d = E("""(()=>{const p=document.querySelector('.qfrdep'),t=p.textContent.replace(/\\s+/g,' ');return{vis:!p.hidden&&p.offsetHeight>0,exp:document.querySelector('.qfdetb').getAttribute('aria-expanded'),t,go:p.querySelectorAll('.qfgo').length,fin:!!p.querySelector('.qffin'),data:!!p.querySelector('details.qfdata')&&!p.querySelector('details.qfdata').open}})()""")
+    h = E("[document.querySelector(__ROW+' .qfrdep').hidden,document.querySelector(__ROW+' .qfdetb').getAttribute('aria-expanded'),Math.round(document.querySelector(__ROW+' .qfdetb').getBoundingClientRect().height)]")
+    pg.click(ROW + " .qfdetb"); pg.wait_for_timeout(100)
+    d = E("""(()=>{const p=document.querySelector(__ROW+' .qfrdep'),t=p.textContent.replace(/\\s+/g,' ');return{vis:!p.hidden&&p.offsetHeight>0,exp:document.querySelector(__ROW+' .qfdetb').getAttribute('aria-expanded'),t,go:p.querySelectorAll('.qfgo').length,fin:!!p.querySelector('.qffin'),data:!!p.querySelector('details.qfdata')&&!p.querySelector('details.qfdata').open}})()""")
     check("%s: Details › opens the dependency panel of that link (IF YOU DO THIS, AT THIS STEP, THIS QUEST FAILS, two Go to quest ›, I finished it already, the collapsed game data) (%s)" % (label, d["exp"]), h[:2] == [True, "false"] and h[2] >= 44 and d["vis"] and d["exp"] == "true" and d["go"] == 2 and d["fin"] and d["data"]
           and all(x in d["t"] for x in ("IF YOU DO THIS", "AT THIS STEP", "THIS QUEST FAILS", "Safe order: finish Following the Thread")), [h, d])
-    pg.click(".qfdetb"); check("%s: Details › closes it again" % label, E("document.querySelector('.qfrdep').hidden") is True)
-    pg.click(".qfdetb"); pg.click('.qfrdep [data-go="%s"]' % THREAD); Q.until(pg, "document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.g==='%s'" % THREAD, 3000)
+    pg.click(ROW + " .qfdetb"); check("%s: Details › closes it again" % label, E("document.querySelector(__ROW+' .qfrdep').hidden") is True)
+    pg.click(ROW + " .qfdetb"); pg.click(ROW + ' .qfrdep [data-go="%s"]' % THREAD); Q.until(pg, "document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.g==='%s'" % THREAD, 3000)
     g = E("[QS.view,QS.region,document.activeElement.className.split(' ')[0],localStorage.getItem('w3p.quests.view')]")
     check("%s: Go to quest from the panel: the failures view has no markers, so the List opens on Novigrad with the quest's row focused (%s)" % (label, g), g == ["list", "no", "qsrow", "list"], g)
-    pg.click("#qsVFails"); pg.wait_for_timeout(200); pg.click(".qfrowx .qffin"); pg.wait_for_timeout(200)
-    check("%s: 'I finished it already' in the panel sets the failed quest to done: the row turns Safe" % label, E("[QS.store.manual['%s'],document.querySelector('.qfst').textContent]" % THREAD) == ["done", "Safe · you finished it"])
+    pg.click("#qsVFails"); pg.wait_for_timeout(200); pg.click(ROW + " .qffin"); pg.wait_for_timeout(200)
+    check("%s: 'I finished it already' in the panel sets the failed quest to done: the row turns Safe" % label, E("[QS.store.manual['%s'],document.querySelector(__ROW+' .qfst').textContent]" % THREAD) == ["done", "Safe · you finished it"])
     pg.reload(); Q.until(pg, Q.READY); Q.opened(pg); pg.wait_for_timeout(300)
-    check("%s: the view is remembered: after a reload Quest failures is open again" % label, E("[QS.view,document.getElementById('qsVFails').getAttribute('aria-pressed'),!!document.querySelector('.qfrowx')]") == ["fails", "true", True])
+    check("%s: the view is remembered: after a reload Quest failures is open again" % label, E("[QS.view,document.getElementById('qsVFails').getAttribute('aria-pressed'),!!document.querySelector(__ROW)]") == ["fails", "true", True])
     pg.close()
     # the footer
     pg, errs, reqs = Q.newpage(b, base, init=seed({}) + ";localStorage.setItem('w3p.quests.view','fails')"); E = pg.evaluate; Q.opened(pg); pg.wait_for_timeout(300)
-    f = E("[QS.view,!!document.querySelector('.qfrowx'),(document.querySelector('.qfcand')||{}).textContent]")
+    f = E("[QS.view,!!document.querySelector(__ROW),(document.querySelector('.qfcand')||{}).textContent]")
     check("%s: view 'fails' stored: it opens on Quest failures; the footer says '%d more possible fail links found in the game files are still being checked.' (the number comes from the data) (%s)" % (label, cands, f), f == ["fails", True, "%d more possible fail links found in the game files are still being checked." % cands], f)
     E("(()=>{const d=JSON.parse(JSON.stringify(W3DATA.QUEST_FAILS));d.candidates=0;QF.init(d);qsRenderView()})()"); pg.wait_for_timeout(100)
-    check("%s: with 0 candidates the footer line is hidden" % label, E("[!!document.querySelector('.qfcand'),!!document.querySelector('.qfrowx')]") == [False, True])
+    check("%s: with 0 candidates the footer line is hidden" % label, E("[!!document.querySelector('.qfcand'),!!document.querySelector(__ROW)]") == [False, True])
     pg.close()
     # phone
     pg, errs, reqs = Q.newpage(b, base, w=390, h=844, mobile=True, init=seed({})); E = pg.evaluate; Q.opened(pg); pg.tap("#qsVFails"); pg.wait_for_timeout(300); pg.tap(".qfdetb"); pg.wait_for_timeout(150)
-    ph = E("""(()=>{const R=e=>e.getBoundingClientRect(),bl=[...document.querySelectorAll('.qfrowx .qfr1 > .qfblk')].map(e=>R(e)),vb=[...document.querySelectorAll('.qsviews .qsv')].filter(x=>!x.hidden).map(e=>Math.round(R(e).top)),row=R(document.querySelector('.qfrowx'));
-      return{sx:document.documentElement.scrollWidth-innerWidth,stack:bl.length===4&&bl.every((r,i)=>i===0||r.top>=bl[i-1].bottom-1)&&bl.every(r=>Math.abs(r.left-bl[0].left)<2),inside:row.right<=innerWidth+1,wrap:new Set(vb).size>1,det:Math.round(R(document.querySelector('.qfdetb')).height),hide:Math.round(R(document.querySelector('.qfhide')).height)}})()""")
+    ph = E("""(()=>{const R=e=>e.getBoundingClientRect(),bl=[...document.querySelector('.qfrowx .qfr1').children].map(e=>R(e)),vb=[...document.querySelectorAll('.qsviews .qsv')].filter(x=>!x.hidden).map(e=>Math.round(R(e).top)),row=R(document.querySelector(__ROW));
+      return{sx:document.documentElement.scrollWidth-innerWidth,stack:bl.length===4&&bl.every((r,i)=>i===0||r.top>=bl[i-1].bottom-1)&&bl.every(r=>Math.abs(r.left-bl[0].left)<2),inside:row.right<=innerWidth+1,wrap:new Set(vb).size>1,det:Math.round(R(document.querySelector(__ROW+' .qfdetb')).height),hide:Math.round(R(document.querySelector('.qfhide')).height)}})()""")
     check("%s: phone (390 px): the four blocks stack, the view-button row wraps, no sideways scroll, Details and the filter are 44 px (%s)" % (label, ph), ph["sx"] <= 1 and ph["stack"] and ph["inside"] and ph["wrap"] and ph["det"] >= 44 and ph["hide"] >= 44, ph)
+    check("%s: no page error" % label, not errs, errs[:1])
+    pg.close()
+
+
+def multi(b, base, check, label):
+    """v39.4: the real links together (three of them: Ugly Baby fails Following the Thread and The Last Wish, King's Gambit fails The Cave of Dreams): banner summary, the panel, tab dots, the order of Quest failures, a single Skellige link, and a quest that fails one quest while another would fail it"""
+    pg, errs, _ = Q.newpage(b, base, init=seed({UGLY: "active", Q206: "active"}, quiet=False)); E = pg.evaluate; Q.opened(pg, "km"); Q.until(pg, "!!document.querySelector('.qfbanner')")
+    t = E("document.querySelector('.qfbrow p').textContent.trim()")
+    check("%s: three links live: one summary line (%s)" % (label, t), t == "3 quests will fail if you continue the quests marked red. Open the details to see what to do first.", t)
+    pg.click(".qfmore"); pg.wait_for_timeout(100)
+    pn = E("""(()=>{const p=document.getElementById('qfPanel');return{n:p.querySelectorAll('.qfdep').length,fails:[...p.querySelectorAll('.qfdep .qfcard.amber .qfbig')].map(e=>e.textContent).sort(),by:[...p.querySelectorAll('.qfdep .qfcard.red .qfbig')].map(e=>e.textContent),t:p.innerText.replace(/\\s+/g,' ')}})()""")
+    check("%s: the panel lists every link (%s)" % (label, pn["fails"]), pn["n"] == 3 and pn["fails"] == ["Following the Thread", "The Cave of Dreams", "The Last Wish"] and sorted(pn["by"]) == ["King's Gambit", "Ugly Baby", "Ugly Baby"], pn)
+    check("%s: the Cave of Dreams block names the step and its time limit; the Last Wish block its limit (%s)" % (label, "Kaer Trolde"), "AT THIS STEP To Kaer Trolde Keep › Spawn Party › Go through the gate of Kaer Trolde Keep to report to Crach" in pn["t"]
+          and "Until part 2 of The Cave of Dreams is done (sq209_part_2_done)." in pn["t"] and "Until The Last Wish reaches its ending scenes (sq202_turn_off_security)." in pn["t"] and "AT THIS STEP Collect UMA › Stable Master › Talk to the stable guard at Crow's Perch" in pn["t"], pn["t"][:200])
+    dots = E("""(()=>{const o={};document.querySelectorAll('#qsRegs .qsreg').forEach(t=>{o[t.dataset.r]=[[...t.querySelectorAll('.qfd')].map(d=>d.className.replace('qfd ','')),t.getAttribute('aria-label')]});return o})()""")
+    check("%s: region tabs with the real data: Kaer Morhen red, Novigrad amber, Skellige both (the failer King's Gambit and the at-risk Last Wish and Cave of Dreams), nothing else (%s)" % (label, {k: v[0] for k, v in dots.items() if v[0]}),
+          dots["km"][0] == ["red"] and dots["no"][0] == ["amber"] and dots["sk"][0] == ["red", "amber"] and all(not v[0] for k, v in dots.items() if k not in ("km", "no", "sk"))
+          and dots["sk"][1].startswith("Skellige, has a quest that fails another and a quest at risk of failing"), dots)
+    pg.click("#qsVFails"); pg.wait_for_timeout(250)
+    ordr = E("[...document.querySelectorAll('.qfrowx')].map(r=>r.querySelector('.qfblk.red .qfbig').textContent+' > '+r.querySelector('.qfblk.amber .qfbig').textContent)")
+    check("%s: Quest failures lists the three, sorted by the failer's level (King's Gambit 18, Ugly Baby 19) then the failed quest's name (%s)" % (label, ordr), ordr == ["King's Gambit > The Cave of Dreams", "Ugly Baby > Following the Thread", "Ugly Baby > The Last Wish"] and E("document.getElementById('qsVFails').textContent") == "Quest failures · 3", ordr)
+    pg.close()
+    # one Skellige link
+    pg, errs, _ = Q.newpage(b, base, init=seed({UGLY: "done", Q206: "active", SQ202: "done"}, quiet=False)); E = pg.evaluate; Q.opened(pg, "sk"); Q.until(pg, "!!document.querySelector('.qfbanner')")
+    t = E("document.querySelector('.qfbrow p').textContent.trim().replace(/\\s+/g,' ')")
+    check("%s: one link left (King's Gambit): %s" % (label, t), t == "King's Gambit (Skellige) fails or closes The Cave of Dreams (Skellige) at the gates of Kaer Trolde Keep. Do The Cave of Dreams first.", t)
+    pr = E("[...document.querySelectorAll('.qfprompt p')].map(p=>p.textContent)")
+    check("%s: Ugly Baby done with Following the Thread still open: its prompt shows (%s)" % (label, pr), pr == ["Ugly Baby is done. Following the Thread would have failed along the way."], pr)
+    pg.close()
+    # a quest that fails one quest and is at risk from another (synthetic second link: The Last Wish fails Heroesmead)
+    pg, errs, _ = Q.newpage(b, base, init=seed({UGLY: "active", Q206: "done"}, quiet=False)); E = pg.evaluate; Q.opened(pg, "sk"); Q.until(pg, "!!document.querySelector('.qfbanner')")
+    E("""(()=>{const x=QS.data.quests.find(q=>q.id==='Q208 Heroesmead'),d=JSON.parse(JSON.stringify(W3DATA.QUEST_FAILS)),l=d.links.find(l=>l.failed_guid==='%s');d.links.push(Object.assign({},l,{failer_guid:'%s',failed_guid:x.g,fact:'synthetic',trigger_label:'Finish The Last Wish',trigger_short:'ending'}));QF.init(d);qsRenderAll()})()""" % (SQ202, SQ202)); pg.wait_for_timeout(250)
+    row = E("""(()=>{const w=document.querySelector('.qsrow[data-g="%s"]').closest('.qfrow');return w&&{cls:w.className,chips:[...w.querySelectorAll('.qfchip')].map(c=>c.textContent),aria:w.querySelector('.qsrow').getAttribute('aria-label')}})()""" % SQ202)
+    check("%s: a quest that fails one quest and is at risk from another shows both: red and amber classes, both chips, both phrases in its label (%s)" % (label, row), row and "qf-fail" in row["cls"] and "qf-risk" in row["cls"] and row["chips"] == ["Fails 1 quest", "Do before Ugly Baby"] and "fails 1 open quest" in row["aria"] and "at risk: do before Ugly Baby" in row["aria"], row)
+    ratio(pg, '.qfrow.qf-fail.qf-risk, .qfrow.qf-fail.qf-risk .qsrn2 b, .qfrow.qf-fail.qf-risk>.qfextra', "red-and-amber row", check, label + " contrast")
+    nx = E("""(()=>{const c=document.querySelector('#qsNext .qscard[data-g="%s"]');return c&&{cls:c.className,t:c.textContent}})()""" % SQ202)
+    check("%s: its Next up card has the red class, the caution box and the amber chip (%s)" % (label, nx and nx["cls"]), nx and "qf-fail" in nx["cls"] and "qf-risk" in nx["cls"] and "Careful: Finish The Last Wish fails Q208" not in nx["t"] and "Careful:" in nx["t"] and "Do before Ugly Baby" in nx["t"], nx)
+    pg.click("#qsVBand"); pg.wait_for_timeout(250)
+    dot = E("""(()=>{const d=document.querySelector('.qsdot[data-g="%s"]');return d&&{cls:d.className,aria:d.getAttribute('aria-label')}})()""" % SQ202)
+    check("%s: its Level band dot has both rings (%s)" % (label, dot), dot and "qf-fail" in dot["cls"] and "qf-risk" in dot["cls"] and "fails 1 open quest" in dot["aria"] and "at risk: do before Ugly Baby" in dot["aria"], dot)
+    E("qsSelect('%s')" % SQ202); pg.wait_for_timeout(250)
+    det = E("[document.querySelectorAll('#qsDetail .qfbox.red').length,document.querySelectorAll('#qsDetail .qfbox.amber').length]")
+    check("%s: its detail panel has the red box and the amber box (%s)" % (label, det), det == [1, 1], det)
     check("%s: no page error" % label, not errs, errs[:1])
     pg.close()
 
@@ -346,6 +417,6 @@ def offline(b, off, check, label):
     check("%s: offline: the prompt's 'Mark it failed' works (hand mark failed)" % label, E("QS.store.manual['%s']" % THREAD) == "failed" and not errs, errs[:1])
     pg.close()
     pg, errs, reqs = Q.newpage(b, off, init=seed({})); E = pg.evaluate; Q.opened(pg); pg.click("#qsVFails"); pg.wait_for_timeout(250)
-    o = E("[document.getElementById('qsVFails').textContent,document.querySelectorAll('.qfrowx').length,document.querySelector('.qfst').textContent,localStorage.getItem('w3p.quests.view')]")
-    check("%s: offline: the Quest failures tab works (button count, the row, its status, the view stored) (%s)" % (label, o), o == ["Quest failures · 1", 1, "Open · plan for it", "fails"] and not errs, o)
+    o = E("[document.getElementById('qsVFails').textContent,document.querySelectorAll('.qfrowx').length,document.querySelector(__ROW+' .qfst').textContent,localStorage.getItem('w3p.quests.view')]")
+    check("%s: offline: the Quest failures tab works (button count, the row, its status, the view stored) (%s)" % (label, o), o == ["Quest failures · 3", 3, "Open · plan for it", "fails"] and not errs, o)
     pg.close()

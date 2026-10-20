@@ -1,0 +1,23 @@
+{
+ "link": "q206_party_started fails The Cave of Dreams",
+ "failed_guid": "41135ec1f20a1d4aad85cabcea5a1c00",
+ "failed_name": "The Cave of Dreams",
+ "failed_id": "SQ209 Cave of Dreams",
+ "failer_guid": "e10a13b571218a46b0d37b0b9954be3f",
+ "failer_name": "King's Gambit",
+ "failer_id": "Q206 Berserkers",
+ "fact": "q206_party_started",
+ "op": {
+  "func": "CF_GreaterEqual",
+  "value": 1
+ },
+ "effect": "Failure",
+ "fail_file": "quests/sidequests/skellige/sq209_weregild.w2phase",
+ "fail_block": 1457,
+ "setter_file": "quests/part_2/q206_berserkers.w2phase",
+ "setter_block": 1546,
+ "trigger_phase": "To Kaer Trolde Keep > Spawn Party",
+ "trigger_scene": null,
+ "status": "verified_gamefiles",
+ "engine_effect": "unconfirmed"
+}
