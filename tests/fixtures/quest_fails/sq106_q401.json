@@ -1,0 +1,23 @@
+{
+ "link": "q401_gotten_uma fails Following the Thread",
+ "failed_guid": "9cf4eb23b5bfd24c94fbd8a2a64070b2",
+ "failed_name": "Following the Thread",
+ "failed_id": "SQ106 Killbill",
+ "failer_guid": "307d9fcade274740b37341fa6a6a76c7",
+ "failer_name": "Ugly Baby",
+ "failer_id": "Q401 Konsylium",
+ "fact": "q401_gotten_uma",
+ "op": {
+  "func": "CF_GreaterEqual",
+  "value": 1
+ },
+ "effect": "Failure",
+ "fail_file": "quests/sidequests/no_mans_land/sq106_killbill.w2phase",
+ "fail_block": 458,
+ "setter_file": "quests/part_1/q401_konsylium.w2phase",
+ "setter_block": 3582,
+ "trigger_phase": "Collect UMA > Stable Master",
+ "trigger_scene": "quests/part_1/quest_files/q401_konsylium/scenes/q401_01_02_stablemaster_about_uma.w2scene",
+ "status": "verified_gamefiles",
+ "engine_effect": "unconfirmed"
+}

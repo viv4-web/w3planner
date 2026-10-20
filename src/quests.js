@@ -1,6 +1,6 @@
 // ---- Quests (v33): status, list, level band, Next up, detail, progress. Data: data/QUESTS.json (tools/make_quests.py, docs/QUESTS.md); the journal text is game content and exists in the live build only ----
 // The screen is S.scr 'q' and lives in the link as s1Q; nothing else is in the link. Progress is kept in this browser (localStorage 'w3p.quests.v1') and in an exported file, never in the link or anywhere else.
-const QS_URL=/*@file:QUESTS*/, QS_RULES_URL=/*@file:QUEST-RULES*/, QS_DESC=/*@quests*/null;
+const QS_URL=/*@file:QUESTS*/, QS_RULES_URL=/*@file:QUEST-RULES*/, QS_FAILS_URL=/*@file:QUEST_FAILS*/, QS_QF_URL=/*@lazyjs:questfails*/, QS_DESC=/*@quests*/null;
 const QS_KEY='w3p.quests.v1';
 const QS_KINDS=[['main','Main'],['side','Secondary'],['contract','Contracts'],['treasure','Treasure hunts'],['gwent','Gwent'],['race','Races'],['fist','Fistfights']];
 const QS_NAMES={none:'Not started',active:'Active',done:'Done',failed:'Failed',inactive:'Inactive'},QS_MARKS=['none','active','done','failed'];
@@ -51,6 +51,7 @@ function qsLoad(){if(QS.data)return Promise.resolve(QS.data);
  return QS.load||(QS.load=(async()=>{if(!(window.W3DATA&&W3DATA.QUESTS))await eqScript(QS_URL);const d=W3DATA.QUESTS;if(!d||!d.quests)throw new Error('empty');
   QS.data=d;QS.byG=new Map(d.quests.map(q=>[q.g,q]));QS.byObj=new Map();QS.byDesc=new Set();d.quests.forEach(q=>{q.o.forEach((g,i)=>QS.byObj.set(g,[q,i]));q.d.forEach(g=>QS.byDesc.add(g))});QS.regions=new Map(d.regions);
   try{if(!(window.W3DATA&&W3DATA.QUEST_RULES))await eqScript(QS_RULES_URL);const R=W3DATA.QUEST_RULES;if(R&&R.quests){R.gmap=new Map(R.gates.map(x=>[x.id,x]));R.pts=new Map(R.points);QS.R=R}}catch(e){QS.R=null}   // the timeline data is optional: without it the other views work
+  try{if(!(window.W3DATA&&W3DATA.QUEST_FAILS))await eqScript(QS_FAILS_URL);if(!window.QF)await eqScript(QS_QF_URL);QF.init(W3DATA.QUEST_FAILS)}catch(e){}   // v39: the fail safeguard (questfails.js) is optional too
   return d})().catch(e=>{QS.load=null;QS.err=true;throw e}))}
 function qsDescLoad(){if(QS.desc)return Promise.resolve(QS.desc);if(!QS_DESC)return Promise.reject(new Error('none'));
  return QS.descP||(QS.descP=new Promise((ok,bad)=>{const s=document.createElement('script');s.src=QS_DESC.desc;s.onload=()=>{const d=(window.W3DATA||{}).quests_desc;if(d){QS.desc=d;ok(d)}else{QS.descP=null;bad(new Error('empty'))}};
@@ -92,11 +93,13 @@ function qsMissLists(){   // per lane in use: the next gate not passed, the open
  lanes.forEach(l=>{const gt=qsGates(l).find(x=>!qsPassed(x));if(!gt)return;const whole=[],obj=[];
   QS.data.quests.forEach(q=>{if(!qsOpenState(qsState(q.g)))return;const c=qsCuts(q).filter(x=>x.gate===gt);if(!c.length)return;if(c.some(x=>x.whole))whole.push(q);else obj.push(q)});
   const my=qsMy(),by=(a,b)=>Math.abs((a.lv==null?999:a.lv)-my)-Math.abs((b.lv==null?999:b.lv)-my)||a.n.localeCompare(b.n);out.push({gate:gt,whole:whole.sort(by),obj:obj.sort(by)})});return out}
+const qsRank=q=>window.QF?QF.rank(q.g):0;   // v39: -1 for a quest that another quest would fail (shown first)
 function qsNextUp(){const my=qsMy(),all=QS.data.quests;QS.nextFail=new Map();
  const miss=[];qsMissLists().forEach(m=>m.whole.forEach(q=>{QS.nextFail.set(q.g,m.gate.name);miss.push(q)}));
  const act=all.filter(q=>qsState(q.g)==='active'&&!QS.nextFail.has(q.g)).sort((a,b)=>Math.abs((a.lv==null?999:a.lv)-my)-Math.abs((b.lv==null?999:b.lv)-my)||a.n.localeCompare(b.n));
  const home=(miss[0]||act[0]||{r:QS.region}).r,fresh=all.filter(q=>qsState(q.g)==='none'&&q.lv!=null&&qsXp(q,my)>=1&&!QS.nextFail.has(q.g)).sort((a,b)=>Math.abs(a.lv-my)-Math.abs(b.lv-my)||(a.r===home?0:1)-(b.r===home?0:1)||a.lv-b.lv||a.n.localeCompare(b.n));
- return miss.concat(act,fresh).slice(0,4)}
+ const risk=(window.QF?QF.risk():[]).filter(q=>!QS.nextFail.has(q.g)),rk=new Set(risk.map(q=>q.g));   // v39: a quest another open quest would fail comes first
+ return miss.concat(risk,act.filter(q=>!rk.has(q.g)),fresh.filter(q=>!rk.has(q.g))).slice(0,4)}
 function qsRenderNext(){const el=qsEl('qsNext'),list=qsNextUp(),my=qsMy();
  el.innerHTML=`<h3>Next up</h3><div class="qscards">${list.map(q=>{const st=qsState(q.g),cur=st==='active'?qsCurrent(q):[],fg=QS.nextFail.get(q.g);
   return`<button type="button" class="qscard t-${q.t}${fg?' fails':''}${QS.sel===q.g?' on':''}" data-g="${q.g}">${qsIcon(st,q.t)}<span class="qscn"><b>${qsEsc(q.n)}</b><small>${qsEsc(QS.regions.get(q.r))} · level ${qsLevelText(q)} · ${QS_NAMES[st]}</small><em${fg?' class="qsfail"':''}>${fg?'Fails at '+qsEsc(fg):st==='active'?(cur.length?(cur[0]===null?cur.length+' active objective'+(cur.length>1?'s':'')+' (text not in this build)':qsEsc(cur[0])+(cur.length>1?' (+'+(cur.length-1)+')':'')):'Current objective: not known'):qsEsc(qsXp(q,my)>=1?'Full XP at your level':'')}</em></span></button>`}).join('')||'<p class="qshint">Nothing left to suggest.</p>'}</div>`;
@@ -136,7 +139,7 @@ function qsRenderBand(host){const my=qsMy(),reg=qsInRegion(QS.region),vis=reg.fi
  const lx=lv=>(Math.max(lo,Math.min(hi,lv))-lo+.5)*slot,zoneLv=my-10,zw=zoneLv>=lo?(Math.min(zoneLv,hi)-lo+1)*slot:0,flip=lx(my)>W-90;
  const zone=zw?`<i class="qsz5" style="width:${zw}px"></i>`:'',line=`<i class="qsme" style="left:${lx(my)}px"></i>`;
  let rows='';
- kinds.forEach(([k,n])=>{const byLv=new Map();vis.filter(q=>q.t===k).sort((a,b)=>(qsState(a.g)==='done')-(qsState(b.g)==='done')||(qsState(b.g)==='active')-(qsState(a.g)==='active')||a.n.localeCompare(b.n)).forEach(q=>{if(!byLv.has(q.lv))byLv.set(q.lv,[]);byLv.get(q.lv).push(q)});
+ kinds.forEach(([k,n])=>{const byLv=new Map();vis.filter(q=>q.t===k).sort((a,b)=>qsRank(a)-qsRank(b)||(qsState(a.g)==='done')-(qsState(b.g)==='done')||(qsState(b.g)==='active')-(qsState(a.g)==='active')||a.n.localeCompare(b.n)).forEach(q=>{if(!byLv.has(q.lv))byLv.set(q.lv,[]);byLv.get(q.lv).push(q)});
   let lines=1,dots='';
   byLv.forEach((list,lv)=>{const key=k+':'+lv,open=QS.cells.has(key),over=list.length>cap,shown=over&&!open?list.slice(0,cap-1):list,total=shown.length+(over?1:0),nl=Math.ceil(total/per);lines=Math.max(lines,nl);
    const x0=(lv-lo)*slot;
@@ -267,7 +270,7 @@ function qsUnplacedHtml(kind,list,scope,avail){if(!list.length)return'';const m=
  return`<details class="qsug" id="${m.id}"${open?' open':''}><summary>${m.title} (${list.length})</summary><p class="qsbnote">${qsEsc(m.help)}</p><div class="qsugl">${rows}</div></details>`}
 // one tooltip for dots: name, type · region · level, status (on hover and on keyboard focus)
 function qsTip(d){const q=QS.byG.get(d.dataset.g),t=qsEl('qsTip');if(!q)return;const st=qsState(q.g),m=qsXp(q,qsMy());
- t.innerHTML=`<b class="t-${q.t}">${qsEsc(q.n)}</b><span>${qsEsc(qsKindName(q.t))} · ${qsEsc(QS.regions.get(q.r))} · level ${qsLevelText(q)}</span><span>${QS_NAMES[st]}${q.hs?' · Hearts of Stone XP '+qsPct(m):m<1?' · 5% XP':''}</span>${(qsOpenState(st)&&qsFailsAt(q))?'<span class="qsfail">Fails at '+qsEsc(qsFailsAt(q).name)+'</span>':''}${qsByChoice(q)?'<span class="qschoicet">Can fail by a choice</span>':''}`;t.hidden=false;
+ t.innerHTML=`<b class="t-${q.t}">${qsEsc(q.n)}</b><span>${qsEsc(qsKindName(q.t))} · ${qsEsc(QS.regions.get(q.r))} · level ${qsLevelText(q)}</span><span>${QS_NAMES[st]}${q.hs?' · Hearts of Stone XP '+qsPct(m):m<1?' · 5% XP':''}</span>${(qsOpenState(st)&&qsFailsAt(q))?'<span class="qsfail">Fails at '+qsEsc(qsFailsAt(q).name)+'</span>':''}${qsByChoice(q)?'<span class="qschoicet">Can fail by a choice</span>':''}${window.QF?QF.tip(q):''}`;t.hidden=false;
  const r=d.getBoundingClientRect(),w=t.offsetWidth,h=t.offsetHeight;t.style.left=Math.max(6,Math.min(innerWidth-w-6,r.left+r.width/2-w/2))+'px';t.style.top=(r.top-h-8>6?r.top-h-8:r.bottom+8)+'px'}
 function qsTipHide(){const t=qsEl('qsTip');if(t)t.hidden=true}
 function qsRenderView(){const host=qsEl('qsView'),sc=qsEl('screenQ');qsTipHide();
