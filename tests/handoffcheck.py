@@ -3,7 +3,9 @@
 canonical(check, site)                  five pages, one canonical each, no hash (no browser); offline_canonical(check, files): the offline package has none
 run(b, site, tmp, check)                two local servers stand in for the two addresses (different ports are different origins, so localStorage does not cross):
                                         the OLD one serves tools/make_pages_redirect.py's output, the NEW one serves the build under /witcher-3/
-Used by tests/run_all.py."""
+Used by tests/run_all.py.
+
+v38: notice(b, site, tmp, check, label) - the handoff notices stay until closed (x or Esc), in every browser run_all.py can start; redirect_targets(check, tmp) - the redirect page names no address but SITE_URL."""
 import base64, json, re, shutil, sys, threading
 from pathlib import Path
 
@@ -17,6 +19,7 @@ SITE_URL = "https://buildplanner.net/witcher-3/"
 G1, G2 = "16c6c2f7e7a7bf4fa1fb373ac8cfb80f", "db56ea162c8b9744af4b43ee4cb1d247"
 KEYS = make_pages_redirect.KEYS
 LINK = [l for l in (ROOT / "tests/fixtures/links/v27.txt").read_text().split() if ".g1B" in l][-1]
+NOTICE_TEXT = "(()=>{const n=document.getElementById('hoNotice');if(!n.hidden)return document.getElementById('hoMsg').textContent;const t=document.getElementById('toast');return t.hidden?'':document.getElementById('toastMsg').textContent})()"
 b64 = lambda o: base64.urlsafe_b64encode((o if isinstance(o, str) else json.dumps(o)).encode()).decode().rstrip("=")
 store = lambda manual, changed, save=None: json.dumps({"v": 1, "manual": manual, "save": save, "changed": changed})
 
@@ -59,7 +62,7 @@ def run(b, site, tmp, check):
         return ctx, pg, errs, dlg
 
     ls = lambda pg, k: pg.evaluate("localStorage.getItem(%s)" % json.dumps(k))
-    toast = lambda pg: pg.evaluate("(()=>{const t=document.getElementById('toast');return t.hidden?'':document.getElementById('toastMsg').textContent})()")
+    toast = lambda pg: pg.evaluate(NOTICE_TEXT)   # v38: the handoff notices are the persistent #hoNotice, not the fading toast
     manual = lambda pg: (json.loads(ls(pg, "w3p.quests.v1") or "null") or {}).get("manual")
 
     # 1. a plain link, a page with a query and an anchor
@@ -120,4 +123,70 @@ def run(b, site, tmp, check):
     # 7. the same hash on the OLD address with hostile storage does not break the redirect
     ctx, pg, errs, dlg = visit(OLD + "#" + LINK, seed_old={"w3p.quests.v1": "not json at all {{{", "w3p.quests.view": "<b>x</b>"})
     check("handoff: unreadable or hostile values on the old address still redirect; the new site rejects them without errors (nothing stored beyond what is valid)", not errs and not dlg and ls(pg, "w3p.quests.v1") is None and ls(pg, "w3p.quests.view") is None, (errs, dlg, toast(pg))); ctx.close()
+    ns.shutdown(); os_.shutdown()
+
+
+def redirect_targets(check, tmp):
+    """the page built for production (default target) sends the visitor nowhere but https://buildplanner.net/witcher-3/: no other address in the page, its rules, or the argument of location.replace"""
+    out = make_pages_redirect.build(Path(tmp) / "handoff-prod"); page = (out / "index.html").read_text(encoding="utf-8"); rules = (out / "_redirects").read_text(encoding="utf-8")
+    urls = set(re.findall(r"https?://[A-Za-z0-9./_~%-]+", page)); rurls = {u for l in rules.splitlines() if l and not l.startswith("#") for u in l.split()[1:2]}
+    check("redirect page (production target): the only address in index.html is %s (canonical, noscript refresh, link, script), and location.replace sends to it" % SITE_URL,
+          urls == {SITE_URL} and make_pages_redirect.TARGET == SITE_URL and re.findall(r"location\.(?:replace|href\s*=|assign)\(?\s*([A-Za-z]+)", page) == ["T"], (urls, make_pages_redirect.TARGET))
+    check("redirect page (production target): every _redirects rule points under %s" % SITE_URL, bool(rurls) and all(u.startswith(SITE_URL) for u in rurls), rurls)
+
+
+def notice(b, site, tmp, check, label):
+    """v38: the handoff notices (progress brought over, too large, stash) stay on screen until the user closes them: still visible after 10 s, a close button (x, keyboard focusable) closes them, so does Esc;
+    role=status, aria-live=polite; above the Import save dialog; an ordinary toast still fades after its own time and does not hide them; the stash sentence's 'Re-import your save' opens the Import save dialog"""
+    root = Path(tmp) / ("handoff-notice-" + label); new_root = root / "new"; shutil.copytree(site, new_root / "witcher-3")
+    ns = serve.make_server(new_root, 0); threading.Thread(target=ns.serve_forever, daemon=True).start(); NEW = "http://127.0.0.1:%d/witcher-3/" % ns.server_address[1]
+    old_dir = make_pages_redirect.build(root / "old", NEW); os_ = serve.make_server(old_dir, 0); threading.Thread(target=os_.serve_forever, daemon=True).start(); OLD = "http://127.0.0.1:%d/" % os_.server_address[1]
+    L = " (%s)" % label
+
+    def visit(url, seed):
+        ctx = b.new_context(viewport={"width": 1440, "height": 950}); pg = ctx.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e).split("\n")[0][:120]))
+        ctx.add_init_script("if(location.origin===%s){const s=%s;for(const k in s)localStorage.setItem(k,s[k])}" % (json.dumps(OLD.rstrip("/")), json.dumps(seed)))
+        pg.goto(url); pg.wait_for_url(NEW + "**", timeout=15000); pg.wait_for_function(READY, timeout=15000); pg.wait_for_timeout(400)
+        return ctx, pg, errs
+    vis = lambda pg, i: pg.evaluate("(()=>{const e=document.getElementById(%s);return !!e&&!e.hidden&&getComputedStyle(e).display!=='none'})()" % json.dumps(i))
+    text = lambda pg: pg.evaluate("document.getElementById('hoMsg').textContent")
+
+    # three variants, opened together so one 10 s wait covers all of them
+    seeds = {"progress brought over": ({"w3p.quests.v1": store({G1: "done"}, 1000)}, "quest progress was brought over from the old address."),
+             "too large": ({"w3p.quests.v1": "x" * 800000}, "too large to bring over automatically"),
+             "stash": ({"w3planner.stash": "{}"}, "Re-import your save to restore your stash.")}
+    runs = {k: visit(OLD + "#" + LINK, s) for k, (s, _) in seeds.items()}
+    for k, (ctx, pg, errs) in runs.items():
+        n = pg.evaluate("(()=>{const n=document.getElementById('hoNotice');return{role:n.getAttribute('role'),live:n.getAttribute('aria-live'),x:document.getElementById('hoX').tagName,label:document.getElementById('hoX').getAttribute('aria-label')}})()")
+        check("handoff notice (%s): shown with the current text, role=status, aria-live=polite, a close button with a label%s" % (k, L),
+              vis(pg, "hoNotice") and seeds[k][1] in text(pg) and n == {"role": "status", "live": "polite", "x": "BUTTON", "label": "Close this notice"} and not errs, (text(pg)[:100], n, errs))
+    # an ordinary toast and a rebuild next to the stash notice, then the wait
+    ctx, pg, errs = runs["stash"]
+    pg.evaluate("save()"); pg.evaluate("notify('An ordinary toast.')"); pg.wait_for_timeout(300)   # save() hides the toast by design, so it goes first
+    box = lambda i: pg.evaluate("(()=>{const r=document.getElementById(%s).getBoundingClientRect();return[r.top,r.bottom]})()" % json.dumps(i))
+    nb, tb = box("hoNotice"), box("toast")
+    check("an ordinary toast shows next to the notice without covering it, and a build change (save()) does not hide the notice%s" % L, vis(pg, "toast") and vis(pg, "hoNotice") and tb[1] <= nb[0] + 1, (nb, tb))
+    pg.wait_for_timeout(10000)
+    for k, (ctx, pg2, errs) in runs.items():
+        check("handoff notice (%s): still visible after 10 s%s" % (k, L), vis(pg2, "hoNotice"), text(pg2)[:80])
+    check("the ordinary toast still fades by itself (6.5 s) while the notice stays%s" % L, not vis(pg, "toast") and vis(pg, "hoNotice"))
+    # the stash sentence: text unchanged, 'Re-import your save' is a button that opens Import save, the notice is above that dialog
+    a = pg.locator("#hoMsg button.holink")
+    check("stash notice: 'Re-import your save' is a button and the sentence reads 'Re-import your save to restore your stash.'%s" % L, a.count() == 1 and a.inner_text() == "Re-import your save" and text(pg) == "Re-import your save to restore your stash.", text(pg))
+    a.click(); pg.wait_for_timeout(300)
+    top = pg.evaluate("(()=>{const r=document.getElementById('hoNotice').getBoundingClientRect(),e=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return !!e&&document.getElementById('hoNotice').contains(e)})()")
+    check("the Import save dialog opens from the notice, and the notice is drawn above the dialog%s" % L, vis(pg, "impov") and top and vis(pg, "hoNotice"), (vis(pg, "impov"), top))
+    pg.keyboard.press("Escape"); pg.wait_for_timeout(200)
+    check("Esc with the dialog open closes the dialog first and leaves the notice%s" % L, not vis(pg, "impov") and vis(pg, "hoNotice"))
+    # close: keyboard focus, then click
+    pg.focus("#hoX"); check("the close button can take keyboard focus%s" % L, pg.evaluate("document.activeElement.id") == "hoX")
+    pg.click("#hoX"); pg.wait_for_timeout(200)
+    check("clicking the close button hides the notice, and the space is given back to toasts%s" % L, not vis(pg, "hoNotice") and not pg.evaluate("document.body.classList.contains('ho-open')"))
+    ctx2, pg2, e2 = runs["progress brought over"]; pg2.focus("#hoX"); pg2.keyboard.press("Enter"); pg2.wait_for_timeout(200)
+    check("the close button works from the keyboard (Enter)%s" % L, not vis(pg2, "hoNotice"))
+    ctx3, pg3, e3 = runs["too large"]; pg3.keyboard.press("Escape"); pg3.wait_for_timeout(200)
+    check("Esc closes the notice%s" % L, not vis(pg3, "hoNotice"))
+    for c, _, _ in runs.values(): c.close()
+    # the next visit to the planner has no notice: it is not remembered anywhere
+    ctx, pg, errs = visit(NEW + "#" + LINK, {}); check("a plain visit shows no notice%s" % L, not vis(pg, "hoNotice")); ctx.close()
     ns.shutdown(); os_.shutdown()

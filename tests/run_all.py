@@ -177,6 +177,12 @@ def main():
         print("\n== Quests ==")
         print("\n== Canonical address and the handoff from the old address (v37) ==")
         handoffcheck.canonical(check, site); handoffcheck.run(b, site, tmp, check)
+        handoffcheck.redirect_targets(check, tmp); handoffcheck.notice(b, site, tmp, check, "chromium")
+        try: fx = pw.firefox.launch()
+        except Exception as e: fx = None; print("  SKIP the handoff notice in Firefox: not installed or missing system libraries (%s)" % str(e).strip().splitlines()[0][:80])
+        if fx:
+            try: handoffcheck.notice(fx, site, tmp, check, "firefox")
+            finally: fx.close()
         qscheck.data(check); qscheck.rules(check); qscheck.run(b, gbase, check, "online"); qscheck.text(b, gbase, check, "online (fake text)", False)
         if a.variant == "game": qscheck.text(b, base, check, "online (live build)", True)
         else: qscheck.publicbuild(b, base, check, "online (public build)")
