@@ -2,7 +2,41 @@
 // A link says: quest A (the failer) reaches a step that fails quest B (the failed one); the game files show it (tools/build_quest_fails.py ships verified links only).
 // Nothing here changes a state by itself. It paints the views quests.js has drawn (a MutationObserver repaints after every redraw) and offers two buttons when A is done and B is still open.
 (function(){
-const OPEN=s=>qsOpenState(s),nm=g=>qsEsc(QS.byG.get(g).n),A={links:[],gone:new Set()};
+// the rules live here, not in quests.css, so index.html stays small (the CSP allows inline styles); the colour tokens --qf-* are in quests.css
+const css=`
+.qfrow{margin:4px 0;border:2px solid transparent;border-radius:6px}.qfrow.qf-fail{background:var(--qf-red-bg);border-color:var(--qf-red)}.qfrow.qf-risk{background:var(--qf-amber-bg);border-color:var(--qf-amber)}.qfrow .qsrow{border-bottom:0;min-height:44px}.qfrow.qf-fail .qsrn2 b{color:#fff2ef}.qfrow.qf-fail .qsrow:hover{background:#4a1b17}.qfrow.qf-risk .qsrow:hover{background:#38291a}
+.qfextra{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:0 10px 8px 36px;font-size:16px;line-height:1.3}.qf-fail>.qfextra{color:var(--qf-ink-red)}.qf-risk>.qfextra{color:var(--qf-ink-amber)}.qfstep{flex:1 1 220px;min-width:0}
+.qfchip{display:inline-flex;align-items:center;font-size:14px;font-weight:600;line-height:1.2;border-radius:999px;padding:3px 10px;color:var(--qf-chip-ink);white-space:nowrap}.qfchip.red{background:var(--qf-red-chip);color:#1a0907}.qfchip.amber{background:var(--qf-amber)}
+.qfby{margin:0;font-size:15px;color:#e8998f}
+.qfwhy{flex:1 1 100%}.qfwhy summary,.qfev summary{display:flex;align-items:center;min-height:44px;cursor:pointer;color:#e3c27a}.qfwhy summary:focus-visible,.qfev summary:focus-visible,.qfprompt .btn:focus-visible,.qfx2:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.qfwhy ol,.qfev ul{margin:0 0 6px;padding-left:22px}.qfwhy code{font-size:14px;color:inherit;background:#0006;padding:0 4px}.qfev{margin:0 0 6px}.qfev li{margin:3px 0;font-size:14px;word-break:break-word}.qfsrc{margin:0 0 6px;font-size:14px;opacity:.85}
+.qfcaution{display:block;margin-top:5px;padding:4px 8px;background:var(--qf-red-bg);border:1px solid var(--qf-red);border-radius:4px;color:var(--qf-ink-red);font-size:15px!important;font-style:normal!important;line-height:1.25}
+.qscard.qf-fail{border-color:var(--qf-red)}.qscard.qf-risk{border-color:var(--qf-amber)}.qscard .qfchip{margin-top:5px;align-self:flex-start;font-size:13px}
+.qsdot.qf-fail{box-shadow:0 0 0 2px var(--qf-red);border-radius:50%}.qsdot.qf-risk{outline:2px dashed var(--qf-amber);outline-offset:2px;border-radius:50%}
+.qfsub{display:block;font-size:15px}.qfsub.red{color:var(--qf-red-chip)}.qfsub.amber{color:var(--qf-amber)}
+.qfdet{display:flex;flex-direction:column;gap:8px;margin:8px 0}.qfbox{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 12px;border:2px solid;border-radius:6px;font-size:16px;line-height:1.3}.qfbox.red{background:var(--qf-red-bg);border-color:var(--qf-red);color:var(--qf-ink-red)}.qfbox.amber{background:var(--qf-amber-bg);border-color:var(--qf-amber);color:var(--qf-ink-amber)}
+.qfprompts:empty{display:none}.qfprompts{display:flex;flex-direction:column;gap:8px;margin:0 0 10px}
+.qfprompt{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:8px 8px 8px 14px;background:#0d0c0bf7;border:1px solid #8a6a36;font-size:17px;line-height:1.3;color:#f1e8d6}.qfprompt p{margin:0;flex:1 1 280px}.qfbtns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.qfprompt .btn{min-height:44px;font-size:16px;cursor:pointer}
+.qfx2{flex:none;width:44px;height:44px;padding:0;background:none;border:1px solid transparent;color:inherit;font:inherit;font-size:24px;line-height:1;cursor:pointer}.qfx2:hover{border-color:#8a6a36}
+
+.qfbbox:empty{display:none}.qfbbox{margin:0 0 10px}.qfbanner{background:var(--qf-red-bg);border:1px solid var(--qf-red);border-radius:6px}
+.qfbrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 14px}.qfbrow svg{flex:none;color:var(--qf-red-chip)}.qfbrow p{margin:0;flex:1 1 360px;color:var(--qf-ink-red);font-size:17px;line-height:1.35}
+.qfn{font-weight:600}.qfn.red{color:var(--qf-red-chip)}.qfn.amber{color:var(--qf-amber)}.qfreg{color:#d9b4ad}
+.qfmore{min-height:44px;padding:0 16px;background:none;color:#ffd6cf;border:1px solid var(--qf-red);border-radius:4px;font:inherit;font-size:16px;font-weight:600;cursor:pointer}.qfmore:hover{background:#4a1b17}
+.qfpanel{border-top:1px solid #7a2f29;background:#1b1410;padding:14px 16px;border-radius:0 0 6px 6px;display:flex;flex-direction:column;gap:16px}.qfpanel[hidden]{display:none}
+.qflab{font-size:13px;font-weight:600;letter-spacing:.06em;color:#a8987a}.qfdep{display:flex;flex-direction:column;gap:10px}.qfdep+.qfdep{border-top:1px solid #3a3226;padding-top:16px}
+.qfcards{display:flex;flex-wrap:wrap;gap:12px;align-items:stretch}.qfcard{flex:1 1 260px;display:flex;flex-direction:column;gap:5px;padding:12px 14px;border:2px solid;border-radius:6px}
+.qfcard.red{background:var(--qf-red-bg);border-color:var(--qf-red);color:#f0b8b0}.qfcard.red .qflab{color:var(--qf-red-chip)}.qfcard.red .qfbig{color:#fff2ef}
+.qfcard.amber{background:var(--qf-amber-bg);border-color:var(--qf-amber);color:#c9b48c}.qfcard.amber .qflab{color:var(--qf-amber)}.qfcard.amber .qfbig{color:#f3e8d2}
+.qfbig{font-size:24px;font-weight:600;line-height:1.1}.qfmeta{font-size:15px}.qfgo{align-self:flex-start;min-height:44px;padding:0;background:none;border:0;font:inherit;font-size:16px;text-decoration:underline;cursor:pointer;color:inherit}
+.qfmid{flex:1 1 220px;display:flex;flex-direction:column;justify-content:center;gap:5px;padding:4px}.qfstepn{color:#fff2ef;font-weight:600}.qfarrow{color:var(--qf-red);font-size:22px;line-height:1}
+.qfsafe{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}.qfsafe p{margin:0;flex:1 1 360px;font-size:16px;color:#d9cbad}.qffin{min-height:44px;font-size:16px;cursor:pointer}
+.qfdata{background:#15110c;border:1px solid #3a3226;border-radius:4px;padding:2px 12px}.qfdata summary{display:flex;align-items:center;min-height:44px;cursor:pointer;color:#c9bba0}.qfdata ul{margin:0 0 6px;padding-left:20px}.qfdata li{margin:3px 0;font-size:14px;color:#c9bba0;word-break:break-word}.qfdata p{margin:0 0 8px;font-size:14px;color:#c9bba0}
+.qfmore:focus-visible,.qfgo:focus-visible,.qffin:focus-visible,.qfdata summary:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.qsreg{position:relative}.qfdots{position:absolute;top:3px;right:4px;display:flex;gap:3px}.qfd{display:block;width:9px;height:9px;box-sizing:border-box;border-radius:50%;box-shadow:0 0 0 1.5px #0d0c0a}.qfd.red{background:var(--qf-red-chip)}.qfd.amber{background:#0d0c0a;border:2.5px solid var(--qf-amber)}
+@keyframes qfpulse{0%,100%{box-shadow:0 0 0 0 #fff0}50%{box-shadow:0 0 0 7px #fffc}}.qf-pulse{animation:qfpulse .7s ease-in-out 3;border-radius:6px}@media (prefers-reduced-motion:reduce){.qf-pulse{animation:none;outline:3px solid #fff;outline-offset:3px}}
+`,st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
+const OPEN=s=>qsOpenState(s),nm=g=>qsEsc(QS.byG.get(g).n),A={links:[],gone:new Set(),open:false,pulse:0};   // open = the details panel under the banner (this visit only, no storage)
 const op=l=>l.op.func.replace('CF_','').replace('GreaterEqual','≥').replace('Greater','>').replace('Equal','=')+' '+l.op.value;
 const live=()=>A.links.filter(l=>OPEN(qsState(l.failed))&&OPEN(qsState(l.failer)));           // both quests still open: red + amber
 const due=()=>A.links.filter(l=>qsState(l.failer)==='done'&&OPEN(qsState(l.failed))&&!A.gone.has(l.failer+l.failed));   // A is done, B was left open: ask
@@ -14,6 +48,29 @@ const why=l=>`<details class="qfwhy"><summary>Why?</summary><ol><li>In ${nm(l.fa
  <li>${nm(l.failed)} waits for <code>${qsEsc(l.fact)} ${op(l)}</code> and fails as soon as it is true.</li></ol>
  <details class="qfev"><summary>Evidence in the game files</summary><ul>${l.evidence.map(e=>`<li><code>${qsEsc(e.file.split('/').pop())}${e.block==null?'':' #'+e.block}</code> ${qsEsc(e.note)}</li>`).join('')}</ul>
  <p>Whether the game fails a quest you have not started yet is unconfirmed.</p></details><p class="qfsrc">Source: remaster game files</p></details>`;
+const qq=g=>QS.byG.get(g),rg=g=>qsEsc(QS.regions.get(qq(g).r)),cn=(g,c)=>`<b class="qfn ${c}">${nm(g)}</b>`;
+const bline=l=>`${cn(l.failer,'red')} <span class="qfreg">(${rg(l.failer)})</span> fails${qsState(l.failed)==='none'?' or closes':''} ${cn(l.failed,'amber')} <span class="qfreg">(${rg(l.failed)})</span> at the ${qsEsc(l.trigger_short)}. Do ${nm(l.failed)} first.`;
+const meta=g=>`${qsEsc(qsKindName(qq(g).t))} · ${rg(g)} · level ${qsLevelText(qq(g))} · ${QS_NAMES[qsState(g)]}`;
+function banner(L){const fl=[...new Set(L.map(l=>l.failed))].length;
+ const msg=L.length===1?bline(L[0]):`${fl} quest${fl>1?'s':''} will fail if you continue the quests marked red. Open the details to see what to do first.`;
+ return`<div class="qfbanner" role="note"><div class="qfbrow"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 21h20L12 3z"/><path d="M12 10v5M12 18h.01"/></svg><p>${msg}</p>
+ <button type="button" class="qfmore" aria-expanded="false" aria-controls="qfPanel">More details</button></div>
+ <div class="qfpanel" id="qfPanel" hidden><div class="qflab">QUEST DEPENDENCY</div>${L.map(l=>`<section class="qfdep" aria-label="${nm(l.failer)} fails ${nm(l.failed)}">
+  <div class="qfcards"><div class="qfcard red"><div class="qflab">IF YOU DO THIS</div><div class="qfbig">${nm(l.failer)}</div><div class="qfmeta">${meta(l.failer)}</div><button type="button" class="qfgo" data-go="${l.failer}">Go to quest ›</button></div>
+  <div class="qfmid"><div class="qflab">AT THIS STEP</div><div class="qfstepn">${qsEsc(l.trigger_phase.split(' > ').concat(l.trigger_label).join(' › '))}</div><div class="qfarrow" aria-hidden="true">→</div></div>
+  <div class="qfcard amber"><div class="qflab">THIS QUEST FAILS</div><div class="qfbig">${nm(l.failed)}</div><div class="qfmeta">${meta(l.failed)}</div><button type="button" class="qfgo" data-go="${l.failed}">Go to quest ›</button></div></div>
+  <div class="qfsafe"><p>Safe order: finish ${nm(l.failed)}, then continue ${nm(l.failer)}.${qsState(l.failed)==='none'?' If you haven\'t started it, the game may close it at this step instead.':''}</p><button type="button" class="btn qffin" data-fin="${l.failed}">I finished it already</button></div>
+  <details class="qfdata"><summary>Game data (remaster files, full trace)</summary><ul>${l.evidence.map(e=>`<li><code>${qsEsc(e.file.split('/').pop())}${e.block==null?'':' #'+e.block}</code> ${qsEsc(e.note)}</li>`).join('')}</ul><p>Whether the game fails a quest you have not started yet is unconfirmed.</p></details></section>`).join('')}</div></div>`}
+function wireBanner(box){const b=box.querySelector('.qfmore'),pn=box.querySelector('.qfpanel');if(!b)return;
+ const set=()=>{pn.hidden=!A.open;b.setAttribute('aria-expanded',String(A.open));b.textContent=A.open?'Hide details':'More details'};set();b.onclick=()=>{A.open=!A.open;set()};
+ box.querySelectorAll('[data-go]').forEach(x=>{x.onclick=()=>goTo(x.dataset.go)});box.querySelectorAll('[data-fin]').forEach(x=>{x.onclick=()=>qsMark(x.dataset.fin,'done')})}
+// "Go to quest": its region tab, the same view, then the row or marker (scrolled to, focused, its ring pulses for about 2 s; reduced motion: a plain outline for as long)
+async function goTo(g){const q=qq(g);if(!q)return;if(q.r!==QS.region){QS.region=q.r;qsRenderAll()}
+ const sel=()=>document.querySelector((QS.view==='list'?'.qsrow':'.qsdot')+'[data-g="'+g+'"]'),frame=()=>new Promise(r=>requestAnimationFrame(r));await frame();let el=sel();
+ if(!el&&QS.view==='list'&&(QS.kind!=='all'||QS.q||QS.hide)){QS.kind='all';QS.q='';QS.hide=false;qsRenderAll();await frame();el=sel()}   // a filter was hiding it
+ if(!el){qsSelect(g,true);return}                                  // not drawn in this view (done and hidden, or in a closed cell): open its detail instead
+ el.scrollIntoView({block:'center',inline:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});el.focus({preventScroll:true});
+ const t=el.closest('.qfrow')||el,id=++A.pulse;t.classList.add('qf-pulse');setTimeout(()=>{if(A.pulse===id)t.classList.remove('qf-pulse')},2000)}
 function prompt(l){return`<div class="qfprompt" role="status" data-k="${l.failer}${l.failed}"><p><b>${nm(l.failer)}</b> is done. <b>${nm(l.failed)}</b> would have failed along the way.</p>
  <div class="qfbtns"><button type="button" class="btn" data-a="failed" data-g="${l.failed}">Mark it failed</button><button type="button" class="btn" data-a="done" data-g="${l.failed}">I finished it first</button><button type="button" class="qfx2" data-a="close" aria-label="Close this notice">×</button></div></div>`}
 function wire(el){el.querySelectorAll('.qfprompt [data-a]').forEach(b=>{b.onclick=()=>{const k=b.closest('.qfprompt').dataset.k,a=b.dataset.a;
@@ -22,12 +79,14 @@ function mk(tag,cls,html){const e=document.createElement(tag);e.className=cls;e.
 function paint(){if(!A.links.length||!QS.data)return;obs.disconnect();try{
  const view=qsEl('qsView'),L=live();
  // the prompt(s) above Next up: every link whose failer is done and whose failed quest is still open
- let box=qsEl('qfPrompts');if(!box){box=mk('div','qfprompts','');box.id='qfPrompts';qsEl('qsMiss').before(box)}
+ let box=qsEl('qfPrompts'),bn=qsEl('qfBanner');if(!bn){bn=mk('div','qfbbox','');bn.id='qfBanner';qsEl('qsMiss').before(bn)}if(!box){box=mk('div','qfprompts','');box.id='qfPrompts';qsEl('qsMiss').before(box)}
  box.innerHTML=due().map(prompt).join('');wire(box);
- // the banner, on every view: one line per failer
- view.querySelectorAll('.qfbanner').forEach(e=>e.remove());
- const fl=[...new Set(L.map(l=>l.failer))];
- if(fl.length)view.prepend(mk('div','qfbanner',fl.map(g=>{const n=fails(g).length;return`<p role="note"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 21h20L12 3z"/><path d="M12 10v5M12 18h.01"/></svg><span>Continuing <b>${nm(g)}</b> fails ${n} open quest${n>1?'s':''}. Do the amber one${n>1?'s':''} first.</span></p>`}).join('')));
+ // the banner above Next up (so on every region tab and every view): one line, or a summary, and the details panel
+ const bh=L.length?banner(L):'';if(bn.dataset.h!==bh){bn.dataset.h=bh;bn.innerHTML=bh;wireBanner(bn)}
+ // region tabs: a red dot when the tab holds a quest that fails another, an amber one when it holds a quest at risk
+ qsEl('qsRegs').querySelectorAll('.qsreg[data-r]').forEach(t=>{t.querySelectorAll('.qfdots').forEach(e=>e.remove());const k=t.dataset.r,r=L.some(l=>qq(l.failer).r===k),a=L.some(l=>qq(l.failed).r===k);if(!r&&!a)return;
+  const w=(r?'has a quest that fails another':'')+(r&&a?' and ':'')+(a?'has a quest at risk of failing':''),n=t.querySelector('.qsrn').textContent;
+  t.append(mk('span','qfdots',(r?'<i class="qfd red"></i>':'')+(a?'<i class="qfd amber"></i>':'')));const o=t.dataset.t||(t.dataset.t=t.title);t.setAttribute('aria-label',n+', '+w.replace(' and has',' and')+', '+t.querySelector('small').textContent);t.title=o+' · '+w});
  // List rows: a card around the row with the chip, the step and the Why? disclosure
  view.querySelectorAll('.qsrow[data-g]').forEach(r=>{const g=r.dataset.g,f=fails(g),k=risks(g),b=by(g);if(!f.length&&!k.length&&!b)return;
   const w=mk('div','qfrow'+(f.length?' qf-fail':k.length?' qf-risk':''),'');r.before(w);w.append(r);
@@ -46,7 +105,7 @@ function paint(){if(!A.links.length||!QS.data)return;obs.disconnect();try{
   if(h){const e=mk('div','qfdet',h);m.after(e);wire(e)}}
  }finally{watch()}}
 const obs=new MutationObserver(()=>paint());
-function watch(){['qsView','qsNext','qsDetail'].forEach(id=>{const e=qsEl(id);if(e)obs.observe(e,{childList:true,subtree:true})})}
+function watch(){['qsView','qsNext','qsDetail','qsRegs'].forEach(id=>{const e=qsEl(id);if(e)obs.observe(e,{childList:true,subtree:true})})}
 document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;const p=document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.qfprompt');
  if(p){e.preventDefault();e.stopPropagation();A.gone.add(p.dataset.k);paint()}},true);   // Esc closes the notice the focus is in (before the drawer's own Esc)
 window.QF={

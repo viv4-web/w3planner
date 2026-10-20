@@ -3,6 +3,7 @@
 data(check)                       the shipped file is exactly the verified link of tests/fixtures/quest_fails/sq106_q401.json (no browser)
 tool(check)                       tools/build_quest_fails.py ships verified records only and refuses a candidate (fake candidate files, no browser)
 run(b, base, check, label)        states (red + amber, nothing, prompt and its two buttons), no automatic change, List, Timeline, Level band, Next up, failed state, contrast, phone
+banner(b, base, check, label)     v39.1: the banner wording, tab dots, details panel, Go to quest, several links, phone
 offline(b, off, check, label)     the same safeguard in the offline package (file://)
 Used by tests/run_all.py. Quest GUIDs: Ugly Baby is the failer, Following the Thread the failed quest."""
 import json, re, subprocess, sys, tempfile
@@ -86,8 +87,11 @@ def run(b, base, check, label):
     keys0 = E("Object.keys(localStorage).sort()"); man0 = E("JSON.stringify(QS.store.manual)")
     Q.until(pg, "!!document.querySelector('.qfbanner')")
     # --- state 1: both open -> red + amber
-    ban = E("[...document.querySelectorAll('.qfbanner p')].map(p=>p.textContent.trim())")
-    check("%s: Ugly Baby active and Following the Thread not started: the banner reads 'Continuing Ugly Baby fails 1 open quest. Do the amber one first.' (%s)" % (label, ban), ban == ["Continuing Ugly Baby fails 1 open quest. Do the amber one first."], ban)
+    ban = E("[...document.querySelectorAll('.qfbrow p')].map(p=>p.textContent.trim().replace(/\\s+/g,' '))")
+    check("%s: Ugly Baby active and Following the Thread NOT started: the banner reads '... fails or closes Following the Thread (Novigrad) at the stable guard. Do Following the Thread first.' (%s)" % (label, ban),
+          ban == ["Ugly Baby (Kaer Morhen) fails or closes Following the Thread (Novigrad) at the stable guard. Do Following the Thread first."], ban)
+    col = E("[getComputedStyle(document.querySelector('.qfbanner .qfn.red')).color,getComputedStyle(document.querySelector('.qfbanner .qfn.amber')).color,document.querySelector('.qfbanner .qfn.red').textContent,document.querySelector('.qfbanner .qfn.amber').textContent]")
+    check("%s: the quest names in the banner are in the red and amber colours (%s)" % (label, col), col == ["rgb(255, 138, 128)", "rgb(240, 180, 82)", "Ugly Baby", "Following the Thread"], col)
     row = E("""(()=>{const w=document.querySelector('.qsrow[data-g="%s"]').closest('.qfrow');return w&&{cls:w.className,chip:w.querySelector('.qfchip').textContent,step:w.querySelector('.qfstep').textContent,aria:w.querySelector('.qsrow').getAttribute('aria-label')}})()""" % UGLY)
     check("%s: List: the failer row is red (qf-fail) with the chip 'Fails 1 quest' and the line naming the step (%s)" % (label, row), row and "qf-fail" in row["cls"] and row["chip"] == "Fails 1 quest"
           and row["step"] == "› Talk to the stable guard at Crow's Perch — Following the Thread fails here" and "fails 1 open quest" in row["aria"], row)
@@ -127,7 +131,7 @@ def run(b, base, check, label):
     pg.mouse.move(2, 2)
     unp = E("""(()=>{const d=document.querySelector('.qsdot[data-g="%s"]');return d?{cls:d.className,aria:d.getAttribute('aria-label')}:null})()""" % THREAD)
     check("%s: Timeline: when Following the Thread has a marker it has the amber ring (qf-risk) and 'at risk: do before Ugly Baby' in its label (%s)" % (label, unp), unp is None or ("qf-risk" in unp["cls"] and "at risk: do before Ugly Baby" in unp["aria"]), unp)
-    check("%s: Timeline: the banner is above the chart" % label, E("!!document.querySelector('#qsView > .qfbanner:first-child')"))
+    check("%s: Timeline: the banner is above the views" % label, E("!!document.querySelector('#qfBanner .qfbanner')"))
     pg.click("#qsVBand"); pg.wait_for_timeout(300)
     dot = E("""(()=>{const d=document.querySelector('.qsdot[data-g="%s"]');return d&&{cls:d.className,aria:d.getAttribute('aria-label')}})()""" % UGLY)
     check("%s: Level band: the Ugly Baby dot has the red ring and the label says it fails 1 open quest (%s)" % (label, dot), dot and "qf-fail" in dot["cls"] and "fails 1 open quest" in dot["aria"], dot)
@@ -190,10 +194,83 @@ def run(b, base, check, label):
     pg.close()
 
 
+def banner(b, base, check, label):
+    """v39.1: the banner of the mockup v3 (started / not started wording, every region tab, names in colour), the region tab dots, the details panel, Go to quest, several links, phone"""
+    pg, errs, reqs = Q.newpage(b, base, init=seed({UGLY: "active"})); E = pg.evaluate; Q.opened(pg, "km"); Q.until(pg, "!!document.querySelector('.qfbanner')")
+    tabs = []
+    for k in ("wo", "vz", "ve", "no", "sk", "km", "hos", "baw", "oth"):
+        pg.click('.qsreg[data-r="%s"]' % k); pg.wait_for_timeout(60); tabs.append(E("!!document.querySelector('#qfBanner .qfbanner')"))
+    check("%s: the banner is on every one of the nine region tabs (%s)" % (label, tabs), all(tabs) and len(tabs) == 9, tabs)
+    pg.click('.qsreg[data-r="no"]'); pg.wait_for_timeout(100)
+    dots = E("""(()=>{const o={};document.querySelectorAll('#qsRegs .qsreg').forEach(t=>{o[t.dataset.r]=[[...t.querySelectorAll('.qfd')].map(d=>d.className.replace('qfd ','')),t.getAttribute('aria-label')]});return o})()""")
+    check("%s: region tabs: a red dot on Kaer Morhen (holds the failer) and an amber dot on Novigrad (holds the quest at risk), no dot elsewhere (%s)" % (label, {k: v[0] for k, v in dots.items() if v[0]}),
+          dots["km"][0] == ["red"] and dots["no"][0] == ["amber"] and all(not v[0] for k, v in dots.items() if k not in ("km", "no")), dots)
+    check("%s: the tab labels say it in words: 'Kaer Morhen, has a quest that fails another, ...' and 'Novigrad, has a quest at risk of failing, ...' (%s)" % (label, [dots["km"][1], dots["no"][1]]),
+          (dots["km"][1] or "").startswith("Kaer Morhen, has a quest that fails another, ") and (dots["no"][1] or "").startswith("Novigrad, has a quest at risk of failing, "), dots)
+    E("(()=>{QS.byG.get('%s').r='km';qsRenderAll()})()" % THREAD); pg.wait_for_timeout(100)
+    both = E("(()=>{const t=document.querySelector('.qsreg[data-r=\"km\"]');return[[...t.querySelectorAll('.qfd')].map(d=>d.className.replace('qfd ','')),t.getAttribute('aria-label')]})()")
+    check("%s: a tab holding both gets both dots and both phrases (%s)" % (label, both), both[0] == ["red", "amber"] and "fails another and a quest at risk of failing" in both[1], both)
+    E("(()=>{QS.byG.get('%s').r='no';qsRenderAll()})()" % THREAD); pg.wait_for_timeout(100)
+    # the details panel
+    pn = E("(()=>{const b=document.querySelector('.qfmore'),p=document.getElementById('qfPanel');return[b.textContent,b.getAttribute('aria-expanded'),p.hidden,Math.round(b.getBoundingClientRect().height)]})()")
+    check("%s: 'More details' (aria-expanded=false, 44 px) with the panel closed at first (%s)" % (label, pn), pn[0] == "More details" and pn[1] == "false" and pn[2] is True and pn[3] >= 44, pn)
+    pg.click(".qfmore"); pg.wait_for_timeout(100)
+    pn = E("""(()=>{const b=document.querySelector('.qfmore'),p=document.getElementById('qfPanel'),t=p.textContent.replace(/\\s+/g,' ');return{lab:b.textContent,exp:b.getAttribute('aria-expanded'),vis:!p.hidden&&p.offsetHeight>0,t,
+      go:[...p.querySelectorAll('.qfgo')].map(x=>[x.textContent,Math.round(x.getBoundingClientRect().height)]),fin:p.querySelector('.qffin').textContent,fh:Math.round(p.querySelector('.qffin').getBoundingClientRect().height),dd:p.querySelector('details.qfdata').open,
+      red:p.querySelector('.qfcard.red .qflab').textContent,amber:p.querySelector('.qfcard.amber .qflab').textContent,n:p.querySelectorAll('.qfdep').length,ev:p.querySelector('details.qfdata li').textContent.length>10}})()""")
+    check("%s: 'More details' opens the panel inline: the button reads 'Hide details' (aria-expanded=true), the red card IF YOU DO THIS, AT THIS STEP with the arrow, the amber card THIS QUEST FAILS (%s)" % (label, pn["lab"]), pn["lab"] == "Hide details" and pn["exp"] == "true" and pn["vis"] and pn["red"] == "IF YOU DO THIS"
+          and pn["amber"] == "THIS QUEST FAILS" and "AT THIS STEP" in pn["t"] and "Collect UMA › Stable Master › Talk to the stable guard at Crow's Perch" in pn["t"] and "→" in pn["t"], pn)
+    check("%s: the cards say 'type · region · level · state' and have a 44 px 'Go to quest ›' each (%s)" % (label, pn["go"]), "Main · Kaer Morhen · level 19 · Active" in pn["t"] and "Secondary · Novigrad · level 11 · Not started" in pn["t"] and pn["go"] == [["Go to quest ›", pn["go"][0][1]]] * 2 and pn["go"][0][1] >= 44, pn["go"])
+    check("%s: under the cards: the safe-order sentence (with the not-started line), 'I finished it already' (44 px) and the collapsed 'Game data (remaster files, full trace)' with the evidence (%s)" % (label, pn["fin"]),
+          "Safe order: finish Following the Thread, then continue Ugly Baby. If you haven't started it, the game may close it at this step instead." in pn["t"] and pn["fin"] == "I finished it already" and pn["fh"] >= 44 and not pn["dd"]
+          and "Game data (remaster files, full trace)" in pn["t"] and pn["ev"] and pn["n"] == 1, pn)
+    for sel, what in (('.qfbrow p, .qfn, .qfreg, .qfmore', "banner"), ('.qfcard.red, .qfcard.red .qflab, .qfcard.red .qfbig, .qfcard.red .qfgo', "red card"), ('.qfcard.amber, .qfcard.amber .qflab, .qfcard.amber .qfbig, .qfcard.amber .qfgo', "amber card"),
+                      ('.qfstepn, .qfsafe p, .qffin, .qfdata summary, .qfdata li', "panel text")):
+        ratio(pg, sel, what, check, label + " contrast")
+    pg.click('.qsreg[data-r="km"]'); pg.wait_for_timeout(100)
+    check("%s: the panel stays open when the region tab changes (it is a visit-only state) and no storage key was added for it" % label, E("[!document.getElementById('qfPanel').hidden,Object.keys(localStorage).sort().join()]") == [True, "w3p.quests.v1"])
+    # Go to quest: region tab switches, the view is kept, the row has focus and its ring pulses
+    pg.click('#qfPanel [data-go="%s"]' % THREAD); Q.until(pg, "document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.g==='%s'" % THREAD, 3000)
+    g = E("[QS.region,QS.view,document.activeElement.dataset.g,document.activeElement.className.split(' ')[0],!!document.querySelector('.qf-pulse'),document.querySelector('.qsreg.on').dataset.r,!document.getElementById('qfPanel').hidden]")
+    check("%s: Go to quest (amber, from the Kaer Morhen tab): the Novigrad tab opens, the List stays, the quest's row has the focus and its ring pulses (%s)" % (label, g), g == ["no", "list", THREAD, "qsrow", True, "no", True], g)
+    pg.wait_for_timeout(2300)
+    check("%s: the pulse is gone after about 2 s" % label, not E("!!document.querySelector('.qf-pulse')"))
+    pg.click("#qsVBand"); pg.click('#qfPanel [data-go="%s"]' % UGLY); Q.until(pg, "document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.g==='%s'" % UGLY, 3000)
+    g = E("[QS.region,QS.view,document.activeElement.dataset.g,document.activeElement.className.split(' ')[0],!!document.querySelector('.qf-pulse')]")
+    check("%s: Go to quest (red) in the Level band: Kaer Morhen opens, the band stays, the Ugly Baby marker has the focus and pulses (%s)" % (label, g), g == ["km", "band", UGLY, "qsdot", True], g)
+    pg.click("#qsVTime"); pg.wait_for_timeout(300); pg.click('#qfPanel [data-go="%s"]' % THREAD); Q.until(pg, "document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.g==='%s'" % THREAD, 3000)
+    g = E("[QS.view,document.activeElement.dataset.g,document.activeElement.className.split(' ')[0]]")
+    check("%s: Go to quest in the Timeline keeps the Timeline and focuses the marker (%s)" % (label, g), g == ["time", THREAD, "qsdot"], g)
+    pg.wait_for_timeout(2300); pg.click("#qsVList"); pg.wait_for_timeout(200)
+    pg.emulate_media(reduced_motion="reduce"); pg.click('#qfPanel [data-go="%s"]' % UGLY); Q.until(pg, "!!document.querySelector('.qf-pulse')", 3000)
+    rm = E("(()=>{const e=document.querySelector('.qf-pulse');const c=getComputedStyle(e);return[c.animationName,c.outlineStyle,c.outlineWidth]})()")
+    check("%s: prefers-reduced-motion: no animation, a plain outline instead (%s)" % (label, rm), rm[0] == "none" and rm[1] == "solid" and rm[2] == "3px", rm)
+    pg.emulate_media(reduced_motion="no-preference")
+    pg.click(".qfmore"); pg.wait_for_timeout(100)
+    check("%s: 'Hide details' closes the panel again" % label, E("[document.getElementById('qfPanel').hidden,document.querySelector('.qfmore').textContent,document.querySelector('.qfmore').getAttribute('aria-expanded')]") == [True, "More details", "false"])
+    pg.click(".qfmore"); pg.click(".qffin"); pg.wait_for_timeout(200)
+    fin = E("[QS.store.manual['%s'],document.querySelectorAll('.qfbanner,.qf-risk,.qf-fail').length]" % THREAD)
+    check("%s: 'I finished it already' sets Following the Thread to done and the warnings go (%s)" % (label, fin), fin == ["done", 0], fin)
+    # started: the failed quest is active -> no 'or closes'
+    pg.close()
+    pg, errs, reqs = Q.newpage(b, base, init=seed({UGLY: "active", THREAD: "active"})); E = pg.evaluate; Q.opened(pg, "km"); Q.until(pg, "!!document.querySelector('.qfbanner')")
+    ban = E("document.querySelector('.qfbanner p').textContent.trim().replace(/\\s+/g,' ')")
+    check("%s: Following the Thread already started: no 'or closes' (%s)" % (label, ban), ban == "Ugly Baby (Kaer Morhen) fails Following the Thread (Novigrad) at the stable guard. Do Following the Thread first.", ban)
+    # several links: one summary line, the panel lists them all
+    E("""(()=>{const x=QS.data.quests.find(q=>q.id==='Q103 The Race'||q.t==='side'&&q.g!=='%s'&&q.g!=='%s'),d=JSON.parse(JSON.stringify(W3DATA.QUEST_FAILS));const l=d.links[0];d.links.push(Object.assign({},l,{failed_guid:x.g,fact:'other_fact'}));QF.init(d);qsRenderAll()})()""" % (UGLY, THREAD)); pg.wait_for_timeout(200)
+    ml = E("[document.querySelector('.qfbanner p').textContent.trim(),document.querySelectorAll('#qfPanel .qfdep').length,document.querySelectorAll('#qsRegs .qfd.amber').length>0]")
+    check("%s: two links: one summary line ('2 quests will fail if you continue ...') and the panel holds a block for each (%s)" % (label, ml), ml[0].startswith("2 quests will fail if you continue") and "Do the amber" not in ml[0] and ml[1] == 2, ml)
+    pg.close()
+    pg, errs, reqs = Q.newpage(b, base, w=390, h=844, mobile=True, init=seed({UGLY: "active"})); E = pg.evaluate; Q.opened(pg, "no"); Q.until(pg, "!!document.querySelector('.qfbanner')"); pg.tap(".qfmore"); pg.wait_for_timeout(200)
+    ph = E("""(()=>{const r=e=>Math.round(e.getBoundingClientRect().height);return{sx:document.documentElement.scrollWidth-innerWidth,w:document.querySelector('#qfBanner').getBoundingClientRect().width<=innerWidth,more:r(document.querySelector('.qfmore')),go:[...document.querySelectorAll('.qfgo')].map(r),fin:r(document.querySelector('.qffin')),sum:r(document.querySelector('.qfdata summary')),cards:document.querySelectorAll('.qfcard').length}})()""")
+    check("%s: phone (390 px) with the panel open: no sideways scroll, the cards stack, More details / Go to quest / I finished it already / the data summary are 44 px targets (%s)" % (label, ph), ph["sx"] <= 1 and ph["w"] and ph["more"] >= 44 and all(h >= 44 for h in ph["go"]) and ph["fin"] >= 44 and ph["sum"] >= 44 and ph["cards"] == 2, ph)
+    pg.close()
+
+
 def offline(b, off, check, label):
     pg, errs, reqs = Q.newpage(b, off, init=seed({UGLY: "active"})); E = pg.evaluate; Q.opened(pg, "no"); Q.until(pg, "!!document.querySelector('.qfbanner')")
     t = E("[document.querySelector('.qfbanner')&&document.querySelector('.qfbanner').textContent.trim(),!!document.querySelector('.qfrow.qf-risk'),typeof QF,!!(window.W3DATA&&W3DATA.QUEST_FAILS)]")
-    check("%s: the offline package has the safeguard: banner, amber row, QF script and data loaded from the package (%s)" % (label, t), t[0] == "Continuing Ugly Baby fails 1 open quest. Do the amber one first." and t[1] and t[2] == "object" and t[3], t)
+    check("%s: the offline package has the safeguard: banner, amber row, QF script and data loaded from the package (%s)" % (label, t), t[0].startswith("Ugly Baby (Kaer Morhen) fails or closes Following the Thread (Novigrad)") and t[1] and t[2] == "object" and t[3], t)
     pg.close()
     pg, errs, reqs = Q.newpage(b, off, init=seed({UGLY: "done"})); E = pg.evaluate; Q.opened(pg, "no"); Q.until(pg, "!!document.querySelector('.qfprompt')")
     pg.click('.qfprompt [data-a="failed"]'); pg.wait_for_timeout(200)
