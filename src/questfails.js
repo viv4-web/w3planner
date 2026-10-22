@@ -185,9 +185,10 @@ function paint(){if(!A.links.length||!QS.data)return;obs.disconnect();try{
   if(f.length||k.length)r.setAttribute('aria-label',r.getAttribute('aria-label')+say(f,k))});
  // dots (Level band, Timeline): a ring and the words in the label and the tooltip
  view.querySelectorAll('.qsdot[data-g]').forEach(d=>{const g=d.dataset.g,f=fails(g),k=risks(g);if(!f.length&&!k.length)return;
-  if(f.length)d.classList.add('qf-fail');if(k.length)d.classList.add('qf-risk');d.setAttribute('aria-label',d.getAttribute('aria-label')+say(f,k))});
+  if(f.length)d.classList.add('qf-fail');if(k.length)d.classList.add('qf-risk');if(d.dataset.ql==null)d.dataset.ql=d.getAttribute('aria-label');d.setAttribute('aria-label',d.dataset.ql+say(f,k))});
  // Next up cards
- qsEl('qsNext').querySelectorAll('.qscard[data-g]').forEach(c=>{const g=c.dataset.g,f=fails(g),k=risks(g),s=c.querySelector('.qscn');if(!s||(!f.length&&!k.length))return;
+ qsEl('qsNext').querySelectorAll('.qscard[data-g]').forEach(c=>{c.classList.remove('qf-fail','qf-risk');c.querySelectorAll('.qfcaution,.qfchip').forEach(e=>e.remove());   // v39.10: a repaint without a redraw (Hide done, a chip, a view, a search) must not add the warnings again
+  const g=c.dataset.g,f=fails(g),k=risks(g),s=c.querySelector('.qscn');if(!s||(!f.length&&!k.length))return;
   if(f.length)c.classList.add('qf-fail');if(k.length)c.classList.add('qf-risk');
   if(f.length)s.append(mk('span','qfcaution',groups(f).map(g=>g.length>=GROUP_MIN?`Careful: ${qsEsc(g[0].trigger_label)} fails ${plural(nf(sp(g)[0].length?sp(g)[0]:g),'open quest')}${sp(g)[0].length&&sp(g)[1].length?', and '+nf(sp(g)[1])+' more unless you\'ve '+qsEsc(ug(sp(g)[1])):''}.`:g.map(l=>isC(l)?`Careful: choosing ${qsEsc(l.choice)} fails ${nm(l.failed)}.`:`Careful: ${qsEsc(l.trigger_label)} ${wd(l)} ${nm(l.failed)}${unl(l)}.`).join(' ')).join(' ')));if(k.length)s.append(mk('span','qfchip amber','Do before '+[...new Set(k.map(l=>nm(l.failer)))].join(', ')))});
  // the detail panel of the selected quest

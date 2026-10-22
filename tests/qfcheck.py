@@ -713,6 +713,77 @@ def v399(b, base, check, label):
     check("%s: no page error" % label, not errs, errs[:1]); pg.close()
 
 
+def v3910(b, base, check, label):
+    """v39.10: (A) no action on one quest changes the stored state of another, and a stale page cannot write back a store that lacks quests saved elsewhere; (B) every warning is drawn once, whatever redraws the view"""
+    qs, nm = _q()
+    MANY = {UGLY: "active", SQ202: "done", Q206: "failed", nm["The Isle of Mists"]: "active", nm["Faithful Friend"]: "failed", nm["Ciri's Room"]: "done", nm["Imperial Audience"]: "active"}
+    X = nm["The Incident at White Orchard"]                                                  # a quest nobody seeded
+    GET = "(()=>JSON.stringify(Object.fromEntries(Object.entries(JSON.parse(localStorage.getItem('w3p.quests.v1')||'{\"manual\":{}}').manual).sort())))()"
+    def fresh(manual, w=1440, h=950, mob=False, region="km", quiet=False):
+        pg, errs, _ = Q.newpage(b, base, w=w, h=h, mobile=mob, init=seed(manual, quiet=quiet)); Q.opened(pg, region); pg.wait_for_timeout(300); return pg, errs
+    def same(pg, what, allowed=None, expect=None):
+        """the stored manual marks after `what` equal the seed, except `allowed` ({guid: new state}) which must have changed exactly so"""
+        before = json.loads(pg.evaluate(GET)); what(); pg.wait_for_timeout(200); after = json.loads(pg.evaluate(GET))
+        want = dict(before); want.update(allowed or {})
+        for k in [k for k, v in want.items() if v is None]: del want[k]
+        mem = pg.evaluate("JSON.stringify(Object.fromEntries(Object.entries(QS.store.manual).sort()))")
+        return after == want and json.loads(mem) == after, {k[:6]: (before.get(k), after.get(k)) for k in set(before) | set(after) if before.get(k) != after.get(k)}
+    # --- A1: every action, every other quest unchanged
+    pg, errs = fresh(MANY); E = pg.evaluate; bad = []
+    acts = [("region tabs", lambda: [(pg.click('.qsreg[data-r="%s"]' % r), pg.wait_for_timeout(60)) for r in ("wo", "vz", "ve", "no", "sk", "km", "hos", "baw", "oth")], None),
+            ("select a quest", lambda: E("qsSelect('%s',true)" % X), None), ("Hide done", lambda: pg.click("#qsHide"), None), ("Hide done off", lambda: pg.click("#qsHide"), None),
+            ("kind chip", lambda: pg.click('.qschip[data-k="main"]'), None), ("search", lambda: pg.fill("#qsQ", "a"), None), ("Level band", lambda: pg.click("#qsVBand"), None), ("Timeline", lambda: pg.click("#qsVTime"), None),
+            ("List", lambda: pg.click("#qsVList"), None), ("Quest failures", lambda: pg.click("#qsVFails"), None), ("Hide ones I've dealt with", lambda: pg.click("#qfHide"), None), ("Details", lambda: pg.click(".qfdetb"), None),
+            ("Hide ones off", lambda: pg.click("#qfHide"), None), ("List again", lambda: pg.click("#qsVList"), None)]
+    for name, fn, al in acts:
+        ok, d = same(pg, fn, al); bad += [] if ok else [(name, d)]
+    check("%s: seven quests seeded with different states: region tabs, selecting a quest, Hide done, a kind chip, search, the four views, Hide ones I've dealt with and Details change no stored state (%s)" % (label, bad), not bad and not errs, bad or errs[:1]); pg.close()
+    for st in ("none", "active", "done", "failed"):
+        pg, errs = fresh(MANY); E = pg.evaluate; E("qsSelect('%s',true)" % X); pg.wait_for_timeout(200)
+        ok, d = same(pg, lambda: pg.click('#qsDetail .qsmark[data-s="%s"]' % st), {X: st})
+        ok2, d2 = same(pg, lambda: pg.click('#qsDetail .qsclear'), {X: None}) if st != "none" or True else (True, 0)
+        check("%s: MY PROGRESS: %s on one quest changes only that quest, and Follow my save only that quest (%s | %s)" % (label, st, d, d2), ok and ok2 and not errs, [d, d2]); pg.close()
+    pg, errs = fresh(MANY, region="no"); E = pg.evaluate
+    ok, d = same(pg, lambda: (pg.click('.qsrow[data-g="%s"]' % nm["Following the Thread"]), pg.wait_for_timeout(150), pg.click('#qsDetail .qsmark[data-s="done"]')), {nm["Following the Thread"]: "done"})
+    check("%s: the List row then MY PROGRESS: only Following the Thread changes (%s)" % (label, d), ok and not errs, d)
+    for a, want in (("failed", "failed"), ("done", "done"), ("close", None)):
+        ok, d = same(pg, lambda: pg.click('%s .qfprompt [data-a="%s"]' % ("#qfPrompts" if a == "close" else "#qsDetail", a)) if False else (E("document.querySelector('#qfPrompts .qfprompt [data-a=\"%s\"]').click()" % a) if E("!!document.querySelector('#qfPrompts .qfprompt [data-a=\"%s\"]')" % a) else None), {nm["Flesh for Sale"]: want} if want else None)
+        check("%s: the prompt's %s changes only Flesh for Sale (%s)" % (label, "'" + a + "'" if a == "close" else a, d), ok, d)
+        if a != "close": pg.close(); pg, errs = fresh(dict(MANY, **{nm["Following the Thread"]: "done"}), region="no"); E = pg.evaluate
+    pg.close()
+    # --- A2: a page whose copy of the store is stale (another tab saved quests it does not know) never writes the old copy back
+    ctx = b.new_context(viewport={"width": 1440, "height": 950}); p1 = ctx.new_page(); p2 = ctx.new_page(); er = []
+    for p in (p1, p2): p.on("pageerror", lambda e: er.append(str(e).split("\n")[0][:100]))
+    p1.goto(base); Q.until(p1, Q.READY); p1.keyboard.press("q"); Q.until(p1, "S.scr==='q'&&document.querySelectorAll('#qsRegs .qsreg').length===9"); p1.click('.qsreg[data-r="no"]'); p1.wait_for_timeout(200)   # p1 has read an empty store
+    p2.goto(base); Q.until(p2, Q.READY); p2.evaluate("localStorage.setItem('w3p.quests.v1',JSON.stringify({v:1,manual:{'%s':'active'},save:null,changed:1}))" % UGLY); p2.wait_for_timeout(300)   # the seed, written from another tab
+    p1.evaluate("qsSelect('%s',true)" % THREAD); p1.wait_for_timeout(200); p1.click('#qsDetail .qsmark[data-s="done"]'); p1.wait_for_timeout(300)
+    got = json.loads(p1.evaluate(GET))
+    check("%s: another tab seeded Ugly Baby active while this page held an empty store: marking Following the Thread done keeps Ugly Baby active in the store (%s)" % (label, {k[:6]: v for k, v in got.items()}), got == {UGLY: "active", THREAD: "done"} and json.loads(p1.evaluate("JSON.stringify(QS.store.manual)")) == got, got)
+    p1.evaluate("QS.store.manual={}"); p1.evaluate("qsSelect('%s',true)" % nm["Imperial Audience"]); p1.wait_for_timeout(150); p1.click('#qsDetail .qsmark[data-s="active"]'); p1.wait_for_timeout(300)   # even when the page missed the change completely
+    got = json.loads(p1.evaluate(GET))
+    check("%s: even when the page's copy is emptied behind its back, a mark adds to what is stored, it does not replace it (%s)" % (label, {k[:6]: v for k, v in got.items()}), got == {UGLY: "active", THREAD: "done", nm["Imperial Audience"]: "active"}, got)
+    check("%s: no page error" % label, not er, er[:1]); ctx.close()
+    # --- B: every warning is drawn once, whatever redraws the view
+    ONCE = """(()=>{const v=[],n=(s,r)=>(r||document).querySelectorAll(s).length;
+      document.querySelectorAll('#qsNext .qscard').forEach(c=>{if(n('.qfcaution',c)>1||n('.qfchip',c)>1)v.push('next up card '+c.dataset.g.slice(0,4)+': '+n('.qfcaution',c)+' cautions, '+n('.qfchip',c)+' chips')});
+      document.querySelectorAll('.qfrow').forEach(w=>{if(w.parentNode.closest('.qfrow')||n('.qfextra',w)>1||n('.qsrow',w)!==1||n('.qfprompt',w)>1)v.push('list row '+w.querySelector('.qsrow').dataset.g.slice(0,4))});
+      document.querySelectorAll('.qsrow[aria-label],.qsdot[aria-label]').forEach(r=>{const a=r.getAttribute('aria-label');if((a.match(/at risk: do before/g)||[]).length>1||(a.match(/, fails \\d+ open quest/g)||[]).length>1)v.push('label '+a.slice(0,60))});
+      if(n('#qsDetail .qfdet')>1||n('#qsDetail .qfinl')>1)v.push('detail panel');if(n('#qfBanner .qfbanner')>1||n('.qfbrow p')>1)v.push('banner');
+      document.querySelectorAll('#qsRegs .qfdots').forEach(d=>{if(d.children.length>2||d.parentNode.querySelectorAll('.qfdots').length>1)v.push('tab dots')});
+      const k=[...document.querySelectorAll('.qfrowx')].map(r=>r.dataset.k);if(new Set(k).size!==k.length)v.push('failures rows repeated');
+      return{v,caut:n('#qsNext .qfcaution'),chips:n('#qsNext .qfchip'),fr:n('.qfrowx')}})()"""
+    pg, errs = fresh({UGLY: "active"}); E = pg.evaluate; E0 = E(ONCE); steps = [("start", E0)]
+    for r in ("wo", "vz", "ve", "no", "sk", "km", "hos", "baw", "oth", "km"): pg.click('.qsreg[data-r="%s"]' % r); pg.wait_for_timeout(120); steps.append(("tab " + r, E(ONCE)))
+    for g in (THREAD, UGLY, nm["The Last Wish"], nm["Flesh for Sale"], UGLY): E("qsSelect('%s',true)" % g); pg.wait_for_timeout(500); steps.append(("open " + qs[g]["n"], E(ONCE)))
+    for lab, js in (("Hide done", "document.getElementById('qsHide').click()"), ("kind chip", "document.querySelector('.qschip[data-k=\"main\"]').click()"), ("search", "(()=>{const i=document.getElementById('qsQ');i.value='a';i.dispatchEvent(new Event('input'))})()"),
+                    ("Level band", "document.getElementById('qsVBand').click()"), ("Timeline", "document.getElementById('qsVTime').click()"), ("Quest failures", "document.getElementById('qsVFails').click()"), ("List", "document.getElementById('qsVList').click()")):
+        E(js); pg.wait_for_timeout(250); steps.append((lab, E(ONCE)))
+    bad = [(n, r["v"]) for n, r in steps if r["v"]]; counts = {r["caut"] for n, r in steps}, {r["chips"] for n, r in steps}
+    check("%s: Ugly Baby active: after every region tab, opening five quests, Hide done, a kind chip, search and the four views each warning is drawn once: no card, row, label, panel, banner or tab dot repeated (%s)" % (label, bad or counts), not bad and not errs, bad or errs[:1])
+    check("%s: Next up keeps exactly its two cautions (Ugly Baby's, Following the Thread's) and two 'Do before' chips through all %d steps (%s)" % (label, len(steps), counts), counts == ({2}, {2}), counts)
+    pg.close()
+
+
 def offline(b, off, check, label):
     pg, errs, reqs = Q.newpage(b, off, init=seed({UGLY: "active"})); E = pg.evaluate; Q.opened(pg, "no"); Q.until(pg, "!!document.querySelector('.qfbanner')")
     t = E("[document.querySelector('.qfbanner')&&document.querySelector('.qfbanner').textContent.trim(),!!document.querySelector('.qfrow.qf-risk'),typeof QF,!!(window.W3DATA&&W3DATA.QUEST_FAILS)]")

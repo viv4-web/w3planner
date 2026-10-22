@@ -338,7 +338,8 @@ function qsDrawerPlace(){const tb=qsEl('topbar'),el=qsEl('qsDetail');el.style.to
 function qsCloseDrawer(focus){if(!QS.open)return;QS.open=false;qsEl('screenQ').classList.remove('qs-open');if(focus){const d=document.querySelector('.qsdot[data-g="'+QS.opener+'"]')||document.querySelector('.qscard.on,.qsmi.on');if(d)d.focus()}}
 
 // ---- progress by hand ----
-function qsMark(g,s){if(s===null)delete QS.store.manual[g];else QS.store.manual[g]=s;qsTouch();qsRenderAll()}
+function qsAdopt(){try{const raw=localStorage.getItem(QS_KEY);if(raw===null)return;const c=qsClean(JSON.parse(raw));if(c)QS.store=c}catch(e){}}   // v39.10: take what is stored now before a change: this page's copy can be stale (another tab, the console), and writing it back would drop the quests it does not know
+function qsMark(g,s){qsAdopt();if(s===null)delete QS.store.manual[g];else QS.store.manual[g]=s;qsTouch();qsRenderAll()}
 function qsRenderAll(){if(!QS.data)return;qsRenderRegs();qsRenderMiss();qsRenderNext();qsRenderView();qsRenderDetail();qsChip();if(QS.open)qsDrawerPlace()}
 
 // ---- the chip: Saved in this browser | export | load | reset ----
@@ -372,14 +373,15 @@ function qsCounts(stateOf){const c={done:0,active:0,failed:0,inactive:0,none:0};
 // what importing would change: counts now and after, and the quests whose hand mark disagrees with the save
 function qsCompare(J){const now=qsCounts(qsState),keep=qsCounts(g=>QS.store.manual[g]||J.q[g]||'none'),repl=qsCounts(g=>J.q[g]||'none');
  const diff=QS.data.quests.filter(q=>QS.store.manual[q.g]&&QS.store.manual[q.g]!==(J.q[q.g]||'none'));return{now,keep,repl,diff}}
-function qsApplyJournal(J,name,mode){QS.store.save={at:Date.now(),file:String(name||'').slice(0,120),q:J.q,o:J.o,e:J.e};if(mode==='replace')QS.store.manual={};qsTouch()}
+function qsApplyJournal(J,name,mode){qsAdopt();QS.store.save={at:Date.now(),file:String(name||'').slice(0,120),q:J.q,o:J.o,e:J.e};if(mode==='replace')QS.store.manual={};qsTouch()}
 
 // ---- screen ----
 function qsBind(){
  const sw=v=>{qsSetView(v);qsEl('screenQ').classList.remove('qs-detail');qsRenderView();qsRenderDetail()};qsEl('qsVTime').onclick=()=>sw('time');qsEl('qsVBand').onclick=()=>sw('band');qsEl('qsVList').onclick=()=>sw('list');qsEl('qsVFails').onclick=()=>sw('fails');
  qsEl('qsScope').querySelectorAll('.qssc').forEach(b=>{b.onclick=()=>{qsSetScope(b.dataset.scope);QS.open=false;qsEl('screenQ').classList.remove('qs-detail');qsRenderView();qsRenderDetail()}});
  const chip=qsEl('qsChip');chip.onclick=e=>{e.stopPropagation();qsMenu(qsEl('qsMenu').hidden)};
- document.addEventListener('click',e=>{const m=qsEl('qsMenu');if(!m.hidden&&!e.composedPath().includes(qsEl('qsChipWrap')))qsMenu(false)});   // composedPath: a click on a button the menu has just re-drawn is still inside it
+ window.addEventListener('storage',e=>{if((e.key===QS_KEY||e.key===null)&&QS.read&&QS.data){qsAdopt();qsRenderAll()}});   // another tab saved: show it
+document.addEventListener('click',e=>{const m=qsEl('qsMenu');if(!m.hidden&&!e.composedPath().includes(qsEl('qsChipWrap')))qsMenu(false)});   // composedPath: a click on a button the menu has just re-drawn is still inside it
  document.addEventListener('keydown',e=>{const m=qsEl('qsMenu');if(!m.hidden&&e.key==='Escape'){e.preventDefault();qsMenu(false);chip.focus()}});
  let rt=0;addEventListener('resize',()=>{if(!QS.shown||!QS.data)return;clearTimeout(rt);rt=setTimeout(()=>{if(QS.view!=='list')qsRenderView();if(QS.open)qsDrawerPlace()},120)});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&QS.shown&&QS.open&&qsEl('qsMenu').hidden){e.preventDefault();qsCloseDrawer(true)}})}

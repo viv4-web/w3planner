@@ -650,7 +650,7 @@ def missunknown(b, base, check, label):
         check("%s: v34.3 no save (%s): no strip (the Missable panel is not there either), the two sections hold all the unplaced quests of the scope (no strip to take any out), the brackets are the grid's own (%s)" % (label, sc, r["sum"]),
               not r["vis"] and r["sum"] == ("No story gate found (157) | Not computed yet (34)" if sc == "base" else "") and E("document.getElementById('qsMiss').hidden") and not [x for x in r["bad"] if x[0] != "strip" and x[0] != "repeated in the collapsed row"], r)
     ks = E("Object.keys(localStorage).sort()"); check("%s: v34.3 no new storage keys (%s) and the link is unchanged" % (label, ks), all(k.startswith("w3p.quests.") for k in ks) and not [k for k in ks if re.search(r"strip|miss|unknown", k)] and not re.search(r"[0-9a-f]{32}|miss", E("location.hash")), ks)
-    check("%s: APP_VERSION is v39.9" % label, E("APP_VERSION") == "v39.9")
+    check("%s: APP_VERSION is v39.10" % label, E("APP_VERSION") == "v39.10")
     check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
     for sub in ("stats-l9b", "stats-l9"):
         d = FIXD / sub; sav = sorted(d.glob("*.sav")) if d.is_dir() else []
