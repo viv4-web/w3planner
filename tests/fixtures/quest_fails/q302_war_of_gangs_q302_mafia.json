@@ -1,0 +1,25 @@
+{
+ "link": "fact: q302_whoreson_found fails The Gangs of Novigrad",
+ "kind": "fact",
+ "failed_guid": "3009f561e3989f4fb389f1adea594b0f",
+ "failed_name": "The Gangs of Novigrad",
+ "failed_id": "Q302 War Of Gangs",
+ "failer_guid": "41009e5ecd3e3e46981b2dc7c6d6f55c",
+ "failer_name": "Get Junior",
+ "failer_id": "Q302 Mafia",
+ "fact": "q302_whoreson_found",
+ "op": {
+  "func": "CF_GreaterEqual",
+  "value": 1,
+  "query": "QF_DoesExist"
+ },
+ "effect": "Failure",
+ "setter_file": "quests/part_1/q302_mafia.w2phase",
+ "setter_block": 660,
+ "fail_file": "quests/part_1/quest_files/q302_mafia/phases/cleaver.w2phase",
+ "fail_block": 95,
+ "trigger_phase": "Chess Club > Meeting with Radovid",
+ "trigger_scene": null,
+ "status": "verified_gamefiles",
+ "engine_effect": "unconfirmed"
+}

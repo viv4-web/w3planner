@@ -54,6 +54,7 @@ T = {
     ("Precious Cargo", "On Thin Ice", "q501_naglfar_arrived"): ("q501_eredin.w2phase", 1268, "mq0002_missing_goods.w2phase", 508),
     ("Faithful Friend", "Something Ends, Something Begins", None): ("q504_ciri_empress.w2phase", 33, "q504_ciri_empress.w2phase", 58),
     ("The Lord of Undvik", "Through Time and Space", "q210_quest_start"): ("q210_depart_novigrad.w2phase", 7, "q202_giant.w2phase", 2936),
+    ("The Gangs of Novigrad", "Get Junior", "q302_whoreson_found"): ("q302_mafia.w2phase", 660, "cleaver.w2phase", 95),
     ("Duck, Duck, Goosed!", "Beyond Hill and Dale...", "q704_ft_goose_done"): ("q704_02_fairy_tale.w2phase", 19, "q704_02_fairy_tale.w2phase", 23),
 }
 

@@ -1,5 +1,5 @@
 
-const APP_VERSION="v39.10";
+const APP_VERSION="v39.11";
 const CFG=Object.assign({mode:"online",shareBase:""},window.PLANNER_CONFIG||{});
 // ---- Handoff from the old address, w3planner.pages.dev (v37; CLAUDE.md, "Handoff"): it redirects here with #<build>&import=<base64url JSON>&stash=1. This part only reads the two extra
 // tokens and removes them from the address, before the build is decoded; the data is merged into localStorage by hoMerge() at the end of quests.js. Any other token: not ours, the hash stays as it is.
