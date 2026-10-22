@@ -123,7 +123,7 @@ def run(b, base, check, label):
     pg.click("#qsVList"); pg.wait_for_timeout(100); pg.click('.qsreg[data-r="ve"]')
     ch = E("[...document.querySelectorAll('.qschip')].map(c=>c.textContent)"); lv = E("[...document.querySelectorAll('#qsRows .qsrow .qslv')].map(e=>e.classList.contains('na')?null:+e.textContent)")
     nn = [x for x in lv if x is not None]
-    check("%s: the List has the chips %s, rows ordered by level (%d in Velen), each with a status icon, name and level" % (label, CHIPS, len(lv)), ch == CHIPS and nn == sorted(nn) and len(lv) == E("QS.data.quests.filter(q=>q.r==='ve').length") and E("document.querySelectorAll('#qsRows .qsrow svg.qsic').length") == len(lv), ch)
+    check("%s: the List has the chips %s, rows ordered by level (%d in Velen), each with a status pill, name and level" % (label, CHIPS, len(lv)), ch == CHIPS and nn == sorted(nn) and len(lv) == E("QS.data.quests.filter(q=>q.r==='ve').length") and E("document.querySelectorAll('#qsRows .qsrw > button.qspill').length") == len(lv) and E("document.querySelectorAll('#qsRows .qsrow svg.qsic').length") == 0, ch)
     pg.click('.qschip[data-k="treasure"]'); tr = E("[...document.querySelectorAll('#qsRows .qsrow')].length"); pg.click('.qschip[data-k="all"]')
     check("%s: a type chip filters the list (Treasure hunts: %d of %d)" % (label, tr, len(lv)), 0 < tr < len(lv) and tr == E("QS.data.quests.filter(q=>q.r==='ve'&&q.t==='treasure').length"))
     pg.fill("#qsQ", "tale"); s1 = E("[...document.querySelectorAll('#qsRows .qsrow b')].map(e=>e.textContent)"); pg.fill("#qsQ", "")
@@ -361,9 +361,9 @@ def colours(b, base, check, label):
     check("%s: in the List the name text takes the colour of its type and the selected type chip is filled with it (%d types in Velen: %s)" % (label, len(got), sorted(got)), len(got) >= 5 and all(v[0] == css(TOK[k]) and v[1] == css(TOK[k]) for k, v in got.items()), got)
     pg.click('.qschip[data-k="all"]'); g = E("document.querySelector('#qsRows .qsrow').dataset.g"); k0 = E("QS.byG.get('%s').t" % g)
     pg.click('#qsRows .qsrow >> nth=0'); pg.click('.qsmark[data-s="done"]'); pg.click('.qschip[data-k="all"]')
-    d = E("(()=>{const r=document.querySelector('#qsRows .qsrow[data-g=\"%s\"]'),n=[...document.querySelectorAll('#qsRows .qsrow.st-none b')][0];return[getComputedStyle(r.querySelector('b')).opacity,r.querySelector('svg').getAttribute('class'),n?getComputedStyle(n).opacity:null,getComputedStyle(document.querySelector('.qstitle')).color]})()" % g)
-    check("%s: a done row has its name at 60%% opacity and a check in its type colour; not-started names stay at full opacity; the drawer/detail title takes the type colour (%s)" % (label, d), d[0] == "0.6" and "qs-done" in d[1] and ("t-" + k0) in d[1] and d[2] == "1" and d[3] == css(TOK[k0]), d)
-    check("%s: the separate green for done is gone (no element is coloured #6cbc4a)" % label, E("[...document.querySelectorAll('.qsic,.qsrow b,.qslv')].every(e=>getComputedStyle(e).color!=='rgb(108, 188, 74)')"))
+    d = E("(()=>{const r=document.querySelector('#qsRows .qsrow[data-g=\"%s\"]'),n=[...document.querySelectorAll('#qsRows .qsrow.st-none b')][0];return[getComputedStyle(r.querySelector('b')).opacity,r.closest('.qsrw').querySelector('.qspill').className,n?getComputedStyle(n).opacity:null,getComputedStyle(document.querySelector('.qstitle')).color]})()" % g)
+    check("%s: a done row has its name at 60%% opacity and a green Done pill with a check (v40: the pill replaced the status icon); not-started names stay at full opacity; the drawer/detail title takes the type colour (%s)" % (label, d), d[0] == "0.6" and "st-done" in d[1] and d[2] == "1" and d[3] == css(TOK[k0]), d)
+    check("%s: the separate green for done is gone (no element is coloured #6cbc4a)" % label, E("[...document.querySelectorAll('.qsic,.qspill,.qsrow b,.qslv')].every(e=>getComputedStyle(e).color!=='rgb(108, 188, 74)')"))
     cd = E("(()=>{const c=document.querySelector('#qsNext .qscard b');return c?[getComputedStyle(c).color,QS.byG.get(document.querySelector('#qsNext .qscard').dataset.g).t]:null})()")
     check("%s: the Next up card title takes the colour of its type (%s)" % (label, cd), cd and cd[0] == css(TOK[cd[1]]), cd)
     # band: shapes by type, legend
@@ -650,7 +650,7 @@ def missunknown(b, base, check, label):
         check("%s: v34.3 no save (%s): no strip (the Missable panel is not there either), the two sections hold all the unplaced quests of the scope (no strip to take any out), the brackets are the grid's own (%s)" % (label, sc, r["sum"]),
               not r["vis"] and r["sum"] == ("No story gate found (157) | Not computed yet (34)" if sc == "base" else "") and E("document.getElementById('qsMiss').hidden") and not [x for x in r["bad"] if x[0] != "strip" and x[0] != "repeated in the collapsed row"], r)
     ks = E("Object.keys(localStorage).sort()"); check("%s: v34.3 no new storage keys (%s) and the link is unchanged" % (label, ks), all(k.startswith("w3p.quests.") for k in ks) and not [k for k in ks if re.search(r"strip|miss|unknown", k)] and not re.search(r"[0-9a-f]{32}|miss", E("location.hash")), ks)
-    check("%s: APP_VERSION is v39.12" % label, E("APP_VERSION") == "v39.12")
+    check("%s: APP_VERSION is v40.0" % label, E("APP_VERSION") == "v40.0")
     check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
     for sub in ("stats-l9b", "stats-l9"):
         d = FIXD / sub; sav = sorted(d.glob("*.sav")) if d.is_dir() else []

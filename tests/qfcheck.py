@@ -283,8 +283,8 @@ def run(b, base, check, label):
     pg.close()
     pg, errs, reqs = Q.newpage(b, base, init=seed({UGLY: "done"})); E = pg.evaluate; Q.opened(pg, "no"); Q.until(pg, "!!document.querySelector('.qfprompt')")
     pg.click('.qfprompt [data-a="failed"]'); pg.wait_for_timeout(200)
-    st = E("[QS.store.manual['%s'],!!document.querySelector('.qfprompt'),document.querySelector('.qsrow[data-g=\"%s\"]').closest('.qfrow')&&document.querySelector('.qsrow[data-g=\"%s\"]').closest('.qfrow').textContent,document.querySelector('.qsrow[data-g=\"%s\"] .qsic').getAttribute('class')]" % (THREAD, THREAD, THREAD, THREAD))
-    check("%s: 'Mark it failed' sets the hand mark to failed (the × outline stays) and the row says 'by Ugly Baby (stable guard)' (%s)" % (label, st[:2] + [(st[2] or '')[-40:]]), st[0] == "failed" and not st[1] and "by Ugly Baby (stable guard)" in (st[2] or "") and "qs-failed" in st[3], st)
+    st = E("[QS.store.manual['%s'],!!document.querySelector('.qfprompt'),document.querySelector('.qsrow[data-g=\"%s\"]').closest('.qfrow')&&document.querySelector('.qsrow[data-g=\"%s\"]').closest('.qfrow').textContent,document.querySelector('.qsrw:has(.qsrow[data-g=\"%s\"]) .qspill').className]" % (THREAD, THREAD, THREAD, THREAD))
+    check("%s: 'Mark it failed' sets the hand mark to failed (the × outline stays) and the row says 'by Ugly Baby (stable guard)' (%s)" % (label, st[:2] + [(st[2] or '')[-40:]]), st[0] == "failed" and not st[1] and "by Ugly Baby (stable guard)" in (st[2] or "") and "st-failed" in st[3], st)
     ratio(pg, '.qfby', "failed 'by' line", check, label + " contrast")
     pg.close()
     pg, errs, reqs = Q.newpage(b, base, init=seed({UGLY: "done"})); E = pg.evaluate; Q.opened(pg, "no"); Q.until(pg, "!!document.querySelector('.qfprompt')")
@@ -397,7 +397,7 @@ def failures(b, base, check, label):
     ratio(pg, "#qsVFails", "Quest failures button (pressed)", check, label + " contrast")
     st = E("[document.getElementById('qsVFails').getAttribute('aria-pressed'),document.getElementById('qsVList').getAttribute('aria-pressed'),localStorage.getItem('w3p.quests.view'),QS.view,document.querySelectorAll('.qfrowx').length,getComputedStyle(document.querySelector('.qsregnav')).display]")
     check("%s: the button stores its view in w3p.quests.view as 'fails', the region tabs are out of the way and the 44 links are listed (%s)" % (label, st), st[:5] == ["true", "false", "fails", "fails", 44] and st[5] == "none", st)
-    row = E("""(()=>{const r=document.querySelector(__ROW),t=e=>r.querySelector(e).innerText.replace(/\\s+/g,' ').trim();return{h:document.querySelector('.qfht h2').textContent,p:document.querySelector('.qfht p').textContent,red:t('.qfblk.red'),mid:t('.qfblk.mid'),amber:t('.qfblk.amber'),st:t('.qfst'),stc:r.querySelector('.qfst').className,det:t('.qfdetb'),hide:document.querySelector('.qfhide').textContent.trim(),cb:document.getElementById('qfHide').checked}})()""")
+    row = E("""(()=>{const r=document.querySelector(__ROW),t=e=>{const el=r.querySelector(e),ps=[...el.querySelectorAll('.qspill')];ps.forEach(x=>x.style.display='none');const v=el.innerText.replace(/\\s+/g,' ').trim();ps.forEach(x=>x.style.display='');return v};return{h:document.querySelector('.qfht h2').textContent,p:document.querySelector('.qfht p').textContent,red:t('.qfblk.red'),mid:t('.qfblk.mid'),amber:t('.qfblk.amber'),st:t('.qfst'),stc:r.querySelector('.qfst').className,det:t('.qfdetb'),hide:document.querySelector('.qfhide').textContent.trim(),cb:document.getElementById('qfHide').checked}})()""")
     check("%s: level 1, nothing started: the row is there (the tab ignores region and level); header text and the four blocks (%s)" % (label, row["red"]), row["h"] == "Every quest that fails another" and row["p"] == "All regions, whatever your level or progress, sorted by the level of the quest that causes the fail. Only links confirmed from the remaster's game files."
           and row["red"] == "IF YOU DO Ugly Baby Main · Kaer Morhen · level 19" and row["mid"] == "AT THIS STEP The talk with the stable guard at Crow's Perch" and row["amber"] == "THIS FAILS Following the Thread Secondary · Novigrad"
           and row["st"] == "Open · plan for it" and "open" in row["stc"] and row["det"] == "Details ›" and row["hide"] == "Hide ones I've dealt with" and not row["cb"], row)
@@ -844,6 +844,110 @@ def v3912(b, base, check, label):
     ban = E("document.querySelector('.qfbrow p').textContent.trim().replace(/\\s+/g,' ')")
     check("%s: Battle Preparations active: the panel lists The Cave of Dreams among the quests that fail at the start of Act III in Skellige (and the banner names the first two by level) (%s)" % (label, ban),
           "The Cave of Dreams" in panel and "THESE 4 QUESTS FAIL" in panel and ban.startswith("Continuing Battle Preparations") and " and 2 more" in ban, [ban, panel[:200]])
+    check("%s: no page error" % label, not errs, errs[:1]); pg.close()
+
+
+def pill(b, base, check, label):
+    """v40: the quest status pill (Option C): a button with the state in words that opens a menu of the four MY PROGRESS states; choosing goes through qsMark; keyboard, phone, one pill per place after every redraw, and no other quest changes"""
+    qs, nm = _q(); EMPTY, THR = nm["Empty Coop"], nm["Following the Thread"]
+    W = ["Not started", "Active", "Done", "Failed"]
+    ROWP = lambda g: '.qsrw:has(.qsrow[data-g="%s"]) .qspill' % g
+    GET = "JSON.stringify(Object.fromEntries(Object.entries(QS.store.manual).sort()))"
+    pg, errs, _ = Q.newpage(b, base, init=seed({UGLY: "active", SQ202: "done", Q206: "failed"}, quiet=False)); E = pg.evaluate; Q.opened(pg, "no"); pg.wait_for_timeout(300)
+    d = E("""(g)=>{const b=document.querySelector('.qsrw:has(.qsrow[data-g="'+g+'"]) .qspill');return{tag:b.tagName,type:b.type,hp:b.getAttribute('aria-haspopup'),ex:b.getAttribute('aria-expanded'),t:b.textContent.trim().replace(/\\s+/g,' '),lab:b.getAttribute('aria-label'),cls:b.className,
+      n:document.querySelectorAll('#qsRows .qsrw').length,np:document.querySelectorAll('#qsRows .qsrw > button.qspill').length,svg:document.querySelectorAll('#qsRows .qsrow svg.qsic').length}}""", EMPTY)
+    check("%s: the List row has a real <button> pill with the state as text + icon, aria-haspopup=menu, aria-expanded=false, and no status circle (%s)" % (label, d),
+          d["tag"] == "BUTTON" and d["type"] == "button" and d["hp"] == "menu" and d["ex"] == "false" and d["t"] == "○ Not started ▾" and d["lab"] == "Empty Coop: Not started. Change status" and "st-none" in d["cls"] and d["n"] == d["np"] > 5 and d["svg"] == 0, d)
+    # the menu: the four states in the words and the order of MY PROGRESS, the current one marked
+    pg.click(ROWP(EMPTY)); pg.wait_for_timeout(120)
+    m = E("""(()=>{const m=document.querySelector('.qspm');return m&&{role:m.getAttribute('role'),items:[...m.querySelectorAll('button')].map(b=>[b.getAttribute('role'),b.textContent.replace(/[○◉✓✕]/,'').trim()]),ex:document.querySelector('.qsrw .qspill[aria-expanded="true"]')&&1,focus:document.activeElement.textContent.replace(/[○◉✓✕]/,'').trim()}})()""")
+    E("qsSelect('%s',true)" % EMPTY); pg.wait_for_timeout(200)       # (opens the drawer and closes the menu)
+    prog = E("[...document.querySelectorAll('#qsDetail .qsmark')].map(b=>b.textContent.trim())")
+    check("%s: the menu lists the four states in the same words and order as MY PROGRESS %s, items are menuitem buttons, the current one says (current), focus is on it (%s)" % (label, prog, m),
+          m and m["role"] == "menu" and [i[1] for i in m["items"]] == ["Not started(current)", "Active", "Done", "Failed"] and all(i[0] == "menuitem" for i in m["items"]) and m["ex"] == 1 and m["focus"] == "Not started(current)" and prog == W, [m, prog])
+    check("%s: no page error" % label, not errs, errs[:1]); pg.close()
+    # --- every state from each place
+    def place(kind, pg, g):
+        if kind == "List": return ROWP(g)
+        if kind == "Next up": return '#qsNext .qscw:has(.qscard[data-g="%s"]) .qspill' % g
+        return '.qfrowx[data-k="%s"] .qfblk.amber .qspill' % (UGLY + THREAD)
+    for kind in ("List", "Next up", "Quest failures"):
+        res = []
+        for si, want in enumerate(("none", "active", "done", "failed")):
+            pg, errs, _ = Q.newpage(b, base, init=seed({UGLY: "active"} if kind != "Next up" else {}, quiet=False)); E = pg.evaluate; Q.opened(pg, "no"); pg.wait_for_timeout(300)
+            if kind == "Next up": g = E("document.querySelector('#qsNext .qscard').dataset.g")
+            elif kind == "Quest failures": g = THREAD; E("qsSetView('fails');qsRenderAll()"); pg.wait_for_timeout(250)
+            else: g = EMPTY
+            pre = E(GET); pg.click(place(kind, pg, g)); pg.wait_for_timeout(100); pg.click('.qspm button[data-s="%s"]' % want); pg.wait_for_timeout(250)
+            man = json.loads(E(GET)); other = {k: v for k, v in man.items() if k != g}; was = {k: v for k, v in json.loads(pre).items() if k != g}
+            txt = E("(sel)=>{const b=document.querySelector(sel);return b&&b.textContent.trim().replace(/\\s+/g,' ')}", place(kind, pg, g))
+            res.append((want, man.get(g), other == was, txt, not errs, E("!!document.querySelector('.qspm')")))
+            pg.close()
+        check("%s: from %s: Not started / Active / Done / Failed each set that quest only (the pill then reads the new state, the menu is gone) (%s)" % (label, kind, res),
+              [r[1] for r in res] == ["none", "active", "done", "failed"] and all(r[2] and r[4] and not r[5] for r in res) and [r[3] for r in res if r[3]] == ["○ Not started ▾", "◉ Active ▾", "✓ Done ▾", "✕ Failed ▾"][:len([r for r in res if r[3]])] and (kind == "Next up" or all(r[3] for r in res)), res)
+    # --- the fail prompt after Done through the pill, exactly as through MY PROGRESS
+    pg, errs, _ = Q.newpage(b, base, init=seed({}, quiet=False)); E = pg.evaluate; Q.opened(pg, "no"); pg.wait_for_timeout(300)
+    pg.click(ROWP(THR)); pg.click('.qspm button[data-s="done"]'); pg.wait_for_timeout(300)
+    t = E("[...document.querySelectorAll('#qfPrompts .qfprompt p')].map(p=>p.textContent)"); btn = E("[...document.querySelectorAll('#qfPrompts .qfprompt button')].map(b=>b.textContent)")
+    check("%s: Done through the pill brings the same prompt as MY PROGRESS: 'Following the Thread is done. Flesh for Sale would have failed along the way.' with Mark it failed / I finished it first (%s)" % (label, t), t == ["Following the Thread is done. Flesh for Sale would have failed along the way."] and btn[:2] == ["Mark it failed", "I finished it first"], [t, btn])
+    pg.click('#qfPrompts .qfprompt [data-a="failed"]'); pg.wait_for_timeout(250)
+    check("%s: and its 'Mark it failed' still works (Flesh for Sale failed, prompt gone)" % label, E("QS.store.manual['%s']" % nm["Flesh for Sale"]) == "failed" and not E("document.querySelector('.qfprompt')"))
+    check("%s: no page error" % label, not errs, errs[:1]); pg.close()
+    # --- keyboard
+    pg, errs, _ = Q.newpage(b, base, init=seed({}, quiet=False)); E = pg.evaluate; Q.opened(pg, "no"); pg.wait_for_timeout(300)
+    foc = lambda: E("(()=>{const a=document.activeElement;return a.dataset.s||(a.classList.contains('qspill')?'PILL:'+a.dataset.pill.slice(0,4):a.tagName)})()")
+    E("document.querySelector('%s').focus()" % ROWP(EMPTY)); pg.keyboard.press("Enter"); pg.wait_for_timeout(100); k = [foc()]
+    pg.keyboard.press("ArrowDown"); k.append(foc()); pg.keyboard.press("ArrowDown"); k.append(foc()); pg.keyboard.press("ArrowUp"); k.append(foc()); pg.keyboard.press("End"); k.append(foc()); pg.keyboard.press("ArrowDown"); k.append(foc()); pg.keyboard.press("Home"); k.append(foc())
+    pg.keyboard.press("Escape"); pg.wait_for_timeout(100); k.append(foc()); closed = not E("document.querySelector('.qspm')"); man0 = E(GET)
+    check("%s: keyboard: Enter opens the menu with focus on the current item, ArrowDown / ArrowUp / End / Home move (wrapping), Escape closes it and returns focus to the pill, no state changed (%s)" % (label, k),
+          k == ["none", "active", "done", "active", "failed", "none", "none", "PILL:" + EMPTY[:4]] and closed and man0 == "{}" and E("document.querySelector('.qspill[aria-expanded=\"true\"]')") is None, [k, closed, man0])
+    pg.keyboard.press("Enter"); pg.wait_for_timeout(100); pg.keyboard.press("ArrowDown"); pg.keyboard.press("ArrowDown"); pg.keyboard.press("Enter"); pg.wait_for_timeout(250)
+    check("%s: keyboard: Enter on the item sets the state (Done), the menu closes and focus returns to the pill (%s)" % (label, foc()), E("QS.store.manual['%s']" % EMPTY) == "done" and foc() == "PILL:" + EMPTY[:4] and not E("document.querySelector('.qspm')"), foc())
+    pg.keyboard.press(" "); pg.wait_for_timeout(100); opened = bool(E("document.querySelector('.qspm')")); pg.mouse.click(5, 5); pg.wait_for_timeout(100)
+    check("%s: Space opens it too; a click outside closes it and changes nothing" % label, opened and not E("document.querySelector('.qspm')") and E("QS.store.manual['%s']" % EMPTY) == "done")
+    E("document.querySelector('%s').focus()" % ROWP(EMPTY)); pg.keyboard.press("ArrowDown"); pg.wait_for_timeout(100); a = bool(E("document.querySelector('.qspm')")); pg.keyboard.press("Tab"); pg.wait_for_timeout(100)
+    check("%s: ArrowDown on the pill opens it, Tab closes it" % label, a and not E("document.querySelector('.qspm')"))
+    check("%s: no page error" % label, not errs, errs[:1]); pg.close()
+    # --- the name still opens the detail panel; the pill does not
+    pg, errs, _ = Q.newpage(b, base, init=seed({}, quiet=False)); E = pg.evaluate; Q.opened(pg, "no"); pg.wait_for_timeout(300)
+    pg.click(ROWP(EMPTY)); pg.wait_for_timeout(100); s1 = E("QS.sel"); pg.keyboard.press("Escape"); pg.click('.qsrow[data-g="%s"]' % EMPTY); pg.wait_for_timeout(200)
+    check("%s: opening the pill does not select the quest; clicking the quest NAME opens its detail panel and changes no state (%s)" % (label, (s1, E("QS.sel"))), s1 is None and E("QS.sel") == EMPTY and E(GET) == "{}", (s1, E("QS.sel")))
+    check("%s: no page error" % label, not errs, errs[:1]); pg.close()
+    # --- no other quest changes: seven seeded quests, every pill action
+    MANY = {UGLY: "active", SQ202: "done", Q206: "failed", nm["The Isle of Mists"]: "active", nm["Faithful Friend"]: "failed", nm["Ciri's Room"]: "done", nm["Imperial Audience"]: "active"}
+    pg, errs, _ = Q.newpage(b, base, init=seed(MANY, quiet=False)); E = pg.evaluate; Q.opened(pg, "no"); pg.wait_for_timeout(300); bad = []
+    for st in ("none", "active", "done", "failed"):
+        before = json.loads(E(GET)); pg.click(ROWP(EMPTY)); pg.wait_for_timeout(80); pg.click('.qspm button[data-s="%s"]' % st); pg.wait_for_timeout(200); after = json.loads(E(GET)); want = dict(before, **{EMPTY: st})
+        if after != want: bad.append((st, {k[:6]: (before.get(k), after.get(k)) for k in set(before) | set(after) if before.get(k) != after.get(k)}))
+    before = E(GET); pg.click(ROWP(EMPTY)); pg.keyboard.press("Escape"); pg.click(ROWP(EMPTY)); pg.mouse.click(5, 5); pg.wait_for_timeout(150)
+    check("%s: seven quests seeded: a pill changes only its own quest, and opening / Escape / clicking away change nothing (%s)" % (label, bad), not bad and E(GET) == before and not errs, bad or errs[:1]); pg.close()
+    # --- one pill per place after every redraw (the Bug B check for the pills)
+    ONCE = """(()=>{const v=[],n=(s,r)=>(r||document).querySelectorAll(s).length;
+      document.querySelectorAll('#qsRows .qsrw').forEach(w=>{if(n('.qspill',w)!==1||n('.qsrow',w)!==1)v.push('row '+w.querySelector('.qsrow').dataset.g.slice(0,4))});
+      document.querySelectorAll('#qsNext .qscw').forEach(w=>{if(n('.qspill',w)!==1)v.push('card')});
+      document.querySelectorAll('.qfrowx .qfblk').forEach(w=>{if(n('.qspill',w)>1)v.push('failures block')});
+      const g=[...document.querySelectorAll('#qsRows .qspill')].map(b=>b.dataset.pill);if(new Set(g).size!==g.length)v.push('repeated pill in the list');
+      return{v,rows:n('#qsRows .qsrw'),cards:n('#qsNext .qscw'),pills:n('.qspill')}})()"""
+    pg, errs, _ = Q.newpage(b, base, init=seed({UGLY: "active"}, quiet=False)); E = pg.evaluate; Q.opened(pg, "km"); pg.wait_for_timeout(300); steps = [("start", E(ONCE))]
+    for r in ("wo", "vz", "ve", "no", "sk", "km", "hos", "baw", "oth", "km"): pg.click('.qsreg[data-r="%s"]' % r); pg.wait_for_timeout(100); steps.append(("tab " + r, E(ONCE)))
+    for lab, js in (("Hide done", "document.getElementById('qsHide').click()"), ("kind chip", "document.querySelector('.qschip[data-k=\"main\"]').click()"), ("search", "(()=>{const i=document.getElementById('qsQ');i.value='a';i.dispatchEvent(new Event('input'))})()"),
+                    ("Level band", "document.getElementById('qsVBand').click()"), ("Quest failures", "document.getElementById('qsVFails').click()"), ("List", "document.getElementById('qsVList').click()")):
+        E(js); pg.wait_for_timeout(200); steps.append((lab, E(ONCE)))
+    for g in (THR, UGLY): E("qsSelect('%s',true)" % g); pg.wait_for_timeout(300); steps.append(("open", E(ONCE)))
+    badr = [(n, r["v"]) for n, r in steps if r["v"]]
+    check("%s: every List row and Next up card holds exactly one pill after every region tab, Hide done, a chip, search, the views and opening quests (%d steps) (%s)" % (label, len(steps), badr or steps[0][1]), not badr and all(r["rows"] > 0 or n in ("Level band", "Quest failures") for n, r in steps[1:]) and not errs, badr or errs[:1]); pg.close()
+    # --- contrast of every state, and the phone
+    pg, errs, _ = Q.newpage(b, base, init=seed({nm["Empty Coop"]: "active", nm["Final Preparations"]: "done", nm["Lost Goods"]: "failed"}, quiet=False)); Q.opened(pg, "no"); pg.wait_for_timeout(300)
+    for st in ("none", "active", "done", "failed"): ratio(pg, "#qsRows .qspill.st-%s" % st, "the %s pill" % st, check, label)
+    pg.click(ROWP(EMPTY)); pg.wait_for_timeout(120); ratio(pg, ".qspm button", "the menu items", check, label); pg.close()
+    pg, errs, _ = Q.newpage(b, base, w=390, h=844, mobile=True, init=seed({UGLY: "active", nm["Final Preparations"]: "done"}, quiet=False)); E = pg.evaluate; Q.opened(pg, "no"); pg.wait_for_timeout(400)
+    ph = E("""(()=>{const rows=[...document.querySelectorAll('#qsRows .qsrw')].slice(0,8),r=e=>e.getBoundingClientRect();return{sx:document.documentElement.scrollWidth-innerWidth,h:rows.map(w=>Math.round(r(w.querySelector('.qspill')).height),),
+      line:rows.every(w=>{const p=r(w.querySelector('.qspill')),n=r(w.querySelector('.qsrn2')),l=r(w.querySelector('.qslv'));return p.right<=n.left+1&&n.right<=l.left+1&&Math.abs((p.top+p.bottom)/2-(n.top+n.bottom)/2)<30}),
+      card:[...document.querySelectorAll('#qsNext .qscw .qspill')].map(b=>Math.round(r(b).height))}})()""")
+    pg.click(ROWP(EMPTY)); pg.wait_for_timeout(150)
+    mm = E("""(()=>{const m=document.querySelector('.qspm'),r=m.getBoundingClientRect(),p=document.querySelector('.qspill[aria-expanded="true"]').getBoundingClientRect();return{l:Math.round(r.left),rt:Math.round(r.right),w:innerWidth,below:r.top>=p.bottom-1||r.bottom<=p.top+1,items:[...m.querySelectorAll('button')].map(b=>Math.round(b.getBoundingClientRect().height)),sx:document.documentElement.scrollWidth-innerWidth}})()""")
+    check("%s: phone 390 px: pills are 44 px tall, in every row the pill, name and level sit side by side on one line, nothing scrolls sideways (%s)" % (label, ph), ph["sx"] <= 1 and all(x >= 44 for x in ph["h"]) and ph["line"] and all(x >= 44 for x in ph["card"]), ph)
+    check("%s: phone: the menu opens beside / below the pill inside the screen with 44 px items and no sideways scroll (%s)" % (label, mm), mm["l"] >= 0 and mm["rt"] <= mm["w"] and all(x >= 44 for x in mm["items"]) and mm["sx"] <= 1, mm)
     check("%s: no page error" % label, not errs, errs[:1]); pg.close()
 
 

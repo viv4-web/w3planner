@@ -1,6 +1,6 @@
 // ---- Quests (v33): status, list, level band, Next up, detail, progress. Data: data/QUESTS.json (tools/make_quests.py, docs/QUESTS.md); the journal text is game content and exists in the live build only ----
 // The screen is S.scr 'q' and lives in the link as s1Q; nothing else is in the link. Progress is kept in this browser (localStorage 'w3p.quests.v1') and in an exported file, never in the link or anywhere else.
-const QS_URL=/*@file:QUESTS*/, QS_RULES_URL=/*@file:QUEST-RULES*/, QS_FAILS_URL=/*@file:QUEST_FAILS*/, QS_QF_URL=/*@lazyjs:questfails*/, QS_DESC=/*@quests*/null;
+const QS_URL=/*@file:QUESTS*/, QS_RULES_URL=/*@file:QUEST-RULES*/, QS_FAILS_URL=/*@file:QUEST_FAILS*/, QS_QF_URL=/*@lazyjs:questfails*/, QS_QP_URL=/*@lazyjs:questpill*/, QS_DESC=/*@quests*/null;
 const QS_KEY='w3p.quests.v1';
 const QS_KINDS=[['main','Main'],['side','Secondary'],['contract','Contracts'],['treasure','Treasure hunts'],['gwent','Gwent'],['race','Races'],['fist','Fistfights']];
 const QS_NAMES={none:'Not started',active:'Active',done:'Done',failed:'Failed',inactive:'Inactive'},QS_MARKS=['none','active','done','failed'];
@@ -21,6 +21,7 @@ const QS_SHAPE={main:'<polygon points="7,0.8 13.2,7 7,13.2 0.8,7"/>',side:'<circ
 const qsShape=(kind,st,legend)=>`<svg class="qsshape qs-${st}" viewBox="0 0 14 14" width="14" height="14" aria-hidden="true" focusable="false">${QS_SHAPE[kind]}${st==='failed'&&!legend?'<path class="x" d="M4.6 4.6l4.8 4.8M9.4 4.6l-4.8 4.8"/>':''}${st==='done'&&!legend?'<path class="ck" d="M4.2 7.2l2 2 3.6-4"/>':''}</svg>`;
 const qsEl=id=>document.getElementById(id);
 const qsEsc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const qsPl=g=>window.QP?QP.pill(g):'',qsIc=(st,kind)=>window.QP?'':qsIcon(st,kind);   // v40: the status pill (questpill.js) in place of the status icon, when the script is there
 const qsIcon=(st,kind)=>`<svg class="qsic qs-${st}${kind?' t-'+kind:''}" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">${QS_ICON[st]||QS_ICON.none}</svg>`;
 
 // ---- storage: every read and write is in try/catch; without storage the screen works for this visit and the chip says so ----
@@ -54,6 +55,7 @@ function qsLoad(){if(QS.data)return Promise.resolve(QS.data);
  return QS.load||(QS.load=(async()=>{if(!(window.W3DATA&&W3DATA.QUESTS))await eqScript(QS_URL);const d=W3DATA.QUESTS;if(!d||!d.quests)throw new Error('empty');
   QS.data=d;QS.byG=new Map(d.quests.map(q=>[q.g,q]));QS.byObj=new Map();QS.byDesc=new Set();d.quests.forEach(q=>{q.o.forEach((g,i)=>QS.byObj.set(g,[q,i]));q.d.forEach(g=>QS.byDesc.add(g))});QS.regions=new Map(d.regions);
   try{if(!(window.W3DATA&&W3DATA.QUEST_RULES))await eqScript(QS_RULES_URL);const R=W3DATA.QUEST_RULES;if(R&&R.quests){R.gmap=new Map(R.gates.map(x=>[x.id,x]));R.pts=new Map(R.points);QS.R=R}}catch(e){QS.R=null}   // the timeline data is optional: without it the other views work
+  try{if(!window.QP)await eqScript(QS_QP_URL)}catch(e){}   // v40: the status pill is optional too
   try{if(!(window.W3DATA&&W3DATA.QUEST_FAILS))await eqScript(QS_FAILS_URL);if(!window.QF)await eqScript(QS_QF_URL);QF.init(W3DATA.QUEST_FAILS)}catch(e){}   // v39: the fail safeguard (questfails.js) is optional too
   return d})().catch(e=>{QS.load=null;QS.err=true;throw e}))}
 function qsDescLoad(){if(QS.desc)return Promise.resolve(QS.desc);if(!QS_DESC)return Promise.reject(new Error('none'));
@@ -105,7 +107,7 @@ function qsNextUp(){const my=qsMy(),all=QS.data.quests;QS.nextFail=new Map();
  return miss.concat(risk,act.filter(q=>!rk.has(q.g)),fresh.filter(q=>!rk.has(q.g))).slice(0,4)}
 function qsRenderNext(){const el=qsEl('qsNext'),list=qsNextUp(),my=qsMy();
  el.innerHTML=`<h3>Next up</h3><div class="qscards">${list.map(q=>{const st=qsState(q.g),cur=st==='active'?qsCurrent(q):[],fg=QS.nextFail.get(q.g);
-  return`<button type="button" class="qscard t-${q.t}${fg?' fails':''}${QS.sel===q.g?' on':''}" data-g="${q.g}">${qsIcon(st,q.t)}<span class="qscn"><b>${qsEsc(q.n)}</b><small>${qsEsc(QS.regions.get(q.r))} · level ${qsLevelText(q)} · ${QS_NAMES[st]}</small><em${fg?' class="qsfail"':''}>${fg?'Fails at '+qsEsc(fg):st==='active'?(cur.length?(cur[0]===null?cur.length+' active objective'+(cur.length>1?'s':'')+' (text not in this build)':qsEsc(cur[0])+(cur.length>1?' (+'+(cur.length-1)+')':'')):'Current objective: not known'):qsEsc(qsXp(q,my)>=1?'Full XP at your level':'')}</em></span></button>`}).join('')||'<p class="qshint">Nothing left to suggest.</p>'}</div>`;
+  return`<div class="qscw"><button type="button" class="qscard t-${q.t}${fg?' fails':''}${QS.sel===q.g?' on':''}" data-g="${q.g}">${qsIc(st,q.t)}<span class="qscn"><b>${qsEsc(q.n)}</b><small>${qsEsc(QS.regions.get(q.r))} · level ${qsLevelText(q)} · ${QS_NAMES[st]}</small><em${fg?' class="qsfail"':''}>${fg?'Fails at '+qsEsc(fg):st==='active'?(cur.length?(cur[0]===null?cur.length+' active objective'+(cur.length>1?'s':'')+' (text not in this build)':qsEsc(cur[0])+(cur.length>1?' (+'+(cur.length-1)+')':'')):'Current objective: not known'):qsEsc(qsXp(q,my)>=1?'Full XP at your level':'')}</em></span></button>${qsPl(q.g)}</div>`}).join('')||'<p class="qshint">Nothing left to suggest.</p>'}</div>`;
  el.querySelectorAll('.qscard').forEach(b=>{b.onclick=()=>qsSelect(b.dataset.g,true)})}
 // the Missable panel (above Next up, only with a save): open quests that fail at the next gate the save has not passed
 function qsRenderMiss(){const el=qsEl('qsMiss'),L=qsMissLists().filter(m=>m.whole.length||m.obj.length);el.hidden=!L.length;if(!L.length){el.textContent='';return}
@@ -125,7 +127,7 @@ function qsRenderList(host){const reg=qsInRegion(QS.region),cnt=k=>reg.filter(q=
  host.innerHTML=`<div class="qsfilters"><div class="qschips" role="group" aria-label="Quest type">${[['all','All']].concat(QS_KINDS).map(([k,n])=>`<button type="button" class="qschip${k==='all'?'':' t-'+k}${QS.kind===k?' on':''}" data-k="${k}" aria-pressed="${QS.kind===k}"${cnt(k)?'':' disabled'}>${n}</button>`).join('')}<button type="button" class="qschip hide${QS.hide?' on':''}" id="qsHide" aria-pressed="${QS.hide}">Hide done</button></div>
   <input id="qsQ" class="qssearch" type="search" placeholder="Search all quests" aria-label="Search all quests" autocomplete="off" spellcheck="false" value="${qsEsc(QS.q)}"></div><div class="qsrows" id="qsRows"></div>`;
  const rows=qsEl('qsRows'),l=qsRows(),all=glWords(QS.q).length;
- rows.innerHTML=l.map(q=>{const st=qsState(q.g),ch=qsByChoice(q);return`<button type="button" class="qsrow t-${q.t} st-${st}${ch?' choice':''}${QS.sel===q.g?' on':''}" data-g="${q.g}" aria-label="${qsEsc(q.n)}, ${qsKindName(q.t)}, ${QS_NAMES[st]}, level ${qsLevelText(q)}${ch?', can fail by a choice':''}">${qsIcon(st,q.t)}<span class="qsrn2"><b>${qsEsc(q.n)}</b>${all?`<small>${qsEsc(QS.regions.get(q.r))}</small>`:''}</span>${ch?'<span class="qsbych">by choice</span>':''}${qsLvSpan(q)}</button>`}).join('')||`<p class="qshint">${QS.q.trim()?'Nothing matches '+qsEsc(QS.q.trim())+'.':'No quests here.'}</p>`;
+ rows.innerHTML=l.map(q=>{const st=qsState(q.g),ch=qsByChoice(q);return`<div class="qsrw">${qsPl(q.g)}<button type="button" class="qsrow t-${q.t} st-${st}${ch?' choice':''}${QS.sel===q.g?' on':''}" data-g="${q.g}" aria-label="${qsEsc(q.n)}, ${qsKindName(q.t)}, ${QS_NAMES[st]}, level ${qsLevelText(q)}${ch?', can fail by a choice':''}">${qsIc(st,q.t)}<span class="qsrn2"><b>${qsEsc(q.n)}</b>${all?`<small>${qsEsc(QS.regions.get(q.r))}</small>`:''}</span>${ch?'<span class="qsbych">by choice</span>':''}${qsLvSpan(q)}</button></div>`}).join('')||`<p class="qshint">${QS.q.trim()?'Nothing matches '+qsEsc(QS.q.trim())+'.':'No quests here.'}</p>`;
  rows.scrollTop=top;host.querySelectorAll('.qschip[data-k]').forEach(b=>{b.onclick=()=>{QS.kind=b.dataset.k;qsRenderView()}});qsEl('qsHide').onclick=()=>{QS.hide=!QS.hide;qsRenderView()};
  const inp=qsEl('qsQ');inp.oninput=()=>{QS.q=inp.value;const p=inp.selectionStart;qsRenderView();const n=qsEl('qsQ');n.focus();n.setSelectionRange(p,p)};
  rows.querySelectorAll('.qsrow').forEach(b=>{b.onclick=()=>qsSelect(b.dataset.g,true);b.onkeydown=e=>{if(e.key!=='ArrowDown'&&e.key!=='ArrowUp')return;const rs=[...rows.querySelectorAll('.qsrow')],i=rs.indexOf(b)+(e.key==='ArrowDown'?1:-1);if(i>=0&&i<rs.length){e.preventDefault();rs[i].focus()}}})}
