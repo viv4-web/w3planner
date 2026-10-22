@@ -1,0 +1,25 @@
+{
+ "link": "fact: q602_done fails A Midnight Clear",
+ "kind": "fact",
+ "failed_guid": "25e3242c3c7cbe45bb43bef76965e875",
+ "failed_name": "A Midnight Clear",
+ "failed_id": "q602romance",
+ "failer_guid": "6b3f0578ae5682499f22c0f97239efb9",
+ "failer_name": "Dead Man's Party",
+ "failer_id": "q602wedding",
+ "fact": "q602_done",
+ "op": {
+  "func": "CF_GreaterEqual",
+  "value": 1,
+  "query": "QF_DoesExist"
+ },
+ "effect": "Failure",
+ "setter_file": "dlc/ep1/data/quests/q602_wedding.w2phase",
+ "setter_block": 514,
+ "fail_file": "dlc/ep1/data/quests/quest_files/q602_wedding/phases/q602_romance.w2phase",
+ "fail_block": 262,
+ "trigger_phase": "Wedding > Capping, then the area exit",
+ "trigger_scene": null,
+ "status": "verified_gamefiles",
+ "engine_effect": "unconfirmed"
+}

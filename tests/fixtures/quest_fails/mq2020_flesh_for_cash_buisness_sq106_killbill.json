@@ -1,0 +1,24 @@
+{
+ "link": "fact: sq106_hammond_knows fails Flesh for Sale",
+ "kind": "fact",
+ "failed_guid": "0057ce75be1b1f4bae3792060fca206d",
+ "failed_name": "Flesh for Sale",
+ "failed_id": "mq2020 Flesh for cash buisness",
+ "failer_guid": "9cf4eb23b5bfd24c94fbd8a2a64070b2",
+ "failer_name": "Following the Thread",
+ "failer_id": "SQ106 Killbill",
+ "fact": "sq106_hammond_knows",
+ "op": {
+  "func": "CF_GreaterEqual",
+  "value": 1
+ },
+ "effect": "Failure",
+ "setter_file": "quests/sidequests/no_mans_land/quest_files/sq106_killbill/phases/sq106_hammond.w2phase",
+ "setter_block": 45,
+ "fail_file": "quests/minor_quests/skellige/mq2020_flesh_for_cash_business.w2phase",
+ "fail_block": 81,
+ "trigger_phase": "Hammond",
+ "trigger_scene": null,
+ "status": "verified_gamefiles",
+ "engine_effect": "unconfirmed"
+}

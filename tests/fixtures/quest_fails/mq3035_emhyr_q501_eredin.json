@@ -1,0 +1,24 @@
+{
+ "link": "fact: q501_naglfar_arrived fails Reason of State",
+ "kind": "fact",
+ "failed_guid": "46185105652a0f45ad95f6e7949edf31",
+ "failed_name": "Reason of State",
+ "failed_id": "mq3035_emhyr",
+ "failer_guid": "58b23412c7f78e4a9d970f3ed331838e",
+ "failer_name": "On Thin Ice",
+ "failer_id": "Q501 Eredin",
+ "fact": "q501_naglfar_arrived",
+ "op": {
+  "func": "CF_GreaterEqual",
+  "value": 1
+ },
+ "effect": "Failure",
+ "setter_file": "quests/part_3/q501_eredin.w2phase",
+ "setter_block": 1268,
+ "fail_file": "quests/minor_quests/novigrad/mq3035_emhyr.w2phase",
+ "fail_block": 29,
+ "trigger_phase": "before naglfar",
+ "trigger_scene": null,
+ "status": "verified_gamefiles",
+ "engine_effect": "unconfirmed"
+}

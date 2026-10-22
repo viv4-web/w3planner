@@ -27,7 +27,11 @@ POINTS = [("p", "Prologue"), ("a", "Act I"), ("i", "Isle of Mists"), ("b", "Batt
 SP = {"Prologue": "p", "Act I free roam": "a", "Isle of Mists": "i", "Battle of Kaer Morhen": "b", "Act III": "3", "Epilogue": "e", "Hearts of Stone start": "h", "Blood and Wine start": "w"}
 TOGGLE = re.compile(r"pause|failsafe", re.I)
 # facts left out although a Failure / Deactivate input follows them: a state of the game, not a point of no return
-EXCLUDE = {"q601_geralt_has_demon_mark": "a Hearts of Stone state flag (the demon mark): it fails an objective of Q310, it is not a story gate"}
+EXCLUDE = {"q601_geralt_has_demon_mark": "a Hearts of Stone state flag (the demon mark): it fails an objective of Q310, it is not a story gate",
+           # v39.5: the only cutoff that rests on q310_yen_novigrad is mq3041 (Out On Your Arse!) at novigrad3. File evidence: its wait 199 (mq3041_showing_presence.w2phase) reads "q310_yen_novigrad == 0"
+           # (compare and value both absent: the designers' label says 0, and an absent value is 0), which the spike counted as "fires when set"; its other test (194) needs >= 1, but all three setters of the
+           # fact (patch_signal_phase_01.w2phase 404, q310_pregeels_new.w2phase 3283 and 3317) are exact resets to 0 (setExactValue, value absent) and no scene or script sets it: nothing in the files sets it to 1
+           "q310_yen_novigrad": "no setter sets it above 0 (patch_signal_phase_01 404, q310_pregeels_new 3283 and 3317 are exact resets) and the wait that reads it is '== 0': the novigrad3 cutoff of mq3041 has no support in the files"}
 # the gates: the spike's cutoff names -> one gate. lane b = the base game columns (x: 0 = left edge of Prologue, 1 = Act I, 2 = Isle of Mists, 3 = Battle, 4 = Act III, 5 = Epilogue, 6 = right edge),
 # lane w / h = the expansions, laid out by quest level (x = a level). `done`: the quests whose Success passes the gate; `next`: the quests that exist once it is passed (rule: docs/QUESTS.md).
 GATES = [

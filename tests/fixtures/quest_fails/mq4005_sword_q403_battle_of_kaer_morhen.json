@@ -1,0 +1,25 @@
+{
+ "link": "fact: q403_council fails Berengar's Blade",
+ "kind": "fact",
+ "failed_guid": "4cb0c6391331f44fac1c1d00fe0da8c6",
+ "failed_name": "Berengar's Blade",
+ "failed_id": "mq4005_sword",
+ "failer_guid": "af804f0b3f79654a81bfa84e39412a8a",
+ "failer_name": "The Battle of Kaer Morhen",
+ "failer_id": "Q403 Battle of Kaer Morhen",
+ "fact": "q403_council",
+ "op": {
+  "func": "CF_GreaterEqual",
+  "value": 1,
+  "query": "QF_DoesExist"
+ },
+ "effect": "Failure",
+ "setter_file": "quests/part_2/quest_files/q403_battle/phases/q403_council.w2phase",
+ "setter_block": 159,
+ "fail_file": "quests/minor_quests/kaer_morhen/mq4005_sword.w2phase",
+ "fail_block": 6,
+ "trigger_phase": "Council > Set NPCs for battle",
+ "trigger_scene": null,
+ "status": "verified_gamefiles",
+ "engine_effect": "unconfirmed"
+}

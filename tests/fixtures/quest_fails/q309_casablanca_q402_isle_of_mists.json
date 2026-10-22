@@ -1,0 +1,25 @@
+{
+ "link": "fact: q402_escort_completed fails Now or Never",
+ "kind": "fact",
+ "failed_guid": "400c9506df5222448169c603f3b4d23f",
+ "failed_name": "Now or Never",
+ "failed_id": "Q309 Casablanca",
+ "failer_guid": "5ce1c21a55b9cb4bb99706bfd11fa286",
+ "failer_name": "The Isle of Mists",
+ "failer_id": "Q402 Isle of Mists",
+ "fact": "q402_escort_completed",
+ "op": {
+  "func": "CF_GreaterEqual",
+  "value": 1,
+  "query": "QF_DoesExist"
+ },
+ "effect": "Failure",
+ "setter_file": "quests/part_2/q402_ciri.w2phase",
+ "setter_block": 1047,
+ "fail_file": "quests/part_2/q309_casablanca.w2phase",
+ "fail_block": 212,
+ "trigger_phase": "before isle",
+ "trigger_scene": null,
+ "status": "verified_gamefiles",
+ "engine_effect": "unconfirmed"
+}

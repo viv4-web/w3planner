@@ -1,0 +1,24 @@
+{
+ "link": "fact: q704_long_night_starts fails The Warble of a Smitten Knight",
+ "kind": "fact",
+ "failed_guid": "7a549eadeb3a3240ae21ad87729fe48a",
+ "failed_name": "The Warble of a Smitten Knight",
+ "failed_id": "SQ701 tournament",
+ "failer_guid": "3d0748ffe569694fbed79cf7adb317e2",
+ "failer_name": "The Night of Long Fangs",
+ "failer_id": "Q704 Starting",
+ "fact": "q704_long_night_starts",
+ "op": {
+  "func": "CF_GreaterEqual",
+  "value": 1
+ },
+ "effect": "Failure",
+ "setter_file": "dlc/bob/data/quests/main_quests/quest_files/q704_truth/phases/q704_01_beginning.w2phase",
+ "setter_block": 42,
+ "fail_file": "dlc/bob/data/quests/sidequests/sq701_tournament.w2phase",
+ "fail_block": 4399,
+ "trigger_phase": "Beginning (q704_truth)",
+ "trigger_scene": null,
+ "status": "verified_gamefiles",
+ "engine_effect": "unconfirmed"
+}

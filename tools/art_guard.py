@@ -65,6 +65,17 @@ def check_inputs(art_dir, root):
     return bad
 
 
+TEXT_EXT = {".html", ".js", ".css", ".json", ".svg", ".txt", ".xml", ".htaccess", ".webmanifest", ".map", ""}
+
+
+def no_file_urls(dist):
+    """v39.3: the ONLINE build must never mention file:// (Firefox: "Content at https://... may not load or link to file:///"). Every text file of dist is searched; the offline package is not checked here (it is opened from a folder)."""
+    bad = []
+    for p in sorted(Path(dist).rglob("*")):
+        if p.is_file() and (p.suffix.lower() in TEXT_EXT or p.name == ".htaccess") and b"file://" in p.read_bytes(): bad.append("%s contains file://" % p.relative_to(dist))
+    return bad
+
+
 def check_dist(dist, art_dir):
     d = Path(dist); bad = []
     html = (d / "index.html").read_text(encoding="utf-8") if (d / "index.html").is_file() else ""
@@ -79,7 +90,7 @@ def check_dist(dist, art_dir):
     if not [p for p in (d / "glossary" / "img").glob("*.webp")] if (d / "glossary" / "img").is_dir() else True: bad.append("dist has no glossary/img pictures")
     if not [p for p in (d / "quests").glob("desc.*.js") if p.stat().st_size]: bad.append("dist has no quests/desc.<hash>.js")
     if not (d / "assets").is_dir() or not any((d / "assets").iterdir()): bad.append("dist has no assets/ (the game art)")
-    return bad
+    return bad + no_file_urls(d)
 
 
 def _fetch(url):

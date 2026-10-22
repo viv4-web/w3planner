@@ -1,0 +1,25 @@
+{
+ "link": "fact: q402_escort_completed fails Ciri's Room",
+ "kind": "fact",
+ "failed_guid": "7380a37420febd4c9a8a8aa61c8ab10a",
+ "failed_name": "Ciri's Room",
+ "failed_id": "Q103 Ciri's Chamber",
+ "failer_guid": "5ce1c21a55b9cb4bb99706bfd11fa286",
+ "failer_name": "The Isle of Mists",
+ "failer_id": "Q402 Isle of Mists",
+ "fact": "q402_escort_completed",
+ "op": {
+  "func": "CF_GreaterEqual",
+  "value": 1,
+  "query": "QF_DoesExist"
+ },
+ "effect": "Failure",
+ "setter_file": "quests/part_2/q402_ciri.w2phase",
+ "setter_block": 1047,
+ "fail_file": "quests/part_1/quest_files/q103_daughter/phases/q103_ciris_room.w2phase",
+ "fail_block": 82,
+ "trigger_phase": "before isle",
+ "trigger_scene": null,
+ "status": "verified_gamefiles",
+ "engine_effect": "unconfirmed"
+}

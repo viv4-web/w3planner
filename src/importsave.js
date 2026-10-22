@@ -145,7 +145,7 @@ async function impDoApply(){
  if(sel.equipment){S.gear=P.gear.slice();S.sock=Array(24).fill(0)}   // the worn pieces change, so the sockets of the old ones go
  if(sel.sockets)S.sock=P.sock.slice();
  if(sel.consumables){for(let i=0;i<6;i++)S.cons[i]=P.cons[i]}      // the sword oils (positions 6 and 7) are not read: left as they are
- if(sel.stash){try{localStorage.setItem('w3planner.stash',JSON.stringify(P.stash));stashDrawn=false}catch(e){notify('The stash could not be kept: this browser blocks storage for the site.')}}
+ if(sel.stash){try{localStorage.setItem('w3planner.stash',JSON.stringify(P.stash));stashDrawn=false}catch(e){notify(qsProbe()?'The stash could not be kept: it is too large for this browser\'s storage.':'The stash could not be kept: this browser blocks storage for the site.')}}
  let qNote='';if(sel.quests&&P.quests&&IMP.qmode!=='cancel'){qsApplyJournal(P.quests.J,f.name,IMP.qmode);const k=Object.values(P.quests.J.q);qNote=' Quests: '+k.filter(v=>v==='done').length+' done, '+k.filter(v=>v==='active').length+' active.'}
  if(sel.character){PS.play=P.play;PS.imp.effects=P.effects}if(sel.equipment)PS.imp.rolled=P.rolled;enforceLocks();eqValidate();cnValidate();const skRm=skFit();S.scr='char';
  PS.imp.stored=sel.character?P.stored:null;PS.imp.link=enc();   // the save's own ability list, used (and checked) by Player Stats only while the build is still this one

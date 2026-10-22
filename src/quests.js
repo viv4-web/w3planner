@@ -1,6 +1,6 @@
 // ---- Quests (v33): status, list, level band, Next up, detail, progress. Data: data/QUESTS.json (tools/make_quests.py, docs/QUESTS.md); the journal text is game content and exists in the live build only ----
 // The screen is S.scr 'q' and lives in the link as s1Q; nothing else is in the link. Progress is kept in this browser (localStorage 'w3p.quests.v1') and in an exported file, never in the link or anywhere else.
-const QS_URL=/*@file:QUESTS*/, QS_RULES_URL=/*@file:QUEST-RULES*/, QS_DESC=/*@quests*/null;
+const QS_URL=/*@file:QUESTS*/, QS_RULES_URL=/*@file:QUEST-RULES*/, QS_FAILS_URL=/*@file:QUEST_FAILS*/, QS_QF_URL=/*@lazyjs:questfails*/, QS_DESC=/*@quests*/null;
 const QS_KEY='w3p.quests.v1';
 const QS_KINDS=[['main','Main'],['side','Secondary'],['contract','Contracts'],['treasure','Treasure hunts'],['gwent','Gwent'],['race','Races'],['fist','Fistfights']];
 const QS_NAMES={none:'Not started',active:'Active',done:'Done',failed:'Failed',inactive:'Inactive'},QS_MARKS=['none','active','done','failed'];
@@ -33,12 +33,15 @@ function qsClean(o){   // untrusted (the file the user loads, or another version
   q:take(o.save.q,['done','active','failed','inactive'],6000),o:take(o.save.o,['done','active','failed','inactive'],12000),e:take(o.save.e,['done','active','failed','inactive'],12000)};
  return out}
 function qsStoreInit(){if(QS.read)return;QS.read=true;qsRead()}
-function qsRead(){try{const v=localStorage.getItem(QS_VIEW_KEY);if(v==='list'||v==='band'||v==='time')QS.view=v;QS.showDone=localStorage.getItem(QS_DONE_KEY)==='1';QS.timeDone=localStorage.getItem(QS_TDONE_KEY)==='1';const sc=localStorage.getItem(QS_TSCOPE_KEY);if(sc==='base'||sc==='hos'||sc==='bob')QS.tscope=sc}catch(e){}   // the view first: it must win on load whether or not any progress is stored (v33c; v33b skipped it when nothing was stored)
- try{const raw=localStorage.getItem(QS_KEY);QS.ok=true;if(!raw)return;const c=qsClean(JSON.parse(raw));if(c)QS.store=c}catch(e){QS.ok=false}}
+function qsRead(){try{const v=localStorage.getItem(QS_VIEW_KEY);if(v==='list'||v==='band'||v==='time'||v==='fails')QS.view=v;QS.showDone=localStorage.getItem(QS_DONE_KEY)==='1';QS.timeDone=localStorage.getItem(QS_TDONE_KEY)==='1';const sc=localStorage.getItem(QS_TSCOPE_KEY);if(sc==='base'||sc==='hos'||sc==='bob')QS.tscope=sc}catch(e){}   // the view first: it must win on load whether or not any progress is stored (v33c; v33b skipped it when nothing was stored)
+ QS.ok=qsProbe();   // v39.3: storage is "blocked" only when a probe key cannot be written, read back and removed right now; reading or parsing our own data says nothing about it
+ let raw=null;try{raw=localStorage.getItem(QS_KEY)}catch(e){}
+ if(!raw)return;try{const c=qsClean(JSON.parse(raw));if(c)QS.store=c}catch(e){QS.bad=true}}   // unreadable data (not JSON, damaged): start empty, the next save replaces it
+function qsProbe(){try{const k=QS_KEY+'.probe';localStorage.setItem(k,'1');const ok=localStorage.getItem(k)==='1';localStorage.removeItem(k);return ok}catch(e){return false}}
 function qsSetDone(on){QS.showDone=on;try{localStorage.setItem(QS_DONE_KEY,on?'1':'0')}catch(e){}}
 function qsSetTimeDone(on){QS.timeDone=on;try{localStorage.setItem(QS_TDONE_KEY,on?'1':'0')}catch(e){}}
 function qsSetView(v){QS.view=v;QS.open=false;try{localStorage.setItem(QS_VIEW_KEY,v)}catch(e){}}
-function qsWrite(){try{localStorage.setItem(QS_KEY,JSON.stringify(Object.assign({v:1},QS.store)));QS.ok=true}catch(e){QS.ok=false}qsChip()}
+function qsWrite(){try{localStorage.setItem(QS_KEY,JSON.stringify(Object.assign({v:1},QS.store)));QS.ok=true;QS.bad=false}catch(e){QS.ok=qsProbe()}qsChip()}   // a real save clears a stuck 'blocked'; a failed one asks the probe (a one-off failure, a full quota: storage still works)
 function qsTouch(){QS.store.changed=Date.now();qsWrite()}
 const qsSaveState=g=>QS.store.save&&QS.store.save.q[g]||'none';
 const qsState=g=>QS.store.manual[g]||qsSaveState(g);
@@ -51,6 +54,7 @@ function qsLoad(){if(QS.data)return Promise.resolve(QS.data);
  return QS.load||(QS.load=(async()=>{if(!(window.W3DATA&&W3DATA.QUESTS))await eqScript(QS_URL);const d=W3DATA.QUESTS;if(!d||!d.quests)throw new Error('empty');
   QS.data=d;QS.byG=new Map(d.quests.map(q=>[q.g,q]));QS.byObj=new Map();QS.byDesc=new Set();d.quests.forEach(q=>{q.o.forEach((g,i)=>QS.byObj.set(g,[q,i]));q.d.forEach(g=>QS.byDesc.add(g))});QS.regions=new Map(d.regions);
   try{if(!(window.W3DATA&&W3DATA.QUEST_RULES))await eqScript(QS_RULES_URL);const R=W3DATA.QUEST_RULES;if(R&&R.quests){R.gmap=new Map(R.gates.map(x=>[x.id,x]));R.pts=new Map(R.points);QS.R=R}}catch(e){QS.R=null}   // the timeline data is optional: without it the other views work
+  try{if(!(window.W3DATA&&W3DATA.QUEST_FAILS))await eqScript(QS_FAILS_URL);if(!window.QF)await eqScript(QS_QF_URL);QF.init(W3DATA.QUEST_FAILS)}catch(e){}   // v39: the fail safeguard (questfails.js) is optional too
   return d})().catch(e=>{QS.load=null;QS.err=true;throw e}))}
 function qsDescLoad(){if(QS.desc)return Promise.resolve(QS.desc);if(!QS_DESC)return Promise.reject(new Error('none'));
  return QS.descP||(QS.descP=new Promise((ok,bad)=>{const s=document.createElement('script');s.src=QS_DESC.desc;s.onload=()=>{const d=(window.W3DATA||{}).quests_desc;if(d){QS.desc=d;ok(d)}else{QS.descP=null;bad(new Error('empty'))}};
@@ -78,10 +82,10 @@ function qsRenderRegs(){const el=qsEl('qsRegs');
 const qsTitles=q=>QS.desc&&QS.desc[q.id]?QS.desc[q.id].o:null;   // objective titles are game text: in the lazy file, live build only
 function qsCurrent(q){const out=[];if(!QS.store.save)return out;const T=qsTitles(q);q.o.forEach((g,i)=>{if(QS.store.save.o[g]==='active')out.push(T?T[i]:null)});return out}   // null = an active objective whose title is not in this build
 // ---- story rules (v34: data/QUEST-RULES.json from the game's quest graphs): story point, gates ("fails at"), predecessors ----
-// A gate is a story point of no return. A save has PASSED a gate when a quest the gate names as "done" is Done or a quest it names as "next" exists (any state): docs/QUESTS.md.
+// A gate is a story point of no return. A save has PASSED a gate when a quest the gate names as "done" is Done, or a quest it names as "next" exists (any state): docs/QUESTS.md.
 const qsRule=g=>QS.R&&QS.R.quests[g]||null;
 const qsGates=lane=>QS.R?QS.R.gates.filter(x=>x.lane===lane).sort((a,b)=>a.x-b.x):[];
-const qsPassed=gt=>gt.done.some(g=>qsState(g)==='done')||gt.next.some(g=>qsState(g)!=='none');
+const qsPassed=gt=>gt.done.some(g=>qsState(g)==='done')||gt.next.some(g=>qsState(g)!=='none');   // v39.6: the Isle of Mists gate stays "Q402 done": the save reader cannot read facts, and no objective is the portal prompt (docs/QUESTS.md, v39.6)
 const qsOpenState=s=>s==='none'||s==='active'||s==='inactive';
 const QS_SECTIONS=['p','a','i','b','3','e'];
 function qsSection(){if(!QS.R)return -1;let best=-1;QS_SECTIONS.forEach((k,i)=>{if((QS.R.enter[k]||[]).some(g=>qsState(g)!=='none'))best=i});return best}   // the highest story section with a quest in the save
@@ -92,11 +96,13 @@ function qsMissLists(){   // per lane in use: the next gate not passed, the open
  lanes.forEach(l=>{const gt=qsGates(l).find(x=>!qsPassed(x));if(!gt)return;const whole=[],obj=[];
   QS.data.quests.forEach(q=>{if(!qsOpenState(qsState(q.g)))return;const c=qsCuts(q).filter(x=>x.gate===gt);if(!c.length)return;if(c.some(x=>x.whole))whole.push(q);else obj.push(q)});
   const my=qsMy(),by=(a,b)=>Math.abs((a.lv==null?999:a.lv)-my)-Math.abs((b.lv==null?999:b.lv)-my)||a.n.localeCompare(b.n);out.push({gate:gt,whole:whole.sort(by),obj:obj.sort(by)})});return out}
+const qsRank=q=>window.QF?QF.rank(q.g):0;   // v39: -1 for a quest that another quest would fail (shown first)
 function qsNextUp(){const my=qsMy(),all=QS.data.quests;QS.nextFail=new Map();
  const miss=[];qsMissLists().forEach(m=>m.whole.forEach(q=>{QS.nextFail.set(q.g,m.gate.name);miss.push(q)}));
  const act=all.filter(q=>qsState(q.g)==='active'&&!QS.nextFail.has(q.g)).sort((a,b)=>Math.abs((a.lv==null?999:a.lv)-my)-Math.abs((b.lv==null?999:b.lv)-my)||a.n.localeCompare(b.n));
  const home=(miss[0]||act[0]||{r:QS.region}).r,fresh=all.filter(q=>qsState(q.g)==='none'&&q.lv!=null&&qsXp(q,my)>=1&&!QS.nextFail.has(q.g)).sort((a,b)=>Math.abs(a.lv-my)-Math.abs(b.lv-my)||(a.r===home?0:1)-(b.r===home?0:1)||a.lv-b.lv||a.n.localeCompare(b.n));
- return miss.concat(act,fresh).slice(0,4)}
+ const risk=(window.QF?QF.risk():[]).filter(q=>!QS.nextFail.has(q.g)),rk=new Set(risk.map(q=>q.g));   // v39: a quest another open quest would fail comes first
+ return miss.concat(risk,act.filter(q=>!rk.has(q.g)),fresh.filter(q=>!rk.has(q.g))).slice(0,4)}
 function qsRenderNext(){const el=qsEl('qsNext'),list=qsNextUp(),my=qsMy();
  el.innerHTML=`<h3>Next up</h3><div class="qscards">${list.map(q=>{const st=qsState(q.g),cur=st==='active'?qsCurrent(q):[],fg=QS.nextFail.get(q.g);
   return`<button type="button" class="qscard t-${q.t}${fg?' fails':''}${QS.sel===q.g?' on':''}" data-g="${q.g}">${qsIcon(st,q.t)}<span class="qscn"><b>${qsEsc(q.n)}</b><small>${qsEsc(QS.regions.get(q.r))} · level ${qsLevelText(q)} · ${QS_NAMES[st]}</small><em${fg?' class="qsfail"':''}>${fg?'Fails at '+qsEsc(fg):st==='active'?(cur.length?(cur[0]===null?cur.length+' active objective'+(cur.length>1?'s':'')+' (text not in this build)':qsEsc(cur[0])+(cur.length>1?' (+'+(cur.length-1)+')':'')):'Current objective: not known'):qsEsc(qsXp(q,my)>=1?'Full XP at your level':'')}</em></span></button>`}).join('')||'<p class="qshint">Nothing left to suggest.</p>'}</div>`;
@@ -136,7 +142,7 @@ function qsRenderBand(host){const my=qsMy(),reg=qsInRegion(QS.region),vis=reg.fi
  const lx=lv=>(Math.max(lo,Math.min(hi,lv))-lo+.5)*slot,zoneLv=my-10,zw=zoneLv>=lo?(Math.min(zoneLv,hi)-lo+1)*slot:0,flip=lx(my)>W-90;
  const zone=zw?`<i class="qsz5" style="width:${zw}px"></i>`:'',line=`<i class="qsme" style="left:${lx(my)}px"></i>`;
  let rows='';
- kinds.forEach(([k,n])=>{const byLv=new Map();vis.filter(q=>q.t===k).sort((a,b)=>(qsState(a.g)==='done')-(qsState(b.g)==='done')||(qsState(b.g)==='active')-(qsState(a.g)==='active')||a.n.localeCompare(b.n)).forEach(q=>{if(!byLv.has(q.lv))byLv.set(q.lv,[]);byLv.get(q.lv).push(q)});
+ kinds.forEach(([k,n])=>{const byLv=new Map();vis.filter(q=>q.t===k).sort((a,b)=>qsRank(a)-qsRank(b)||(qsState(a.g)==='done')-(qsState(b.g)==='done')||(qsState(b.g)==='active')-(qsState(a.g)==='active')||a.n.localeCompare(b.n)).forEach(q=>{if(!byLv.has(q.lv))byLv.set(q.lv,[]);byLv.get(q.lv).push(q)});
   let lines=1,dots='';
   byLv.forEach((list,lv)=>{const key=k+':'+lv,open=QS.cells.has(key),over=list.length>cap,shown=over&&!open?list.slice(0,cap-1):list,total=shown.length+(over?1:0),nl=Math.ceil(total/per);lines=Math.max(lines,nl);
    const x0=(lv-lo)*slot;
@@ -267,13 +273,13 @@ function qsUnplacedHtml(kind,list,scope,avail){if(!list.length)return'';const m=
  return`<details class="qsug" id="${m.id}"${open?' open':''}><summary>${m.title} (${list.length})</summary><p class="qsbnote">${qsEsc(m.help)}</p><div class="qsugl">${rows}</div></details>`}
 // one tooltip for dots: name, type · region · level, status (on hover and on keyboard focus)
 function qsTip(d){const q=QS.byG.get(d.dataset.g),t=qsEl('qsTip');if(!q)return;const st=qsState(q.g),m=qsXp(q,qsMy());
- t.innerHTML=`<b class="t-${q.t}">${qsEsc(q.n)}</b><span>${qsEsc(qsKindName(q.t))} · ${qsEsc(QS.regions.get(q.r))} · level ${qsLevelText(q)}</span><span>${QS_NAMES[st]}${q.hs?' · Hearts of Stone XP '+qsPct(m):m<1?' · 5% XP':''}</span>${(qsOpenState(st)&&qsFailsAt(q))?'<span class="qsfail">Fails at '+qsEsc(qsFailsAt(q).name)+'</span>':''}${qsByChoice(q)?'<span class="qschoicet">Can fail by a choice</span>':''}`;t.hidden=false;
+ t.innerHTML=`<b class="t-${q.t}">${qsEsc(q.n)}</b><span>${qsEsc(qsKindName(q.t))} · ${qsEsc(QS.regions.get(q.r))} · level ${qsLevelText(q)}</span><span>${QS_NAMES[st]}${q.hs?' · Hearts of Stone XP '+qsPct(m):m<1?' · 5% XP':''}</span>${(qsOpenState(st)&&qsFailsAt(q))?'<span class="qsfail">Fails at '+qsEsc(qsFailsAt(q).name)+'</span>':''}${qsByChoice(q)?'<span class="qschoicet">Can fail by a choice</span>':''}${window.QF?QF.tip(q):''}`;t.hidden=false;
  const r=d.getBoundingClientRect(),w=t.offsetWidth,h=t.offsetHeight;t.style.left=Math.max(6,Math.min(innerWidth-w-6,r.left+r.width/2-w/2))+'px';t.style.top=(r.top-h-8>6?r.top-h-8:r.bottom+8)+'px'}
 function qsTipHide(){const t=qsEl('qsTip');if(t)t.hidden=true}
 function qsRenderView(){const host=qsEl('qsView'),sc=qsEl('screenQ');qsTipHide();
- [['qsVTime','time'],['qsVBand','band'],['qsVList','list']].forEach(([id,v])=>{qsEl(id).classList.toggle('on',QS.view===v);qsEl(id).setAttribute('aria-pressed',String(QS.view===v))});
- sc.classList.toggle('qs-band',QS.view!=='list');sc.classList.toggle('qs-time',QS.view==='time');qsEl('qsScope').hidden=QS.view!=='time';qsEl('qsScope').querySelectorAll('.qssc').forEach(b=>{const on=b.dataset.scope===QS.tscope;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on))});sc.classList.toggle('qs-open',QS.view!=='list'&&QS.open);   // Level band and Timeline: the detail is a drawer
- if(QS.view==='time')qsRenderTime(host);else if(QS.view==='band')qsRenderBand(host);else qsRenderList(host)}
+ [['qsVTime','time'],['qsVBand','band'],['qsVList','list'],['qsVFails','fails']].forEach(([id,v])=>{qsEl(id).classList.toggle('on',QS.view===v);qsEl(id).setAttribute('aria-pressed',String(QS.view===v))});
+ sc.classList.toggle('qs-band',QS.view!=='list');sc.classList.toggle('qs-fails',QS.view==='fails'&&!!window.QF);sc.classList.toggle('qs-time',QS.view==='time');qsEl('qsScope').hidden=QS.view!=='time';qsEl('qsScope').querySelectorAll('.qssc').forEach(b=>{const on=b.dataset.scope===QS.tscope;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on))});sc.classList.toggle('qs-open',QS.view!=='list'&&QS.open);   // Level band and Timeline: the detail is a drawer
+ if(QS.view==='time')qsRenderTime(host);else if(QS.view==='band')qsRenderBand(host);else if(QS.view==='fails'&&window.QF)QF.fails(host);else qsRenderList(host)}
 
 // ---- the detail panel (a column beside the list; in the Level band a drawer from the right) ----
 function qsJournal(q,el){   // the spoiler gate: with a save only the entries the save has shown, otherwise nothing, until the player asks for the whole journal
@@ -304,13 +310,13 @@ function qsRenderDetail(){const el=qsEl('qsDetail'),q=QS.sel&&QS.byG.get(QS.sel)
  el.classList.add('has');const hadFocus=document.activeElement&&document.activeElement.id==='qsClose';   // a re-draw (the text arriving) must not drop the focus
  const st=qsState(q.g),sv=qsSaveState(q.g),hand=QS.store.manual[q.g],haveSave=!!QS.store.save,cur=qsCurrent(q),my=qsMy(),T=qsTitles(q);
  const saveLine=!haveSave?'No save imported: use <b>My progress</b> below, or import a save.':`In your save: <b>${QS_NAMES[sv]}</b>${sv==='none'?' (no journal entry)':''}`+(hand?` · you marked it <b>${QS_NAMES[hand]}</b>`:'');
-const rl=qsRule(q.g),cuts=qsCuts(q),afters=((rl&&rl.a)||[]).map(g=>QS.byG.get(g)).filter(Boolean),spn=rl&&rl.s?QS.R.pts.get(rl.s):null;
+const ql=window.QF?QF.line(q.g):null,rl=qsRule(q.g),cuts=qsCuts(q),afters=((rl&&rl.a)||[]).map(g=>QS.byG.get(g)).filter(Boolean),spn=rl&&rl.s?QS.R.pts.get(rl.s):null;
  const whole=cuts.filter(c=>c.whole),objs=cuts.filter(c=>!c.whole),gn=c=>`<b>${qsEsc(c.gate.name)}</b>${qsPassed(c.gate)?' <span class="dim">(passed in this save)</span>':''}`;
  const rulesHtml=!QS.R?'':`<div class="qsrules"><p class="qsrule">Story point: ${spn?'<b>'+qsEsc(spn)+'</b>':qsPlaceKind(q)==='ungated'?'<span class="qsnogate">no story gate found</span>':'<span title="not computed yet">— not computed yet</span>'}</p>
   ${afters.length?`<p class="qsrule qsafter">Opens after: ${afters.map(a=>`<button type="button" class="qslink t-${a.t}" data-g="${a.g}">${qsEsc(a.n)}</button>`).join(', ')}</p>`:''}
   ${whole.length?`<p class="qsrule qsfailsat">Fails at ${whole.map(gn).join(', ')}</p>`:''}
   ${objs.length?`<p class="qsrule qsloses">Loses an objective at ${objs.map(gn).join(', ')}</p>`:''}
-  ${!whole.length&&!objs.length?`<p class="qsrule qsnomiss">${qsByChoice(q)?'No story gate fails this quest':'Not missable as far as computed'}</p>`:''}</div>`;
+  ${!whole.length&&!objs.length?(ql!=null?ql:`<p class="qsrule qsnomiss">${qsByChoice(q)?'No story gate fails this quest':'Not missable as far as computed'}</p>`):''}</div>`;
  const curHtml=cur.length?`<ul>${cur.map(t=>`<li>${t===null?'An active objective (its text is not included in this build)':qsEsc(t)}</li>`).join('')}</ul>`:'<p class="dim">Not known: the save has no active objective for it.</p>';
  el.innerHTML=`<button type="button" class="btn qsclose" id="qsClose" aria-label="Close">×</button><button type="button" class="btn qsback" id="qsBack" aria-label="Back to the list">◀ Back</button><h2 class="qstitle t-${q.t}">${qsIcon(st,q.t)}<span>${qsEsc(q.n)}</span></h2>
   <p class="qsmeta">${qsEsc(qsKindName(q.t))} · ${qsEsc(QS.regions.get(q.r))} · ${q.lv==null?'<span title="not computed yet">level —</span>':'level '+q.lv}</p>
@@ -332,24 +338,25 @@ function qsDrawerPlace(){const tb=qsEl('topbar'),el=qsEl('qsDetail');el.style.to
 function qsCloseDrawer(focus){if(!QS.open)return;QS.open=false;qsEl('screenQ').classList.remove('qs-open');if(focus){const d=document.querySelector('.qsdot[data-g="'+QS.opener+'"]')||document.querySelector('.qscard.on,.qsmi.on');if(d)d.focus()}}
 
 // ---- progress by hand ----
-function qsMark(g,s){if(s===null)delete QS.store.manual[g];else QS.store.manual[g]=s;qsTouch();qsRenderAll()}
+function qsAdopt(){try{const raw=localStorage.getItem(QS_KEY);if(raw===null)return;const c=qsClean(JSON.parse(raw));if(c)QS.store=c}catch(e){}}   // v39.10: take what is stored now before a change: this page's copy can be stale (another tab, the console), and writing it back would drop the quests it does not know
+function qsMark(g,s){qsAdopt();if(s===null)delete QS.store.manual[g];else QS.store.manual[g]=s;qsTouch();qsRenderAll()}
 function qsRenderAll(){if(!QS.data)return;qsRenderRegs();qsRenderMiss();qsRenderNext();qsRenderView();qsRenderDetail();qsChip();if(QS.open)qsDrawerPlace()}
 
 // ---- the chip: Saved in this browser | export | load | reset ----
 const qsWhen=t=>t?new Date(t).toLocaleString([],{dateStyle:'medium',timeStyle:'short'}):'never';
-function qsChip(){const b=qsEl('qsChip');if(!b)return;b.textContent=(QS.ok?'Saved in this browser':'Not saved in this browser')+' ▾';b.classList.toggle('warn',!QS.ok);
+function qsChip(){const b=qsEl('qsChip');if(!b)return;if(!QS.ok)QS.ok=qsProbe();b.textContent=(QS.ok?(qsHasProgress()?'Saved in this browser':'No progress yet'):'Not saved in this browser')+' ▾';b.classList.toggle('warn',!QS.ok);
  const m=qsEl('qsMenu');if(m.hidden)return;qsMenuFill()}
 function qsMenuFill(){const m=qsEl('qsMenu'),n=QS.data?qsMarked():0,h=qsHand(),s=QS.store.save;
  m.innerHTML=`<p class="qsmeta2"><b>${n}</b> quest${n===1?'':'s'} marked${h?' · '+h+' by hand':''}${s?' · save: '+qsEsc(s.file||'imported')+' ('+qsEsc(qsWhen(s.at))+')':''}</p><p class="qsmeta2">Last change: ${qsEsc(qsWhen(QS.store.changed))}</p>
-  ${QS.ok?'':'<p class="qsmeta2 bad">This browser blocks storage for the site: your marks work until you close the page. Export them to keep them.</p>'}
+  ${QS.ok?'':'<p class="qsmeta2 bad">This browser blocks storage for the site: your marks work until you close the page. Export them to keep them.</p>'}${QS.bad?'<p class="qsmeta2">The progress saved earlier could not be read. It is replaced when you mark a quest.</p>':''}
   <button type="button" class="btn" id="qsExport" role="menuitem">Export progress (.json)</button>
   <label class="btn" role="menuitem" tabindex="0" id="qsLoadLbl" for="qsLoadFile">Load progress file</label><input class="vh" id="qsLoadFile" type="file" accept=".json,application/json" aria-label="Load a progress file">
   ${QS.confirm?'<p class="qsmeta2 bad">Remove all your quest progress from this browser?</p><div class="qsrow2"><button type="button" class="btn qsdanger" id="qsResetYes">Reset</button><button type="button" class="btn" id="qsResetNo">Keep it</button></div>':'<button type="button" class="btn" id="qsReset" role="menuitem">Reset</button>'}
   <p class="qsmsg" id="qsMsg2" role="status"></p>`;
  qsEl('qsExport').onclick=qsExport;qsEl('qsLoadFile').onchange=e=>{if(e.target.files[0])qsLoadFile(e.target.files[0]);e.target.value=''};const lb=qsEl('qsLoadLbl');lb.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();qsEl('qsLoadFile').click()}};
  const r=qsEl('qsReset');if(r)r.onclick=()=>{QS.confirm=true;qsMenuFill();qsEl('qsResetNo').focus()};
- const y=qsEl('qsResetYes');if(y){y.onclick=()=>{QS.store={manual:{},save:null,changed:Date.now()};QS.confirm=false;try{localStorage.removeItem(QS_KEY)}catch(e){QS.ok=false}qsMenuFill();qsRenderAll();qsEl('qsMsg2').textContent='Your quest progress was removed.'};qsEl('qsResetNo').onclick=()=>{QS.confirm=false;qsMenuFill();qsEl('qsReset').focus()}}}
-function qsMenu(open){const m=qsEl('qsMenu'),b=qsEl('qsChip');m.hidden=!open;b.setAttribute('aria-expanded',String(open));QS.confirm=false;if(open)qsMenuFill()}
+ const y=qsEl('qsResetYes');if(y){y.onclick=()=>{QS.store={manual:{},save:null,changed:Date.now()};QS.confirm=false;try{localStorage.removeItem(QS_KEY)}catch(e){QS.ok=qsProbe()}qsMenuFill();qsRenderAll();qsEl('qsMsg2').textContent='Your quest progress was removed.'};qsEl('qsResetNo').onclick=()=>{QS.confirm=false;qsMenuFill();qsEl('qsReset').focus()}}}
+function qsMenu(open){const m=qsEl('qsMenu'),b=qsEl('qsChip');if(open){QS.ok=qsProbe();qsChip()}m.hidden=!open;b.setAttribute('aria-expanded',String(open));QS.confirm=false;if(open)qsMenuFill()}
 function qsExport(){const o=Object.assign({app:'w3planner',kind:'quest-progress',exported:new Date().toISOString()},{v:1,manual:QS.store.manual,save:QS.store.save,changed:QS.store.changed});
  const url=URL.createObjectURL(new Blob([JSON.stringify(o)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='w3planner-quests.json';qsEl('qsChipWrap').appendChild(a);a.click();a.remove();   // inside the chip's box, so its own click does not count as a click outside the menu
  setTimeout(()=>URL.revokeObjectURL(url),2000);
@@ -366,14 +373,15 @@ function qsCounts(stateOf){const c={done:0,active:0,failed:0,inactive:0,none:0};
 // what importing would change: counts now and after, and the quests whose hand mark disagrees with the save
 function qsCompare(J){const now=qsCounts(qsState),keep=qsCounts(g=>QS.store.manual[g]||J.q[g]||'none'),repl=qsCounts(g=>J.q[g]||'none');
  const diff=QS.data.quests.filter(q=>QS.store.manual[q.g]&&QS.store.manual[q.g]!==(J.q[q.g]||'none'));return{now,keep,repl,diff}}
-function qsApplyJournal(J,name,mode){QS.store.save={at:Date.now(),file:String(name||'').slice(0,120),q:J.q,o:J.o,e:J.e};if(mode==='replace')QS.store.manual={};qsTouch()}
+function qsApplyJournal(J,name,mode){qsAdopt();QS.store.save={at:Date.now(),file:String(name||'').slice(0,120),q:J.q,o:J.o,e:J.e};if(mode==='replace')QS.store.manual={};qsTouch()}
 
 // ---- screen ----
 function qsBind(){
- const sw=v=>{qsSetView(v);qsEl('screenQ').classList.remove('qs-detail');qsRenderView();qsRenderDetail()};qsEl('qsVTime').onclick=()=>sw('time');qsEl('qsVBand').onclick=()=>sw('band');qsEl('qsVList').onclick=()=>sw('list');
+ const sw=v=>{qsSetView(v);qsEl('screenQ').classList.remove('qs-detail');qsRenderView();qsRenderDetail()};qsEl('qsVTime').onclick=()=>sw('time');qsEl('qsVBand').onclick=()=>sw('band');qsEl('qsVList').onclick=()=>sw('list');qsEl('qsVFails').onclick=()=>sw('fails');
  qsEl('qsScope').querySelectorAll('.qssc').forEach(b=>{b.onclick=()=>{qsSetScope(b.dataset.scope);QS.open=false;qsEl('screenQ').classList.remove('qs-detail');qsRenderView();qsRenderDetail()}});
  const chip=qsEl('qsChip');chip.onclick=e=>{e.stopPropagation();qsMenu(qsEl('qsMenu').hidden)};
- document.addEventListener('click',e=>{const m=qsEl('qsMenu');if(!m.hidden&&!e.composedPath().includes(qsEl('qsChipWrap')))qsMenu(false)});   // composedPath: a click on a button the menu has just re-drawn is still inside it
+ window.addEventListener('storage',e=>{if((e.key===QS_KEY||e.key===null)&&QS.read&&QS.data){qsAdopt();qsRenderAll()}});   // another tab saved: show it
+document.addEventListener('click',e=>{const m=qsEl('qsMenu');if(!m.hidden&&!e.composedPath().includes(qsEl('qsChipWrap')))qsMenu(false)});   // composedPath: a click on a button the menu has just re-drawn is still inside it
  document.addEventListener('keydown',e=>{const m=qsEl('qsMenu');if(!m.hidden&&e.key==='Escape'){e.preventDefault();qsMenu(false);chip.focus()}});
  let rt=0;addEventListener('resize',()=>{if(!QS.shown||!QS.data)return;clearTimeout(rt);rt=setTimeout(()=>{if(QS.view!=='list')qsRenderView();if(QS.open)qsDrawerPlace()},120)});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&QS.shown&&QS.open&&qsEl('qsMenu').hidden){e.preventDefault();qsCloseDrawer(true)}})}
@@ -387,7 +395,7 @@ function qsOpen(){if(QS.shown)return;QS.shown=true;if(!QS.init){QS.init=true;qsB
 function qsSync(){if(QS.shown&&QS.data&&QS.lv!==qsMy()){QS.lv=qsMy();qsRenderAll()}}   // the Level field changed: zones, Next up and tooltips follow it
 
 // ---- Handoff from the old address (v37): merge what it sent (HANDOFF, app.js) into localStorage. Only the five keys of this screen; every value is checked; nothing newer is overwritten ----
-const HO_KEYS=[QS_KEY,QS_VIEW_KEY,QS_DONE_KEY,QS_TDONE_KEY,QS_TSCOPE_KEY],HO_PREF={[QS_VIEW_KEY]:/^(list|band|time)$/,[QS_DONE_KEY]:/^[01]$/,[QS_TDONE_KEY]:/^[01]$/,[QS_TSCOPE_KEY]:/^(base|hos|bob)$/};
+const HO_KEYS=[QS_KEY,QS_VIEW_KEY,QS_DONE_KEY,QS_TDONE_KEY,QS_TSCOPE_KEY],HO_PREF={[QS_VIEW_KEY]:/^(list|band|time|fails)$/,[QS_DONE_KEY]:/^[01]$/,[QS_TDONE_KEY]:/^[01]$/,[QS_TSCOPE_KEY]:/^(base|hos|bob)$/};
 function hoParse(b64){const b=b64.replace(/-/g,'+').replace(/_/g,'/'),bin=atob(b+'='.repeat((4-b.length%4)%4)),o=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(bin,c=>c.charCodeAt(0))));
  if(!o||typeof o!=='object'||Array.isArray(o))return null;const out={};
  for(const k of HO_KEYS)if(Object.prototype.hasOwnProperty.call(o,k)&&typeof o[k]==='string'&&o[k].length<=800000)out[k]=o[k];return out}
@@ -405,7 +413,7 @@ function hoMerge(){const H=HANDOFF;if(!H.data&&!H.bad&&!H.big&&!H.stash)return;c
      else if(have===null&&HO_PREF[k].test(o[k])){localStorage.setItem(k,o[k]);n++}}
     QS.read=false}}
   catch(e){ok=false}
-  if(!ok)msg.push('Your quest progress could not be brought over from the old address (the data was unreadable, or this browser blocks storage for the site).');
+  if(!ok)msg.push('Your quest progress could not be brought over from the old address ('+(qsProbe()?'the data was unreadable':'this browser blocks storage for the site')+').');
   else if(n)msg.push('Your quest progress was brought over from the old address.')}
  if(msg.length||H.stash)hoShow(msg,H.stash)}
 // v38: the notices stay on screen until the user closes them (x, or Esc); an ordinary notify() toast is not touched and does not hide them. The stash sentence keeps its text; "Re-import your save" opens the Import save dialog
@@ -420,3 +428,6 @@ document.getElementById('hoX').onclick=hoClose;
 document.addEventListener('keydown',e=>{const n=document.getElementById('hoNotice');if(e.key!=='Escape'||n.hidden)return;
  if(n.contains(document.activeElement)||!document.querySelector('.impov:not([hidden]),.igov:not([hidden]),.skov:not([hidden]),#mutov:not([hidden])'))hoClose()});   // an open dialog takes its own Esc first
 hoMerge();
+// v39.3: a file dropped anywhere but on the Import dialog's drop zone would make the browser try to open it (Firefox answers with a security error: content may not load or link to a local file). Stop that and say where files go.
+['dragover','drop'].forEach(t=>document.addEventListener(t,e=>{const d=e.dataTransfer;if(!d||![...(d.types||[])].includes('Files')||(e.target.closest&&e.target.closest('#impdrop')))return;e.preventDefault();
+ if(t==='drop')notify('Files are not opened here. Use Import save for a save, or the Saved in this browser menu on the Quests tab to load a progress file.')}));

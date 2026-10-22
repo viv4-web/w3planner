@@ -1,0 +1,24 @@
+{
+ "link": "fact: q501_naglfar_arrived fails A Frying Pan, Spick and Span",
+ "kind": "fact",
+ "failed_guid": "16c6c2f7e7a7bf4fa1fb373ac8cfb80f",
+ "failed_name": "A Frying Pan, Spick and Span",
+ "failed_id": "MQ0004 Locked Shed",
+ "failer_guid": "58b23412c7f78e4a9d970f3ed331838e",
+ "failer_name": "On Thin Ice",
+ "failer_id": "Q501 Eredin",
+ "fact": "q501_naglfar_arrived",
+ "op": {
+  "func": "CF_Greater",
+  "value": 0
+ },
+ "effect": "Failure",
+ "setter_file": "quests/part_3/q501_eredin.w2phase",
+ "setter_block": 1268,
+ "fail_file": "quests/minor_quests/prologue_village/mq0004_locked_shed.w2phase",
+ "fail_block": 191,
+ "trigger_phase": "before naglfar",
+ "trigger_scene": null,
+ "status": "verified_gamefiles",
+ "engine_effect": "unconfirmed"
+}

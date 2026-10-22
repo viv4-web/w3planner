@@ -78,13 +78,18 @@ def rules(check):
           set(R) <= set(qs) and all(set(r) <= {"s", "h", "c", "a", "u", "k"} for r in R.values()) and all(re.fullmatch(r"[0-9a-f]{32}", g) for g in R) and
           all(re.fullmatch(r"[0-9a-f]{32}", a) for r in R.values() for a in r.get("a", [])) and set(R_ for r in R.values() for R_ in [r.get("s")] if R_) <= {p[0] for p in d["points"]} and len(raw) < 60000)
     check("QUEST-RULES.json: %d gates: the base-game gates in story order (%s) and the Blood and Wine and Hearts of Stone ones" % (len(gates), [g["id"] for g in d["gates"] if g["lane"] == "b"]),
-          [g["id"] for g in sorted(d["gates"], key=lambda g: g["x"]) if g["lane"] == "b"] == ["prologue", "isle", "battle", "novigrad3", "skellige3", "naglfar", "ciri", "finish"] and {"bawnight", "baw703", "hos"} <= set(gates) and all(set(g) - {"code", "real"} == {"id", "name", "lane", "x", "done", "next"} for g in gates.values())
+          [g["id"] for g in sorted(d["gates"], key=lambda g: g["x"]) if g["lane"] == "b"] == ["prologue", "isle", "battle", "novigrad3", "skellige3", "naglfar", "ciri", "finish"] and {"bawnight", "baw703", "hos"} <= set(gates) and all(set(g) - {"code", "real", "obj"} == {"id", "name", "lane", "x", "done", "next"} for g in gates.values()) and not any("obj" in g for g in gates.values())
           and all(re.fullmatch(r"Q\d{3}", g["code"]) for g in gates.values() if "code" in g) and [i for i, g in gates.items() if g.get("real")] == ["bawnight"] and gates["isle"]["code"] == "Q402" and "code" not in gates["finish"])
     check("QUEST-RULES.json: Q106 and Q107 fail at Isle of Mists (a whole-quest Failure), the story points of Q402, Q403 and Q111 are Isle of Mists, Battle of Kaer Morhen and Act III",
           R[by["Q106 Keira's bussiness"]]["c"] == [["isle", "q", "f"]] and R[by["Q107 Swamps"]]["c"] == [["isle", "q", "f"]] and R[by["Q402 Isle of Mists"]]["s"] == "i" and R[by["Q403 Battle of Kaer Morhen"]]["s"] == "b" and R[by["Q111 Imlerith"]]["s"] == "3")
     check("QUEST-RULES.json: left out: the temporary toggles (MQ3026 Novigrad Horse Racing has no cutoff) and the demon-mark flag (Q310 Ciri's Night Out has none); Collect 'Em All has no rule; a story point derived by default is stored as unknown (mq1001 Dog Trail has none)",
           "c" not in R.get(by["MQ3026 Novigrad Horse Racing"], {}) and "c" not in R.get(by["Q310 Ciri's Night Out"], {}) and "s" not in R.get(by["Card Game Meta: Gather All"], {}) and "s" not in R.get(by["mq1001 Dog Trail"], {}) and
           sum("s" not in R.get(g, {}) for g in qs) == 191 and sum("s" in r for r in R.values()) == 210)
+    sd = {q["g"]: q for q in qs.values()}
+    check("QUEST-RULES.json (v39.6): the Isle of Mists gate is passed when Q402 is done (or Q403 exists): no gate has an objective (`obj`): the save reader cannot read facts and no objective is the portal prompt",
+          not any("obj" in g for g in gates.values()) and gates["isle"]["done"] == [by["Q402 Isle of Mists"]] and gates["isle"]["next"] == [by["Q403 Battle of Kaer Morhen"]])
+    check("QUEST-RULES.json (v39.5): Out On Your Arse! (mq3041) has no cutoff at Act III: Novigrad: nothing in the files sets q310_yen_novigrad above 0 (the cutoff is left out in tools/make_quest_rules.py with the file evidence); it is ungated, and no other quest lost a cutoff",
+          "c" not in R.get(by["mq3041_showing_presence"], {}) and R[by["mq3041_showing_presence"]].get("u") == "ungated" and sum("c" in r for r in R.values()) == 51 and sum(any(k[1] == "q" for k in r.get("c", [])) for r in R.values()) == 32)
     U = {g: r["u"] for g, r in R.items() if "u" in r}; K = {g: r["k"] for g, r in R.items() if "k" in r}
     check("QUEST-RULES.json (v35): every quest with no story point has `u` (ungated 157 + unknown 34 = 191), no placed quest has one, the 3 'likely' ones carry nothing but `unknown`", len(U) == 191 and sum(v == "ungated" for v in U.values()) == 157 and sum(v == "unknown" for v in U.values()) == 34
           and set(U) == {g for g in qs if "s" not in R.get(g, {})} and all(v in ("ungated", "unknown") for v in U.values()) and all(set(R[by[i]]) == {"u"} or set(R[by[i]]) <= {"u", "c", "a", "k"} for i in ("SQ302 Philippa", "mq1057: The Great Spirit", "NML Hunt: Fogling")) and all(U[by[i]] == "unknown" for i in ("SQ302 Philippa", "mq1057: The Great Spirit", "NML Hunt: Fogling")))
@@ -645,7 +650,7 @@ def missunknown(b, base, check, label):
         check("%s: v34.3 no save (%s): no strip (the Missable panel is not there either), the two sections hold all the unplaced quests of the scope (no strip to take any out), the brackets are the grid's own (%s)" % (label, sc, r["sum"]),
               not r["vis"] and r["sum"] == ("No story gate found (157) | Not computed yet (34)" if sc == "base" else "") and E("document.getElementById('qsMiss').hidden") and not [x for x in r["bad"] if x[0] != "strip" and x[0] != "repeated in the collapsed row"], r)
     ks = E("Object.keys(localStorage).sort()"); check("%s: v34.3 no new storage keys (%s) and the link is unchanged" % (label, ks), all(k.startswith("w3p.quests.") for k in ks) and not [k for k in ks if re.search(r"strip|miss|unknown", k)] and not re.search(r"[0-9a-f]{32}|miss", E("location.hash")), ks)
-    check("%s: v38 APP_VERSION is v38" % label, E("APP_VERSION") == "v38")
+    check("%s: APP_VERSION is v39.10" % label, E("APP_VERSION") == "v39.10")
     check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
     for sub in ("stats-l9b", "stats-l9"):
         d = FIXD / sub; sav = sorted(d.glob("*.sav")) if d.is_dir() else []
@@ -659,7 +664,7 @@ def missunknown(b, base, check, label):
               and E("document.getElementById('qsTL').compareDocumentPosition(document.getElementById('qsMU'))&Node.DOCUMENT_POSITION_FOLLOWING") != 0 and E("document.getElementById('qsMU').compareDocumentPosition(document.querySelector('.qslegend'))&Node.DOCUMENT_POSITION_FOLLOWING") != 0, [ttl, g])
         rm = E("(()=>{const q=QS.data.quests.find(q=>q.n==='Redania\\'s Most Wanted');return{inUnk:[...document.querySelectorAll('.qsug .qsdot')].some(e=>e.dataset.g===q.g),inGrid:!!document.querySelector('#qsTL .qsdot[data-g=\"'+q.g+'\"]'),inStrip:!!document.querySelector('#qsMU .qsmug[data-gate=\"isle\"] .qsdot[data-g=\"'+q.g+'\"]'),cut:QS.R.quests[q.g].c,s:QS.R.quests[q.g].s}})()")
         check("%s [%s]: v34.3 Redania's Most Wanted (Novigrad, no story point, failed by the Isle of Mists cut) is in the strip under that gate, not in the grid and not under 'No story gate found / Not computed yet' (%s)" % (label, sub, rm), rm["inStrip"] and not rm["inUnk"] and not rm["inGrid"] and rm["s"] is None, rm)
-        check("%s [%s]: v35 the two sections lost exactly the strip's quests (and the done ones, hidden without Show done) (%s; %d in the strip)" % (label, sub, r["sum"], r["total"]), sum(int(x) for x in re.findall(r"\((\d+)\)", r["sum"])) + r["total"] + E("QS.data.quests.filter(q=>!(QS.R.quests[q.g]&&QS.R.quests[q.g].s)&&qsState(q.g)==='done').length") == 191 and r["total"] == 8 and r["dup"] == 0, r)
+        check("%s [%s]: v35 the two sections lost exactly the strip's quests (and the done ones, hidden without Show done) (%s; %d in the strip)" % (label, sub, r["sum"], r["total"]), sum(int(x) for x in re.findall(r"\((\d+)\)", r["sum"])) + r["total"] + E("QS.data.quests.filter(q=>!(QS.R.quests[q.g]&&QS.R.quests[q.g].s)&&qsState(q.g)==='done').length") == 191 and r["total"] == 7 and r["dup"] == 0, r)
         check("%s [%s]: v34.3 invariant, Base game, every gate: the open quests that fail at a gate = those in its bracket (placed) + those in its strip group; none drawn twice; the Missable panel's list at the next gate = bracket + strip group (%s)" % (label, sub, r["panel"]), not r["bad"] and r["panel"] and r["panel"]["ok"] and r["panel"]["gate"] == "isle" and r["panel"]["n"] == 10, r)
         order = E("[...document.querySelectorAll('#qsMU .qsmug')].map(x=>x.dataset.gate+(x.classList.contains('passed')?'*':''))")
         check("%s [%s]: v34.3 groups: the next gate not passed first, then the others in story order, passed gates last and dashed grey (%s)" % (label, sub, order), order == ["isle", "battle", "novigrad3", "skellige3", "prologue*"], order)
@@ -795,7 +800,9 @@ def v35(b, base, check, label):
     # the story-gate line of a quest with the block
     kg = next(iter(keep)); pg.evaluate("qsSelect('%s',true)" % kg); pg.wait_for_timeout(100); nm = E("[...document.querySelectorAll('#qsDetail .qsnomiss')].map(e=>e.textContent)")
     pg.evaluate("qsSelect('%s',true)" % nob[0]); pg.wait_for_timeout(100); nm2 = E("[...document.querySelectorAll('#qsDetail .qsnomiss')].map(e=>e.textContent)")
-    check("%s: v35 where the block is shown the line says 'No story gate fails this quest' (%s); elsewhere 'Not missable as far as computed' (%s)" % (label, nm, nm2), nm == ["No story gate fails this quest"] and nm2 in (["Not missable as far as computed"], []), [nm, nm2])
+    onlink = {l["failed_guid"] for l in json.loads((ROOT / "data" / "QUEST_FAILS.json").read_text(encoding="utf-8"))["links"]}   # v39.9: a quest at risk from a shipped fail link says "Can fail ..." instead (tests/qfcheck.py v399)
+    check("%s: v35 where the block is shown the line says 'No story gate fails this quest' (%s), unless the quest is on a fail link (then 'Can fail ...' replaces it); elsewhere 'Not missable as far as computed' (%s)" % (label, nm, nm2),
+          nm == (["No story gate fails this quest"] if kg not in onlink else []) and nm2 in (["Not missable as far as computed"], []), [nm, nm2])
     # leaks and storage
     bad = leaks(pg); ks = E("Object.keys(localStorage).sort()"); src = (ROOT / "src" / "quests.js").read_text(encoding="utf-8")
     check("%s: v35 no internal scene output or fact name appears in the screen (%s)" % (label, bad[:3]), not bad, bad)
@@ -818,11 +825,11 @@ def v35save(b, base, check, label):
             if E("QS.timeDone") != sd: pg.click("#qsShowDoneT"); pg.wait_for_timeout(200)
             r = E(COUNT); tot = r["strip"] + r["a"] + r["c"] + (0 if sd else r["done"])
             check("%s [stats-l9b]: v35 scope %s, Show done %s: strip %d + 'No story gate found' %d + 'Not computed yet' %d%s = all %d unplaced quests of the scope; the strip is not repeated; markers shown = counts" % (label, sc, "on" if sd else "off", r["strip"], r["a"], r["c"], "" if sd else " + %d done hidden" % r["done"], r["unplaced"]),
-                  tot == r["unplaced"] and r["overlap"] == 0 and r["dup"] == 0 and r["shown"] == r["a"] + r["c"] and (r["strip"] == 8 if sc == "base" else r["strip"] == 0), r)
+                  tot == r["unplaced"] and r["overlap"] == 0 and r["dup"] == 0 and r["shown"] == r["a"] + r["c"] and (r["strip"] == 7 if sc == "base" else r["strip"] == 0), r)
         if E("QS.timeDone"): pg.click("#qsShowDoneT"); pg.wait_for_timeout(150)
     pg.click('#qsScope [data-scope="base"]'); pg.wait_for_timeout(200)
     order = E("[...document.querySelectorAll('#qsMU .qsmug')].map(x=>x.dataset.gate+(x.classList.contains('passed')?'*':'')+':'+x.querySelectorAll('.qsdot').length).join()")
-    check("%s [stats-l9b]: v35 the strip is unchanged: 8 quests under the same gates (%s)" % (label, order), E("document.querySelectorAll('#qsMU .qsdot').length") == 8 and order.startswith("isle:") and order.endswith("prologue*:1"), order)
+    check("%s [stats-l9b]: v35 the strip lost mq3041 (v39.5): 7 quests under the same gates (%s)" % (label, order), E("document.querySelectorAll('#qsMU .qsdot').length") == 7 and order.startswith("isle:") and order.endswith("prologue*:1"), order)
     mis = E("[...document.querySelectorAll('#qsMiss .qsmi, #qsNext .qscard.fails')].map(e=>e.dataset.g)")
     check("%s [stats-l9b]: v35 choice quests are not added to the Missable panel or Next up's 'Fails at' cards: every one listed has a gate cutoff (%d listed)" % (label, len(mis)), mis and all("c" in E("QS.R.quests['%s']" % g) for g in mis), mis)
     # markers on the grid, the strip legend

@@ -1,0 +1,25 @@
+{
+ "link": "fact: q705_stash_disabled fails The Perks of Being a Jailbird",
+ "kind": "fact",
+ "failed_guid": "1c593ea30a96b744aa7351b50c907570",
+ "failed_name": "The Perks of Being a Jailbird",
+ "failed_id": "Q705 Prison Stash",
+ "failer_guid": "ac1c76fd8378df44afc9458adf3c1650",
+ "failer_name": "Burlap is the New Stripe",
+ "failer_id": "Q705 Prison",
+ "fact": "q705_stash_disabled",
+ "op": {
+  "func": "CF_GreaterEqual",
+  "value": 1,
+  "query": "QF_DoesExist"
+ },
+ "effect": "Failure",
+ "setter_file": "dlc/bob/data/quests/main_quests/q705_epilog.w2phase",
+ "setter_block": 1204,
+ "fail_file": "dlc/bob/data/quests/main_quests/q705_epilog.w2phase",
+ "fail_block": 1836,
+ "trigger_phase": "geralt in prison > going out of jail",
+ "trigger_scene": null,
+ "status": "verified_gamefiles",
+ "engine_effect": "unconfirmed"
+}
