@@ -127,6 +127,9 @@ Views: List: a card around the row with a chip, the step line and, on the amber 
 - **Stored progress** (`qsAdopt` in `src/quests.js`): `qsMark` and `qsApplyJournal` first read `w3p.quests.v1` and continue from it, so a page whose in-memory copy is stale (another tab, a seed written from the console after the page had read the store) adds its change to what is stored instead of writing the whole old copy back and dropping the quests it never saw. A `storage` event from another tab does the same and redraws. If the key is absent or unreadable the page keeps its own copy. Test: `qfcheck.v3910` (two tabs; the copy emptied behind the page's back; every action on a seven-quest seed changes no other quest).
 - **Warnings drawn once**: `paint()` in `src/questfails.js` runs after every redraw of the view, the detail or the tabs, but Next up is not always redrawn with them (Hide done, a kind chip, a view button, a search keystroke), so the caution box and the "Do before" chip were appended again each time. It now clears what it added first (cards, band and timeline labels).
 
+### v40 backlog: "Can fail" line on a quest that is already done
+The detail panel's "Can fail: do it before <Failer>" (and the unless and choice forms) still shows when the at-risk quest is Done. It should say it was done in time, e.g. "Done before Ugly Baby (safe)". The line comes from `QF.line(g)` in `src/questfails.js`; it is static today, so it needs the quest's state (and the failer's: a failer already done with the quest open is the "Missed" status of the Quest failures tab).
+
 ### v40 backlog: Quest failures tie order
 Same-level failers still keep the name order: Imperial Audience vs The Incident at White Orchard (level 2), Beyond Hill and Dale... vs The Night of Long Fangs (level 47). Derive the order from the quests' start conditions in the game files (what starts each quest and when), not by hand.
 
