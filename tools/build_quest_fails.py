@@ -20,6 +20,7 @@ Every link has a `kind`:
   choice            a choice outcome in the failer; there is no "do it first"; needs `choice` (the option in plain words) and `safe` (the option that keeps the quest)
   journal_status    the failed quest fails on a journal state of the failer (no fact); needs `journal`
   flow              a Failure / Deactivate placed in the failer's own flow (no fact needed); needs `flow`
+`only_if_started` (optional, v40.1, true only, needs effect Deactivate): the game closes the failed quest only if it was started; the screen warns only while the player has it Active and lists the row in the Quest failures tab as "Only if you've started it" otherwise.
 `window`, `advice`, `safe_text` and `banner_text` (optional) are plain-English copy that replaces the generic "Do <failed> first" / safe-order / banner sentence ({failed} and {failer} stand for the quest names). Every user-facing string is checked: an id with an underscore, "phase" or a quest code (sq209, q504) is refused.
 `premise` (optional) is an evidence note: the comparison reads an absent value as 0 ("> 0" / "== 0"), see docs/QUESTS.md. `effect` is Failure or Deactivate (closes). Evidence items that
 three or more links share (the Isle of Mists setter) are stored once in `ev` and referenced by their index.
@@ -172,6 +173,9 @@ def convert_cov(rec, quests):
     if rec.get("premise"): link["premise"] = "; ".join(rec["premise"]) if isinstance(rec["premise"], list) else str(rec["premise"])
     for k in ("advice", "safe_text", "banner_text"):                 # `window` of a coverage record is a technical note (when the wait is armed): not shipped
         if rec.get(k): link[k] = rec[k]
+    if rec.get("only_if_started") is not None:                       # v40.1: the failed quest is closed only if it was started; the screen warns only while it is Active
+        if rec["only_if_started"] is not True or eff != "Deactivate": sys.exit("refusing %s: only_if_started must be true and goes with effect Deactivate (the quest is closed only if started)" % who)
+        link["only_if_started"] = True
     link["evidence"] = evidence_of(rec, who)
     link["engine_effect"] = "unconfirmed" if str(rec.get("engine_effect", "")).startswith("unconfirmed") else str(rec.get("engine_effect") or "unconfirmed")
     check_wording(link, who)

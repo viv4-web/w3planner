@@ -50,6 +50,7 @@ T = {
     ("A Midnight Clear", "Dead Man's Party", "q602_done"): ("q602_wedding.w2phase", 514, "q602_romance.w2phase", 262),
     ("Flesh for Sale", "Following the Thread", "sq106_hammond_knows"): ("sq106_hammond.w2phase", 45, "mq2020_flesh_for_cash_business.w2phase", 81),
     ("Amidst the Mill's Grist", "Where Children Toil, Toys Waste Away", None): ("q702_hunt.w2phase", 75, "q702_hunt.w2phase", 33),
+    ("Raging Wolf", "The Night of Long Fangs", "q704_long_night_starts"): ("q704_01_beginning.w2phase", 42, "ff701_master.w2phase", 239),
     ("The Warble of a Smitten Knight", "The Night of Long Fangs", "q704_long_night_starts"): ("q704_01_beginning.w2phase", 42, "sq701_tournament.w2phase", 4399),
     ("The Perks of Being a Jailbird", "Burlap is the New Stripe", "q705_stash_disabled"): ("q705_epilog.w2phase", 1204, "q705_epilog.w2phase", 1836),
     ("A Frying Pan, Spick and Span", "On Thin Ice", "q501_naglfar_arrived"): ("q501_eredin.w2phase", 1268, "mq0004_locked_shed.w2phase", 191),
@@ -86,7 +87,7 @@ def main():
             continue
         if row is None: sys.exit("no block row in T for %s" % (key,))
         fx = {"link": "%s: %s fails %s" % (l["kind"], l.get("fact") or l["trigger_short"], failed["n"]), "kind": l["kind"], "failed_guid": failed["g"], "failed_name": failed["n"], "failed_id": failed["id"],
-              "failer_guid": failer["g"], "failer_name": failer["n"], "failer_id": failer["id"], "fact": l.get("fact"), "op": l.get("op"), "effect": l["effect"],
+              "failer_guid": failer["g"], "failer_name": failer["n"], "failer_id": failer["id"], "fact": l.get("fact"), "op": l.get("op"), "effect": l["effect"], **({"only_if_started": True} if l.get("only_if_started") else {}),
               "setter_file": next(e["file"] for e in evidence(l, d.get("ev", [])) if e["file"].endswith("/" + row[0]) and e["block"] == row[1]), "setter_block": row[1],
               "fail_file": next(e["file"] for e in evidence(l, d.get("ev", [])) if e["file"].endswith("/" + row[2]) and e["block"] == row[3]), "fail_block": row[3],
               "trigger_phase": l["trigger_phase"], "trigger_scene": None, "status": "verified_gamefiles", "engine_effect": "unconfirmed"}

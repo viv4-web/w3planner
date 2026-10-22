@@ -52,11 +52,13 @@ const qsHasProgress=()=>!!(qsHand()||QS.store.save);
 
 // ---- data ----
 function qsLoad(){if(QS.data)return Promise.resolve(QS.data);
- return QS.load||(QS.load=(async()=>{if(!(window.W3DATA&&W3DATA.QUESTS))await eqScript(QS_URL);const d=W3DATA.QUESTS;if(!d||!d.quests)throw new Error('empty');
+ return QS.load||(QS.load=(async()=>{const get=(have,url)=>have()?Promise.resolve():eqScript(url).catch(()=>{}),   // never rejects: each optional file may be missing
+   opt=Promise.all([get(()=>window.W3DATA&&W3DATA.QUEST_RULES,QS_RULES_URL),get(()=>window.QP,QS_QP_URL),get(()=>window.W3DATA&&W3DATA.QUEST_FAILS,QS_FAILS_URL),get(()=>window.QF,QS_QF_URL)]);
+  if(!(window.W3DATA&&W3DATA.QUESTS))await eqScript(QS_URL);const d=W3DATA.QUESTS;if(!d||!d.quests)throw new Error('empty');
   QS.data=d;QS.byG=new Map(d.quests.map(q=>[q.g,q]));QS.byObj=new Map();QS.byDesc=new Set();d.quests.forEach(q=>{q.o.forEach((g,i)=>QS.byObj.set(g,[q,i]));q.d.forEach(g=>QS.byDesc.add(g))});QS.regions=new Map(d.regions);
-  try{if(!(window.W3DATA&&W3DATA.QUEST_RULES))await eqScript(QS_RULES_URL);const R=W3DATA.QUEST_RULES;if(R&&R.quests){R.gmap=new Map(R.gates.map(x=>[x.id,x]));R.pts=new Map(R.points);QS.R=R}}catch(e){QS.R=null}   // the timeline data is optional: without it the other views work
-  try{if(!window.QP)await eqScript(QS_QP_URL)}catch(e){}   // v40: the status pill is optional too
-  try{if(!(window.W3DATA&&W3DATA.QUEST_FAILS))await eqScript(QS_FAILS_URL);if(!window.QF)await eqScript(QS_QF_URL);QF.init(W3DATA.QUEST_FAILS)}catch(e){}   // v39: the fail safeguard (questfails.js) is optional too
+  await opt;   // v40.1: the optional files below were requested together with the quest list (one round trip, not five); nothing here runs before the Quests screen is opened
+  try{const R=W3DATA.QUEST_RULES;if(R&&R.quests){R.gmap=new Map(R.gates.map(x=>[x.id,x]));R.pts=new Map(R.points);QS.R=R}}catch(e){QS.R=null}   // the timeline data is optional: without it the other views work
+  try{QF.init(W3DATA.QUEST_FAILS)}catch(e){}   // v39: the fail safeguard (questfails.js, with the status pill of v40) is optional too
   return d})().catch(e=>{QS.load=null;QS.err=true;throw e}))}
 function qsDescLoad(){if(QS.desc)return Promise.resolve(QS.desc);if(!QS_DESC)return Promise.reject(new Error('none'));
  return QS.descP||(QS.descP=new Promise((ok,bad)=>{const s=document.createElement('script');s.src=QS_DESC.desc;s.onload=()=>{const d=(window.W3DATA||{}).quests_desc;if(d){QS.desc=d;ok(d)}else{QS.descP=null;bad(new Error('empty'))}};
@@ -279,7 +281,7 @@ function qsTip(d){const q=QS.byG.get(d.dataset.g),t=qsEl('qsTip');if(!q)return;c
  const r=d.getBoundingClientRect(),w=t.offsetWidth,h=t.offsetHeight;t.style.left=Math.max(6,Math.min(innerWidth-w-6,r.left+r.width/2-w/2))+'px';t.style.top=(r.top-h-8>6?r.top-h-8:r.bottom+8)+'px'}
 function qsTipHide(){const t=qsEl('qsTip');if(t)t.hidden=true}
 function qsRenderView(){const host=qsEl('qsView'),sc=qsEl('screenQ');qsTipHide();
- [['qsVTime','time'],['qsVBand','band'],['qsVList','list'],['qsVFails','fails']].forEach(([id,v])=>{qsEl(id).classList.toggle('on',QS.view===v);qsEl(id).setAttribute('aria-pressed',String(QS.view===v))});
+ [['qsVTime','time'],['qsVBand','band'],['qsVList','list'],['qsVFails','fails']].forEach(([id,v])=>{if(!qsEl(id))return;qsEl(id).classList.toggle('on',QS.view===v);qsEl(id).setAttribute('aria-pressed',String(QS.view===v))});
  sc.classList.toggle('qs-band',QS.view!=='list');sc.classList.toggle('qs-fails',QS.view==='fails'&&!!window.QF);sc.classList.toggle('qs-time',QS.view==='time');qsEl('qsScope').hidden=QS.view!=='time';qsEl('qsScope').querySelectorAll('.qssc').forEach(b=>{const on=b.dataset.scope===QS.tscope;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on))});sc.classList.toggle('qs-open',QS.view!=='list'&&QS.open);   // Level band and Timeline: the detail is a drawer
  if(QS.view==='time')qsRenderTime(host);else if(QS.view==='band')qsRenderBand(host);else if(QS.view==='fails'&&window.QF)QF.fails(host);else qsRenderList(host)}
 
@@ -318,7 +320,7 @@ const ql=window.QF?QF.line(q.g):null,rl=qsRule(q.g),cuts=qsCuts(q),afters=((rl&&
   ${afters.length?`<p class="qsrule qsafter">Opens after: ${afters.map(a=>`<button type="button" class="qslink t-${a.t}" data-g="${a.g}">${qsEsc(a.n)}</button>`).join(', ')}</p>`:''}
   ${whole.length?`<p class="qsrule qsfailsat">Fails at ${whole.map(gn).join(', ')}</p>`:''}
   ${objs.length?`<p class="qsrule qsloses">Loses an objective at ${objs.map(gn).join(', ')}</p>`:''}
-  ${!whole.length&&!objs.length?(ql!=null?ql:`<p class="qsrule qsnomiss">${qsByChoice(q)?'No story gate fails this quest':'Not missable as far as computed'}</p>`):''}</div>`;
+  ${!whole.length&&!objs.length?(ql!=null?ql:`<p class="qsrule qsnomiss">${qsByChoice(q)?'No story gate fails this quest':'Not missable as far as computed'}</p>`):ql||''}</div>`;   // v40.1: the safeguard line (open, Done before, Failed, Missed) also shows under the story-gate lines
  const curHtml=cur.length?`<ul>${cur.map(t=>`<li>${t===null?'An active objective (its text is not included in this build)':qsEsc(t)}</li>`).join('')}</ul>`:'<p class="dim">Not known: the save has no active objective for it.</p>';
  el.innerHTML=`<button type="button" class="btn qsclose" id="qsClose" aria-label="Close">×</button><button type="button" class="btn qsback" id="qsBack" aria-label="Back to the list">◀ Back</button><h2 class="qstitle t-${q.t}">${qsIcon(st,q.t)}<span>${qsEsc(q.n)}</span></h2>
   <p class="qsmeta">${qsEsc(qsKindName(q.t))} · ${qsEsc(QS.regions.get(q.r))} · ${q.lv==null?'<span title="not computed yet">level —</span>':'level '+q.lv}</p>
@@ -379,7 +381,8 @@ function qsApplyJournal(J,name,mode){qsAdopt();QS.store.save={at:Date.now(),file
 
 // ---- screen ----
 function qsBind(){
- const sw=v=>{qsSetView(v);qsEl('screenQ').classList.remove('qs-detail');qsRenderView();qsRenderDetail()};qsEl('qsVTime').onclick=()=>sw('time');qsEl('qsVBand').onclick=()=>sw('band');qsEl('qsVList').onclick=()=>sw('list');qsEl('qsVFails').onclick=()=>sw('fails');
+ const sw=v=>{qsSetView(v);qsEl('screenQ').classList.remove('qs-detail');qsRenderView();qsRenderDetail()};qsEl('qsVTime').onclick=()=>sw('time');qsEl('qsVBand').onclick=()=>sw('band');qsEl('qsVList').onclick=()=>sw('list');qsEl('qsVList').parentNode.addEventListener('click',e=>{if(e.target.closest('#qsVFails'))sw('fails')});   // v40.1: the button is made by questfails.js when it loads
+ 
  qsEl('qsScope').querySelectorAll('.qssc').forEach(b=>{b.onclick=()=>{qsSetScope(b.dataset.scope);QS.open=false;qsEl('screenQ').classList.remove('qs-detail');qsRenderView();qsRenderDetail()}});
  const chip=qsEl('qsChip');chip.onclick=e=>{e.stopPropagation();qsMenu(qsEl('qsMenu').hidden)};
  window.addEventListener('storage',e=>{if((e.key===QS_KEY||e.key===null)&&QS.read&&QS.data){qsAdopt();qsRenderAll()}});   // another tab saved: show it
@@ -390,8 +393,8 @@ document.addEventListener('click',e=>{const m=qsEl('qsMenu');if(!m.hidden&&!e.co
 function qsClose(){QS.shown=false;const w=qsEl('qsChipWrap');if(w){w.hidden=true;qsMenu(false)}}
 function qsOpen(){if(QS.shown)return;QS.shown=true;if(!QS.init){QS.init=true;qsBind()}qsStoreInit();
  qsEl('qsChipWrap').hidden=false;qsChip();
- const body=qsEl('qsBody');qsEl('qsLoadMsg').hidden=true;qsEl('qsLoadMsg').textContent='';
- qsLoad().then(()=>{if(!QS.shown)return;body.hidden=false;QS.lv=qsMy();qsRenderAll();   // the objective titles (Next up) come with the lazy text file
+ const body=qsEl('qsBody'),lm=qsEl('qsLoadMsg');lm.hidden=!!QS.data;lm.textContent=QS.data?'':'Loading quests…';   // v40.1: a plain line while the files arrive
+ qsLoad().then(()=>{lm.hidden=true;lm.textContent='';if(!QS.shown)return;body.hidden=false;QS.lv=qsMy();qsRenderAll();   // the objective titles (Next up) come with the lazy text file
    if(QS_DESC&&!QS.desc)qsDescLoad().then(D=>{QS.desc=D;if(QS.shown){qsRenderNext();qsRenderDetail()}},()=>{})},
   ()=>{body.hidden=true;qsEl('qsLoadMsg').hidden=false;qsEl('qsLoadMsg').textContent='The quest list could not be loaded. Check your connection and try again.'})}
 function qsSync(){if(QS.shown&&QS.data&&QS.lv!==qsMy()){QS.lv=qsMy();qsRenderAll()}}   // the Level field changed: zones, Next up and tooltips follow it
