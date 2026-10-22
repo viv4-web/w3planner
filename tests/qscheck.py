@@ -650,7 +650,7 @@ def missunknown(b, base, check, label):
         check("%s: v34.3 no save (%s): no strip (the Missable panel is not there either), the two sections hold all the unplaced quests of the scope (no strip to take any out), the brackets are the grid's own (%s)" % (label, sc, r["sum"]),
               not r["vis"] and r["sum"] == ("No story gate found (157) | Not computed yet (34)" if sc == "base" else "") and E("document.getElementById('qsMiss').hidden") and not [x for x in r["bad"] if x[0] != "strip" and x[0] != "repeated in the collapsed row"], r)
     ks = E("Object.keys(localStorage).sort()"); check("%s: v34.3 no new storage keys (%s) and the link is unchanged" % (label, ks), all(k.startswith("w3p.quests.") for k in ks) and not [k for k in ks if re.search(r"strip|miss|unknown", k)] and not re.search(r"[0-9a-f]{32}|miss", E("location.hash")), ks)
-    check("%s: v39 APP_VERSION is v39" % label, E("APP_VERSION") == "v39")
+    check("%s: APP_VERSION is v39.9" % label, E("APP_VERSION") == "v39.9")
     check("%s: no script errors" % label, not errs, errs[:1]); pg.close()
     for sub in ("stats-l9b", "stats-l9"):
         d = FIXD / sub; sav = sorted(d.glob("*.sav")) if d.is_dir() else []
@@ -800,7 +800,9 @@ def v35(b, base, check, label):
     # the story-gate line of a quest with the block
     kg = next(iter(keep)); pg.evaluate("qsSelect('%s',true)" % kg); pg.wait_for_timeout(100); nm = E("[...document.querySelectorAll('#qsDetail .qsnomiss')].map(e=>e.textContent)")
     pg.evaluate("qsSelect('%s',true)" % nob[0]); pg.wait_for_timeout(100); nm2 = E("[...document.querySelectorAll('#qsDetail .qsnomiss')].map(e=>e.textContent)")
-    check("%s: v35 where the block is shown the line says 'No story gate fails this quest' (%s); elsewhere 'Not missable as far as computed' (%s)" % (label, nm, nm2), nm == ["No story gate fails this quest"] and nm2 in (["Not missable as far as computed"], []), [nm, nm2])
+    onlink = {l["failed_guid"] for l in json.loads((ROOT / "data" / "QUEST_FAILS.json").read_text(encoding="utf-8"))["links"]}   # v39.9: a quest at risk from a shipped fail link says "Can fail ..." instead (tests/qfcheck.py v399)
+    check("%s: v35 where the block is shown the line says 'No story gate fails this quest' (%s), unless the quest is on a fail link (then 'Can fail ...' replaces it); elsewhere 'Not missable as far as computed' (%s)" % (label, nm, nm2),
+          nm == (["No story gate fails this quest"] if kg not in onlink else []) and nm2 in (["Not missable as far as computed"], []), [nm, nm2])
     # leaks and storage
     bad = leaks(pg); ks = E("Object.keys(localStorage).sort()"); src = (ROOT / "src" / "quests.js").read_text(encoding="utf-8")
     check("%s: v35 no internal scene output or fact name appears in the screen (%s)" % (label, bad[:3]), not bad, bad)

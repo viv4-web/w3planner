@@ -353,7 +353,7 @@ def banner(b, base, check, label):
     # several links: one summary line, the panel lists them all
     E("""(()=>{const x=QS.data.quests.find(q=>q.id==='Q103 The Race'),d=JSON.parse(JSON.stringify(W3DATA.QUEST_FAILS)),l=d.links.find(l=>l.failer_guid==='%s'&&l.failed_guid==='%s');d.links=[l,Object.assign({},l,{failed_guid:x.g,fact:'other_fact'})];QF.init(d);qsRenderAll()})()""" % (UGLY, THREAD)); pg.wait_for_timeout(200)
     ml = E("[document.querySelector('.qfbanner p').textContent.trim(),document.querySelectorAll('#qfPanel .qfdep').length,document.querySelectorAll('#qsRegs .qfd.amber').length>0]")
-    check("%s: two links: one summary line ('2 quests will fail if you continue ...') and the panel holds a block for each (%s)" % (label, ml), ml[0].startswith("2 quests will fail if you continue") and "Do the amber" not in ml[0] and ml[1] == 2, ml)
+    check("%s: two links: one sentence naming the failer and both quests at risk (v39.9) and the panel holds a block for each (%s)" % (label, ml), ml[0] == "Continuing Ugly Baby (Kaer Morhen) fails or closes Ciri's Story: The Race and Following the Thread." and ml[1] == 2, ml)
     pg.close()
     pg, errs, reqs = Q.newpage(b, base, w=390, h=844, mobile=True, init=seed({UGLY: "active"})); E = pg.evaluate; Q.opened(pg, "no"); Q.until(pg, "!!document.querySelector('.qfbanner')"); pg.tap(".qfmore"); pg.wait_for_timeout(200)
     ph = E("""(()=>{const r=e=>Math.round(e.getBoundingClientRect().height);return{sx:document.documentElement.scrollWidth-innerWidth,w:document.querySelector('#qfBanner').getBoundingClientRect().width<=innerWidth,more:r(document.querySelector('.qfmore')),go:[...document.querySelectorAll('.qfgo')].map(r),fin:r(document.querySelector('.qffin')),sum:r(document.querySelector('.qfdata summary')),cards:document.querySelectorAll('.qfcard').length}})()""")
@@ -436,7 +436,7 @@ def multi(b, base, check, label):
     """v39.4: the real links together (three of them: Ugly Baby fails Following the Thread and The Last Wish, King's Gambit fails The Cave of Dreams): banner summary, the panel, tab dots, the order of Quest failures, a single Skellige link, and a quest that fails one quest while another would fail it"""
     pg, errs, _ = Q.newpage(b, base, init=seed({UGLY: "active", Q206: "active"}, quiet=False)); E = pg.evaluate; Q.opened(pg, "km"); Q.until(pg, "!!document.querySelector('.qfbanner')"); E(ONLY3); pg.wait_for_timeout(250)
     t = E("document.querySelector('.qfbrow p').textContent.trim()")
-    check("%s: three links live: one summary line (%s)" % (label, t), t == "3 quests will fail if you continue the quests marked red. Open the details to see what to do first.", t)
+    check("%s: three links live: one sentence per failer, in the order of their levels (v39.9) (%s)" % (label, t), t == "Continuing King's Gambit (Skellige) fails or closes The Cave of Dreams. Continuing Ugly Baby (Kaer Morhen) fails or closes Following the Thread and The Last Wish.", t)
     pg.click(".qfmore"); pg.wait_for_timeout(100)
     pn = E("""(()=>{const p=document.getElementById('qfPanel');return{n:p.querySelectorAll('.qfdep').length,fails:[...p.querySelectorAll('.qfdep .qfcard.amber .qfbig')].map(e=>e.textContent).sort(),by:[...p.querySelectorAll('.qfdep .qfcard.red .qfbig')].map(e=>e.textContent),t:p.innerText.replace(/\\s+/g,' '),pub:(()=>{const c=p.cloneNode(true);c.querySelectorAll('details.qfdata').forEach(x=>x.remove());return c.textContent.replace(/\\s+/g,' ')})()}})()""")
     check("%s: the panel lists every link (%s)" % (label, pn["fails"]), pn["n"] == 3 and pn["fails"] == ["Following the Thread", "The Cave of Dreams", "The Last Wish"] and sorted(pn["by"]) == ["King's Gambit", "Ugly Baby", "Ugly Baby"], pn)
@@ -492,7 +492,7 @@ def kinds(b, base, check, label):
     # --- the Isle of Mists group: one banner line, the list in the panel, one header in the tab
     pg, errs, _ = Q.newpage(b, base, init=seed({THREAD: "done", ISLE: "active"}, keep=isle_failed)); E = pg.evaluate; Q.opened(pg, "km"); Q.until(pg, "!!document.querySelector('.qfbanner')")
     ban = E("[...document.querySelectorAll('.qfbrow p')].map(p=>p.textContent.trim().replace(/\\s+/g,' '))")
-    check("%s: the Isle of Mists prompt: ONE banner line split in the two parts, 'Accepting the portal prompt in The Isle of Mists fails 12 open quests, and 4 more unless you've gathered allies.' (the three choices are not on it: their failers are not active; the Isle of Mists is active) (%s)" % (label, ban), ban == ["Accepting the portal prompt in The Isle of Mists fails 12 open quests, and 4 more unless you've gathered allies."], ban)
+    check("%s: the Isle of Mists: ONE banner sentence naming the first two quests by level and counting the rest, 'Continuing The Isle of Mists (Kaer Morhen) fails or closes Ciri's Room, A Favor for a Friend and 10 more, and 4 more unless you've gathered allies.' (the three choices are not on it: their failers are not active; the Isle of Mists is active) (%s)" % (label, ban), ban == ["Continuing The Isle of Mists (Kaer Morhen) fails or closes Ciri's Room, A Favor for a Friend and 10 more, and 4 more unless you've gathered allies."], ban)
     pg.click(".qfmore"); pg.wait_for_timeout(100)
     pn = E("""(()=>{const p=document.getElementById('qfPanel'),g=p.querySelector('.qfdepg');return{groups:p.querySelectorAll('.qfdepg').length,singles:[...p.querySelectorAll('.qfdep:not(.qfdepg)')].map(d=>d.querySelector('.qfcard.red .qflab').textContent),li:g.querySelectorAll('.qfgl li').length,main:g.querySelectorAll('.qfgl:not(.qfgu) li').length,sub:g.querySelectorAll('.qfgu li').length,
       lab:g.innerText.replace(/\\s+/g,' '),names:[...g.querySelectorAll('.qfgl li b')].map(e=>e.textContent),unl:[...g.querySelectorAll('.qfunl')].map(e=>e.textContent),go:[...g.querySelectorAll('.qfgl .qfgo')].length,fin:[...g.querySelectorAll('.qfgl .qffin')].length}})()""")
@@ -557,7 +557,7 @@ def kinds(b, base, check, label):
     # three choices live with the Isle group: the banner has the group only, the panel the group and the three choices, no 'do first' anywhere for them
     pg, errs, _ = Q.newpage(b, base, init=seed({THREAD: "done", ISLE: "active", SQ101: "active", Q109: "active"}, keep=[VELEN, SQ101, Q109])); E = pg.evaluate; Q.opened(pg, "km"); Q.until(pg, "!!document.querySelector('.qfbanner')")
     ban = E("[...document.querySelectorAll('.qfbrow p')].map(p=>p.textContent.trim().replace(/\\s+/g,' '))")
-    check("%s: choices live, the Isle and both choice failers active: one summary line for the three failed quests (%s)" % (label, ban), ban == ["3 quests will fail if you continue the quests marked red. Open the details to see what to do first."], ban)
+    check("%s: choices live, the Isle and both choice failers active: one sentence per failer, the two choices that fail the same quest in one (v39.9) (%s)" % (label, ban), ban == ["Choosing to fail the date with Keira in A Favor for a Friend (Velen) fails Brothers In Arms: Velen. Choosing to defeat Keira or to let Keira leave for Radovid in For the Advancement of Learning (Velen) fails Brothers In Arms: Velen. Continuing The Isle of Mists (Kaer Morhen) fails A Favor for a Friend and For the Advancement of Learning, and 1 more unless you've gathered allies."], ban)
     pg.click(".qfmore"); pg.wait_for_timeout(100)
     t = E("[...document.querySelectorAll('#qfPanel .qfdep:not(.qfdepg)')].map(d=>d.innerText.replace(/\\s+/g,' '))")
     check("%s: but the panel has the three choice blocks: IF YOU CHOOSE, 'This is a choice, not an order: no quest can be done first to avoid it. To keep Brothers In Arms: Velen, <the safe option>.' (send Keira to Kaer Morhen in For the Advancement of Learning / don't fail the date with Keira in A Favor for a Friend), no 'Safe order', no 'I finished it already' (%s)" % (label, [c[:40] for c in t]),
@@ -618,6 +618,98 @@ def gate(b, base, check, label):
           {"cab": nm["Cabaret"], "isle": isle["g"], "o": isle["o"], "battle": nm["The Battle of Kaer Morhen"]})
     check("%s: the Isle of Mists gate: not passed with no progress (Cabaret fails at it); a save with Q402 active and its 'travel to the Isle' objective DONE (between the objective and the prompt) or every objective done: still not passed, Cabaret still open and failing at the gate; Q402 done: passed; Q403 started: passed (%s)" % (label, p),
           p == [False, "isle", False, False, False, "isle", False, "isle", True, True, None, True], p)
+    check("%s: no page error" % label, not errs, errs[:1]); pg.close()
+
+
+def v399(b, base, check, label):
+    """v39.9: the banner names the quests (2 / 3 / >3 at risk, two failers, 390 px), the tie order in Quest failures, the prompt in the strip + the detail panel + the List row + the failures row (one state, cleared together),
+    and 'Can fail: ...' instead of 'Not missable as far as computed' for every quest that is on a fail link"""
+    qs, nm = _q()
+    FLESH, ISLE = nm["Flesh for Sale"], nm["The Isle of Mists"]
+    # --- the banner with the real data: Ugly Baby active, both quests at risk open
+    for w, h, mob in ((1440, 950, False), (390, 844, True)):
+        pg, errs, _ = Q.newpage(b, base, w=w, h=h, mobile=mob, init=seed({UGLY: "active"}, quiet=False)); E = pg.evaluate; Q.opened(pg, "km"); Q.until(pg, "!!document.querySelector('.qfbanner')")
+        pg.click(".qfmore"); pg.wait_for_timeout(150)
+        r = E("""(()=>{const p=document.querySelector('.qfbrow p'),m=document.querySelector('.qfmore');return{t:p.textContent.trim().replace(/\\s+/g,' '),sx:document.documentElement.scrollWidth-innerWidth,pw:p.scrollWidth-p.clientWidth,r:Math.round(document.querySelector('.qfbanner').getBoundingClientRect().right)-innerWidth,more:m.textContent,mh:Math.round(m.getBoundingClientRect().height)}})()""")
+        check("%s: %d px: Ugly Baby active, both quests open: 'Continuing Ugly Baby (Kaer Morhen) fails or closes Following the Thread and The Last Wish.', the More details button kept (44 px, now 'Hide details'), no sideways scroll (%s)" % (label, w, r),
+              r["t"] == "Continuing Ugly Baby (Kaer Morhen) fails or closes Following the Thread and The Last Wish." and r["more"] == "Hide details" and r["mh"] >= 44 and r["sx"] <= 1 and r["pw"] <= 1 and r["r"] <= 0, r)
+        check("%s: %d px: no page error" % (label, w), not errs, errs[:1]); pg.close()
+        pg, errs, _ = Q.newpage(b, base, w=w, h=h, mobile=mob, init=seed({ISLE: "active"}, quiet=False)); E = pg.evaluate; Q.opened(pg, "km"); Q.until(pg, "!!document.querySelector('.qfbanner')")
+        pg.click(".qfmore"); pg.wait_for_timeout(150)
+        r = E("""(()=>{const p=document.querySelector('.qfbrow p');return{t:p.textContent.trim().replace(/\\s+/g,' '),n:document.querySelectorAll('.qfbrow p').length,deps:document.querySelectorAll('#qfPanel .qfdep').length,sx:document.documentElement.scrollWidth-innerWidth,pw:p.scrollWidth-p.clientWidth,pn:document.getElementById('qfPanel').scrollWidth-document.getElementById('qfPanel').clientWidth}})()""")
+        check("%s: %d px: The Isle of Mists active (16 links): one sentence, the first two quests by level, 'and 10 more', 'and 4 more unless you've gathered allies'; the panel open; no sideways scroll (%s)" % (label, w, r),
+              r["t"] == "Continuing The Isle of Mists (Kaer Morhen) fails or closes Ciri's Room, A Favor for a Friend and 10 more, and 4 more unless you've gathered allies." and r["n"] == 1 and r["sx"] <= 1 and r["pw"] <= 1 and r["pn"] <= 1, r)
+        check("%s: %d px: no page error" % (label, w), not errs, errs[:1]); pg.close()
+    # --- 2, 3 and 4 quests at risk for one failer (synthetic links from the real one), and the cap
+    pg, errs, _ = Q.newpage(b, base, init=seed({UGLY: "active"}, quiet=False)); E = pg.evaluate; Q.opened(pg, "km"); Q.until(pg, "!!document.querySelector('.qfbanner')")
+    names = ["Ciri's Room", "An Invitation from Keira Metz", "Return to Crookback Bog", "A Matter of Life and Death"]   # levels 5, 6, 9, 12
+    got = []
+    for n, want in ((2, "Continuing Ugly Baby (Kaer Morhen) fails or closes Ciri's Room and An Invitation from Keira Metz."),
+                    (3, "Continuing Ugly Baby (Kaer Morhen) fails or closes Ciri's Room, An Invitation from Keira Metz and Return to Crookback Bog."),
+                    (4, "Continuing Ugly Baby (Kaer Morhen) fails or closes Ciri's Room, An Invitation from Keira Metz and 2 more.")):
+        E("""(a)=>{const d=JSON.parse(JSON.stringify(W3DATA.QUEST_FAILS)),l=d.links.find(l=>l.failer_guid===a.u&&l.failed_guid===a.t);
+          d.links=a.n.slice(0,a.k).map((g,i)=>Object.assign({},l,{failed_guid:a.g[g],fact:'f'+i}));QF.init(d);qsRenderAll()}""", {"u": UGLY, "t": THREAD, "n": names, "k": n, "g": nm}); pg.wait_for_timeout(200)
+        t = E("document.querySelector('.qfbrow p').textContent.trim().replace(/\\s+/g,' ')")
+        got.append(t); check("%s: %d quests at risk for one failer: %s (%s)" % (label, n, want, t), t == want, t)
+    pg.close()
+    # --- the order of Quest failures: by the failer's level, then by its story point (QUEST-RULES.json `s`, the order of `points`); a tie with no story-point difference keeps the old order
+    pg, errs, _ = Q.newpage(b, base, init=seed({})); E = pg.evaluate; Q.opened(pg); E("qsSetView('fails');qsRenderAll()"); pg.wait_for_timeout(250)
+    ORD = """[...document.querySelectorAll('.qfrowsx > *')].map(e=>QS.byG.get((e.dataset.k||e.querySelector('.qfrowx').dataset.k).slice(0,32)).n)"""   # the failer of each entry, in the order shown
+    o = E(ORD); lv = {q["n"]: q["lv"] for q in qs.values()}
+    check("%s: Quest failures: sorted by the failer's level (%s)" % (label, [lv[x] for x in o]), [lv[x] for x in o] == sorted(lv[x] for x in o), o)
+    i, j = o.index("Imperial Audience"), o.index("The Incident at White Orchard")
+    check("%s: the level-2 tie Imperial Audience / The Incident at White Orchard: both are story point 'p' with the same predecessors, so no field orders them and the old order (by name) stays (%s)" % (label, (i, j)),
+          i < j and E("(()=>{const r=QS.R.quests;return r['%s'].s===r['%s'].s&&JSON.stringify(r['%s'].a)===JSON.stringify(r['%s'].a)})()" % (nm["Imperial Audience"], nm["The Incident at White Orchard"], nm["Imperial Audience"], nm["The Incident at White Orchard"])), (i, j))
+    o2 = E("""(a)=>{QS.R.quests[a.t].s='e';QS.R.quests[a.e].s='3';qsRenderAll();return %s}""" % ORD, {"t": nm["On Thin Ice"], "e": nm["Something Ends, Something Begins"]})
+    check("%s: two failers of one level: the earlier story point comes first (On Thin Ice and Something Ends, Something Begins, level 30, story points swapped here so the name order disagrees) (%s)" % (label, o2[o2.index("Something Ends, Something Begins") - 1:][:3]), o2.index("Something Ends, Something Begins") + 1 == o2.index("On Thin Ice"), o2)
+    o3 = E("""(a)=>{QS.R.quests[a.t].s='3';QS.R.quests[a.e].s='3';qsRenderAll();return %s}""" % ORD, {"t": nm["On Thin Ice"], "e": nm["Something Ends, Something Begins"]})
+    check("%s: the same story point: back to the name order" % label, o3.index("On Thin Ice") < o3.index("Something Ends, Something Begins"), o3)
+    check("%s: no page error" % label, not errs, errs[:1]); pg.close()
+    # --- the prompt is where the quest was marked done, and everywhere else: one state
+    FOUR = """(()=>({strip:document.querySelectorAll('#qfPrompts .qfprompt').length,detail:!!document.querySelector('#qsDetail .qsprog + .qfinl .qfprompt'),
+      row:!!(document.querySelector('.qsrow[data-g="%s"]')&&document.querySelector('.qsrow[data-g="%s"]').closest('.qfrow')&&document.querySelector('.qsrow[data-g="%s"]').closest('.qfrow').querySelector('.qfprompt')),
+      fails:!!document.querySelector('.qfrowx[data-k="%s%s"] .qfinl .qfprompt'),all:document.querySelectorAll('.qfprompt').length,man:QS.store.manual['%s']||null}))()""" % (THREAD, THREAD, THREAD, THREAD, FLESH, FLESH)
+    def start(w=1440, h=950, mob=False):
+        pg, errs, _ = Q.newpage(b, base, w=w, h=h, mobile=mob, init=seed({THREAD: "done"}, quiet=False)); Q.opened(pg, "no"); Q.until(pg, "!!document.querySelector('.qfprompt')")
+        pg.evaluate("qsSelect('%s')" % THREAD); pg.wait_for_timeout(250); return pg, errs
+    pg, errs = start(); E = pg.evaluate
+    f = E(FOUR); txt = E("[...document.querySelectorAll('.qfprompt')].map(p=>p.querySelector('p').textContent+'|'+[...p.querySelectorAll('button')].map(x=>x.textContent).join(','))")
+    check("%s: Following the Thread marked done, Flesh for Sale open: the same prompt is in the strip, under MY PROGRESS in the detail panel and on the quest's List row, and the hand mark was not changed (%s)" % (label, f),
+          f["strip"] == 1 and f["detail"] and f["row"] and f["all"] == 3 and f["man"] is None, f)
+    check("%s: the three copies say the same and offer the same two actions plus the close button (%s)" % (label, txt[0]), len(set(txt)) == 1 and txt[0] == "Following the Thread is done. Flesh for Sale would have failed along the way.|Mark it failed,I finished it first,×", txt)
+    E("qsSetView('fails');qsRenderAll()"); pg.wait_for_timeout(250); f = E(FOUR)
+    check("%s: in Quest failures the row of that link carries it too (and the strip stays) (%s)" % (label, f), f["fails"] and f["strip"] == 1 and f["all"] == 3, f)
+    check("%s: no page error" % label, not errs, errs[:1]); pg.close()
+    for where, sel, want in (("the detail panel", '#qsDetail .qfprompt [data-a="done"]', "done"), ("the List row", '.qfrow .qfprompt [data-a="failed"]', "failed"), ("the strip", '#qfPrompts .qfprompt [data-a="done"]', "done")):
+        pg, errs = start(); E = pg.evaluate; pg.click(sel); pg.wait_for_timeout(250); f = E(FOUR)
+        check("%s: answering in %s sets Flesh for Sale to %s and clears the prompt in every place (%s)" % (label, where, want, f), f["man"] == want and f["all"] == 0, f)
+        check("%s: no page error" % label, not errs, errs[:1]); pg.close()
+    pg, errs = start(); E = pg.evaluate; E("qsSetView('fails');qsRenderAll()"); pg.wait_for_timeout(250); pg.click('.qfrowx .qfinl [data-a="failed"]'); pg.wait_for_timeout(250); f = E(FOUR)
+    check("%s: answering in the Quest failures row clears it everywhere (%s)" % (label, f), f["man"] == "failed" and f["all"] == 0, f)
+    pg.close()
+    pg, errs = start(); E = pg.evaluate; pg.click('#qsDetail .qfprompt .qfx2'); pg.wait_for_timeout(250); f = E(FOUR)
+    check("%s: closing it with × in the detail panel closes every copy and changes no state (%s)" % (label, f), f["all"] == 0 and f["man"] is None, f)
+    pg.close()
+    pg, errs = start(390, 844, True); E = pg.evaluate
+    ph = E("""(()=>({sx:document.documentElement.scrollWidth-innerWidth,h:[...document.querySelectorAll('.qfinl .qfprompt button')].map(x=>Math.round(x.getBoundingClientRect().height)).filter(x=>x>0),w:[...document.querySelectorAll('.qfprompt')].every(p=>p.getBoundingClientRect().right<=innerWidth)}))()""")
+    check("%s: 390 px: the copies beside the quest do not scroll sideways and their buttons are 44 px (%s)" % (label, ph), ph["sx"] <= 1 and ph["w"] and len(ph["h"]) >= 3 and all(x >= 44 for x in ph["h"]), ph)
+    check("%s: no page error" % label, not errs, errs[:1]); pg.close()
+    # --- "Can fail" instead of "Not missable as far as computed"
+    pg, errs, _ = Q.newpage(b, base, init=seed({}, quiet=False)); E = pg.evaluate; Q.opened(pg, "km")
+    res = E("""(a)=>{const out={};a.forEach(g=>{qsSelect(g);const r=document.querySelector('#qsDetail .qsrules');out[g]={t:r?r.textContent.replace(/\\s+/g,' '):'',gate:!!(r&&r.querySelector('.qsfailsat,.qsloses')),can:r?r.querySelectorAll('.qfcan').length:0,no:r?r.querySelectorAll('.qsnomiss').length:0}});return out}""", sorted({l["failer_guid"] for l in LINKS} | {l["failed_guid"] for l in LINKS}))
+    bad = [qs[g]["n"] for g, v in res.items() if "Not missable" in v["t"] or v["no"]]
+    check("%s: none of the %d quests on a fail link says 'Not missable as far as computed' (%s)" % (label, len(res), bad), len(res) == len({l["failer_guid"] for l in LINKS} | {l["failed_guid"] for l in LINKS}) and not bad, bad)
+    atrisk = {l["failed_guid"] for l in LINKS}
+    miss = [qs[g]["n"] for g in atrisk if not res[g]["gate"] and not res[g]["can"]]
+    check("%s: every at-risk quest without a gate rule of its own has a 'Can fail' line (%d of %d; the rest say 'Fails at ...') (%s)" % (label, sum(1 for g in atrisk if res[g]["can"]), len(atrisk), miss), not miss, miss)
+    t = {k: res[nm[k]]["t"] for k in ("Following the Thread", "Brothers In Arms: Velen", "Imperial Audience")}
+    check("%s: Following the Thread says 'Can fail: do it before Ugly Baby'; Brothers In Arms: Velen says 'Can fail at The Isle of Mists unless you've recruited Keira in Velen first' and 'Can fail by a choice in ...'; a quest that only fails others has no such line (%s)" % (label, t),
+          "Can fail: do it before Ugly Baby" in t["Following the Thread"] and "Can fail at The Isle of Mists unless you've recruited Keira in Velen first" in t["Brothers In Arms: Velen"] and "Can fail by a choice in A Favor for a Friend" in t["Brothers In Arms: Velen"]
+          and "Can fail" not in t["Imperial Audience"], t)
+    E("qsSelect('%s')" % THREAD); pg.wait_for_timeout(150); pg.click("#qsDetail .qfcan .qslink"); pg.wait_for_timeout(200)
+    check("%s: the failer's name in the line opens that quest (%s)" % (label, E("QS.sel")), E("QS.sel") == UGLY)
+    n = E("""(()=>{const links=new Set(%s);for(const q of QS.data.quests){if(links.has(q.g))continue;qsSelect(q.g);if(document.querySelector('#qsDetail .qsnomiss'))return document.querySelector('#qsDetail .qsnomiss').textContent}return null})()""" % json.dumps(sorted({l["failer_guid"] for l in LINKS} | {l["failed_guid"] for l in LINKS})))
+    check("%s: a quest with no fail link and no other rule still says 'Not missable as far as computed' (%s)" % (label, n), n == "Not missable as far as computed", n)
     check("%s: no page error" % label, not errs, errs[:1]); pg.close()
 
 
