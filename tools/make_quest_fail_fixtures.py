@@ -12,6 +12,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 FXD = ROOT / "tests" / "fixtures" / "quest_fails"
+# fixtures of links that were pulled stay in the folder (the fixtures are append-only, tests/linkcheck.py) and are listed here with the reason; no link, no check
+RETIRED = {"mq3012_warrior_statuette_q210_preparations.json": "v39.12: The Soldier Statuette <- Battle Preparations stood on a repair phase alone (bugfixing_phase 2076) and was pulled"}
 # (failed quest name, failer quest name, fact or None) -> (step file, step block, fail file, fail block). Files are given by name; the full path is the one in the link's evidence.
 ISLE = ("q402_ciri.w2phase", 1047)
 T = {
@@ -44,7 +46,7 @@ T = {
     ("Contract: Devil by the Well", "Imperial Audience", "q002_left_village"): ("q002_emhyr.w2phase", 351, "mq0003_freshwater.w2phase", 1130),
     ("Contract: Devil by the Well", "On Thin Ice", "q501_naglfar_arrived"): ("q501_eredin.w2phase", 1268, "mq0003_freshwater.w2phase", 1146),
     ("Reason of State", "On Thin Ice", "q501_naglfar_arrived"): ("q501_eredin.w2phase", 1268, "mq3035_emhyr.w2phase", 29),
-    ("The Soldier Statuette", "Battle Preparations", None): ("bugfixing_phase.w2phase", 2103, "bugfixing_phase.w2phase", 2076),
+    ("The Cave of Dreams", "Battle Preparations", "q210_on_quest"): ("q210_precanaris.w2phase", 1871, "sq209_weregild.w2phase", 1457),
     ("A Midnight Clear", "Dead Man's Party", "q602_done"): ("q602_wedding.w2phase", 514, "q602_romance.w2phase", 262),
     ("Flesh for Sale", "Following the Thread", "sq106_hammond_knows"): ("sq106_hammond.w2phase", 45, "mq2020_flesh_for_cash_business.w2phase", 81),
     ("Amidst the Mill's Grist", "Where Children Toil, Toys Waste Away", None): ("q702_hunt.w2phase", 75, "q702_hunt.w2phase", 33),
@@ -54,6 +56,7 @@ T = {
     ("Precious Cargo", "On Thin Ice", "q501_naglfar_arrived"): ("q501_eredin.w2phase", 1268, "mq0002_missing_goods.w2phase", 508),
     ("Faithful Friend", "Something Ends, Something Begins", None): ("q504_ciri_empress.w2phase", 33, "q504_ciri_empress.w2phase", 58),
     ("The Lord of Undvik", "Through Time and Space", "q210_quest_start"): ("q210_depart_novigrad.w2phase", 7, "q202_giant.w2phase", 2936),
+    ("The Gangs of Novigrad", "Get Junior", "q302_whoreson_found"): ("q302_mafia.w2phase", 660, "cleaver.w2phase", 95),
     ("Duck, Duck, Goosed!", "Beyond Hill and Dale...", "q704_ft_goose_done"): ("q704_02_fairy_tale.w2phase", 19, "q704_02_fairy_tale.w2phase", 23),
 }
 
@@ -68,7 +71,7 @@ def evidence(l, table):
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--check", action="store_true"); a = ap.parse_args()
     d = json.loads((ROOT / "data" / "QUEST_FAILS.json").read_text(encoding="utf-8")); qs = {q["g"]: q for q in json.loads((ROOT / "data" / "QUESTS.json").read_text(encoding="utf-8"))["quests"]}
-    old = {f.name for f in FXD.glob("*.json")}; made = set(); bad = []
+    old = {f.name for f in FXD.glob("*.json")} - set(RETIRED); made = set(); bad = []
     for l in d["links"]:
         failed, failer = qs[l["failed_guid"]], qs[l["failer_guid"]]
         key = (failed["n"], failer["n"], l.get("fact"))
@@ -92,7 +95,7 @@ def main():
         if a.check:
             if not p.exists() or json.loads(p.read_text(encoding="utf-8")) != fx: bad.append(name)
         else: p.write_text(txt, encoding="utf-8")
-    extra = sorted(old - made) if not a.check else sorted({f.name for f in FXD.glob("*.json")} - made)
+    extra = sorted(old - made) if not a.check else sorted({f.name for f in FXD.glob("*.json")} - made - set(RETIRED))
     if bad or extra: sys.exit("fixtures out of step: missing / different %s, with no link %s" % (bad, extra))
     print("%d fixtures for %d links" % (len(made), len(d["links"])))
 

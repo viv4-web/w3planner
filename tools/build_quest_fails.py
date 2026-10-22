@@ -11,6 +11,9 @@ or is no cause of its own: needs a `rejection` text; not shipped, not counted), 
 answered, not counted). The tool stops when nothing is verified, when a verified record has gaps, a GUID that is not a quest of data/QUESTS.json, no evidence, or a field its kind needs is missing.
 `candidates` is a number and nothing else. No game text: GUIDs, a fact name, a comparison, block numbers and short labels of our own.
 
+v39.12, the per-site rule: every record carries `sites` (each fail site of its pair or failed quest: file, block, kind in_play_wait / repair / patch / own_flow / precondition / protective / phase_level, status, and its own `reason` or `missing`).
+A repair / patch site (bugfixing_phase, patch_*) never ships and never rejects a record that has an in-play site; a record is rejected only when every one of its sites is; a verified record needs a verified in-play site.
+
 Every link has a `kind`:
   fact              the failer's step sets a story fact; the failed quest waits for it and fails ("Do <failed> first")
   fails_unless_set  the failed quest is tested once at the trigger and fails unless its own fact is already set (Brothers In Arms at the Isle of Mists portal prompt); needs `condition` (what saves it, from its evidence) and `unless_group` (the shared phrase for the banner: "gathered allies")
@@ -34,6 +37,36 @@ HUMAN = {
     ("e10a13b571218a46b0d37b0b9954be3f", "q206_party_started"): dict(trigger_label="the gate of Kaer Trolde Keep, on the way to report to Crach", trigger_short="gates of Kaer Trolde Keep"),
 }
 STATUSES = ("verified_gamefiles", "rejected", "candidate", "not_a_fail", "not_found")
+# v39.12: a record is judged PER FAIL SITE (every place in the game graphs where the failed quest's journal block gets a Failure / Deactivate input), never on the first-ranked site alone.
+# `sites` = [{file, block, kind, status, reason | missing}]. A repair or patch phase (bugfixing_phase, patch_*) is a one-shot clean-up for older saves: such a site is always rejected and never ships, and it can
+# never reject a record that has an in-play site. A record is rejected only when EVERY site is rejected (each with its own reason).
+SITE_KINDS = ("in_play_wait", "repair", "patch", "own_flow", "precondition", "protective", "phase_level")
+SITE_STATUSES = ("verified_gamefiles", "rejected", "candidate")
+REPAIR_KINDS = ("repair", "patch")
+
+
+def check_sites(rec, who):
+    """the per-site rule; SystemExit with the reason when a record breaks it"""
+    st = rec.get("status")
+    if "sites" not in rec or not isinstance(rec["sites"], list): sys.exit("refusing %s: no `sites` list: a record is judged per fail site" % who)
+    ss = rec["sites"]
+    for x in ss:
+        if not isinstance(x, dict) or not str(x.get("file", "")).strip() or not isinstance(x.get("block"), int): sys.exit("refusing %s: a site needs file and block" % who)
+        if x.get("kind") not in SITE_KINDS: sys.exit("refusing %s: site %s %s has kind %r (one of %s)" % (who, x.get("file"), x.get("block"), x.get("kind"), ", ".join(SITE_KINDS)))
+        if x.get("status") not in SITE_STATUSES: sys.exit("refusing %s: site %s %s has status %r" % (who, x.get("file"), x.get("block"), x.get("status")))
+        if x["status"] == "rejected" and not str(x.get("reason") or "").strip(): sys.exit("refusing %s: site %s %s is rejected without its own reason" % (who, x["file"], x["block"]))
+        if x["status"] == "candidate" and not str(x.get("missing") or "").strip(): sys.exit("refusing %s: site %s %s is a candidate without what is missing" % (who, x["file"], x["block"]))
+        if x["kind"] in REPAIR_KINDS and x["status"] != "rejected": sys.exit("refusing %s: site %s %s is a %s phase: a repair-only site is always rejected, it never ships" % (who, x["file"], x["block"], x["kind"]))
+        if re.match(r"(bugfix|patch)", x["file"].split("/")[-1], re.I) and x["kind"] not in REPAIR_KINDS: sys.exit("refusing %s: site %s %s sits in a bugfixing / patch file but is not kind repair / patch" % (who, x["file"], x["block"]))
+    stat = {x["status"] for x in ss}
+    if st == "verified_gamefiles" and "verified_gamefiles" not in stat: sys.exit("refusing %s: verified_gamefiles but no in-play site is verified (a repair-only record never ships)" % who)
+    if st == "rejected" and (not ss or stat != {"rejected"}): sys.exit("refusing %s: rejected, but not every site is rejected (%s): a record is rejected only when each of its sites is" % (who, ", ".join(sorted(stat)) or "no sites"))
+    if st == "candidate" and "candidate" not in stat and not str(rec.get("missing") or "").strip(): sys.exit("refusing %s: candidate with no candidate site and no `missing`" % who)
+    if st in ("candidate", "rejected", "not_a_fail", "not_found") and "verified_gamefiles" in stat: sys.exit("refusing %s: status %s but a site is verified" % (who, st))
+    if rec.get("fail_file") is not None:                                       # a pair record: its first-ranked site and every additional record are all among the sites
+        want = {(str(rec["fail_file"]).split("/")[-1], rec.get("fail_block"))} | {(str(a.get("file")).split("/")[-1], a.get("block")) for a in rec.get("additional_records") or []}
+        have = {(x["file"].split("/")[-1], x["block"]) for x in ss}
+        if want - have: sys.exit("refusing %s: sites not judged: %s" % (who, ", ".join("%s %s" % w for w in sorted(want - have))))
 KINDS = ("fact", "fails_unless_set", "choice", "journal_status", "flow")
 KIND_NEEDS = {"fact": ("fact", "op"), "fails_unless_set": ("fact", "op", "condition", "unless_group"), "choice": ("fact", "op", "choice", "safe"), "journal_status": ("journal",), "flow": ("flow",)}
 EFFECTS = ("Failure", "Deactivate")
@@ -164,7 +197,8 @@ def build(cand, quests, include=()):
     for src, r in recs:
         name = "%s <- %s" % (r.get("failed_id"), r.get("failer_id")) if src == "pairs" else r.get("checklist_entry")
         if r.get("status") not in STATUSES: sys.exit("refusing %s: unknown status %r" % (name, r.get("status")))
-        if r["status"] == "rejected" and not str(r.get("rejection") or "").strip(): sys.exit("refusing %s: rejected without a reason" % name)
+        if r["status"] == "rejected" and not str(r.get("rejection") or r.get("reason") or "").strip(): sys.exit("refusing %s: rejected without a reason" % name)
+        check_sites(r, name)
     by_failed = {}
     for src, r in recs: by_failed.setdefault(r.get("failed_guid"), []).append((src, r))
     cv = lambda src, r: convert(r, quests) if src == "pairs" else convert_cov(r, quests)
