@@ -210,3 +210,10 @@ Files Vivek uploads to `/home/w3dev/incoming/` (zips from the PC kit): do NOT wa
 5. Script the game-data extraction (`docs/DATA-PIPELINE.md`; the Glossary's is `tools/build_glossary.py`).
 6. GitHub Actions workflows in `.github/workflows` have run: CI is green on `main` (since PR #1). `gh api repos/viv4-web/w3planner/actions/permissions` returns 403 by design (the token has no administration rights); that is not a CI problem.
 7. Later: automate deploys, once manual deploys have been smooth for a while.
+
+## Vault reflex
+Vault: ~/livesync-bridge/vault. At the end of any session that changed code, decisions or plans:
+1. Prepend a dated entry to `<vault>/20 Organs/W3Planner/W3Planner Pulse.md`: Changed, Why, Learned (if anything transfers), Decision candidates.
+2. Update `<vault>/20 Organs/W3Planner/W3Planner Vitals.md` (health, active work, blockers, next) and set `updated:`.
+3. If a choice passed the decision bar in `<vault>/CLAUDE.md`, ask me one question about why, then write it to `<vault>/00 Senses/` with the Decision template. Same for lessons. Never write to `10 Brain/`.
+Keep it short. Skip if nothing meaningful happened.
